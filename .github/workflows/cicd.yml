@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [ "onix-v2-api" ]
+        service: [ "onix-api" ]
     outputs:
       imageTag: ${{ steps.prep.outputs.version }}
       autoDeployEnv: ${{ steps.prep.outputs.deployEnv }}
@@ -28,8 +28,8 @@ jobs:
     - name: Prepare
       id: prep
       run: |
-        DOCKER_IMAGE=promid/${{matrix.service}}
-        GCR_IMAGE=asia-southeast1-docker.pkg.dev/its-artifact-commons/rtarf/${{matrix.service}}
+        DOCKER_IMAGE=onix-api/${{matrix.service}}
+        GCR_IMAGE=asia-southeast1-docker.pkg.dev/its-artifact-commons/onix/${{matrix.service}}
         VERSION=latest
         GIT_HASH=$(git rev-parse --short "$GITHUB_SHA")
         ENV=dev
@@ -56,9 +56,9 @@ jobs:
           TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
         fi
 
-        DOCKERFILE=onix-v2-api/Dockerfile
-        if [[ $SERVICE == "onix-v2-api" ]]; then
-          DOCKERFILE=onix-v2-api/Dockerfile
+        DOCKERFILE=onix-api/Dockerfile
+        if [[ $SERVICE == "onix-api" ]]; then
+          DOCKERFILE=onix-api/Dockerfile
         fi
 
         echo ::set-output name=tags::${TAGS}
@@ -125,7 +125,7 @@ jobs:
       with:
         status: ${{ job.status }}
         fields: repo,message,commit,author,ref,workflow # selectable (default: repo,message)
-        text: "Start deploying [onix-v2-api] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
+        text: "Start deploying [onix-api] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
 
@@ -135,21 +135,21 @@ jobs:
       run: |
         export ENVIRONMENT=${{ needs.build1.outputs.autoDeployEnv }}
         export ARGOCD_BRANCH=${{ needs.build1.outputs.autoDeployBranch }}
-        export VALUE_FILE_DIR="values/onix-v2-api"
-        export VALUE_FILE=${VALUE_FILE_DIR}/onix-v2-api-03-${ARGOCD_BRANCH}-image-tag.yaml
+        export VALUE_FILE_DIR="values/onix-api"
+        export VALUE_FILE=${VALUE_FILE_DIR}/onix-api-03-${ARGOCD_BRANCH}-image-tag.yaml
         export IMAGE_TAG1=${{ needs.build1.outputs.imageTag }}
         git config --global user.email "cicd-auto@onix.com"
         git config --global user.name "CICD"
 
-        git clone "https://cicd-token:${GH_TOKEN}@github.com/rtaf-soc/rtarf-ads-argocd-apps" deployment
-        cd deployment
-        git checkout ${ARGOCD_BRANCH}
-        cp ${VALUE_FILE_DIR}/onix-v2-api-02-image-tag-template.yaml ${VALUE_FILE}
-        sed -i "s#<<image-tag>>#${IMAGE_TAG1}#g" ${VALUE_FILE}
-        ls -lrt
-        cat ${VALUE_FILE}
+        #git clone "https://cicd-token:${GH_TOKEN}@github.com/wintech-thai/onix-v2-argocd-apps" deployment
+        #cd deployment
+        #git checkout ${ARGOCD_BRANCH}
+        #cp ${VALUE_FILE_DIR}/onix-api-02-image-tag-template.yaml ${VALUE_FILE}
+        #sed -i "s#<<image-tag>>#${IMAGE_TAG1}#g" ${VALUE_FILE}
+        #ls -lrt
+        #cat ${VALUE_FILE}
 
-        git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
+        #git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
 
     - name: Slack notification end
       if: always()
@@ -157,6 +157,6 @@ jobs:
       with:
         status: ${{ job.status }}
         fields: repo,message,commit,author,ref,workflow # selectable (default: repo,message)
-        text: "Done deploying [onix-v2-api] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]"
+        text: "Done deploying [onix-api] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]"
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
