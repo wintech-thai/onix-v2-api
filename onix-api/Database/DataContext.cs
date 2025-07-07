@@ -20,6 +20,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MUser>? Users { get; set; }
     public DbSet<MOrganizationUser>? OrganizationUsers { get; set; }
     public DbSet<MSystemVariable>? SystemVariables { get; set; }
+    public DbSet<MMasterRef>? MasterRefs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,5 +30,8 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MUser>();
         modelBuilder.Entity<MOrganizationUser>();
         modelBuilder.Entity<MSystemVariable>();
+
+        modelBuilder.Entity<MMasterRef>()
+            .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
     }
 }
