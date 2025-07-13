@@ -22,6 +22,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MSystemVariable>? SystemVariables { get; set; }
     public DbSet<MMasterRef>? MasterRefs { get; set; }
     public DbSet<MCycle>? Cycles { get; set; }
+    public DbSet<MItem>? Items { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,11 +32,16 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MUser>();
         modelBuilder.Entity<MOrganizationUser>();
         modelBuilder.Entity<MSystemVariable>();
+        modelBuilder.Entity<MItem>();
+
 
         modelBuilder.Entity<MMasterRef>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
 
         modelBuilder.Entity<MCycle>()
+            .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+
+        modelBuilder.Entity<MItem>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
     }
 }

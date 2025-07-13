@@ -7,7 +7,9 @@ namespace Its.Onix.Api.ViewsModels
     {
         public string? FullTextSearch { get; set; }
         public int? CycleType { get; set; }
-        public DateTime? StargDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTime? FromStargDate { get; set; }
+        public DateTime? ToStargDate { get; set; }
+        public DateTime? FromEndDate { get; set; }
+        public DateTime? ToEndDate { get; set; }
     }
 }
