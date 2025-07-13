@@ -12,5 +12,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MUser>? Users { get; set; }
         public DbSet<MOrganizationUser>? OrganizationUsers { get; set; }
         public DbSet<MSystemVariable>? SystemVariables { get; set; }
+        public DbSet<MMasterRef>? MasterRefs { get; set; }
+        public DbSet<MCycle>? Cycles { get; set; }
     }
 }
