@@ -6,13 +6,13 @@ using System.Diagnostics.CodeAnalysis;
 namespace Its.Onix.Api.Models
 {
     [ExcludeFromCodeCoverage]
-    [Table("Cycles")]
+    [Table("Items")]
 
     [Index(nameof(OrgId))]
-    public class MCycle
+    public class MItem
     {
         [Key]
-        [Column("cycle_id")]
+        [Column("item_id")]
         public Guid? Id { get; set; }
 
         [Column("org_id")]
@@ -27,14 +27,11 @@ namespace Its.Onix.Api.Models
         [Column("tags")]
         public string? Tags { get; set; }
 
-        [Column("cycle_type")] /* 1=Lottery */
-        public int? CycleType { get; set; }
+        [Column("item_type")] /* 1=Lottery */
+        public int? ItemType { get; set; }
 
-        [Column("start_date")]
-        public DateTime? StargDate { get; set; }
-
-        [Column("end_date")]
-        public DateTime? EndDate { get; set; }
+        [Column("narrative")]
+        public string? Narrative { get; set; }
 
 
         //System fields
@@ -44,7 +41,7 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
-        public MCycle()
+        public MItem()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
