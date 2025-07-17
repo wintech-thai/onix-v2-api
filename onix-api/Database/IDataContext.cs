@@ -15,5 +15,6 @@ namespace Its.Onix.Api.Database
         public DbSet<MMasterRef>? MasterRefs { get; set; }
         public DbSet<MCycle>? Cycles { get; set; }
         public DbSet<MItem>? Items { get; set; }
+        public DbSet<MItemImage>? ItemImages { get; set; }
     }
 }

@@ -40,6 +40,16 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteItemCascadeById/{itemId}")]
+        public IActionResult DeleteItemCascadeById(string id, string itemId)
+        {
+            //TODO : Change the implementiation here...
+            var result = svc.DeleteItemById(id, itemId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateItemById/{itemId}")]
         public IActionResult UpdateItemById(string id, string itemId, [FromBody] MItem request)
