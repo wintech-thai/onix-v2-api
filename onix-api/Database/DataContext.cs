@@ -23,6 +23,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MMasterRef>? MasterRefs { get; set; }
     public DbSet<MCycle>? Cycles { get; set; }
     public DbSet<MItem>? Items { get; set; }
+    public DbSet<MItemImage>? ItemImages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,6 +34,7 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MOrganizationUser>();
         modelBuilder.Entity<MSystemVariable>();
         modelBuilder.Entity<MItem>();
+        modelBuilder.Entity<MItemImage>();
 
 
         modelBuilder.Entity<MMasterRef>()
@@ -43,5 +45,12 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MItem>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+
+
+        modelBuilder.Entity<MItemImage>()
+            .HasOne(ii => ii.Item)
+            .WithMany(i => i.Images)
+            .HasForeignKey(ii => ii.ItemId)
+            .HasPrincipalKey(i => i.Id);
     }
 }

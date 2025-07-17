@@ -46,6 +46,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IMasterRefService, MasterRefService>();
             builder.Services.AddScoped<ICycleService, CycleService>();
             builder.Services.AddScoped<IItemService, ItemService>();
+            builder.Services.AddScoped<IItemImageService, ItemImageService>();
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
@@ -56,6 +57,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IMasterRefRepository, MasterRefRepository>();
             builder.Services.AddScoped<ICycleRepository, CycleRepository>();
             builder.Services.AddScoped<IItemRepository, ItemRepository>();
+            builder.Services.AddScoped<IItemImageRepository, ItemImageRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();

@@ -6,35 +6,35 @@ using System.Diagnostics.CodeAnalysis;
 namespace Its.Onix.Api.Models
 {
     [ExcludeFromCodeCoverage]
-    [Table("Items")]
+    [Table("ItemImages")]
 
     [Index(nameof(OrgId))]
-    public class MItem
+    public class MItemImage
     {
         [Key]
-        [Column("item_id")]
+        [Column("item_image_id")]
         public Guid? Id { get; set; }
 
         [Column("org_id")]
         public string? OrgId { get; set; }
 
-        [Column("code")]
-        public string? Code { get; set; }
+        [Column("item_id")]
+        [ForeignKey("Item")]
+        public Guid? ItemId { get; set; }
+        public MItem? Item { get; set; }  // <== Navigation property
 
-        [Column("description")]
-        public string? Description { get; set; }
+        [Column("path")]
+        public string? ImagePath { get; set; }
+
+        [Column("narative")]
+        public string? Narative { get; set; }
 
         [Column("tags")]
         public string? Tags { get; set; }
 
-        [Column("item_type")] /* 1=Lottery */
-        public int? ItemType { get; set; }
+        [Column("category")] 
+        public int? Category { get; set; }
 
-        [Column("narrative")]
-        public string? Narrative { get; set; }
-
-        //Navigation Properties
-        public ICollection<MItemImage> Images { get; set; } = new List<MItemImage>();
 
         //System fields
         [Column("created_date")]
@@ -43,7 +43,7 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
-        public MItem()
+        public MItemImage()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
