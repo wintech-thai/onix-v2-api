@@ -52,6 +52,9 @@ namespace Its.Onix.Api.Models
         public string? SecondaryEmail { get; set; }
 
 
+        //Navigation Properties
+        public ICollection<MPricingPlan> PricingPlans { get; set; } = new List<MPricingPlan>();
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }

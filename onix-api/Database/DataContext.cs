@@ -25,6 +25,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MItem>? Items { get; set; }
     public DbSet<MItemImage>? ItemImages { get; set; }
     public DbSet<MEntity>? Entities { get; set; }
+    public DbSet<MPricingPlan>? PricingPlans { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -55,5 +56,14 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MEntity>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+
+        modelBuilder.Entity<MPricingPlan>()
+            .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+
+        modelBuilder.Entity<MPricingPlan>()
+            .HasOne(pp => pp.Customer)
+            .WithMany(cm => cm.PricingPlans)
+            .HasForeignKey(pp => pp.CustomerId)
+            .HasPrincipalKey(cm => cm.Id);
     }
 }
