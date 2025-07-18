@@ -24,6 +24,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MCycle>? Cycles { get; set; }
     public DbSet<MItem>? Items { get; set; }
     public DbSet<MItemImage>? ItemImages { get; set; }
+    public DbSet<MEntity>? Entities { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,11 +47,13 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MItem>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
 
-
         modelBuilder.Entity<MItemImage>()
             .HasOne(ii => ii.Item)
             .WithMany(i => i.Images)
             .HasForeignKey(ii => ii.ItemId)
             .HasPrincipalKey(i => i.Id);
+
+        modelBuilder.Entity<MEntity>()
+            .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
     }
 }
