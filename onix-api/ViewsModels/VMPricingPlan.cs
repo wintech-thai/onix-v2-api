@@ -3,10 +3,11 @@ using System.Diagnostics.CodeAnalysis;
 namespace Its.Onix.Api.ViewsModels
 {
     [ExcludeFromCodeCoverage]
-    public class VMCycle : VMQueryBase
+    public class VMPricingPlan : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
         public int? CycleType { get; set; }
+        public int? Status { get; set; }
         public DateTime? FromStartDate { get; set; }
         public DateTime? ToStartDate { get; set; }
         public DateTime? FromEndDate { get; set; }
