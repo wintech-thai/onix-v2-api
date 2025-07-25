@@ -49,6 +49,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IItemImageService, ItemImageService>();
             builder.Services.AddScoped<EntityService, EntityService>();
             builder.Services.AddScoped<PricingPlanService, PricingPlanService>();
+            builder.Services.AddScoped<PricingPlanItemService, PricingPlanItemService>();
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
@@ -62,6 +63,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IItemImageRepository, ItemImageRepository>();
             builder.Services.AddScoped<IEntityRepository, EntityRepository>();
             builder.Services.AddScoped<IPricingPlanRepository, PricingPlanRepository>();
+            builder.Services.AddScoped<IPricingPlanItemRepository, PricingPlanItemRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();

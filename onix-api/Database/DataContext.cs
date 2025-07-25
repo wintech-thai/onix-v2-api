@@ -26,6 +26,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MItemImage>? ItemImages { get; set; }
     public DbSet<MEntity>? Entities { get; set; }
     public DbSet<MPricingPlan>? PricingPlans { get; set; }
+    public DbSet<MPricingPlanItem>? PricingPlanItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,5 +66,11 @@ public class DataContext : DbContext, IDataContext
             .WithMany(cm => cm.PricingPlans)
             .HasForeignKey(pp => pp.CustomerId)
             .HasPrincipalKey(cm => cm.Id);
+
+        modelBuilder.Entity<MPricingPlanItem>()
+            .HasOne(pi => pi.PricingPlan)
+            .WithMany(i => i.PricingPlanItems)
+            .HasForeignKey(pi => pi.PricingPlanId)
+            .HasPrincipalKey(i => i.Id);
     }
 }
