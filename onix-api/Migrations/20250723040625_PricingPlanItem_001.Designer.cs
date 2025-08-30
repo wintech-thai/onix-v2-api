@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20250723040625_PricingPlanItem_001")]
+    partial class PricingPlanItem_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -552,55 +555,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MScanItem", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("scan_item_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("Pin")
-                        .HasColumnType("text")
-                        .HasColumnName("pin");
-
-                    b.Property<string>("ProductCode")
-                        .HasColumnType("text")
-                        .HasColumnName("product_code");
-
-                    b.Property<DateTime?>("RegisteredDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("registered_date");
-
-                    b.Property<string>("RegisteredFlag")
-                        .HasColumnType("text")
-                        .HasColumnName("registered_flag");
-
-                    b.Property<string>("Serial")
-                        .HasColumnType("text")
-                        .HasColumnName("serial");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("OrgId", "Serial", "Pin")
-                        .IsUnique();
-
-                    b.ToTable("ScanItems");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MSystemVariable", b =>

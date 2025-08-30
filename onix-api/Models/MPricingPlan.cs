@@ -57,11 +57,17 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
+
+        //Navigation Properties
+        public ICollection<MPricingPlanItem> PricingPlanItems { get; set; } = new List<MPricingPlanItem>();
+
         public MPricingPlan()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             UpdatedDate = DateTime.UtcNow;
+
+            PricingPlanItems = new List<MPricingPlanItem>();
         }
     }
 }
