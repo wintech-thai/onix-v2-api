@@ -4,6 +4,7 @@ using Its.Onix.Api.Services;
 using Its.Onix.Api.ModelsViews;
 using System.Text.Json;
 using Its.Onix.Api.Utils;
+using System.Text;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -32,9 +33,12 @@ namespace Its.Onix.Api.Controllers
             var result = svc.VerifyScanItem(id, serial, pin);
             var jsonString = JsonSerializer.Serialize(result);
 
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+            
             var encryptedB64 = EncryptionUtils.Encrypt(jsonString, key, iv);
 
-            var url = $"{baseUrl}?data={encryptedB64}";
+            var url = $"{baseUrl}?data={jsonStringB64}";
 
             return Redirect(url);
         }
