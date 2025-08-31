@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ModelsViews;
+using System.Text.Json;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -23,11 +25,17 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/Verify/{serial}/{pin}")]
         public IActionResult? Verify(string id, string serial, string pin)
         {
+            var baseUrl = cfg["ScanItem:RedirectUrl"]!;
+            var key = cfg["ScanItem:SymmetricKey"]!;
+            var iv = cfg["ScanItem:EncryptionIv"]!;
+
             var result = svc.VerifyScanItem(id, serial, pin);
+            var jsonString = JsonSerializer.Serialize(result);
 
-            var url = cfg["ScanItem:RedirectUrl"]!;
+            var encryptedB64 = EncryptionUtils.Encrypt(jsonString, key, iv);
 
-            //TODO : Redirect to https://aldamex.com/scan/data=base64(encrypt(result))
+            var url = $"{baseUrl}?data={encryptedB64}";
+
             return Redirect(url);
         }
 
