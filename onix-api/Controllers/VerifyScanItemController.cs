@@ -9,11 +9,13 @@ namespace Its.Onix.Api.Controllers
     public class VerifyScanItemController : ControllerBase
     {
         private readonly IScanItemService svc;
+        private readonly IConfiguration cfg;
 
         [ExcludeFromCodeCoverage]
-        public VerifyScanItemController(IScanItemService service)
+        public VerifyScanItemController(IScanItemService service, IConfiguration config)
         {
             svc = service;
+            cfg = config;
         }
 
         [ExcludeFromCodeCoverage]
@@ -23,8 +25,10 @@ namespace Its.Onix.Api.Controllers
         {
             var result = svc.VerifyScanItem(id, serial, pin);
 
+            var url = cfg["ScanItem:RedirectUrl"]!;
+
             //TODO : Redirect to https://aldamex.com/scan/data=base64(encrypt(result))
-            return Redirect("https://google.com");
+            return Redirect(url);
         }
 
         [ExcludeFromCodeCoverage]
@@ -33,6 +37,8 @@ namespace Its.Onix.Api.Controllers
         public MVScanItemResult? VerifyScanItem(string id, string serial, string pin)
         {
             var result = svc.VerifyScanItem(id, serial, pin);
+            result.RedirectUrl = cfg["ScanItem:RedirectUrl"]!;
+
             return result;
         }
     }
