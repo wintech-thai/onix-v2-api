@@ -37,8 +37,10 @@ namespace Its.Onix.Api.Controllers
             string jsonStringB64 = Convert.ToBase64String(jsonBytes);
             
             var encryptedB64 = EncryptionUtils.Encrypt(jsonString, key, iv);
+            var decryptText = EncryptionUtils.Decrypt(encryptedB64, key, iv);
+            Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
 
-            var url = $"{baseUrl}?data={jsonStringB64}";
+            var url = $"{baseUrl}?data={encryptedB64}";
 
             return Redirect(url);
         }
