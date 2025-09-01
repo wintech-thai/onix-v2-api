@@ -5,6 +5,7 @@ using Its.Onix.Api.ModelsViews;
 using System.Text.Json;
 using Its.Onix.Api.Utils;
 using System.Text;
+using System.Web;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -38,9 +39,13 @@ namespace Its.Onix.Api.Controllers
             
             var encryptedB64 = EncryptionUtils.Encrypt(jsonString, key, iv);
             var decryptText = EncryptionUtils.Decrypt(encryptedB64, key, iv);
-            Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
 
-            var url = $"{baseUrl}?data={encryptedB64}";
+            var urlSafe = HttpUtility.UrlEncode(encryptedB64);
+            var url = $"{baseUrl}?data={urlSafe}";
+
+//Console.WriteLine($"DEBUG - Encrypted Text (B64) : {encryptedB64}");
+//Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
+//Console.WriteLine($"DEBUG - URL Safe : {urlSafe}");
 
             return Redirect(url);
         }
