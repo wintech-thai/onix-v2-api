@@ -28,7 +28,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (result != null)
             {
                 result.RegisteredFlag = "TRUE";
-                result.RegisteredDate = DateTime.Now;
+                result.RegisteredDate = DateTime.UtcNow;
                 context!.SaveChanges();
             }
 

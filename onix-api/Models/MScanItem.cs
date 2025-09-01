@@ -30,6 +30,21 @@ namespace Its.Onix.Api.Models
         [Column("product_code")]
         public string? ProductCode { get; set; }
 
+        [Column("sequence_no")]
+        public string? SequenceNo { get; set; }
+
+        [Column("url")]
+        public string? Url { get; set; }
+
+        [Column("run_id")]
+        public string? RunId { get; set; }
+
+        [Column("uploaded_path")]
+        public string? UploadedPath { get; set; }
+
+        [Column("item_group")]
+        public string? ItemGroup { get; set; }
+
         [Column("registered_flag")]
         public string? RegisteredFlag { get; set; } /* YES or NO */
 
