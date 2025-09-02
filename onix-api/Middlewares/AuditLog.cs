@@ -12,6 +12,9 @@ namespace Its.Onix.Api.AuditLogs
         public string? ClientIp { get; set; }
         public string? CfClientIp { get; set; }
 
+        public string? CustomStatus { get; set; }
+        public string? CustomDesc { get; set; }
+
         public long? RequestSize { get; set; }
         public long? ResponseSize { get; set; }
         public long? LatencyMs { get; set; }
