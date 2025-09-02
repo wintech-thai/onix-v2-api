@@ -23,7 +23,7 @@ namespace Its.Onix.Api.AuditLogs
 
             var scheme = context.Request.Scheme;
             var method = context.Request.Method;
-            var host = context.Request.Host.ToString();
+            var host = context.Request.Headers["Host"].ToString();
             var path = context.Request.Path;
             var query = context.Request.QueryString.ToString();
             var fullUrl = $"{method} {path}{query}";
@@ -33,7 +33,7 @@ namespace Its.Onix.Api.AuditLogs
             var clientIp = "";
             if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var xForwardedFor))
             {
-                clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
+                clientIp = xForwardedFor.ToString(); //.Split(',')[0].Trim();
             }
 
             await _next(context); // call next middleware
