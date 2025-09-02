@@ -9,6 +9,7 @@ using Its.Onix.Api.Services;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Authorizations;
 using Its.Onix.Api.Authentications;
+using Its.Onix.Api.AuditLogs;
 
 namespace Its.Onix.Api
 {
@@ -100,6 +101,7 @@ namespace Its.Onix.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseMiddleware<AuditLogMiddleware>();
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
