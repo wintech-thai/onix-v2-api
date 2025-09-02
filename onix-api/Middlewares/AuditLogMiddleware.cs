@@ -23,17 +23,23 @@ namespace Its.Onix.Api.AuditLogs
 
             var scheme = context.Request.Scheme;
             var method = context.Request.Method;
-            var host = context.Request.Host.ToString();
+            var host = context.Request.Headers["X-Forwarded-Host"].ToString();
             var path = context.Request.Path;
             var query = context.Request.QueryString.ToString();
             var fullUrl = $"{method} {path}{query}";
             var requestSize = context.Request.ContentLength ?? 0;
             var userAgent = context.Request.Headers["User-Agent"].ToString();
 
+            var cfClientIp = "";
+            if (context.Request.Headers.ContainsKey("CF-Connecting-IP"))
+            {
+                cfClientIp = context.Request.Headers["CF-Connecting-IP"].ToString();
+            }
+
             var clientIp = "";
             if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var xForwardedFor))
             {
-                clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
+                clientIp = xForwardedFor.ToString(); //.Split(',')[0].Trim();
             }
 
             await _next(context); // call next middleware
@@ -63,6 +69,7 @@ namespace Its.Onix.Api.AuditLogs
                 LatencyMs = latencyMs,
                 Scheme = scheme,
                 ClientIp = clientIp,
+                CfClientIp = cfClientIp,
             };
 
             var logJson = JsonSerializer.Serialize(logObject);
