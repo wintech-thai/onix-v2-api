@@ -37,9 +37,9 @@ namespace Its.Onix.Api.AuditLogs
             }
 
             var clientIp = "";
-            if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var xForwardedFor))
+            if (context.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
             {
-                clientIp = xForwardedFor.ToString(); //.Split(',')[0].Trim();
+                clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
             }
 
             await _next(context); // call next middleware
