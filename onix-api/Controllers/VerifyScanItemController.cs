@@ -43,10 +43,11 @@ namespace Its.Onix.Api.Controllers
             var urlSafe = HttpUtility.UrlEncode(encryptedB64);
             var url = $"{baseUrl}?data={urlSafe}";
 
-//Console.WriteLine($"DEBUG - Encrypted Text (B64) : {encryptedB64}");
-//Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
-//Console.WriteLine($"DEBUG - URL Safe : {urlSafe}");
+            //Console.WriteLine($"DEBUG - Encrypted Text (B64) : {encryptedB64}");
+            //Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
+            //Console.WriteLine($"DEBUG - URL Safe : {urlSafe}");
 
+            Response.Headers.Append("CUST_STATUS", result.Status);
             return Redirect(url);
         }
 
@@ -58,6 +59,7 @@ namespace Its.Onix.Api.Controllers
             var result = svc.VerifyScanItem(id, serial, pin);
             result.RedirectUrl = cfg["ScanItem:RedirectUrl"]!;
 
+            Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
         }
     }

@@ -44,6 +44,12 @@ namespace Its.Onix.Api.AuditLogs
 
             await _next(context); // call next middleware
 
+            var custStatus = "";
+            if (context.Response.Headers.TryGetValue("CUST_STATUS", out var customStatus))
+            {
+                custStatus = customStatus;
+            }
+
             var responseSize = memoryStream.Length;
             var statusCode = context.Response.StatusCode;
 
@@ -70,6 +76,7 @@ namespace Its.Onix.Api.AuditLogs
                 Scheme = scheme,
                 ClientIp = clientIp,
                 CfClientIp = cfClientIp,
+                CustomStatus = custStatus,
             };
 
             var logJson = JsonSerializer.Serialize(logObject);

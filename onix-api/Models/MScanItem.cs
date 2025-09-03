@@ -48,6 +48,10 @@ namespace Its.Onix.Api.Models
         [Column("registered_flag")]
         public string? RegisteredFlag { get; set; } /* YES or NO */
 
+        [Column("used_flag")]
+        public string? UsedFlag { get; set; } /* TRUE or FALSE */
+
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
@@ -58,6 +62,7 @@ namespace Its.Onix.Api.Models
         public MScanItem()
         {
             Id = Guid.NewGuid();
+            UsedFlag = "FALSE";
             CreatedDate = DateTime.UtcNow;
         }
     }
