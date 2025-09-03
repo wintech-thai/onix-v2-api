@@ -37,12 +37,18 @@ namespace Its.Onix.Api.AuditLogs
             }
 
             var clientIp = "";
-            if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var xForwardedFor))
+            if (context.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
             {
-                clientIp = xForwardedFor.ToString(); //.Split(',')[0].Trim();
+                clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
             }
 
             await _next(context); // call next middleware
+
+            var custStatus = "";
+            if (context.Response.Headers.TryGetValue("CUST_STATUS", out var customStatus))
+            {
+                custStatus = customStatus;
+            }
 
             var responseSize = memoryStream.Length;
             var statusCode = context.Response.StatusCode;
@@ -70,6 +76,7 @@ namespace Its.Onix.Api.AuditLogs
                 Scheme = scheme,
                 ClientIp = clientIp,
                 CfClientIp = cfClientIp,
+                CustomStatus = custStatus,
             };
 
             var logJson = JsonSerializer.Serialize(logObject);
