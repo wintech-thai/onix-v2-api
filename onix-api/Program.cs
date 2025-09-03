@@ -10,6 +10,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Authorizations;
 using Its.Onix.Api.Authentications;
 using Its.Onix.Api.AuditLogs;
+using System.Threading.RateLimiting;
 
 namespace Its.Onix.Api
 {
@@ -83,6 +84,45 @@ namespace Its.Onix.Api
                 options.AddPolicy("GenericRolePolicy", policy => policy.AddRequirements(new GenericRbacRequirement()));
             });
 
+            //Begin rate limiter
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = 429;
+
+                options.OnRejected = async (context, token) =>
+                {
+                    var clientIp = "unknown";
+                    if (context.HttpContext.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
+                    {
+                        clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
+                    }
+
+                    Log.Warning($"Rate limit triggered for IP: {clientIp} at {DateTime.UtcNow}");
+                    await context.HttpContext.Response.WriteAsync("Too many requests. Try again later.", token);
+                };
+                
+                // ทำ partitioned rate limiter per IP
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                {
+                    var clientIp = "unknown";
+                    if (httpContext.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
+                    {
+                        clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
+                    }
+
+                    return RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: clientIp,
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 20, // อนุญาต 20 requests
+                            Window = TimeSpan.FromSeconds(10), // ต่อ 10 วินาที
+                            QueueLimit = 0,
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                        });
+                });
+            });
+            //End rate limit
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -101,6 +141,7 @@ namespace Its.Onix.Api
                 app.UseSwaggerUI();
             }
 
+            app.UseRateLimiter();
             app.UseMiddleware<AuditLogMiddleware>();
             app.UseHttpsRedirection();
             app.UseAuthentication();
