@@ -1,16 +1,20 @@
 using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
 using Serilog;
+
 
 namespace Its.Onix.Api.AuditLogs
 {
     public class AuditLogMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly HttpClient _httpClient;
 
-        public AuditLogMiddleware(RequestDelegate next)
+        public AuditLogMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory)
         {
             _next = next;
+            _httpClient = httpClientFactory.CreateClient();
         }
 
         public async Task InvokeAsync(HttpContext context)
@@ -77,10 +81,37 @@ namespace Its.Onix.Api.AuditLogs
                 ClientIp = clientIp,
                 CfClientIp = cfClientIp,
                 CustomStatus = custStatus,
+                Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
             };
 
             var logJson = JsonSerializer.Serialize(logObject);
             Log.Information(logJson);
+
+            await SendAuditLog(logJson);
+        }
+
+        private async Task SendAuditLog(string logJson)
+        {
+            var endPoint = Environment.GetEnvironmentVariable("LOG_ENDPOINT");
+            if (endPoint == null)
+            {
+                return;
+            }
+            
+            try
+            {
+                var content = new StringContent(logJson, Encoding.UTF8, "application/json");
+                var response = await _httpClient.PostAsync(endPoint, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Log.Warning($"Failed to send audit log, status code = [{response.StatusCode}]");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message);
+            }
         }
     }
 }
