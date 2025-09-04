@@ -123,6 +123,8 @@ namespace Its.Onix.Api
             });
             //End rate limit
 
+            builder.Services.AddHttpClient();
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
