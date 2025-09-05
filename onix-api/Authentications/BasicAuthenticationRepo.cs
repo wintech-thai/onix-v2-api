@@ -1,16 +1,19 @@
 using System.Security.Claims;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Authentications
 {
     public class BasicAuthenticationRepo : IBasicAuthenticationRepo
     {
         private readonly IApiKeyService? service = null;
+        private readonly RedisHelper _redis;
 
-        public BasicAuthenticationRepo(IApiKeyService svc)
+        public BasicAuthenticationRepo(IApiKeyService svc, RedisHelper redis)
         {
             service = svc;
+            _redis = redis;
         }
 
         private MVApiKey? VerifyKey(string orgId, string password)

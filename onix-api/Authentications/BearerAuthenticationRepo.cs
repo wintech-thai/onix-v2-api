@@ -2,17 +2,19 @@ using Serilog;
 using System.Security.Claims;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Services;
-using System.Text.RegularExpressions;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Authentications
 {
     public class BearerAuthenticationRepo : IBearerAuthenticationRepo
     {
         private readonly IOrganizationService? service = null;
+        private readonly RedisHelper _redis;
 
-        public BearerAuthenticationRepo(IOrganizationService svc)
+        public BearerAuthenticationRepo(IOrganizationService svc, RedisHelper redis)
         {
             service = svc;
+            _redis = redis;
         }
 
         private MVOrganizationUser? VerifyUser(string orgId, string user)
