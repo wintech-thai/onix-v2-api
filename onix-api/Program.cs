@@ -11,6 +11,8 @@ using Its.Onix.Api.Authorizations;
 using Its.Onix.Api.Authentications;
 using Its.Onix.Api.AuditLogs;
 using System.Threading.RateLimiting;
+using StackExchange.Redis;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api
 {
@@ -24,12 +26,22 @@ namespace Its.Onix.Api
                 .CreateLogger();
             Log.Logger = log;
 
+
             var builder = WebApplication.CreateBuilder(args);
+
             builder.Services.AddControllers()
                 .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
 
+
             var cfg = builder.Configuration;
             var connStr = $"Host={cfg["PostgreSQL:Host"]}; Database={cfg["PostgreSQL:Database"]}; Username={cfg["PostgreSQL:User"]}; Password={cfg["PostgreSQL:Password"]}";
+
+
+            var redisHostStr = $"{cfg["Redis:Host"]}:{cfg["Redis:Port"]}"; 
+            builder.Services.AddSingleton<IConnectionMultiplexer>(
+                sp => ConnectionMultiplexer.Connect(redisHostStr));
+            builder.Services.AddScoped<RedisHelper>();
+
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
