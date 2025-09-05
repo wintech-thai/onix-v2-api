@@ -17,6 +17,17 @@ namespace Its.Onix.Api.AuditLogs
             _httpClient = httpClientFactory.CreateClient();
         }
 
+        private string? GetValue(HttpContext context, string key, string defaultValue)
+        {
+            var value = context.Items[key];
+            if (value == null)
+            {
+                return defaultValue;
+            }
+
+            return value.ToString();
+        }
+
         public async Task InvokeAsync(HttpContext context)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -82,6 +93,14 @@ namespace Its.Onix.Api.AuditLogs
                 CfClientIp = cfClientIp,
                 CustomStatus = custStatus,
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+
+                userInfo = new UserInfo()
+                {
+                    Role = GetValue(context, "Temp-Authorized-Role", ""),
+                    IdentityType = GetValue(context, "Temp-Identity-Type", ""),
+                    UserId = GetValue(context, "Temp-Identity-Id", ""),
+                    UserName = GetValue(context, "Temp-Identity-Name", ""),
+                }
             };
 
             var logJson = JsonSerializer.Serialize(logObject);

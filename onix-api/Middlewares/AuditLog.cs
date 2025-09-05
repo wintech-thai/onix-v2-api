@@ -19,5 +19,12 @@ namespace Its.Onix.Api.AuditLogs
         public long? RequestSize { get; set; }
         public long? ResponseSize { get; set; }
         public long? LatencyMs { get; set; }
+
+        public UserInfo? userInfo { get; set; }
+
+        public AuditLog()
+        {
+            userInfo = new UserInfo();
+        }
     }
 }
