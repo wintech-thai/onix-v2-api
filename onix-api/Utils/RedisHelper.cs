@@ -1,3 +1,4 @@
+using System.Text.Json;
 using StackExchange.Redis;
 
 namespace Its.Onix.Api.Utils
@@ -20,6 +21,20 @@ namespace Its.Onix.Api.Utils
             return value.HasValue ? value.ToString() : null;
         }
 
+        public async Task SetObjectAsync<T>(string key, T obj, TimeSpan? expiry = null)
+        {
+            var json = JsonSerializer.Serialize(obj);
+            await _db.StringSetAsync(key, json, expiry);
+        }
+
+        public async Task<T?> GetObjectAsync<T>(string key)
+        {
+            var value = await _db.StringGetAsync(key);
+            if (value.IsNullOrEmpty) return default;
+            
+            return JsonSerializer.Deserialize<T>(value!);
+        }
+    
         public Task<bool> DeleteAsync(string key)
             => _db.KeyDeleteAsync(key);
     }

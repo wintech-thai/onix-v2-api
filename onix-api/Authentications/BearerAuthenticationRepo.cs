@@ -19,9 +19,21 @@ namespace Its.Onix.Api.Authentications
 
         private MVOrganizationUser? VerifyUser(string orgId, string user)
         {
-            //Improvement(caching) : Added chaching mechanism here
-            var m = service!.VerifyUserInOrganization(orgId, user);
-            return m;
+            //This has not been tested
+
+            var key = $"#{orgId}:VerifyUser:#{user}";
+            var t = _redis.GetObjectAsync<MVOrganizationUser>(key);
+            var orgUser = t.Result;
+
+            if (orgUser == null)
+            {
+                var m = service!.VerifyUserInOrganization(orgId, user);
+                _ = _redis.SetObjectAsync(key, m, TimeSpan.FromMinutes(5));
+
+                orgUser = m;
+            }
+
+            return orgUser;
         }
 
         public User? Authenticate(string orgId, string user, string password, HttpRequest request)

@@ -18,15 +18,22 @@ namespace Its.Onix.Api.Authentications
 
         private MVApiKey? VerifyKey(string orgId, string password)
         {
-            //Improvement(caching) : Added chaching mechanism here
+            var key = $"#{orgId}:VerifyKey:#{password}";
 
-            var m = service!.VerifyApiKey(orgId, password);
-            if (m != null && m.Status!.Equals("OK"))
+            var t = _redis.GetObjectAsync<MVApiKey>(key);
+            var mapiKey = t.Result;
+
+            if (mapiKey == null)
             {
-                return m;
+                //Not found
+                //Console.WriteLine("################### GET FROM DB ##############3");
+                var m = service!.VerifyApiKey(orgId, password);
+                _ = _redis.SetObjectAsync(key, m, TimeSpan.FromMinutes(5));
+
+                mapiKey = m;
             }
 
-            return null;
+            return mapiKey;
         }
 
         public User? Authenticate(string orgId, string user, string password, HttpRequest request)
