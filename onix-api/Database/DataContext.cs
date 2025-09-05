@@ -43,6 +43,8 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MScanItem>()
             .HasIndex(t => new { t.OrgId, t.Serial, t.Pin }).IsUnique();
+        modelBuilder.Entity<MScanItem>()
+            .HasIndex(t => new { t.OrgId, t.Serial }).IsUnique();
 
         modelBuilder.Entity<MMasterRef>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
