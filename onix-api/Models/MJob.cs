@@ -60,10 +60,14 @@ namespace Its.Onix.Api.Models
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
 
+        [NotMapped]
+        public NameValue[] Parameters { get; set; }
+
         public MJob()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
+            Parameters = Array.Empty<NameValue>();
         }
     }
 }

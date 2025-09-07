@@ -5,6 +5,7 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -27,6 +28,7 @@ namespace Its.Onix.Api.Controllers
         public MVJob? CreateScanItemGeneratorJob(string id, [FromBody] MJob request)
         {
             request.Type = "ScanItemGenerator";
+            request.Configuration = JsonSerializer.Serialize(request.Parameters);
 
             var result = svc.AddJob(id, request);
             return result;
