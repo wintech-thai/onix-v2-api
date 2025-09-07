@@ -24,8 +24,8 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/CreateScanItemGeneratorJob")]
-        public MVJob? CreateScanItemGeneratorJob(string id, [FromBody] MJob request)
+        [Route("org/{id}/action/CreateJobScanItemGenerator")]
+        public MVJob? CreateJobScanItemGenerator(string id, [FromBody] MJob request)
         {
             request.Type = "ScanItemGenerator";
             request.Status = "Pending";
