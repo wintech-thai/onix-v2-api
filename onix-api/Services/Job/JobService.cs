@@ -2,16 +2,20 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Utils;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
     public class JobService : BaseService, IJobService
     {
         private readonly IJobRepository? repository = null;
+        private readonly RedisHelper _redis;
 
-        public JobService(IJobRepository repo) : base()
+        public JobService(IJobRepository repo, RedisHelper redis) : base()
         {
             repository = repo;
+            _redis = redis;
         }
 
         public MJob GetJobById(string orgId, string jobId)
@@ -26,14 +30,19 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
             var r = new MVJob();
-
-            var result = repository!.AddJob(job);
-
             r.Status = "OK";
             r.Description = "Success";
-            r.Job = result;
 
-            //TODO : Publish job to message queue here...
+            job.Configuration = JsonSerializer.Serialize(job.Parameters);
+            var result = repository!.AddJob(job);
+            result.Configuration = "";
+            
+            r.Job = result;
+            
+            var stream = job.Type;
+            var message = JsonSerializer.Serialize(r.Job);
+
+            _ = _redis.PublishMessageAsync(stream!, message);
 
             return r;
         }

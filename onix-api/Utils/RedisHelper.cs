@@ -34,6 +34,14 @@ namespace Its.Onix.Api.Utils
             
             return JsonSerializer.Deserialize<T>(value!);
         }
+
+        public async Task<string> PublishMessageAsync(string stream, string message)
+        {
+            var msgId = await _db.StreamAddAsync(stream,
+                [new NameValueEntry("message", message)]);
+                
+            return msgId.ToString();
+        }
     
         public Task<bool> DeleteAsync(string key)
             => _db.KeyDeleteAsync(key);

@@ -28,7 +28,7 @@ namespace Its.Onix.Api.Controllers
         public MVJob? CreateScanItemGeneratorJob(string id, [FromBody] MJob request)
         {
             request.Type = "ScanItemGenerator";
-            request.Configuration = JsonSerializer.Serialize(request.Parameters);
+            request.Status = "Pending";
 
             var result = svc.AddJob(id, request);
             return result;
