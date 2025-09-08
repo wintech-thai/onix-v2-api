@@ -1,0 +1,8 @@
+{
+    "Name":"ScanItemGen-001",
+    "Description":"Test-001",
+    "Parameters": [
+        {"Name":"SCAN_ITEM_COUNT", "Value": "500"},
+        {"Name":"NOTIFY_EMAIL", "Value": "happy.face@gmail.com"}
+    ]
+}

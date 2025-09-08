@@ -20,5 +20,6 @@ namespace Its.Onix.Api.Database
         public DbSet<MPricingPlan>? PricingPlans { get; set; }
         public DbSet<MPricingPlanItem>? PricingPlanItems { get; set; }
         public DbSet<MScanItem>? ScanItems { get; set; }
+        public DbSet<MJob>? Jobs { get; set; }
     }
 }

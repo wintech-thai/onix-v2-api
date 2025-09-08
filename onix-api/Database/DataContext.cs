@@ -28,6 +28,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MPricingPlan>? PricingPlans { get; set; }
     public DbSet<MPricingPlanItem>? PricingPlanItems { get; set; }
     public DbSet<MScanItem>? ScanItems { get; set; }
+    public DbSet<MJob>? Jobs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,6 +41,7 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MItem>();
         modelBuilder.Entity<MItemImage>();
         modelBuilder.Entity<MScanItem>();
+        modelBuilder.Entity<MJob>();
 
         modelBuilder.Entity<MScanItem>()
             .HasIndex(t => new { t.OrgId, t.Serial, t.Pin }).IsUnique();
