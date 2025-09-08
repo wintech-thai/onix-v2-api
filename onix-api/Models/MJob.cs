@@ -41,6 +41,12 @@ namespace Its.Onix.Api.Models
         [Column("progress_pct")]
         public int? ProgressPct { get; set; } /* Progress percentage */
 
+        [Column("succeed_cnt")]
+        public int? SucceedCount { get; set; }
+
+        [Column("failed_cnt")]
+        public int? FailedCount { get; set; }
+
         [Column("configuration")]
         public string? Configuration { get; set; } /* Environment variables passed to job */
 
