@@ -2,7 +2,8 @@
     "Name":"ScanItemGen-001",
     "Description":"Test-001",
     "Parameters": [
-        {"Name":"SCAN_ITEM_COUNT", "Value": "500"},
+        {"Name":"SCAN_ITEM_COUNT", "Value": "50"},
+        {"Name":"SERIAL_NUMBER_PREFIX", "Value": "PJ"},
         {"Name":"NOTIFY_EMAIL", "Value": "happy.face@gmail.com"}
     ]
 }
