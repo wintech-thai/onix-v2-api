@@ -38,8 +38,9 @@ namespace Its.Onix.Api.Services
             result.Configuration = "";
             
             r.Job = result;
-            
-            var stream = job.Type;
+
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"{environment}:{job.Type}";
             var message = JsonSerializer.Serialize(r.Job);
 
             _ = _redis.PublishMessageAsync(stream!, message);
