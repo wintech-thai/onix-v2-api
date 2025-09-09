@@ -65,6 +65,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPricingPlanService, PricingPlanService>();
             builder.Services.AddScoped<IPricingPlanItemService, PricingPlanItemService>();
             builder.Services.AddScoped<IScanItemService, ScanItemService>();
+            builder.Services.AddScoped<IScanItemActionService, ScanItemActionService>();
             builder.Services.AddScoped<IJobService, JobService>();
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -81,6 +82,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPricingPlanRepository, PricingPlanRepository>();
             builder.Services.AddScoped<IPricingPlanItemRepository, PricingPlanItemRepository>();
             builder.Services.AddScoped<IScanItemRepository, ScanItemRepository>();
+            builder.Services.AddScoped<IScanItemActionRepository, ScanItemActionRepository>();
             builder.Services.AddScoped<IJobRepository, JobRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
