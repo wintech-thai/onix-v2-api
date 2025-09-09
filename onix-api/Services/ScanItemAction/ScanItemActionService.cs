@@ -9,10 +9,12 @@ namespace Its.Onix.Api.Services
     public class ScanItemActionService : BaseService, IScanItemActionService
     {
         private readonly IScanItemActionRepository? repository = null;
+        private readonly RedisHelper _redis;
 
-        public ScanItemActionService(IScanItemActionRepository repo) : base()
+        public ScanItemActionService(IScanItemActionRepository repo, RedisHelper redis) : base()
         {
             repository = repo;
+            _redis = redis;
         }
 
         public MScanItemAction GetScanItemActionById(string orgId, string actionId)
@@ -79,6 +81,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
+
             r.ScanItemAction = result;
             return r;
         }
@@ -109,6 +113,7 @@ namespace Its.Onix.Api.Services
                 r.Description = $"ScanItemAction ID [{actionId}] not found for the organization [{orgId}]";
             }
 
+            _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
             return r;
         }
 
