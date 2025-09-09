@@ -29,6 +29,8 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MPricingPlanItem>? PricingPlanItems { get; set; }
     public DbSet<MScanItem>? ScanItems { get; set; }
     public DbSet<MJob>? Jobs { get; set; }
+    public DbSet<MScanItemTemplate>? ScanItemTemplates { get; set; }
+    public DbSet<MScanItemAction>? ScanItemActions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,8 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MItem>();
         modelBuilder.Entity<MItemImage>();
         modelBuilder.Entity<MScanItem>();
+        modelBuilder.Entity<MScanItemTemplate>();
+        modelBuilder.Entity<MScanItemAction>();
         modelBuilder.Entity<MJob>();
 
         modelBuilder.Entity<MScanItem>()

@@ -1,0 +1,5 @@
+{
+    "RedirectUrl": "https://api-local.please-scan.com/verifyxx",
+    "EncryptionKey": "<ENCRYPTION_KEY>",
+    "EncryptionIV": "<ENCRYPTION_IV>"
+}
