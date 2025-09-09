@@ -1,0 +1,8 @@
+{
+    "SerialPrefixDigit": 2,
+    "GeneratorCount": 100,
+    "SerialDigit": 7,
+    "PinDigit": 6,
+    "UrlTemplate": "https://scan-dev.please-scan.com/org/{VAR_ORG}/Verify/{VAR_SERIAL}/{VAR_PIN}",
+    "NotificationEmail": "support@please-scan.com"
+}

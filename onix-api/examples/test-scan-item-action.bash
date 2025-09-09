@@ -10,7 +10,7 @@ cp ${JSON_FILE_SRC} ${JSON_FILE_TMP}
 sed -i "s#<ENCRYPTION_KEY>#${ENCRYPTION_KEY}#g" ${JSON_FILE_TMP}
 sed -i "s#<ENCRYPTION_IV>#${ENCRYPTION_IV}#g" ${JSON_FILE_TMP}
 
-curl -s -X POST ${API_HTTP_ENDPOINT}/api/ScanItemAction/org/${API_ORG}/action/AddScanItemAction \
+curl -s -X POST ${API_HTTP_ENDPOINT}/api/ScanItemAction/org/${API_ORG}/action/UpdateScanItemActionById/a494466d-7427-464d-b00f-ef5234012ac3 \
 -H "Content-Type: application/json" \
 -v \
 -u "dummy:${API_KEY}" \
