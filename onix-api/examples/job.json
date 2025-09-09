@@ -2,7 +2,8 @@
     "Name":"ScanItemGen-001",
     "Description":"Test-001",
     "Parameters": [
-        {"Name":"SCAN_ITEM_COUNT", "Value": "50"},
-        {"Name":"NOTIFY_EMAIL", "Value": "happy.face@gmail.com"}
+        {"Name":"SCAN_ITEM_COUNT", "Value": "100"},
+        {"Name":"SCAN_ITEM_ORG", "Value": "dummy"},
+        {"Name":"EMAIL_NOTI_ADDRESS", "Value": "happy.face@gmail.com"}
     ]
 }
