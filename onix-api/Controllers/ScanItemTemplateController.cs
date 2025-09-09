@@ -10,31 +10,31 @@ namespace Its.Onix.Api.Controllers
     [Authorize(Policy = "GenericRolePolicy")]
     [ApiController]
     [Route("/api/[controller]")]
-    public class ScanItemActionController : ControllerBase
+    public class ScanItemTemplateController : ControllerBase
     {
-        private readonly IScanItemActionService svc;
+        private readonly IScanItemTemplateService svc;
 
         [ExcludeFromCodeCoverage]
-        public ScanItemActionController(IScanItemActionService service)
+        public ScanItemTemplateController(IScanItemTemplateService service)
         {
             svc = service;
         }
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/GetScanItemAction")]
-        public MScanItemAction GetScanItemAction(string id)
+        [Route("org/{id}/action/GetScanItemTemplate")]
+        public MScanItemTemplate GetScanItemTemplate(string id)
         {
-            var result = svc.GetScanItemAction(id);
+            var result = svc.GetScanItemTemplate(id);
             return result;
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/AddScanItemAction")]
-        public MVScanItemAction? AddScanItemAction(string id, [FromBody] MScanItemAction request)
+        [Route("org/{id}/action/AddScanItemTemplate")]
+        public MVScanItemTemplate? AddScanItemTemplate(string id, [FromBody] MScanItemTemplate request)
         {
-            var result = svc.AddScanItemAction(id, request);
+            var result = svc.AddScanItemTemplate(id, request);
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return result;
@@ -42,10 +42,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/UpdateScanItemActionById/{actionId}")]
-        public IActionResult UpdateScanItemActionById(string id, string actionId, [FromBody] MScanItemAction request)
+        [Route("org/{id}/action/UpdateScanItemTemplateById/{actionId}")]
+        public IActionResult UpdateScanItemTemplateById(string id, string actionId, [FromBody] MScanItemTemplate request)
         {
-            var result = svc.UpdateScanItemActionById(id, actionId, request);
+            var result = svc.UpdateScanItemTemplateById(id, actionId, request);
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return Ok(result);

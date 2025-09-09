@@ -10,5 +10,11 @@ namespace Its.Onix.Api.Utils
             //TODO : Use environment as key component
             return $"{orgId}:ScanItemAction";
         }
+
+        public static string CreateScanItemTemplateKey(string orgId)
+        {
+            //TODO : Use environment as key component
+            return $"{orgId}:ScanItemTemplate";
+        }
     }
 }
