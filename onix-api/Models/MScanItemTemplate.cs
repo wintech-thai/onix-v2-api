@@ -40,12 +40,15 @@ namespace Its.Onix.Api.Models
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
-        public object? GetPropertyValue(string propertyName)
+        public string GetPropertyValue(string propertyName, string defaultValue)
         {
-            var prop = this.GetType().GetProperty(propertyName);
-            if (prop == null) return null; // ถ้าไม่เจอ property
+            var prop = GetType().GetProperty(propertyName);
+            if (prop == null) return "";
 
-            return prop.GetValue(this);
+            var value = prop.GetValue(this);
+            if (value == null) return defaultValue;
+
+            return value.ToString()!;
         }
 
         public MScanItemTemplate()
