@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Its.Onix.Api.Services
 {
@@ -9,10 +10,11 @@ namespace Its.Onix.Api.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string tokenEndpoint = "";
-        //private readonly string issuer = "";
-        //private readonly string signedKeyUrl = "";
+        private readonly string issuer = "";
+        private readonly string signedKeyUrl = "";
         private readonly string? clientId = "";
         private readonly string? clientSecret = "";
+        private IJwtSigner signer = new JwtSigner();
 
         public AuthService(IHttpClientFactory httpClientFactory) : base()
         {
@@ -26,10 +28,10 @@ namespace Its.Onix.Api.Services
 
             //issuer = $"{urlPrefix}/auth/realms/{realm}";
             tokenEndpoint = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/token";
-            //signedKeyUrl = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/certs";
+            signedKeyUrl = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/certs";
         }
 
-        public string GetPreferredUsername(string accessToken)
+        private string GetPreferredUsername(string accessToken)
         {
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(accessToken);
@@ -39,7 +41,7 @@ namespace Its.Onix.Api.Services
 
             return username!;
         }
-        
+
         private UserToken GetUserToken(KeyValuePair<string, string>[] form)
         {
             var userToken = new UserToken();
@@ -109,6 +111,28 @@ namespace Its.Onix.Api.Services
             }
 
             return userToken;
+        }
+
+        public SecurityToken ValidateAccessToken(string accessToken, JwtSecurityTokenHandler tokenHandler)
+        {
+            //Important : In Keycloak keys setting we must enable only 1 key proder 'RS256'.
+            //https://keycloak.devops.napbiotec.io/auth/realms/rtarf-ads-dev/protocol/openid-connect/certs
+            var securityKey = signer.GetSignedKey(signedKeyUrl);
+            var param = new TokenValidationParameters()
+            {
+                ValidIssuer = issuer,
+                ValidAudience = "account",
+                IssuerSigningKey = securityKey,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+            };
+
+            SecurityToken validatedToken;
+            tokenHandler.ValidateToken(accessToken, param, out validatedToken);
+
+            return validatedToken;
         }
     }
 }

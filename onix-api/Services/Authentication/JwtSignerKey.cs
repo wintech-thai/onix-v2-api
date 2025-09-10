@@ -1,7 +1,7 @@
 using Serilog;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Its.Onix.Api.Authentications
+namespace Its.Onix.Api.Services
 {
     public static class JwtSignerKey
     {
