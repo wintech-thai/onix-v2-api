@@ -10,8 +10,8 @@ namespace Its.Onix.Api.Authentications
 {
     public abstract class AuthenticationHandlerProxyBase : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        protected abstract User? AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request);
-        protected abstract User? AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request);
+        protected abstract AuthenResult? AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request);
+        protected abstract AuthenResult? AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request);
 
         [Obsolete]
         protected AuthenticationHandlerProxyBase(
@@ -26,16 +26,22 @@ namespace Its.Onix.Api.Authentications
         {
             if (!Request.Headers.TryGetValue("Authorization", out var authData))
             {
-                return AuthenticateResult.Fail("No Authorization header found");
+                var msg = "No Authorization header found";
+                await Response.WriteAsync(msg);
+
+                return AuthenticateResult.Fail(msg);
             }
 
             var authHeader = AuthenticationHeaderValue.Parse(authData!);
             if (!authHeader.Scheme.Equals("Bearer") && !authHeader.Scheme.Equals("Basic"))
             {
-                return AuthenticateResult.Fail($"Unknown scheme [{authHeader.Scheme}]");
+                var msg = $"Unknown scheme [{authHeader.Scheme}]";
+                await Response.WriteAsync(msg);
+
+                return AuthenticateResult.Fail(msg);
             }
 
-            User? user = null;
+            var authResult = new AuthenResult();
             try
             {
                 var orgId = ServiceUtils.GetOrgId(Request);
@@ -43,26 +49,32 @@ namespace Its.Onix.Api.Authentications
 
                 if (authHeader.Scheme.Equals("Basic"))
                 {
-                    user = await Task.Run(() => AuthenticateBasic(orgId, credentialBytes, Request));
+                    authResult = await Task.Run(() => AuthenticateBasic(orgId, credentialBytes, Request));
                 }
                 else
                 {
                     //Bearer
-                    user = await Task.Run(() => AuthenticateBearer(orgId, credentialBytes, Request));
+                    authResult = await Task.Run(() => AuthenticateBearer(orgId, credentialBytes, Request));
                 }
             }
             catch (Exception e)
             {
-                Log.Error($"[AuthenticationHandlerProxyBase] --> [{e.Message}]");
+                var msg = e.Message;
+                await Response.WriteAsync(msg);
+
+                Log.Error($"[AuthenticationHandlerProxyBase] --> [{msg}]");
                 return AuthenticateResult.Fail($"Invalid Authorization Header for [{authHeader.Scheme}]");
             }
 
-            if (user == null)
+            if (authResult!.UserAuthen == null)
             {
-                return AuthenticateResult.Fail($"Invalid username or password for [{authHeader.Scheme}]");
+                var msg = $"User not found [{authResult.UserName}], scheme=[{authHeader.Scheme}]";
+                await Response.WriteAsync(msg);
+
+                return AuthenticateResult.Fail(msg);
             }
 
-            var identity = new ClaimsIdentity(user.Claims, Scheme.Name);
+            var identity = new ClaimsIdentity(authResult.UserAuthen.Claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 

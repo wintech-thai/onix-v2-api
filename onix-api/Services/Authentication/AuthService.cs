@@ -26,7 +26,7 @@ namespace Its.Onix.Api.Services
             clientId = Environment.GetEnvironmentVariable("IDP_CLIENT_ID");
             clientSecret = Environment.GetEnvironmentVariable("IDP_CLIENT_SECRET");
 
-            //issuer = $"{urlPrefix}/auth/realms/{realm}";
+            issuer = $"{urlPrefix}/auth/realms/{realm}";
             tokenEndpoint = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/token";
             signedKeyUrl = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/certs";
         }
@@ -118,6 +118,7 @@ namespace Its.Onix.Api.Services
             //Important : In Keycloak keys setting we must enable only 1 key proder 'RS256'.
             //https://keycloak.devops.napbiotec.io/auth/realms/rtarf-ads-dev/protocol/openid-connect/certs
             var securityKey = signer.GetSignedKey(signedKeyUrl);
+            //Console.WriteLine($"=== {accessToken} ===");
             var param = new TokenValidationParameters()
             {
                 ValidIssuer = issuer,

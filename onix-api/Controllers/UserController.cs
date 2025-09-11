@@ -36,5 +36,19 @@ namespace Its.Onix.Api.Controllers
             var result = svc.AddUser(id, request);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddUser")]
+        public IActionResult AddUser(string id, [FromBody] MUser request)
+        {
+            var result = svc.AddUser(id, request);
+            if (result!.Status != "OK")
+            {
+                return BadRequest(result!.Description);
+            }
+            
+            return Ok(result);
+        }
     }
 }
