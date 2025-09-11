@@ -67,10 +67,18 @@ namespace Its.Onix.Api.AuditLogs
 
             var responseSize = memoryStream.Length;
             var statusCode = context.Response.StatusCode;
-
+  
             memoryStream.Seek(0, SeekOrigin.Begin);
             await memoryStream.CopyToAsync(originalBodyStream);
             context.Response.Body = originalBodyStream;
+
+            var statusDesc = "";
+            if (statusCode != 200)
+            {
+                memoryStream.Seek(0, SeekOrigin.Begin);
+                var responseBody = await new StreamReader(memoryStream).ReadToEndAsync();
+                statusDesc = responseBody;
+            }
 
             stopwatch.Stop();
 
@@ -92,6 +100,7 @@ namespace Its.Onix.Api.AuditLogs
                 ClientIp = clientIp,
                 CfClientIp = cfClientIp,
                 CustomStatus = custStatus,
+                CustomDesc = statusDesc,
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
 
                 userInfo = new UserInfo()

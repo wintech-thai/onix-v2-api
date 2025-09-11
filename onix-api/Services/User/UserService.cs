@@ -26,7 +26,7 @@ namespace Its.Onix.Api.Services
             if (f1)
             {
                 r.Status = "EMAIL_DUPLICATE";
-                r.Description = "Email is duplicate";
+                r.Description = $"Email is [{user!.UserEmail!}] duplicate";
 
                 return r;
             }
@@ -34,7 +34,7 @@ namespace Its.Onix.Api.Services
             if (f2)
             {
                 r.Status = "USERNAME_DUPLICATE";
-                r.Description = "User name is duplicate";
+                r.Description = $"User name [{user!.UserName!}] is duplicate";
 
                 return r;
             }

@@ -30,9 +30,33 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/AdminGetUserAllowedOrganization/{userName}")]
-        public IActionResult AdminGetUserAllowedOrganization(string userName)
+        [Route("org/{id}/action/GetUserAllowedOrg")]
+        public IActionResult GetUserAllowedOrg()
         {
+            var idTypeObj = Response.HttpContext.Items["Temp-Identity-Type"];
+            if (idTypeObj == null)
+            {
+                return BadRequest("Unable to identify identity type!!!");
+            }
+
+            var idType = idTypeObj.ToString();
+            if (idType != "JWT")
+            {
+                return BadRequest("Only allow for JWT identity type!!!");
+            }
+
+            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (nameObj == null)
+            {
+                return BadRequest("Unable to find user name!!!");
+            }
+
+            var userName = nameObj.ToString();
+            if (userName == "")
+            {
+                return BadRequest("User name is empty!!!");
+            }
+
             var result = svc.GetUserAllowedOrganization(userName!);
             return Ok(result);
         }
@@ -43,6 +67,11 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult AddUserToOrganization(string id, [FromBody] MOrganizationUser request)
         {
             var result = svc.AddUserToOrganization(id, request);
+            if (result!.Status != "OK")
+            {
+                return BadRequest(result!.Description);
+            }
+            
             return Ok(result);
         }
 

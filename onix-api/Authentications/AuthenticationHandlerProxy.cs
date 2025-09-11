@@ -32,17 +32,23 @@ namespace Its.Onix.Api.Authentications
             _authService = authService;
         }
 
-        protected override User? AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request)
+        protected override AuthenResult AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request)
         {
             var credentials = Encoding.UTF8.GetString(jwtBytes!).Split(new[] { ':' }, 2);
             var username = credentials[0];
             var password = credentials[1];
 
             var user = basicAuthenRepo!.Authenticate(orgId, username, password, request);
-            return user;
+            var authResult = new AuthenResult()
+            {
+                UserAuthen = user,
+                UserName = username,
+            };
+
+            return authResult;
         }
 
-        protected override User? AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request)
+        protected override AuthenResult AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request)
         {
             var accessToken = Encoding.UTF8.GetString(jwtBytes!);
 
@@ -53,8 +59,13 @@ namespace Its.Onix.Api.Authentications
             string userName = jwt.Claims.First(c => c.Type == "preferred_username").Value;
 
             var user = bearerAuthRepo!.Authenticate(orgId, userName, "", request);
+            var authResult = new AuthenResult()
+            {
+                UserAuthen = user,
+                UserName = userName,
+            };
 
-            return user;
+            return authResult;
         }
     }
 }
