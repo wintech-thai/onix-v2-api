@@ -50,18 +50,20 @@ namespace Its.Onix.Api.Services
             }
 
             r.ScanItem = result;
+            var id = result.Id.ToString();
+
             if (result.RegisteredFlag!.Equals("TRUE"))
             {
                 r.Status = "ALREADY_REGISTERED";
                 r.DescriptionEng = $"Your product serial=[{serial}] and pin=[{pin}] is already registered!!!";
                 r.DescriptionThai = $"สินค้า ซีเรียล=[{serial}] และ พิน=[{pin}] เคยลงทะเบียนแล้ว!!!";
 
+                repository.IncreaseScanCount(id!);
+
                 return r;
             }
 
-            var id = result.Id.ToString();
             r.ScanItem = repository.RegisterScanItem(id!);
-
             return r;
         }
     }

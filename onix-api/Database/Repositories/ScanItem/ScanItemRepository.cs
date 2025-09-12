@@ -29,6 +29,23 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.RegisteredFlag = "TRUE";
                 result.RegisteredDate = DateTime.UtcNow;
+                result.ScanCount = (result.ScanCount ?? 0) + 1;
+
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
+        public MScanItem IncreaseScanCount(string itemId)
+        {
+            Guid id = Guid.Parse(itemId);
+            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+
+                result.ScanCount = (result.ScanCount ?? 0) + 1;
                 context!.SaveChanges();
             }
 
