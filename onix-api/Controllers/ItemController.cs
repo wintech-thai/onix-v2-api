@@ -14,11 +14,13 @@ namespace Its.Onix.Api.Controllers
     public class ItemController : ControllerBase
     {
         private readonly IItemService svc;
+        private readonly IItemImageService _itemImgService;
 
         [ExcludeFromCodeCoverage]
-        public ItemController(IItemService service)
+        public ItemController(IItemService service, IItemImageService itemImgService)
         {
             svc = service;
+            _itemImgService = itemImgService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -27,6 +29,16 @@ namespace Its.Onix.Api.Controllers
         public MVItem? AddItem(string id, [FromBody] MItem request)
         {
             var result = svc.AddItem(id, request);
+            return result;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddItemImage/{itemId}")]
+        public MVItemImage? AddItemImage(string id, Guid itemId, [FromBody] MItemImage request)
+        {
+            request.ItemId = itemId;
+            var result = _itemImgService.AddItemImage(id, request);
             return result;
         }
 
@@ -65,6 +77,18 @@ namespace Its.Onix.Api.Controllers
         {
             var result = svc.GetItemById(id, itemId);
             return result;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetItemImagesByItemId/{itemId}")]
+        public IActionResult GetItemImagesByItemId(string id, string itemId)
+        {
+            var param = new VMItemImage();
+            param.ItemId = itemId;
+
+            var result = _itemImgService.GetItemImages(id, param);
+            return Ok(result);
         }
 
         [HttpPost]

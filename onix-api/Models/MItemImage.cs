@@ -26,6 +26,9 @@ namespace Its.Onix.Api.Models
         [Column("path")]
         public string? ImagePath { get; set; }
 
+        [Column("url")]
+        public string? ImageUrl { get; set; }
+
         [Column("narative")]
         public string? Narative { get; set; }
 

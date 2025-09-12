@@ -12,6 +12,22 @@ namespace Its.Onix.Api.Services
             repository = repo;
         }
 
+        public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.AttachScanItemToProduct(itemId, productId);
+
+            r.ScanItem = result;
+            
+            return r;
+        }
+
         public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin)
         {
             var r = new MVScanItemResult()
@@ -23,7 +39,7 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetScanItemBySerialPin(serial, pin);
-            
+
             if (result == null)
             {
                 r.Status = "NOTFOUND";

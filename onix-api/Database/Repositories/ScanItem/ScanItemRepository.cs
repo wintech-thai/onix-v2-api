@@ -34,5 +34,21 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result!;
         }
+
+        public MScanItem AttachScanItemToProduct(string itemId, string productId)
+        {
+            Guid pid = Guid.Parse(productId);
+            Guid id = Guid.Parse(itemId);
+            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.UsedFlag = "TRUE";
+                result.ItemId = pid;
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
     }
 }
