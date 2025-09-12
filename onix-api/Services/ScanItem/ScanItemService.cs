@@ -12,6 +12,22 @@ namespace Its.Onix.Api.Services
             repository = repo;
         }
 
+        public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.AttachScanItemToProduct(itemId, productId);
+
+            r.ScanItem = result;
+            
+            return r;
+        }
+
         public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin)
         {
             var r = new MVScanItemResult()
@@ -23,7 +39,7 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetScanItemBySerialPin(serial, pin);
-            
+
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -34,18 +50,20 @@ namespace Its.Onix.Api.Services
             }
 
             r.ScanItem = result;
+            var id = result.Id.ToString();
+
             if (result.RegisteredFlag!.Equals("TRUE"))
             {
                 r.Status = "ALREADY_REGISTERED";
                 r.DescriptionEng = $"Your product serial=[{serial}] and pin=[{pin}] is already registered!!!";
                 r.DescriptionThai = $"สินค้า ซีเรียล=[{serial}] และ พิน=[{pin}] เคยลงทะเบียนแล้ว!!!";
 
+                repository.IncreaseScanCount(id!);
+
                 return r;
             }
 
-            var id = result.Id.ToString();
             r.ScanItem = repository.RegisterScanItem(id!);
-
             return r;
         }
     }

@@ -32,6 +32,8 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public string? UserEmail { get; set; }
+        public string? OrgName { get; set; }
+        public string? OrgDesc { get; set; }
 
         public MOrganizationUser()
         {

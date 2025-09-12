@@ -48,9 +48,14 @@ namespace Its.Onix.Api.Models
         [Column("registered_flag")]
         public string? RegisteredFlag { get; set; } /* YES or NO */
 
-        [Column("used_flag")]
-        public string? UsedFlag { get; set; } /* TRUE or FALSE */
+        [Column("scan_count")]
+        public int? ScanCount { get; set; }
 
+
+        [Column("used_flag")]
+        public string? UsedFlag { get; set; } /* YES or NO */
+        [Column("item_id")]
+        public Guid? ItemId { get; set; }
 
         //System fields
         [Column("created_date")]

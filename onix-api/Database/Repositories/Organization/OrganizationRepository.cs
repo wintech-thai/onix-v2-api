@@ -27,12 +27,36 @@ namespace Its.Onix.Api.Database.Repositories
 
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName)
         {
-            var m = context!.OrganizationUsers!.Where(
-                p => p!.UserName!.Equals(userName))
-                .OrderByDescending(e => e.OrgCustomId)
-                .ToList();
+            //var m = context!.OrganizationUsers!.Where(
+            //    p => p!.UserName!.Equals(userName))
+            //    .OrderByDescending(e => e.OrgCustomId)
+            //    .ToList();
 
-            return m!;
+            var result =
+                from ou in context!.OrganizationUsers
+                where ou.UserName == userName
+                orderby ou.OrgCustomId descending
+
+                // JOIN กับ Organizations
+                join o in context.Organizations!
+                    on ou.OrgCustomId equals o.OrgCustomId into orgJoin
+                from o in orgJoin.DefaultIfEmpty()
+
+                // JOIN กับ Users
+                join u in context.Users!
+                    on ou.UserName equals u.UserName into userJoin
+                from u in userJoin.DefaultIfEmpty()
+
+                select new MOrganizationUser
+                {
+                    UserName = ou.UserName,
+                    OrgCustomId = ou.OrgCustomId,
+                    OrgDesc = o != null ? o.OrgDescription : null,
+                    OrgName = o != null ? o.OrgName : null,
+                    UserEmail = u != null ? u.UserEmail : null
+                };
+
+            return result.ToList();
         }
 
         public bool IsUserNameExist(string userName)
