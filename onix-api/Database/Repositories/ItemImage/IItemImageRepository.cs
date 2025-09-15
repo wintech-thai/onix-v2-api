@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Database.Repositories
         public MItemImage AddItemImage(MItemImage itemImageId);
         public int GetItemImageCount(VMItemImage param);
         public IEnumerable<MItemImage> GetItemImages(VMItemImage param);
+        public IEnumerable<MImage> GetImages(VMItemImage param);
         public MItemImage GetItemImageById(string itemImageId);
         public MItemImage? DeleteItemImageById(string itemImageId);
         public List<MItemImage>? DeleteItemImageByItemId(string itemId);

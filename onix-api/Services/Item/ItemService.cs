@@ -3,6 +3,7 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
@@ -20,26 +21,32 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetItemById(itemId);
 
+            result.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(result.Properties!);
+            result.Properties = "";
+
             return result;
         }
 
-        public MVItem? AddItem(string orgId, MItem cycle)
+        public MVItem? AddItem(string orgId, MItem item)
         {
             repository!.SetCustomOrgId(orgId);
 
             var r = new MVItem();
 
-            var isExist = repository!.IsItemCodeExist(cycle.Code!);
+            var isExist = repository!.IsItemCodeExist(item.Code!);
 
             if (isExist)
             {
                 r.Status = "DUPLICATE";
-                r.Description = $"Item code [{cycle.Code}] is duplicate";
+                r.Description = $"Item code [{item.Code}] is duplicate";
 
                 return r;
             }
 
-            var result = repository!.AddItem(cycle);
+            item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
+
+            var result = repository!.AddItem(item);
+            result.Properties = "";
 
             r.Status = "OK";
             r.Description = "Success";
@@ -48,7 +55,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVItem? UpdateItemById(string orgId, string itemId, MItem cycle)
+        public MVItem? UpdateItemById(string orgId, string itemId, MItem item)
         {
             var r = new MVItem()
             {
@@ -57,8 +64,10 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.UpdateItemById(itemId, cycle);
 
+            item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
+            var result = repository!.UpdateItemById(itemId, item);
+            
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -67,7 +76,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            result.Properties = "";
             r.Item = result;
+
             return r;
         }
 
@@ -104,6 +115,12 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetItems(param);
+
+            foreach (var item in result)
+            {
+                item.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(item.Properties!);
+                item.Properties = "";
+            }
 
             return result;
         }

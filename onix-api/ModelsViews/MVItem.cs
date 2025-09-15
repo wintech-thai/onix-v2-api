@@ -9,5 +9,6 @@ namespace Its.Onix.Api.ModelsViews
         public string? Status { get; set; }
         public string? Description { get; set; }
         public MItem? Item { get; set; }
+        public ICollection<MImage> Images { get; set; } = new List<MImage>();
     }
 }

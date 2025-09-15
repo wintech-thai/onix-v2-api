@@ -62,6 +62,9 @@ namespace Its.Onix.Api.Controllers
             var result = svc.VerifyScanItem(id, serial, pin);
             var jsonString = JsonSerializer.Serialize(result);
 
+            var scanUrl = result.ScanItem!.Url!;
+            result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
             string jsonStringB64 = Convert.ToBase64String(jsonBytes);
             
@@ -85,8 +88,21 @@ namespace Its.Onix.Api.Controllers
         public MVScanItemResult? VerifyScanItem(string id, string serial, string pin)
         {
             var result = svc.VerifyScanItem(id, serial, pin);
-            result.RedirectUrl = cfg["ScanItem:RedirectUrl"]!;
+            //result.RedirectUrl = cfg["ScanItem:RedirectUrl"]!;
 
+            var scanUrl = result.ScanItem!.Url!;
+            result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+
+            Response.Headers.Append("CUST_STATUS", result.Status);
+            return result;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/GetProduct/{serial}/{pin}")]
+        public MVItem? GetProduct(string id, string serial, string pin)
+        {
+            var result = svc.GetScanItemProduct(id, serial, pin);
             Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
         }

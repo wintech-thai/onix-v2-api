@@ -7,3 +7,9 @@ curl -s -X POST ${API_HTTP_ENDPOINT}/api/Item/org/${API_ORG}/action/AddItem \
 -v \
 -u "dummy:${API_KEY}" \
 -d @item.json
+
+#curl -s -X POST ${API_HTTP_ENDPOINT}/api/Item/org/${API_ORG}/action/GetItems \
+#-H "Content-Type: application/json" \
+#-v \
+#-u "dummy:${API_KEY}" \
+#-d @item.json
