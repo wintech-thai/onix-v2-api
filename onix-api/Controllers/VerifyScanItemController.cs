@@ -62,8 +62,11 @@ namespace Its.Onix.Api.Controllers
             var result = svc.VerifyScanItem(id, serial, pin);
             var jsonString = JsonSerializer.Serialize(result);
 
-            var scanUrl = result.ScanItem!.Url!;
-            result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+            if (result.ScanItem != null)
+            {
+                var scanUrl = result.ScanItem!.Url!;
+                result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+            }
 
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
             string jsonStringB64 = Convert.ToBase64String(jsonBytes);
@@ -90,8 +93,11 @@ namespace Its.Onix.Api.Controllers
             var result = svc.VerifyScanItem(id, serial, pin);
             //result.RedirectUrl = cfg["ScanItem:RedirectUrl"]!;
 
-            var scanUrl = result.ScanItem!.Url!;
-            result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+            if (result.ScanItem != null)
+            {
+                var scanUrl = result.ScanItem!.Url!;
+                result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+            }
 
             Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
