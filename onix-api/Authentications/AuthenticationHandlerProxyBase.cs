@@ -27,7 +27,9 @@ namespace Its.Onix.Api.Authentications
             if (!Request.Headers.TryGetValue("Authorization", out var authData))
             {
                 var msg = "No Authorization header found";
-                await Response.WriteAsync(msg);
+
+                //ไม่ response body ที่ตรงนี้ เพราะจะทำให้ API ที่ไม่ต้อง authen ได้รับ string ที่ไม่ใช่ JSON กลับไปด้วย
+                //await Response.WriteAsync(msg);
 
                 return AuthenticateResult.Fail(msg);
             }
