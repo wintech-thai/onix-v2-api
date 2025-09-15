@@ -6,12 +6,12 @@ namespace Its.Onix.Api.Database.Repositories
     public interface IItemRepository
     {
         public void SetCustomOrgId(string customOrgId);
-        public MItem AddItem(MItem cycle);
+        public MItem AddItem(MItem item);
         public int GetItemCount(VMItem param);
         public IEnumerable<MItem> GetItems(VMItem param);
-        public MItem GetItemById(string cycleId);
-        public MItem? DeleteItemById(string cycleId);
-        public bool IsItemCodeExist(string cycleName);
-        public MItem? UpdateItemById(string cycleId, MItem cycle);
+        public MItem GetItemById(string itemId);
+        public MItem? DeleteItemById(string itemId);
+        public bool IsItemCodeExist(string itemCode);
+        public MItem? UpdateItemById(string itemId, MItem item);
     }
 }

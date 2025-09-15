@@ -1,15 +1,25 @@
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
+using Its.Onix.Api.Utils;
+using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Models;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
     public class ScanItemService : BaseService, IScanItemService
     {
         private readonly IScanItemRepository? repository = null;
+        private readonly IItemRepository _itemRepo;
+        private readonly IItemImageRepository _imageItemRepo;
 
-        public ScanItemService(IScanItemRepository repo) : base()
+        public ScanItemService(IScanItemRepository repo,
+            IItemRepository itemRepo,
+            IItemImageRepository imageItemRepo) : base()
         {
             repository = repo;
+            _itemRepo = itemRepo;
+            _imageItemRepo = imageItemRepo;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
@@ -25,6 +35,70 @@ namespace Its.Onix.Api.Services
 
             r.ScanItem = result;
             
+            return r;
+        }
+
+        public MVItem GetScanItemProduct(string orgId, string serial, string pin)
+        {
+            _itemRepo!.SetCustomOrgId(orgId);
+            _imageItemRepo!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVItem()
+            {
+                Status = "SUCCESS",
+                Description = "",
+            };
+
+            var result = repository!.GetScanItemBySerialPin(serial, pin);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
+
+                return r;
+            }
+
+            var productId = result.ItemId.ToString();
+            if (productId == null)
+            {
+                r.Status = "PRODUCT_NOT_ATTACH";
+                r.Description = $"No product attached to this scan item!!!";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(productId))
+            {
+                r.Status = "PRODUCT_ID_INVALID";
+                r.Description = $"Product ID [{productId}] invalid!!!";
+
+                return r;
+            }
+
+            var product = _itemRepo.GetItemById(productId!);
+
+            if (product == null)
+            {
+                r.Status = "PRODUCT_NOTFOUND";
+                r.Description = $"Product ID [{productId}] not found!!!";
+
+                return r;
+            }
+
+            var imageParam = new VMItemImage()
+            {
+                ItemId = productId,
+            };
+
+            var images = _imageItemRepo.GetImages(imageParam);
+            product.Images = []; //This is important to set this otherwise we will see error 502 for some reason
+            product.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(product.Properties!);
+            product.Properties = "";
+
+            r.Item = product;
+            r.Images = images.ToArray();
             return r;
         }
 

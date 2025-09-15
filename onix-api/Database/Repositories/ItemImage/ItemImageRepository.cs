@@ -54,6 +54,23 @@ namespace Its.Onix.Api.Database.Repositories
 
             return cnt;
         }
+        public IEnumerable<MImage> GetImages(VMItemImage param)
+        {
+            var arr = GetItemImages(param);
+            IEnumerable<MImage> images = arr.Select(item => new MImage
+            {
+                Id = item.Id,
+                OrgId = item.OrgId,
+                ItemId = item.ItemId,
+                ImagePath = item.ImagePath,
+                ImageUrl = item.ImageUrl,
+                Narative = item.Narative,
+                Tags = item.Tags,
+                Category = item.Category,
+            });
+
+            return images;
+        }
 
         public IEnumerable<MItemImage> GetItemImages(VMItemImage param)
         {

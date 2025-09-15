@@ -1,7 +1,8 @@
 {
-    "Code": "ALDAMEX CINNAFACT-E 10 ML",
+    "Code": "ALDAMEX CINNAFACT-E 10 ML-#3",
     "Description": "ALDAMEX CINNAFACT-E 10 ML",
     "ItemType": 1,
     "Narrative": "ช่วยแก้ปัญหาพ่อพันธุ์น้ำเชื้อน้อย แม่พันธุ์ตกไข่ยาก|ช่วยให้การผสมพันธุ์นอกฤดูเป็นเรื่องง่ายขึ้น|เหมาะสำหรับผู้เพาะพันธุ์ปลา และกบ ต่อครั้งในจำนวนมาก|ฮอร์โมนมีความเข้มข้น 15,000 ไมโครกรัม ต้องเจือจางและใช้ควบคู่กับยาเสริมฤทธิ์",
-    "Tags": "https://aldamex.com/products-for-aquatic/"
+    "Tags": "https://aldamex.com/products-for-aquatic/",
+    "PropertiesObj": {"Width": 4, "Height": 2.5, "Weight": 15.99} 
 }

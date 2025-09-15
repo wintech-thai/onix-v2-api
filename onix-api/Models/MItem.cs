@@ -33,6 +33,11 @@ namespace Its.Onix.Api.Models
         [Column("narrative")]
         public string? Narrative { get; set; }
 
+        [Column("properties")]
+        public string? Properties { get; set; } /* JSON string */
+        [NotMapped]
+        public MItemProperties? PropertiesObj { get; set; }
+
         //Navigation Properties
         public ICollection<MItemImage> Images { get; set; } = new List<MItemImage>();
 
