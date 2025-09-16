@@ -12,14 +12,17 @@ namespace Its.Onix.Api.Services
         private readonly IScanItemRepository? repository = null;
         private readonly IItemRepository _itemRepo;
         private readonly IItemImageRepository _imageItemRepo;
+        private readonly IStorageUtils _storageUtil;
 
         public ScanItemService(IScanItemRepository repo,
             IItemRepository itemRepo,
-            IItemImageRepository imageItemRepo) : base()
+            IItemImageRepository imageItemRepo,
+            IStorageUtils storageUtil) : base()
         {
             repository = repo;
             _itemRepo = itemRepo;
             _imageItemRepo = imageItemRepo;
+            _storageUtil = storageUtil;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
@@ -98,7 +101,20 @@ namespace Its.Onix.Api.Services
             product.Properties = "";
 
             r.Item = product;
-            r.Images = images.ToArray();
+
+            var validFor = TimeSpan.FromMinutes(60);
+            var contentType = "image/png";
+            var imageList = images.ToList(); 
+
+            foreach (var img in imageList)
+            {
+                if (!string.IsNullOrEmpty(img.ImagePath))
+                {
+                    img.ImageUrl = _storageUtil.GenerateDownloadUrl(img.ImagePath!, validFor, contentType);
+                }
+            }
+
+            r.Images = imageList;
             return r;
         }
 

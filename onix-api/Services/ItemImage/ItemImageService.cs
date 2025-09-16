@@ -49,13 +49,25 @@ namespace Its.Onix.Api.Services
 
         public MVItemImage? AddItemImage(string orgId, MItemImage itemImage)
         {
-            repository!.SetCustomOrgId(orgId);
-
             var r = new MVItemImage();
-            var result = repository!.AddItemImage(itemImage);
-
             r.Status = "OK";
             r.Description = "Success";
+
+            repository!.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(itemImage.ImagePath))
+            {
+                if (!_storageUtil.IsObjectExist(itemImage.ImagePath))
+                {
+                    r.Status = "OBJECT_NOT_FOUND";
+                    r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
+                    return r;
+                }
+            }
+
+            //TODO : Allow only image .png to be uploaded
+
+            var result = repository!.AddItemImage(itemImage);
             r.ItemImage = result;
 
             return r;
@@ -70,6 +82,19 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(itemImage.ImagePath))
+            {
+                if (!_storageUtil.IsObjectExist(itemImage.ImagePath))
+                {
+                    r.Status = "OBJECT_NOT_FOUND";
+                    r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
+                    return r;
+                }
+            }
+
+            //TODO : Allow only image .png to be uploaded
+
             var result = repository!.UpdateItemImageById(itemImageId, itemImage);
 
             if (result == null)
@@ -145,9 +170,19 @@ namespace Its.Onix.Api.Services
         public IEnumerable<MItemImage> GetItemImages(string orgId, VMItemImage param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetItemImages(param);
+            var images = repository!.GetItemImages(param);
 
-            return result;
+            var validFor = TimeSpan.FromMinutes(60);
+            var contentType = "image/png";
+            foreach (var img in images)
+            {
+                if (!string.IsNullOrEmpty(img.ImagePath))
+                {
+                    img.ImageUrl = _storageUtil.GenerateDownloadUrl(img.ImagePath!, validFor, contentType);
+                }
+            }
+            
+            return images;
         }
 
         public int GetItemImageCount(string orgId, VMItemImage param)
