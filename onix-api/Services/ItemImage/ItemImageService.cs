@@ -9,10 +9,25 @@ namespace Its.Onix.Api.Services
     public class ItemImageService : BaseService, IItemImageService
     {
         private readonly IItemImageRepository? repository = null;
+        private readonly IStorageUtils _storageUtil;
 
-        public ItemImageService(IItemImageRepository repo) : base()
+        public ItemImageService(IItemImageRepository repo, IStorageUtils storageUtil) : base()
         {
             repository = repo;
+            _storageUtil = storageUtil;
+        }
+
+        public string GetItemImageUploadPresignedUrl(string orgId, string itemId)
+        {
+            var sec = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
+            var objectName = $"{Environment.GetEnvironmentVariable("ENV_GROUP")}/{orgId}/Products/{itemId}.{sec}.img";
+            var validFor = TimeSpan.FromMinutes(15);
+            var contentType = "application/octet-stream";
+
+            var url = _storageUtil.GenerateUploadUrl(bucket, objectName, validFor, contentType);
+            return url;
         }
 
         public MItemImage GetItemImageById(string orgId, string itemImageId)

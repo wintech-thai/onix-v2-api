@@ -1,8 +1,15 @@
 {
-    "Code": "ALDAMEX CINNAFACT-E 10 ML-#3",
-    "Description": "ALDAMEX CINNAFACT-E 10 ML",
+    "Code": "HYDRO HERB LIVGUARD 1 LITER",
+    "Description": "HYDRO HERB LIVGUARD 1 LITER",
     "ItemType": 1,
-    "Narrative": "ช่วยแก้ปัญหาพ่อพันธุ์น้ำเชื้อน้อย แม่พันธุ์ตกไข่ยาก|ช่วยให้การผสมพันธุ์นอกฤดูเป็นเรื่องง่ายขึ้น|เหมาะสำหรับผู้เพาะพันธุ์ปลา และกบ ต่อครั้งในจำนวนมาก|ฮอร์โมนมีความเข้มข้น 15,000 ไมโครกรัม ต้องเจือจางและใช้ควบคู่กับยาเสริมฤทธิ์",
-    "Tags": "https://aldamex.com/products-for-aquatic/",
-    "PropertiesObj": {"Width": 4, "Height": 2.5, "Weight": 15.99} 
+    "Narrative": "บำรุงและฟื้นฟูเซลล์ตับที่เสียหายจากเชื้อโรคและสารพิษ|แก้ปัญหาภาวะไขมันแทรกในตับ|แก้ปัญหาตับซีดจากการได้รับความเครียด|เพิ่มประสิทธิภาพการกำจัดสารพิษของตับ|เพิ่มประสิทธิภาพการย่อยและการดูดซึมไขมันที่จำเป็นต่อสัตว์|เพิ่มประสิทธิภาพการดูดซึมวิตามิน A, D, E และ K",
+    "Tags": "",
+    "PropertiesObj": {
+        "Width": 4, 
+        "Height": 2.5, 
+        "Weight": 15.99, 
+        "Category": "ผลิตภัณฑ์สมุนไพรสำหรับสัตว์",
+        "SupplierUrl": "https://www.napbiotec.io/",
+        "ProductUrl": "https://aldamex.com/product/hydro-herb-livguard-1-liter/"
+    } 
 }
