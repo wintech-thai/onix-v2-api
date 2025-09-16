@@ -14,6 +14,7 @@ using System.Threading.RateLimiting;
 using StackExchange.Redis;
 using Its.Onix.Api.Utils;
 using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Storage.V1;
 
 namespace Its.Onix.Api
 {
@@ -42,6 +43,16 @@ namespace Its.Onix.Api
             builder.Services.AddSingleton<IConnectionMultiplexer>(
                 sp => ConnectionMultiplexer.Connect(redisHostStr));
             builder.Services.AddScoped<RedisHelper>();
+
+            builder.Services.AddSingleton(sp =>
+            {
+                // ถ้าใช้ service account json
+                var storageClient = StorageClient.Create(
+                    GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
+                );
+
+                return storageClient;
+            });
 
             builder.Services.AddSingleton(sp =>
             {
