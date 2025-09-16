@@ -17,7 +17,7 @@ namespace Its.Onix.Api.Services
             _storageUtil = storageUtil;
         }
 
-        public string GetItemImageUploadPresignedUrl(string orgId, string itemId)
+        public MVPresignedUrl GetItemImageUploadPresignedUrl(string orgId, string itemId)
         {
             var sec = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
@@ -27,7 +27,16 @@ namespace Its.Onix.Api.Services
             var contentType = "application/octet-stream";
 
             var url = _storageUtil.GenerateUploadUrl(bucket, objectName, validFor, contentType);
-            return url;
+
+            var result = new MVPresignedUrl()
+            {
+                Status = "SUCCESS",
+                Description = "",
+                PresignedUrl = url,
+                ObjectName = objectName,
+            };
+
+            return result;
         }
 
         public MItemImage GetItemImageById(string orgId, string itemImageId)
