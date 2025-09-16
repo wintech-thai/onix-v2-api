@@ -8,6 +8,8 @@ namespace Its.Onix.Api.Models
         public string? DimensionUnit { get; set; }
         public string? WeightUnit { get; set; }
         public string? Category { get; set; }
+        public string? SupplierUrl { get; set; }
+        public string? ProductUrl { get; set; }
 
         public double? Width { get; set; }
 
