@@ -5,7 +5,7 @@ namespace Its.Onix.Api.Models
     [ExcludeFromCodeCoverage]
     public class MItemProperties
     {
-        public string? DimentionUnit { get; set; }
+        public string? DimensionUnit { get; set; }
         public string? WeightUnit { get; set; }
         public string? Category { get; set; }
 
@@ -18,7 +18,7 @@ namespace Its.Onix.Api.Models
 
         public MItemProperties()
         {
-            DimentionUnit = "cm";
+            DimensionUnit = "cm";
             WeightUnit = "gram";
         }
     }
