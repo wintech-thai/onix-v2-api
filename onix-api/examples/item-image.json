@@ -1,7 +1,7 @@
 {
-    "ImagePath": "gs://xxxx/sssss/abc.jpg",
-    "ImageUrl": "https://cdn.xxxx.com/sssss/abc.jpg",
+    "ImagePath": "",
+    "ImageUrl": "https://placehold.co/1280x720?text=image2&font=roboto",
     "Category": 1,
-    "Narative": "รูปด้านข้างกล่องจะต้องเป็น...บลา ๆ ๆ ",
+    "Narative": "กล่องสินค้า",
     "Tags": "https://aldamex.com/products-for-aquatic/"
 }

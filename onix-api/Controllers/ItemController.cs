@@ -91,6 +91,15 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetItemImageUploadPresignedUrl/{itemId}")]
+        public IActionResult GetItemImageUploadPresignedUrl(string id, string itemId)
+        {
+            var result = _itemImgService.GetItemImageUploadPresignedUrl(id, itemId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/GetItems")]
         public IActionResult GetItems(string id, [FromBody] VMItem param)

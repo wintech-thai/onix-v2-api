@@ -13,6 +13,7 @@ using Its.Onix.Api.AuditLogs;
 using System.Threading.RateLimiting;
 using StackExchange.Redis;
 using Its.Onix.Api.Utils;
+using Google.Apis.Auth.OAuth2;
 
 namespace Its.Onix.Api
 {
@@ -42,6 +43,12 @@ namespace Its.Onix.Api
                 sp => ConnectionMultiplexer.Connect(redisHostStr));
             builder.Services.AddScoped<RedisHelper>();
 
+            builder.Services.AddSingleton(sp =>
+            {
+                return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
+                                    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
+            });
+            builder.Services.AddSingleton<IStorageUtils, StorageUtils>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
