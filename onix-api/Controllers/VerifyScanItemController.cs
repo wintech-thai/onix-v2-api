@@ -60,13 +60,13 @@ namespace Its.Onix.Api.Controllers
             var iv = scanItemAction!.EncryptionIV;
 
             var result = svc.VerifyScanItem(id, serial, pin);
-            var jsonString = JsonSerializer.Serialize(result);
-
             if (result.ScanItem != null)
             {
                 var scanUrl = result.ScanItem!.Url!;
                 result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
             }
+
+            var jsonString = JsonSerializer.Serialize(result);
 
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
             string jsonStringB64 = Convert.ToBase64String(jsonBytes);
