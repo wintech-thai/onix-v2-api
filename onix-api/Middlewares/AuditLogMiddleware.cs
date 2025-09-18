@@ -112,6 +112,12 @@ namespace Its.Onix.Api.AuditLogs
                 }
             };
 
+            if (path == "/health")
+            {
+                //No need to audit log for health check
+                return;
+            }
+
             var logJson = JsonSerializer.Serialize(logObject);
             Log.Information(logJson);
 

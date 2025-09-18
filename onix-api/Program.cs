@@ -161,6 +161,7 @@ namespace Its.Onix.Api
             //End rate limit
 
             builder.Services.AddHttpClient();
+            builder.Services.AddHealthChecks();
 
             var app = builder.Build();
 
@@ -182,6 +183,7 @@ namespace Its.Onix.Api
 
             app.UseRateLimiter();
             app.UseMiddleware<AuditLogMiddleware>();
+            app.MapHealthChecks("/health");
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();

@@ -24,6 +24,16 @@ namespace Its.Onix.Api.Authentications
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+            var path = Request.Path.ToString();
+            if (Request.Path.StartsWithSegments("/health"))
+            {
+                var id = new ClaimsIdentity();
+                var pp = new ClaimsPrincipal(id);
+                var tck = new AuthenticationTicket(pp, Scheme.Name);
+
+                return AuthenticateResult.Success(tck);
+            }
+
             if (!Request.Headers.TryGetValue("Authorization", out var authData))
             {
                 var msg = "No Authorization header found";
