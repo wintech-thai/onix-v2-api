@@ -76,6 +76,19 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/CreateJobOtpEmailSend")]
+        public MVJob? CreateJobOtpEmailSend(string id, [FromBody] MJob request)
+        {
+            request.Type = "OtpEmailSend";
+            request.Status = "Pending";
+
+            var result = svc.AddJob(id, request);
+            return result;
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetJobById/{jobId}")]
