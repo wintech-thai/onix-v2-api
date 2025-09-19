@@ -4,6 +4,7 @@ using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Models;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 
 namespace Its.Onix.Api.Services
 {
@@ -13,16 +14,19 @@ namespace Its.Onix.Api.Services
         private readonly IItemRepository _itemRepo;
         private readonly IItemImageRepository _imageItemRepo;
         private readonly IStorageUtils _storageUtil;
+        private readonly RedisHelper _redis;
 
         public ScanItemService(IScanItemRepository repo,
             IItemRepository itemRepo,
             IItemImageRepository imageItemRepo,
-            IStorageUtils storageUtil) : base()
+            IStorageUtils storageUtil,
+            RedisHelper redis) : base()
         {
             repository = repo;
             _itemRepo = itemRepo;
             _imageItemRepo = imageItemRepo;
             _storageUtil = storageUtil;
+            _redis = redis;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
@@ -41,7 +45,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVItem GetScanItemProduct(string orgId, string serial, string pin)
+        public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp)
         {
             _itemRepo!.SetCustomOrgId(orgId);
             _imageItemRepo!.SetCustomOrgId(orgId);
@@ -53,8 +57,25 @@ namespace Its.Onix.Api.Services
                 Description = "",
             };
 
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "GetProduct");
+            var otpObj = _redis.GetObjectAsync<MOtp>(cacheKey).Result;
+            if (otpObj == null)
+            {
+                r.Status = "OTP_NOTFOUND_OR_EXPIRE";
+                r.Description = $"OTP [{otp}] not found or expire!!!";
 
+                return r;
+            }
+
+            if (otpObj.Otp != otp)
+            {
+                r.Status = "OTP_INVALID";
+                r.Description = $"OTP [{otp}] is invalid (not match)!!!";
+
+                return r;
+            }
+
+            var result = repository!.GetScanItemBySerialPin(serial, pin);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
