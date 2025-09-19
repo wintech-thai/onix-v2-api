@@ -44,7 +44,7 @@ namespace Its.Onix.Api.Services
             var result = repository!.AttachScanItemToProduct(itemId, productId);
 
             r.ScanItem = result;
-            
+
             return r;
         }
 
@@ -77,7 +77,7 @@ namespace Its.Onix.Api.Services
             };
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "GetProduct");
-            var otpObj = _redis.GetObjectAsync<MOtp>(cacheKey).Result;
+            var otpObj = _redis.GetObjectAsync<MOtp>($"{cacheKey}:{serial}:{pin}").Result;
             if (otpObj == null)
             {
                 r.Status = "OTP_NOTFOUND_OR_EXPIRE";
@@ -170,7 +170,7 @@ namespace Its.Onix.Api.Services
             };
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "GetCustomer");
-            var otpObj = _redis.GetObjectAsync<MOtp>(cacheKey).Result;
+            var otpObj = _redis.GetObjectAsync<MOtp>($"{cacheKey}:{serial}:{pin}").Result;
             if (otpObj == null)
             {
                 r.Status = "OTP_NOTFOUND_OR_EXPIRE";
@@ -263,6 +263,53 @@ namespace Its.Onix.Api.Services
             }
 
             r.ScanItem = repository.RegisterScanItem(id!);
+            return r;
+        }
+
+        public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVOtp()
+            {
+                Status = "SUCCESS",
+                Description = "",
+            };
+
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "GetOtpViaEmail");
+            var otpObj = _redis.GetObjectAsync<MOtp>($"{cacheKey}:{serial}:{pin}").Result;
+            if (otpObj == null)
+            {
+                r.Status = "OTP_NOTFOUND_OR_EXPIRE";
+                r.Description = $"OTP [{otp}] not found or expire!!!";
+
+                return r;
+            }
+
+            if (otpObj.Otp != otp)
+            {
+                r.Status = "OTP_INVALID";
+                r.Description = $"OTP [{otp}] is invalid (not match)!!!";
+
+                return r;
+            }
+
+            //TODO : Check rate limit here
+
+            //Keep the email sent OTP in cache also for future use
+            var emailOtp = ServiceUtils.CreateOTP(6);
+            var o = new MOtp()
+            {
+                Otp = emailOtp,
+            };
+            var cacheKey2 = CacheHelper.CreateApiOtpKey(orgId, "ReceivedOtpViaEmail");
+            _ = _redis.SetObjectAsync($"{cacheKey2}:{serial}:{pin}", o, TimeSpan.FromMinutes(30));
+
+            //TODO : Submit job to send OTP email, use serial & pin (masking) in the email
+
+            r.OTP = emailOtp;
+            r.Description = $"OTP [{emailOtp}] sent to email [{email}]";
+
             return r;
         }
     }
