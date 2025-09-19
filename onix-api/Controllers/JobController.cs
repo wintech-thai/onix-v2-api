@@ -85,8 +85,9 @@ namespace Its.Onix.Api.Controllers
             request.Type = "OtpEmailSend";
             request.Status = "Pending";
 
-            var result = svc.AddJob(id, request);
-            return result;
+            //Use for testing only
+            //var result = svc.AddJob(id, request);
+            return null;
         }
 
         [ExcludeFromCodeCoverage]
