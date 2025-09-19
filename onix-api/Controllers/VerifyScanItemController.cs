@@ -31,7 +31,7 @@ namespace Its.Onix.Api.Controllers
             _scanItemActionService = scanItemActionService;
         }
 
-        private string CreateUrlWithOTP(string orgId, string scanUrl, string keyword, string apiName)
+        private string CreateUrlWithOTP(string orgId, string scanUrl, string keyword, string apiName, string serial, string pin)
         {
             var url = scanUrl.Replace(keyword, apiName);
             var otp = ServiceUtils.CreateOTP(6);
@@ -43,10 +43,11 @@ namespace Its.Onix.Api.Controllers
             };
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, apiName);
-            _ = _redis.SetObjectAsync(cacheKey, otpObj, TimeSpan.FromMinutes(60));
+            _ = _redis.SetObjectAsync($"{cacheKey}:{serial}:{pin}", otpObj, TimeSpan.FromMinutes(30));
 
             url = $"{url}/{otp}";
-//Console.WriteLine($"===== [{url}] =====");
+            //Console.WriteLine($"===== [{url}] =====");
+
             return url;
         }
 
@@ -82,8 +83,10 @@ namespace Its.Onix.Api.Controllers
             if (result.ScanItem != null)
             {
                 var scanUrl = result.ScanItem!.Url!;
-                result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
-                result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer");
+                result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct", serial, pin);
+                result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer", serial, pin);
+                result.RegisterCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "RegisterCustomer", serial, pin);
+                result.RequestOtpViaEmailUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetOtpViaEmail", serial, pin);
             }
 
             var jsonString = JsonSerializer.Serialize(result);
@@ -116,8 +119,10 @@ namespace Its.Onix.Api.Controllers
             if (result.ScanItem != null)
             {
                 var scanUrl = result.ScanItem!.Url!;
-                result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
-                result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer");
+                result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct", serial, pin);
+                result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer", serial, pin);
+                result.RegisterCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "RegisterCustomer", serial, pin);
+                result.RequestOtpViaEmailUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "SendOtpViaEmail", serial, pin);
             }
 
             Response.Headers.Append("CUST_STATUS", result.Status);
@@ -133,7 +138,7 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
         }
-        
+
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/GetCustomer/{serial}/{pin}/{otp}")]
@@ -144,6 +149,33 @@ namespace Its.Onix.Api.Controllers
 
             var r = ServiceUtils.MaskingEntity(result);
             return r;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/RegisterCustomer/{serial}/{pin}/{otp}")]
+        public MVEntityRestrictedInfo? RegisterCustomer(string id, string serial, string pin, string otp, [FromBody] MCustomerRegister request)
+        {
+            //TODO : Implement this, need to validate email OTP too, update scan-item with customer-id
+
+            //var result = svc.GetScanItemCustomer(id, serial, pin, otp);
+            //Response.Headers.Append("CUST_STATUS", result.Status);
+            //var r = ServiceUtils.MaskingEntity(result);
+
+            return null;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/GetOtpViaEmail/{serial}/{pin}/{otp}/{email}")]
+        public MVOtp? GetOtpViaEmail(string id, string serial, string pin, string otp, string email)
+        {
+            var result = svc.GetOtpViaEmail(id, serial, pin, otp, email);
+            Response.Headers.Append("CUST_STATUS", result.Status);
+
+            //Console.WriteLine($"==== Sent this OTP [{result.OTP}] to [{email}] ====");
+
+            return result;
         }
     }
 }
