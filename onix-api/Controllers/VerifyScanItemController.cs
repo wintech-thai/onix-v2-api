@@ -46,9 +46,9 @@ namespace Its.Onix.Api.Controllers
             _ = _redis.SetObjectAsync(cacheKey, otpObj, TimeSpan.FromMinutes(60));
 
             url = $"{url}/{otp}";
-            //Console.WriteLine($"===== [{url}] =====");
+//Console.WriteLine($"===== [{url}] =====");
             return url;
-        } 
+        }
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
@@ -83,13 +83,14 @@ namespace Its.Onix.Api.Controllers
             {
                 var scanUrl = result.ScanItem!.Url!;
                 result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
+                result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer");
             }
 
             var jsonString = JsonSerializer.Serialize(result);
 
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
             string jsonStringB64 = Convert.ToBase64String(jsonBytes);
-            
+
             var encryptedB64 = EncryptionUtils.Encrypt(jsonString, key!, iv!);
             //var decryptText = EncryptionUtils.Decrypt(encryptedB64, key, iv);
 
@@ -116,6 +117,7 @@ namespace Its.Onix.Api.Controllers
             {
                 var scanUrl = result.ScanItem!.Url!;
                 result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
+                result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer");
             }
 
             Response.Headers.Append("CUST_STATUS", result.Status);
@@ -130,6 +132,18 @@ namespace Its.Onix.Api.Controllers
             var result = svc.GetScanItemProduct(id, serial, pin, otp);
             Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
+        }
+        
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/GetCustomer/{serial}/{pin}/{otp}")]
+        public MVEntityRestrictedInfo? GetCustomer(string id, string serial, string pin, string otp)
+        {
+            var result = svc.GetScanItemCustomer(id, serial, pin, otp);
+            Response.Headers.Append("CUST_STATUS", result.Status);
+
+            var r = ServiceUtils.MaskingEntity(result);
+            return r;
         }
     }
 }

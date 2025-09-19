@@ -13,6 +13,7 @@ namespace Its.Onix.Api.ModelsViews
         public MScanItem? ScanItem { get; set; }
         public string? RedirectUrl { get; set; }
         public string? GetProductUrl { get; set; }
+        public string? GetCustomerUrl { get; set; }
 
         /* Object generated date, to determine if this data is too old */
         public DateTime? DataGeneratedDate { get; set; }

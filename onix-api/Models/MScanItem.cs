@@ -57,6 +57,11 @@ namespace Its.Onix.Api.Models
         [Column("item_id")]
         public Guid? ItemId { get; set; }
 
+        [Column("applied_flag")]
+        public string? AppliedFlag { get; set; } /* YES or NO */
+        [Column("customer_id")]
+        public Guid? CustomerId { get; set; }
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
