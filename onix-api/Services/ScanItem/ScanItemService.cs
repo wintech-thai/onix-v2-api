@@ -16,12 +16,14 @@ namespace Its.Onix.Api.Services
         private readonly IEntityRepository _entityRepo;
         private readonly IStorageUtils _storageUtil;
         private readonly RedisHelper _redis;
+        private readonly IJobService _jobService;
 
         public ScanItemService(IScanItemRepository repo,
             IItemRepository itemRepo,
             IItemImageRepository imageItemRepo,
             IEntityRepository entityRepo,
             IStorageUtils storageUtil,
+            IJobService jobService,
             RedisHelper redis) : base()
         {
             repository = repo;
@@ -30,6 +32,7 @@ namespace Its.Onix.Api.Services
             _entityRepo = entityRepo;
             _storageUtil = storageUtil;
             _redis = redis;
+            _jobService = jobService;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
@@ -250,6 +253,29 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private MVJob? CreateEmailSendOtpJob(string orgId, string serial, string pin, string emailOtp, string email)
+        {
+            var job = new MJob()
+            {
+                Name = $"EmailSendOtpJob:{Guid.NewGuid()}",
+                Description = "ScanItemService.CreateEmailSendOtpJob()",
+                Type = "OtpEmailSend",
+                Status = "Pending",
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = "customer-registration-otp" },
+                    new NameValue { Name = "OTP", Value = emailOtp },
+                    new NameValue { Name = "SERIAL", Value = serial },
+                    new NameValue { Name = "PIN", Value = pin },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+            return result;
+        }
+
         public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email)
         {
             repository!.SetCustomOrgId(orgId);
@@ -289,7 +315,8 @@ namespace Its.Onix.Api.Services
             var cacheKey2 = CacheHelper.CreateApiOtpKey(orgId, "ReceivedOtpViaEmail");
             _ = _redis.SetObjectAsync($"{cacheKey2}:{serial}:{pin}", o, TimeSpan.FromMinutes(30));
 
-            //TODO : Submit job to send OTP email, use serial & pin (masking) in the email
+            //Submit job to send OTP email, use serial & pin (masking) in the email
+            CreateEmailSendOtpJob(orgId, serial, pin, emailOtp, email);
 
             r.OTP = emailOtp;
             r.Description = $"OTP [{emailOtp}] sent to email [{email}]";
