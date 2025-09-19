@@ -31,6 +31,25 @@ namespace Its.Onix.Api.Controllers
             _scanItemActionService = scanItemActionService;
         }
 
+        private string CreateUrlWithOTP(string orgId, string scanUrl, string keyword, string apiName)
+        {
+            var url = scanUrl.Replace(keyword, apiName);
+            var otp = ServiceUtils.CreateOTP(6);
+
+            var otpObj = new MOtp()
+            {
+                Otp = otp,
+                Id = "",
+            };
+
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, apiName);
+            _ = _redis.SetObjectAsync(cacheKey, otpObj, TimeSpan.FromMinutes(60));
+
+            url = $"{url}/{otp}";
+            //Console.WriteLine($"===== [{url}] =====");
+            return url;
+        } 
+
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/Verify/{serial}/{pin}")]
@@ -63,7 +82,7 @@ namespace Its.Onix.Api.Controllers
             if (result.ScanItem != null)
             {
                 var scanUrl = result.ScanItem!.Url!;
-                result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+                result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
             }
 
             var jsonString = JsonSerializer.Serialize(result);
@@ -96,7 +115,7 @@ namespace Its.Onix.Api.Controllers
             if (result.ScanItem != null)
             {
                 var scanUrl = result.ScanItem!.Url!;
-                result.GetProductUrl = scanUrl.Replace("Verify", "GetProduct");
+                result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
             }
 
             Response.Headers.Append("CUST_STATUS", result.Status);
@@ -105,10 +124,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/GetProduct/{serial}/{pin}")]
-        public MVItem? GetProduct(string id, string serial, string pin)
+        [Route("org/{id}/GetProduct/{serial}/{pin}/{otp}")]
+        public MVItem? GetProduct(string id, string serial, string pin, string otp)
         {
-            var result = svc.GetScanItemProduct(id, serial, pin);
+            var result = svc.GetScanItemProduct(id, serial, pin, otp);
             Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
         }
