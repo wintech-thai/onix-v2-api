@@ -14,6 +14,8 @@ namespace Its.Onix.Api.ModelsViews
         public string? RedirectUrl { get; set; }
         public string? GetProductUrl { get; set; }
         public string? GetCustomerUrl { get; set; }
+        public string? RegisterCustomerUrl { get; set; }
+        public string? RequestOtpViaEmailUrl { get; set; }
 
         /* Object generated date, to determine if this data is too old */
         public DateTime? DataGeneratedDate { get; set; }

@@ -48,6 +48,22 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVScanItem AttachScanItemToCustomer(string orgId, string itemId, string customerId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.AttachScanItemToCustomer(itemId, customerId);
+
+            r.ScanItem = result;
+
+            return r;
+        }
+
         public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp)
         {
             _itemRepo!.SetCustomOrgId(orgId);
@@ -128,7 +144,7 @@ namespace Its.Onix.Api.Services
 
             var validFor = TimeSpan.FromMinutes(60);
             var contentType = "image/png";
-            var imageList = images.ToList(); 
+            var imageList = images.ToList();
 
             foreach (var img in imageList)
             {

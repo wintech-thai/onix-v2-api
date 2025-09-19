@@ -46,7 +46,7 @@ namespace Its.Onix.Api.Controllers
             _ = _redis.SetObjectAsync(cacheKey, otpObj, TimeSpan.FromMinutes(60));
 
             url = $"{url}/{otp}";
-//Console.WriteLine($"===== [{url}] =====");
+            //Console.WriteLine($"===== [{url}] =====");
             return url;
         }
 
@@ -84,6 +84,8 @@ namespace Its.Onix.Api.Controllers
                 var scanUrl = result.ScanItem!.Url!;
                 result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
                 result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer");
+                result.RegisterCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "RegisterCustomer");
+                result.RequestOtpViaEmailUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "SendOtpViaEmail");
             }
 
             var jsonString = JsonSerializer.Serialize(result);
@@ -118,6 +120,8 @@ namespace Its.Onix.Api.Controllers
                 var scanUrl = result.ScanItem!.Url!;
                 result.GetProductUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetProduct");
                 result.GetCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "GetCustomer");
+                result.RegisterCustomerUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "RegisterCustomer");
+                result.RequestOtpViaEmailUrl = CreateUrlWithOTP(id, scanUrl, "Verify", "SendOtpViaEmail");
             }
 
             Response.Headers.Append("CUST_STATUS", result.Status);
@@ -133,7 +137,7 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", result.Status);
             return result;
         }
-        
+
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/GetCustomer/{serial}/{pin}/{otp}")]
@@ -144,6 +148,34 @@ namespace Its.Onix.Api.Controllers
 
             var r = ServiceUtils.MaskingEntity(result);
             return r;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/RegisterCustomer/{serial}/{pin}/{otp}")]
+        public MVEntityRestrictedInfo? RegisterCustomer(string id, string serial, string pin, string otp, [FromBody] MCustomerRegister request)
+        {
+            //TODO : Implement this, need to validate email OTP too, update scan-item with customer-id
+
+            //var result = svc.GetScanItemCustomer(id, serial, pin, otp);
+            //Response.Headers.Append("CUST_STATUS", result.Status);
+            //var r = ServiceUtils.MaskingEntity(result);
+
+            return null;
+        }
+        
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/SendOtpViaEmail/{serial}/{pin}/{otp}/{email}")]
+        public MVOtp? SendOtpViaEmail(string id, string serial, string pin, string otp, string email)
+        {
+            //TODO : Implement this, need to keep email OTP in cache too, create OTP via email job
+
+            //var result = svc.GetScanItemCustomer(id, serial, pin, otp);
+            //Response.Headers.Append("CUST_STATUS", result.Status);
+            //var r = ServiceUtils.MaskingEntity(result);
+            
+            return null;
         }
     }
 }
