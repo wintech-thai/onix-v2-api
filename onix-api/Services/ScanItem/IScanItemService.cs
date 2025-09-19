@@ -1,3 +1,4 @@
+using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 
 namespace Its.Onix.Api.Services
@@ -10,5 +11,6 @@ namespace Its.Onix.Api.Services
         public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp);
         public MVEntity GetScanItemCustomer(string orgId, string serial, string pin, string otp);
         public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email);
+        public MVEntity RegisterCustomer(string id, string serial, string pin, string otp, MCustomerRegister cust);
     }
 }
