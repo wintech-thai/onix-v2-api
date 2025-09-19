@@ -156,13 +156,11 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/RegisterCustomer/{serial}/{pin}/{otp}")]
         public MVEntityRestrictedInfo? RegisterCustomer(string id, string serial, string pin, string otp, [FromBody] MCustomerRegister request)
         {
-            //TODO : Implement this, need to validate email OTP too, update scan-item with customer-id
+            var result = svc.RegisterCustomer(id, serial, pin, otp, request);
+            Response.Headers.Append("CUST_STATUS", result.Status);
 
-            //var result = svc.GetScanItemCustomer(id, serial, pin, otp);
-            //Response.Headers.Append("CUST_STATUS", result.Status);
-            //var r = ServiceUtils.MaskingEntity(result);
-
-            return null;
+            var r = ServiceUtils.MaskingEntity(result);
+            return r;
         }
 
         [ExcludeFromCodeCoverage]

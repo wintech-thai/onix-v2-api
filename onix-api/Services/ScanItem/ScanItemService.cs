@@ -48,22 +48,6 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItem AttachScanItemToCustomer(string orgId, string itemId, string customerId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "SUCCESS",
-                Description = "Success",
-            };
-
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.AttachScanItemToCustomer(itemId, customerId);
-
-            r.ScanItem = result;
-
-            return r;
-        }
-
         public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp)
         {
             _itemRepo!.SetCustomOrgId(orgId);
@@ -310,6 +294,108 @@ namespace Its.Onix.Api.Services
             r.OTP = emailOtp;
             r.Description = $"OTP [{emailOtp}] sent to email [{email}]";
 
+            return r;
+        }
+
+        public MVScanItem AttachScanItemToCustomer(string orgId, string itemId, string customerId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.AttachScanItemToCustomer(itemId, customerId);
+
+            r.ScanItem = result;
+
+            return r;
+        }
+
+        public MVEntity RegisterCustomer(string orgId, string serial, string pin, string otp, MCustomerRegister cust)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _entityRepo!.SetCustomOrgId(orgId);
+
+            var r = new MVEntity()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "RegisterCustomer");
+            var otpObj = _redis.GetObjectAsync<MOtp>($"{cacheKey}:{serial}:{pin}").Result;
+            if (otpObj == null)
+            {
+                r.Status = "OTP_NOTFOUND_OR_EXPIRE";
+                r.Description = $"OTP [{otp}] not found or expire!!!";
+
+                return r;
+            }
+
+            if (otpObj.Otp != otp)
+            {
+                r.Status = "OTP_INVALID";
+                r.Description = $"OTP [{otp}] is invalid (not match)!!!";
+
+                return r;
+            }
+
+            var userOtp = cust.EmailOtp;
+
+            var emailSentOtpCacheKey = CacheHelper.CreateApiOtpKey(orgId, "ReceivedOtpViaEmail");
+            var emailSentOtpObj = _redis.GetObjectAsync<MOtp>($"{emailSentOtpCacheKey}:{serial}:{pin}").Result;
+            if (emailSentOtpObj == null)
+            {
+                r.Status = "CUSTOMER_OTP_NOTFOUND";
+                r.Description = $"OTP [{userOtp}] not found or expire!!!";
+
+                return r;
+            }
+
+            if (userOtp != emailSentOtpObj.Otp)
+            {
+                r.Status = "CUSTOMER_OTP_INVALID";
+                r.Description = $"OTP [{userOtp}] invalid (not match)!!!";
+
+                return r;
+            }
+
+            var scanItem = repository!.GetScanItemBySerialPin(serial, pin);
+            if (scanItem == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
+
+                return r;
+            }
+
+            var customerId = scanItem.CustomerId.ToString();
+            if (ServiceUtils.IsGuidValid(customerId!))
+            {
+                r.Status = "SCAN_ITEM_IS_ALREADY_OCCUPIED";
+                r.Description = $"Scan Item is already owned by another customer=[{customerId}]!!!";
+
+                return r;
+            }
+
+            var entity = new MEntity()
+            {
+                PrimaryEmail = cust.Email,
+                EntityType = 1,
+                EntityCategory = 1,
+                Code = $"CUST:{Guid.NewGuid()}",
+                Name = cust.Email,
+            };
+
+            //Get or create customer here
+            var customer = _entityRepo.GetOrCreateEntityByEmail(entity);
+            customerId = customer.Id.ToString();
+
+            AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
+
+            r.Entity = customer;
             return r;
         }
     }

@@ -11,6 +11,18 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
+        public MEntity GetOrCreateEntityByEmail(MEntity entity)
+        {
+            var email = entity.PrimaryEmail;
+            var e = GetEntityByEmail(email!);
+            if (e == null)
+            {
+                e = AddEntity(entity);
+            }
+
+            return e;
+        }
+
         public MEntity AddEntity(MEntity item)
         {
             item.Id = Guid.NewGuid();
@@ -95,6 +107,12 @@ namespace Its.Onix.Api.Database.Repositories
                 .ToList();
 
             return arr;
+        }
+
+        public MEntity GetEntityByEmail(string email)
+        {
+            var u = context!.Entities!.Where(p => p!.PrimaryEmail!.Equals(email) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
+            return u!;
         }
 
         public MEntity GetEntityById(string itemId)
