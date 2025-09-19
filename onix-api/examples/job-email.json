@@ -1,0 +1,11 @@
+{
+    "Name":"SendEmail-001",
+    "Description":"Test-001",
+    "Parameters": [
+        {"Name":"EMAIL_OTP_ADDRESS", "Value": "pjame.fb@gmail.com"},
+        {"Name":"TEMPLATE_TYPE", "Value": "customer-registration-otp"},
+        {"Name":"OTP", "Value": "123456"},
+        {"Name":"SERIAL", "Value": "TU0000002"},
+        {"Name":"PIN", "Value": "DRIIGCH"}
+    ]
+}
