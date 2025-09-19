@@ -69,6 +69,8 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MEntity>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+        modelBuilder.Entity<MEntity>()
+            .HasIndex(t => new { t.OrgId, t.PrimaryEmail }).IsUnique();
 
         modelBuilder.Entity<MPricingPlan>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();

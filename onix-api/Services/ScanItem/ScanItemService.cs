@@ -13,18 +13,21 @@ namespace Its.Onix.Api.Services
         private readonly IScanItemRepository? repository = null;
         private readonly IItemRepository _itemRepo;
         private readonly IItemImageRepository _imageItemRepo;
+        private readonly IEntityRepository _entityRepo;
         private readonly IStorageUtils _storageUtil;
         private readonly RedisHelper _redis;
 
         public ScanItemService(IScanItemRepository repo,
             IItemRepository itemRepo,
             IItemImageRepository imageItemRepo,
+            IEntityRepository entityRepo,
             IStorageUtils storageUtil,
             RedisHelper redis) : base()
         {
             repository = repo;
             _itemRepo = itemRepo;
             _imageItemRepo = imageItemRepo;
+            _entityRepo = entityRepo;
             _storageUtil = storageUtil;
             _redis = redis;
         }
@@ -136,6 +139,75 @@ namespace Its.Onix.Api.Services
             }
 
             r.Images = imageList;
+            return r;
+        }
+
+        public MVEntity GetScanItemCustomer(string orgId, string serial, string pin, string otp)
+        {
+            _entityRepo!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntity()
+            {
+                Status = "SUCCESS",
+                Description = "",
+            };
+
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "GetCustomer");
+            var otpObj = _redis.GetObjectAsync<MOtp>(cacheKey).Result;
+            if (otpObj == null)
+            {
+                r.Status = "OTP_NOTFOUND_OR_EXPIRE";
+                r.Description = $"OTP [{otp}] not found or expire!!!";
+
+                return r;
+            }
+
+            if (otpObj.Otp != otp)
+            {
+                r.Status = "OTP_INVALID";
+                r.Description = $"OTP [{otp}] is invalid (not match)!!!";
+
+                return r;
+            }
+
+            var result = repository!.GetScanItemBySerialPin(serial, pin);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
+
+                return r;
+            }
+
+            var customerId = result.CustomerId.ToString();
+            if (customerId == null)
+            {
+                r.Status = "CUSTOMER_NOT_ATTACH";
+                r.Description = $"No product attached to this scan item!!!";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(customerId))
+            {
+                r.Status = "CUSTOMER_ID_INVALID";
+                r.Description = $"Customer ID [{customerId}] invalid!!!";
+
+                return r;
+            }
+
+            var customer = _entityRepo.GetEntityById(customerId!);
+
+            if (customer == null)
+            {
+                r.Status = "CUSTOMER_NOTFOUND";
+                r.Description = $"Customer ID [{customerId}] not found!!!";
+
+                return r;
+            }
+
+            r.Entity = customer;
             return r;
         }
 
