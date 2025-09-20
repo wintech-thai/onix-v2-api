@@ -36,7 +36,7 @@ namespace Its.Onix.Api.Models
 
         public MScanItemAction()
         {
-            ThemeVerify = "Default";
+            ThemeVerify = "default";
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
         }
