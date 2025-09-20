@@ -80,7 +80,7 @@ namespace Its.Onix.Api.Controllers
             var iv = scanItemAction!.EncryptionIV;
 
             var result = svc.VerifyScanItem(id, serial, pin);
-            result.ThemeVerify = string.IsNullOrWhiteSpace(scanItemAction.ThemeVerify) ? "Default" : scanItemAction.ThemeVerify;
+            result.ThemeVerify = string.IsNullOrWhiteSpace(scanItemAction.ThemeVerify) ? "default" : scanItemAction.ThemeVerify;
 
             if (result.ScanItem != null)
             {
@@ -100,7 +100,7 @@ namespace Its.Onix.Api.Controllers
             //var decryptText = EncryptionUtils.Decrypt(encryptedB64, key, iv);
 
             var urlSafe = HttpUtility.UrlEncode(encryptedB64);
-            var url = $"{baseUrl}?org={id}&data={urlSafe}";
+            var url = $"{baseUrl}?org={id}&theme={result.ThemeVerify}&data={urlSafe}";
 
             //Console.WriteLine($"DEBUG - Encrypted Text (B64) : {encryptedB64}");
             //Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
