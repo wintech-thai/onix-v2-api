@@ -27,12 +27,16 @@ namespace Its.Onix.Api.Models
         [Column("encryption_iv")] 
         public string? EncryptionIV { get; set; }
 
+        [Column("theme_verify")] 
+        public string? ThemeVerify { get; set; }
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
         public MScanItemAction()
         {
+            ThemeVerify = "Default";
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
         }

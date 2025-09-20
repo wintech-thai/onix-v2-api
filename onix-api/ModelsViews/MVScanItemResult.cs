@@ -16,6 +16,7 @@ namespace Its.Onix.Api.ModelsViews
         public string? GetCustomerUrl { get; set; }
         public string? RegisterCustomerUrl { get; set; }
         public string? RequestOtpViaEmailUrl { get; set; }
+        public string? ThemeVerify { get; set; }
 
         /* Object generated date, to determine if this data is too old */
         public DateTime? DataGeneratedDate { get; set; }
