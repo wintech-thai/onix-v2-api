@@ -55,6 +55,34 @@ namespace Its.Onix.Api.Controllers
             return customParams;
         }
 
+        private NameValue[] ConfigDefaultParamsCacheLoader(string orgId, MJob job)
+        {
+            var exceptionFields = new string[] { "ORG_ID" }; /* Fields not allow to pass by user */
+
+            var userParams = job.Parameters;
+            var userFields = userParams.ToDictionary(item => item.Name!, item => item.Value);
+
+            var customParams = new NameValue[]
+            {
+                new NameValue() { Name = "ORG_ID", Value = orgId },
+                new NameValue() { Name = "DATA_SECTION", Value = "ALL" },
+            };
+
+            foreach (var param in customParams)
+            {
+                var name = param.Name;
+                if (exceptionFields.Contains(name)) continue;
+
+                if (userFields.ContainsKey(name!))
+                {
+                    //Update with user provided value
+                    param.Value = userFields[name!];
+                }
+            }
+
+            return customParams;
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/CreateJobScanItemGenerator")]
@@ -76,6 +104,19 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/CreateJobCacheLoaderTrigger")]
+        public MVJob? CreateJobCacheLoaderTrigger(string id, [FromBody] MJob request)
+        {
+            request.Type = "CacheLoader";
+            request.Status = "Pending";
+
+            request.Parameters = ConfigDefaultParamsCacheLoader(id, request);
+
+            var result = svc.AddJob(id, request);
+            return result;
+        }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
