@@ -87,6 +87,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IScanItemTemplateService, ScanItemTemplateService>();
             builder.Services.AddScoped<IJobService, JobService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IAdminService, AdminService>();
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();

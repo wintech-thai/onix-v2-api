@@ -21,6 +21,9 @@ namespace Its.Onix.Api.Models
         [Column("user_email")]
         public string? UserEmail { get; set; }
 
+        [Column("is_org_initial_user")]
+        public string? IsOrgInitialUser { get; set; } /* YES or NO */
+
         [Column("user_created_date")]
         public DateTime? UserCreatedDate { get; set; }
 

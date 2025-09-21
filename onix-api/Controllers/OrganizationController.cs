@@ -74,7 +74,7 @@ namespace Prom.LPR.Api.Controllers
             
             return Ok(result);
         }
-
+/*
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AdminAddOrganization")]
@@ -94,5 +94,6 @@ namespace Prom.LPR.Api.Controllers
             var result = svc.AddUserToOrganization(userOrgId!, request);
             return Ok(result);
         }
+*/
     }
 }

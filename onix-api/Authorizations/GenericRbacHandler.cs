@@ -10,7 +10,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 {
     private readonly IRoleService service;
     private string apiCalled = "";
-    private readonly string adminOnlyApiPattern = @"^(.+):(Admin.+)$";
+    private readonly string adminOnlyApiPattern = @"^(Admin):(.+)$";
 
     public GenericRbacHandler(IRoleService svc)
     {
