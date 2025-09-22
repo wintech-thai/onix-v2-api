@@ -26,6 +26,10 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult RegisterOrganization(string id, [FromBody] MOrganizeRegistration request)
         {
             var result = svc.RegisterOrganization(id, request);
+
+            Response.Headers.Append("CUST_STATUS", result.Status);
+            Response.Headers.Append("CUST_DESC", result.Description);
+
             return Ok(result);
         }
 
@@ -35,6 +39,10 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult SendOtpViaEmail(string id, string email)
         {
             var result = svc.SendOrgRegisterOtpEmail(id, email);
+
+            Response.Headers.Append("CUST_STATUS", result.Status);
+            Response.Headers.Append("CUST_DESC", result.Description);
+            
             return Ok(result);
         }
     }
