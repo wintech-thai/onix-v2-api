@@ -8,17 +8,20 @@ namespace Its.Onix.Api.Services
     {
         private readonly IOrganizationService _orgService;
         private readonly IUserService _userService;
+        private readonly IAuthService _authService;
         private readonly RedisHelper _redis;
         private readonly IJobService _jobService;
 
         public AdminService(IOrganizationService orgSvc,
             IUserService userSvc,
             IJobService jobService,
+            IAuthService authService,
             RedisHelper redis) : base()
         {
             _orgService = orgSvc;
             _userService = userSvc;
             _jobService = jobService;
+            _authService = authService;
             _redis = redis;
         }
 
@@ -203,7 +206,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : เพิ่ม user เข้า Keycloak
+            var idpResult = _authService.AddUserToIDP(user).Result;
+            if (!idpResult.Success)
+            {
+                r.Status = "IDP_ADD_USER_ERROR";
+                r.Description = idpResult.Message;
+
+                return r;
+            }
 
             //Send email noti to activate organization too
             CreateEmailSendWelcomeJob(orgId, email!, userOrgId!, userName!);

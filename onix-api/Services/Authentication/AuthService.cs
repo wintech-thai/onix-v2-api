@@ -1,7 +1,9 @@
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
+using Its.Onix.Api.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Its.Onix.Api.Services
@@ -10,6 +12,7 @@ namespace Its.Onix.Api.Services
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string tokenEndpoint = "";
+        private readonly string userEndpoint = "";
         private readonly string issuer = "";
         private readonly string signedKeyUrl = "";
         private readonly string? clientId = "";
@@ -29,6 +32,8 @@ namespace Its.Onix.Api.Services
             issuer = $"{urlPrefix}/auth/realms/{realm}";
             tokenEndpoint = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/token";
             signedKeyUrl = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/certs";
+
+            userEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users";
         }
 
         private string GetPreferredUsername(string accessToken)
@@ -42,7 +47,7 @@ namespace Its.Onix.Api.Services
             return username!;
         }
 
-        private UserToken GetUserToken(KeyValuePair<string, string>[] form)
+        private UserToken GetToken(KeyValuePair<string, string>[] form)
         {
             var userToken = new UserToken();
             userToken.Status = "Success";
@@ -87,8 +92,8 @@ namespace Its.Onix.Api.Services
                 new KeyValuePair<string,string>("username", userLogin.UserName),
                 new KeyValuePair<string,string>("password", userLogin.Password)
             };
-            Console.WriteLine($"==== [{userLogin.Password}] ====");
-            var userToken = GetUserToken(form);
+            //Console.WriteLine($"==== [{userLogin.Password}] ====");
+            var userToken = GetToken(form);
             userToken.UserName = userLogin.UserName;
 
             return userToken;
@@ -104,13 +109,64 @@ namespace Its.Onix.Api.Services
                 new KeyValuePair<string,string>("refresh_token", refreshToken),
             };
 
-            var userToken = GetUserToken(form);
+            var userToken = GetToken(form);
             if (userToken.Status == "Success")
             {
                 userToken.UserName = GetPreferredUsername(userToken.Token.AccessToken!);
             }
 
             return userToken;
+        }
+
+        private UserToken GetServiceAccountToken()
+        {
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "client_credentials"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+            };
+
+            var saToken = GetToken(form);
+            return saToken;
+        }
+
+        private async Task<IdpResult> CreateUserAsync(string token, MOrganizeRegistration orgUser)
+        {
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var user = new
+            {
+                username = orgUser.UserName,
+                email = orgUser.Email,
+                enabled = true,
+                firstName = orgUser.Name,
+                lastName = orgUser.Lastname,
+            };
+
+            var content = new StringContent(JsonSerializer.Serialize(user), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(userEndpoint, content);
+
+            var result = new IdpResult()
+            {
+                Success = true,
+                Message = $"User [{orgUser.UserName}] [{orgUser.Email}] created successfully!",
+            };
+
+            if (!response.IsSuccessStatusCode)
+            {
+                result.Success = false;
+                result.Message = await response.Content.ReadAsStringAsync();
+            }
+
+            return result;
+        }
+
+        public async Task<IdpResult> AddUserToIDP(MOrganizeRegistration orgUser)
+        {
+            var token = GetServiceAccountToken();
+            return await CreateUserAsync(token.Token.AccessToken, orgUser);
         }
 
         public SecurityToken ValidateAccessToken(string accessToken, JwtSecurityTokenHandler tokenHandler)
