@@ -7,5 +7,8 @@ namespace Its.Onix.Api.Services
     {
         public MVOtp SendOrgRegisterOtpEmail(string orgId, string email);
         public MVOrganizeRegistration RegisterOrganization(string orgId, MOrganizeRegistration user);
+        public bool IsOrganizationExist(string orgId);
+        public bool IsUserNameExist(string userName);
+        public bool IsEmailExist(string email);
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
-using Its.Onix.Api.ModelsViews;
 
 namespace Prom.LPR.Api.Controllers
 {
@@ -42,7 +41,34 @@ namespace Prom.LPR.Api.Controllers
 
             Response.Headers.Append("CUST_STATUS", result.Status);
             Response.Headers.Append("CUST_DESC", result.Description);
-            
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/IsOrgIdExist/{orgid}")]
+        public IActionResult IsOrgIdExist(string id, string orgid)
+        {
+            var result = svc.IsOrganizationExist(orgid);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/IsUserNameExist/{username}")]
+        public IActionResult IsUserNameExist(string id, string userName)
+        {
+            var result = svc.IsUserNameExist(userName);
+            return Ok(result);
+        }
+        
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/IsEmailExist/{email}")]
+        public IActionResult IsEmailExist(string id, string email)
+        {
+            var result = svc.IsEmailExist(email);
             return Ok(result);
         }
     }

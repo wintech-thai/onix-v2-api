@@ -11,5 +11,6 @@ namespace Its.Onix.Api.Services
         public MVOrganizationUser VerifyUserInOrganization(string orgId, string userName);
         public MVOrganization AddOrganization(string orgId, MOrganization org);
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName);
+        public bool IsOrgIdExist(string orgId);
     }
 }

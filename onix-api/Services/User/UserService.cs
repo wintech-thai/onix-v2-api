@@ -13,7 +13,7 @@ namespace Its.Onix.Api.Services
             repository = repo;
         }
 
-        public MVUser? AddUser(string orgId, MUser user)
+        public MVUser AddUser(string orgId, MUser user)
         {
             //Improvement(validation) : Added validation here
 
