@@ -71,7 +71,44 @@ namespace Its.Onix.Api.Services
 
         public MVOrganizeRegistration RegisterOrganization(string orgId, MOrganizeRegistration user)
         {
-            var r = new MVOrganizeRegistration();
+            var email = user.Email;
+            var userName = user.UserName;
+            var userOrgName = user.UserOrgName;
+            var userOtp = user.ProofEmailOtp;
+
+            var r = new MVOrganizeRegistration()
+            {
+                Status = "SUCCESS",
+                Description = $"Registered org=[{userOrgName}] for user=[{userName}]",
+            };
+
+            // ตรวจสอบว่า OTP ตรงกับที่เคยให้ออกไปก่อนหน้าหรือไม่
+            var emailSentOtpCacheKey = CacheHelper.CreateApiOtpKey(orgId, "SendOrgRegisterOtpEmail");
+            var emailSentOtpObj = _redis.GetObjectAsync<MOtp>($"{emailSentOtpCacheKey}:{email}").Result;
+            if (emailSentOtpObj == null)
+            {
+                r.Status = "PROVIDED_OTP_NOTFOUND";
+                r.Description = $"OTP [{userOtp}] for email=[{email}] not found or expire!!!";
+
+                return r;
+            }
+
+            if (userOtp != emailSentOtpObj.Otp)
+            {
+                r.Status = "PROVIDED_OTP_INVALID";
+                r.Description = $"OTP [{userOtp}] for email=[{email}] invalid (not match)!!!";
+
+                return r;
+            }
+
+            // ตรวจสอบว่ามี username, useremail อยู่ในระบบก่อนหน้าหรือยัง
+
+            // ตรวจสอบว่าชื่อ org_id ซ้ำหรือไม่
+
+            // สร้าง org & user (สร้าง user ที่ Keycloak ด้วย)
+
+            //Send email noti
+
             //Send email noti to activate organization too
             return r;
         }

@@ -79,6 +79,13 @@ namespace Its.Onix.Api.AuditLogs
                 var responseBody = await new StreamReader(memoryStream).ReadToEndAsync();
                 statusDesc = responseBody;
             }
+            else
+            {
+                if (context.Response.Headers.TryGetValue("CUST_DESC", out var statusDescHeader))
+                {
+                    statusDesc = statusDescHeader;
+                }
+            }
 
             stopwatch.Stop();
 
