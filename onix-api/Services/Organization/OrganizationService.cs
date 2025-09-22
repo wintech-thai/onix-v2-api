@@ -15,6 +15,12 @@ namespace Its.Onix.Api.Services
             userService = userSvc;
         }
 
+        public bool IsOrgIdExist(string orgId)
+        {
+            var isExist = repository!.IsCustomOrgIdExist(orgId!);
+            return isExist;
+        }
+
         public MVOrganization AddOrganization(string orgId, MOrganization org)
         {
             var customOrgId = org.OrgCustomId;
