@@ -88,7 +88,7 @@ namespace Its.Onix.Api.Controllers
             if (!string.IsNullOrEmpty(request.UserName) && (userName != request.UserName))
             {
                 //เอาไว้ดูว่ามีใครลองส่ง username เข้ามาเพื่อ hack ระบบหรือไม่
-                message = $"{message}. ALERT : JWT user [{userName}] but injected user is [{request.UserName}]";
+                message = $"{message}, JWT user [{userName}] but injected user is [{request.UserName}]";
             }
             Response.Headers.Append("CUST_DESC", message);
 

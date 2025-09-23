@@ -8,12 +8,21 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Its.Onix.Api.Services
 {
+    public class KeycloakUser
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+    }
+
     public class AuthService : BaseService, IAuthService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string tokenEndpoint = "";
         private readonly string userEndpoint = "";
         private readonly string chagePasswordEndpoint = "";
+        private readonly string getUserIdEndpoint = "";
+        private readonly string logoutEndpoint = "";
         private readonly string issuer = "";
         private readonly string signedKeyUrl = "";
         private readonly string? clientId = "";
@@ -36,7 +45,9 @@ namespace Its.Onix.Api.Services
             signedKeyUrl = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/certs";
 
             userEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users";
-            chagePasswordEndpoint = $"{urlPrefix}/auth/realms/{realm}/account/credentials/password";
+            chagePasswordEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users/<<user-id>>/reset-password";
+            logoutEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users/<<user-id>>/logout";
+            getUserIdEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users?username=<<user-name>>";
         }
 
         private string GetPreferredUsername(string accessToken)
@@ -143,19 +154,22 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        private async Task<IdpResult> ChangeOwnPasswordAsync(MUpdatePassword password, string token)
+        private async Task<IdpResult> ChangeOwnPasswordAsync(MUpdatePassword password, string token, string userId)
         {
+            var ep = chagePasswordEndpoint.Replace("<<user-id>>", userId);
+
             using var client = new HttpClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var body = new
             {
-                currentPassword = password.CurrentPassword,
-                newPassword = password.NewPassword,
+                type = "password",
+                value = password.NewPassword,
+                temporary = false,
             };
 
             var jsonContent = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(chagePasswordEndpoint, jsonContent);
+            var response = await client.PutAsync(ep, jsonContent);
 
             var result = new IdpResult()
             {
@@ -169,6 +183,66 @@ namespace Its.Onix.Api.Services
                 var errMsg = await response.Content.ReadAsStringAsync();
                 result.Message = $"Uanble to call update password API, {errMsg}";
             }
+
+            return result;
+        }
+
+        private async Task<IdpResult> LogoutUserAsync(string token, string userId)
+        {
+            var ep = logoutEndpoint.Replace("<<user-id>>", userId);
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var response = await client.PostAsync(ep, null);
+
+            var result = new IdpResult()
+            {
+                Success = true,
+                Message = $"Successfully logout user for IDP user=[{userId}].",
+            };
+
+            if (!response.IsSuccessStatusCode)
+            {
+                result.Success = false;
+                var errMsg = await response.Content.ReadAsStringAsync();
+                result.Message = $"Uanble to call LogoutUserAsync(), {errMsg}";
+            }
+
+            return result;
+        }
+
+        public async Task<IdpResult> GetUserIdByUsernameAsync(string username, string token)
+        {
+            var ep = getUserIdEndpoint.Replace("<<user-name>>", username);
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var response = await client.GetAsync(ep);
+
+            var result = new IdpResult()
+            {
+                UserId = "",
+                Success = true,
+                Message = "",
+            };
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                result.Success = false;
+                result.Message = error;
+
+                return result;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var users = JsonSerializer.Deserialize<List<KeycloakUser>>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var user = users?.FirstOrDefault();
+            result.UserId = user?.Id;
 
             return result;
         }
@@ -237,7 +311,6 @@ namespace Its.Onix.Api.Services
         public async Task<IdpResult> AddUserToIDP(MOrganizeRegistration orgUser)
         {
             var token = GetServiceAccountToken();
-            //TODO : ต้องยิง API อีกตัวไปที่ Keycloak ให้สร้าง initial password
             return await CreateUserAsync(token.Token.AccessToken, orgUser);
         }
 
@@ -249,17 +322,27 @@ namespace Its.Onix.Api.Services
                 Message = "",
             };
 
-            //เอา user/password ที่ได้มาไป login อีกรอบเพื่อเอา access token
+            // เอา current password มา login ก่อนเพื่อดูว่าจะ login ได้มั้ย เพื่อมั่นใจว่าเค้ารู้ password เก่าจริง ๆ 
+            var userLogin = new UserLogin()
+            {
+                UserName = password.UserName,
+                Password = password.CurrentPassword,
+            };
+            var loginResult = Login(userLogin);
+            if (loginResult.Status != "Success")
+            {
+                r.Success = false;
+                r.Message = "Unable to login with current password!!!";
+                return r;
+            }
+
+            //เอา admin access token
             var form = new[]
             {
-                new KeyValuePair<string,string>("grant_type", "password"),
-                //new KeyValuePair<string,string>("response_type", "token"),
+                new KeyValuePair<string,string>("grant_type", "client_credentials"),
                 new KeyValuePair<string,string>("client_id", clientId!),
                 new KeyValuePair<string,string>("client_secret", clientSecret!),
-                new KeyValuePair<string,string>("username", password.UserName),
-                new KeyValuePair<string,string>("password", password.CurrentPassword)
             };
-
             var userToken = GetToken(form);
             if (userToken.Status != "Success")
             {
@@ -268,13 +351,24 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //เรียก Keycloak เพื่อเปลี่ยนรหัสผ่านของ user คนนั้น
-            //TODO - ตรงนี้ยังไม่เวิร์ค
-            var result = await ChangeOwnPasswordAsync(password, userToken.Token.AccessToken);
+            // อ่านค่า UserId จาก UserName
+            var userIdResult = GetUserIdByUsernameAsync(password.UserName, userToken.Token.AccessToken).Result;
+            if (!userIdResult.Success)
+            {
+                return userIdResult;
+            }
 
-            //TODO : ต้อง logout session ของ user นั้นออกทั้งหมด้วยเพื่อบังคับให้ login ใหม่
+            // เปลี่ยน password โดยใช้ UserId เป็น input
+            var userId = userIdResult.UserId;
+            var chagePasswordResult = await ChangeOwnPasswordAsync(password, userToken.Token.AccessToken, userId!);
+            if (!chagePasswordResult.Success)
+            {
+                return chagePasswordResult;
+            }
 
-            return result;
+            // ต้อง logout session ของ user นั้นออกเพื่อบังคับให้ login ใหม่ (ใช้ refresh token เพื่อขอ access token ไม่ได้)
+            var logoutResult = await LogoutUserAsync(userToken.Token.AccessToken, userId!);
+            return logoutResult;
         }
     }
 }

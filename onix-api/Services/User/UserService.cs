@@ -8,13 +8,16 @@ namespace Its.Onix.Api.Services
     {
         private readonly IUserRepository repository;
         private readonly IAuthService _authService;
+        private readonly IJobService _jobService;
 
         public UserService(
             IUserRepository repo,
+            IJobService jobService,
             IAuthService authService) : base()
         {
             repository = repo;
             _authService = authService;
+            _jobService = jobService;
         }
 
         public MVUser AddUser(string orgId, MUser user)
@@ -92,6 +95,27 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        private MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName)
+        {
+            var job = new MJob()
+            {
+                Name = $"EmailPasswordChangeJob:{Guid.NewGuid()}",
+                Description = "User.CreateEmailPasswordChangeJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = "org-password-change" },
+                    new NameValue { Name = "ORG_USER_NAMME", Value = userName },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+            return result;
+        }
+
         public MVUpdatePassword UpdatePassword(string userName, MUpdatePassword password)
         {
             var result = new MVUpdatePassword()
@@ -108,6 +132,16 @@ namespace Its.Onix.Api.Services
             }
 
             //Send email to user to notify password change
+            var user = GetUserByName("notuse", userName);
+            if (user == null)
+            {
+                result.Status = "USERNAME_NOT_FOUND_DB";
+                result.Description = $"Unable to find user name [{userName}] in DB!!!";
+
+                return result;
+            }
+
+            CreateEmailPasswordChangeJob("notuse", user.UserEmail!, userName);
 
             return result;
         }

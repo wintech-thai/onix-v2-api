@@ -36,7 +36,7 @@ namespace Its.Onix.Api.Authentications
                     User = new Models.MUser() { UserName = user },
                     OrgUser = new Models.MOrganizationUser() { OrgCustomId = orgId },
                 };
-                Console.WriteLine($"WHITELISTED ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
+                //Console.WriteLine($"WHITELISTED ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
                 return ou;
             }
 
@@ -77,12 +77,14 @@ namespace Its.Onix.Api.Authentications
                 Role = m.OrgUser!.RolesList,
                 AuthenType = "JWT",
                 OrgId = m.OrgUser.OrgCustomId,
+                Email = m.User.UserEmail,
             };
 
             u.Claims = new[] {
                 new Claim(ClaimTypes.NameIdentifier, u.UserId.ToString()!),
                 new Claim(ClaimTypes.Name, user),
                 new Claim(ClaimTypes.Role, u.Role!),
+                //new Claim(ClaimTypes.Email, u.Email!),
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
