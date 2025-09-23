@@ -108,6 +108,21 @@ namespace Its.Onix.Api.Services
                 enabled = true,
                 firstName = orgUser.Name,
                 lastName = orgUser.Lastname,
+
+                credentials = new[]
+                {
+                    new
+                    {
+                        type = "password",
+                        value = orgUser.UserInitialPassword,
+                        temporary = false
+                    }
+                },
+                groups = new string[] { },
+                attributes = new
+                {
+                    locale = new[] { "en" }
+                }
             };
 
             var content = new StringContent(JsonSerializer.Serialize(user), Encoding.UTF8, "application/json");
