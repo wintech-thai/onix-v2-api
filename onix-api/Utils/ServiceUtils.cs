@@ -6,6 +6,19 @@ namespace Its.Onix.Api.Utils
 {
     public static class ServiceUtils
     {
+        private static readonly string[] whiteListedApi = [
+                "Organization:GetUserAllowedOrg",
+                "User:UpdatePassword"
+            ];
+
+        public static bool IsWhiteListedAPI(string controller, string api)
+        {
+            //จะไม่ต้อง verify user แต่ยังต้อง validate JWT token อยู่
+            var whiteListedKey = $"{controller}:{api}";
+
+            return whiteListedApi.Contains(whiteListedKey);
+        }
+
         public static string MaskEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
@@ -31,15 +44,15 @@ namespace Its.Onix.Api.Utils
             else
             {
                 // เก็บตัวแรกและตัวสุดท้าย
-                var maskedLocal = local[0] 
-                                + new string('*', local.Length - 2) 
+                var maskedLocal = local[0]
+                                + new string('*', local.Length - 2)
                                 + local[^1];
                 return $"{maskedLocal}@{domain}";
             }
         }
 
         public static MVEntityRestrictedInfo MaskingEntity(MVEntity entity)
-        {            
+        {
             var m = new MVEntityRestrictedInfo()
             {
                 Status = entity.Status,
@@ -79,16 +92,21 @@ namespace Its.Onix.Api.Utils
                 return false;
             }
         }
-
-        public static string GetOrgId(HttpRequest request)
+        
+        public static PathComponent GetPathComponent(HttpRequest request)
         {
             var pattern = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
             var path = request.Path;
             MatchCollection matches = Regex.Matches(path, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
-            var orgId = matches[0].Groups[2].Value;
+            var result = new PathComponent()
+            {
+                OrgId = matches[0].Groups[2].Value,
+                ControllerName = matches[0].Groups[1].Value,
+                ApiName = matches[0].Groups[3].Value,
+            };
 
-            return orgId;
+            return result;
         }
     }
 }

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+export $(grep -v '^#' .env | xargs)
+
+ACCESS_TOKEN="eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJHOTV2ajMtZDlJQ0otNEJuZ09iUkY2MVlpNzBMR01jQkpuZklISmFoRkFJIn0.eyJleHAiOjE3NTg2MzAwMTUsImlhdCI6MTc1ODYyOTcxNSwianRpIjoiN2I5ODlhZTMtZWEzNy00YjJiLThmNGItODU1OGM3NjY0ZDc3IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay5kZXZvcHMubmFwYmlvdGVjLmlvL2F1dGgvcmVhbG1zL29uaXgtdjItZGV2IiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImQ1YWRhYjZmLTU1ODYtNGE3OC1iYTg5LWFiMGY5MGI1ZTk0MCIsInR5cCI6IkJlYXJlciIsImF6cCI6InBsZWFzZS1zY2FuIiwic2Vzc2lvbl9zdGF0ZSI6Ijc2ODI3NDM1LTk3YzEtNDBmMS1hYWZmLWI3ZWZiYmU2Y2U2YiIsImFjciI6IjEiLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJkZWZhdWx0LXJvbGVzLW9uaXgtdjItZGV2IiwidW1hX2F1dGhvcml6YXRpb24iXX0sInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50IiwibWFuYWdlLWFjY291bnQtbGlua3MiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6Im9wZW5pZCBwcm9maWxlIGVtYWlsIG9mZmxpbmVfYWNjZXNzIiwic2lkIjoiNzY4Mjc0MzUtOTdjMS00MGYxLWFhZmYtYjdlZmJiZTZjZTZiIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJuYW1lIjoiUGphbWUgUGxlYXNlLVNjYW4iLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwamFtZTE1IiwiZ2l2ZW5fbmFtZSI6IlBqYW1lIiwibG9jYWxlIjoiZW4iLCJmYW1pbHlfbmFtZSI6IlBsZWFzZS1TY2FuIiwiZW1haWwiOiJwamFtZTE1LmZiQGdtYWlsLmNvbSJ9.FbN4R9tK_iPRUAlj6HzOQo97qPIs0ZTbVxEGXu3xqqmHwMwZxrwwEyG8yE_6_MuD3LfW0mZj4CnvitjK_4T62T1LgSVZwnr_CwiFqEmbqkNSGJbIB-1qvojyjgJmi1sKrIwyak11dWdvGLdvvIrKWv2y0tecTvISZthppEQPmrQSIrz76x9MNYia-cm63EMDwmJcrSaxnGtCFFZLDClf_Iv5gCNxPRr3fm-oovCIRhtg3F1ha9Q4cBM62umtITbuptwMw_agQtxafDDYJKbqv2LrT9e1Dgq7yA46sLSFuMyEPC2GE8UaNzW9o0YJ5LPqUHOSEVVtyjr33v5ahAZBmQ"
+ACCESS_TOKEN_B64=$(echo -n "${ACCESS_TOKEN}" | base64 -w0)
+
+#curl -s -X GET ${API_HTTP_ENDPOINT}/api/Organization/org/${API_ORG}/action/GetUserAllowedOrg \
+#-H "Content-Type: application/json" -v -u "dummy:${API_KEY}"
+
+API_ENDPOINT='/api/User/org/temp/action/UpdatePassword'
+
+curl -s -X POST "${API_HTTP_ENDPOINT}${API_ENDPOINT}" \
+-H "Content-Type: application/json" -v \
+-H "Authorization: Bearer ${ACCESS_TOKEN_B64}" \
+-d @update-password.json \
+
+#curl -s -X POST https://keycloak.devops.napbiotec.io/auth/realms/onix-v2-dev/account/credentials/password \
+#-H "Content-Type: application/json" -v \
+#-H "Authorization: Bearer ${ACCESS_TOKEN}" \
+#-d @update-password.json \

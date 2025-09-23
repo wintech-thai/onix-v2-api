@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
+using Microsoft.AspNetCore.Identity;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -17,9 +18,27 @@ namespace Its.Onix.Api.Authentications
             _redis = redis;
         }
 
-        private MVOrganizationUser? VerifyUser(string orgId, string user)
+        private MVOrganizationUser? VerifyUser(string orgId, string user, HttpRequest request)
         {
             //This has not been tested
+            //จะมี API บางตัวที่ไม่ต้องสนใจ user ว่าอยู่ใน org มั้ยเช่น UpdatePassword, GetAllAllowedOrg...
+
+            var pc = ServiceUtils.GetPathComponent(request);
+            var isWhiteListed = ServiceUtils.IsWhiteListedAPI(pc.ControllerName, pc.ApiName);
+
+            if (isWhiteListed)
+            {
+                var ou = new MVOrganizationUser()
+                {
+                    Status = "OK",
+                    Description = $"Whitelisted API [{pc.ControllerName}] [{pc.ApiName}]",
+
+                    User = new Models.MUser() { UserName = user },
+                    OrgUser = new Models.MOrganizationUser() { OrgCustomId = orgId },
+                };
+                //Console.WriteLine($"WHITELISTED ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
+                return ou;
+            }
 
             var key = $"#{orgId}:VerifyUser:#{user}";
             var t = _redis.GetObjectAsync<MVOrganizationUser>(key);
@@ -38,7 +57,7 @@ namespace Its.Onix.Api.Authentications
 
         public User? Authenticate(string orgId, string user, string password, HttpRequest request)
         {
-            var m = VerifyUser(orgId, user);
+            var m = VerifyUser(orgId, user, request);
             if (m == null)
             {
                 return null;
@@ -58,6 +77,7 @@ namespace Its.Onix.Api.Authentications
                 Role = m.OrgUser!.RolesList,
                 AuthenType = "JWT",
                 OrgId = m.OrgUser.OrgCustomId,
+                Email = m.User.UserEmail,
             };
 
             u.Claims = new[] {
