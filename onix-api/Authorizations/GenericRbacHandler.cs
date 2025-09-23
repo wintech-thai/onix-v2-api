@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Its.Onix.Api.Services;
 using Serilog;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Authorizations;
 
@@ -31,7 +32,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var group = matches[0].Groups[1].Value;
         var api = matches[0].Groups[3].Value;
 
-        if ((group == "Organization") && (api == "GetUserAllowedOrg"))
+        if (ServiceUtils.IsWhiteListedAPI(group, api))
         {
             //No need to check for permission just only for this API
             return "TEMP";

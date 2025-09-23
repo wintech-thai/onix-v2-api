@@ -6,11 +6,15 @@ namespace Its.Onix.Api.Services
 {
     public class UserService : BaseService, IUserService
     {
-        private readonly IUserRepository? repository = null;
+        private readonly IUserRepository repository;
+        private readonly IAuthService _authService;
 
-        public UserService(IUserRepository repo) : base()
+        public UserService(
+            IUserRepository repo,
+            IAuthService authService) : base()
         {
             repository = repo;
+            _authService = authService;
         }
 
         public MVUser AddUser(string orgId, MUser user)
@@ -84,6 +88,26 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetUserByName(userName);
+
+            return result;
+        }
+
+        public MVUpdatePassword UpdatePassword(string userName, MUpdatePassword password)
+        {
+            var result = new MVUpdatePassword()
+            {
+                Status = "SUCCESS",
+                Description = $"Updated password for user [{userName}]",
+            };
+
+            var r = _authService.ChangeUserPasswordIdp(password).Result;
+            if (!r.Success)
+            {
+                result.Description = r.Message;
+                result.Status = "IDP_UPDATE_PASSWORD_ERROR";
+            }
+
+            //Send email to user to notify password change
 
             return result;
         }

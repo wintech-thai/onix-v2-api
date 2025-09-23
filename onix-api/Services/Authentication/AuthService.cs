@@ -13,11 +13,13 @@ namespace Its.Onix.Api.Services
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string tokenEndpoint = "";
         private readonly string userEndpoint = "";
+        private readonly string chagePasswordEndpoint = "";
         private readonly string issuer = "";
         private readonly string signedKeyUrl = "";
         private readonly string? clientId = "";
         private readonly string? clientSecret = "";
         private IJwtSigner signer = new JwtSigner();
+
 
         public AuthService(IHttpClientFactory httpClientFactory) : base()
         {
@@ -34,6 +36,7 @@ namespace Its.Onix.Api.Services
             signedKeyUrl = $"{urlPrefix}/auth/realms/{realm}/protocol/openid-connect/certs";
 
             userEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users";
+            chagePasswordEndpoint = $"{urlPrefix}/auth/realms/{realm}/account/credentials/password";
         }
 
         private string GetPreferredUsername(string accessToken)
@@ -75,44 +78,6 @@ namespace Its.Onix.Api.Services
             {
                 userToken.Status = "FAILED";
                 userToken.Message = ex.Message;
-            }
-
-            return userToken;
-        }
-
-        public UserToken Login(UserLogin userLogin)
-        {
-            var form = new[]
-            {
-                new KeyValuePair<string,string>("grant_type", "password"),
-                new KeyValuePair<string,string>("response_type", "token"),
-                new KeyValuePair<string,string>("scope", "openid offline_access"),
-                new KeyValuePair<string,string>("client_id", clientId!),
-                new KeyValuePair<string,string>("client_secret", clientSecret!),
-                new KeyValuePair<string,string>("username", userLogin.UserName),
-                new KeyValuePair<string,string>("password", userLogin.Password)
-            };
-            //Console.WriteLine($"==== [{userLogin.Password}] ====");
-            var userToken = GetToken(form);
-            userToken.UserName = userLogin.UserName;
-
-            return userToken;
-        }
-
-        public UserToken RefreshToken(string refreshToken)
-        {
-            var form = new[]
-            {
-                new KeyValuePair<string,string>("grant_type", "refresh_token"),
-                new KeyValuePair<string,string>("client_id", clientId!),
-                new KeyValuePair<string,string>("client_secret", clientSecret!),
-                new KeyValuePair<string,string>("refresh_token", refreshToken),
-            };
-
-            var userToken = GetToken(form);
-            if (userToken.Status == "Success")
-            {
-                userToken.UserName = GetPreferredUsername(userToken.Token.AccessToken!);
             }
 
             return userToken;
@@ -163,10 +128,34 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        public async Task<IdpResult> AddUserToIDP(MOrganizeRegistration orgUser)
+        private async Task<IdpResult> ChangeOwnPasswordAsync(MUpdatePassword password, string token)
         {
-            var token = GetServiceAccountToken();
-            return await CreateUserAsync(token.Token.AccessToken, orgUser);
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var body = new
+            {
+                currentPassword = password.CurrentPassword,
+                newPassword = password.NewPassword,
+            };
+
+            var jsonContent = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(chagePasswordEndpoint, jsonContent);
+
+            var result = new IdpResult()
+            {
+                Success = true,
+                Message = $"Successfully reset password for [{password.UserName}].",
+            };
+
+            if (!response.IsSuccessStatusCode)
+            {
+                result.Success = false;
+                var errMsg = await response.Content.ReadAsStringAsync();
+                result.Message = $"Uanble to call update password API, {errMsg}";
+            }
+
+            return result;
         }
 
         public SecurityToken ValidateAccessToken(string accessToken, JwtSecurityTokenHandler tokenHandler)
@@ -190,6 +179,87 @@ namespace Its.Onix.Api.Services
             tokenHandler.ValidateToken(accessToken, param, out validatedToken);
 
             return validatedToken;
+        }
+
+        public UserToken Login(UserLogin userLogin)
+        {
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "password"),
+                new KeyValuePair<string,string>("response_type", "token"),
+                new KeyValuePair<string,string>("scope", "openid offline_access"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+                new KeyValuePair<string,string>("username", userLogin.UserName),
+                new KeyValuePair<string,string>("password", userLogin.Password)
+            };
+            //Console.WriteLine($"==== [{userLogin.Password}] ====");
+            var userToken = GetToken(form);
+            userToken.UserName = userLogin.UserName;
+
+            return userToken;
+        }
+
+        public UserToken RefreshToken(string refreshToken)
+        {
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "refresh_token"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+                new KeyValuePair<string,string>("refresh_token", refreshToken),
+            };
+
+            var userToken = GetToken(form);
+            if (userToken.Status == "Success")
+            {
+                userToken.UserName = GetPreferredUsername(userToken.Token.AccessToken!);
+            }
+
+            return userToken;
+        }
+
+        public async Task<IdpResult> AddUserToIDP(MOrganizeRegistration orgUser)
+        {
+            var token = GetServiceAccountToken();
+            //TODO : ต้องยิง API อีกตัวไปที่ Keycloak ให้สร้าง initial password
+            return await CreateUserAsync(token.Token.AccessToken, orgUser);
+        }
+
+        public async Task<IdpResult> ChangeUserPasswordIdp(MUpdatePassword password)
+        {
+            var r = new IdpResult()
+            {
+                Success = true,
+                Message = "",
+            };
+
+            //เอา user/password ที่ได้มาไป login อีกรอบเพื่อเอา access token
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "password"),
+                //new KeyValuePair<string,string>("response_type", "token"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+                new KeyValuePair<string,string>("username", password.UserName),
+                new KeyValuePair<string,string>("password", password.CurrentPassword)
+            };
+
+            var userToken = GetToken(form);
+            if (userToken.Status != "Success")
+            {
+                r.Success = false;
+                r.Message = $"Unable to get access token for password reset [{userToken.Message}]";
+                return r;
+            }
+
+            //เรียก Keycloak เพื่อเปลี่ยนรหัสผ่านของ user คนนั้น
+            //TODO - ตรงนี้ยังไม่เวิร์ค
+            var result = await ChangeOwnPasswordAsync(password, userToken.Token.AccessToken);
+
+            //TODO : ต้อง logout session ของ user นั้นออกทั้งหมด้วยเพื่อบังคับให้ login ใหม่
+
+            return result;
         }
     }
 }

@@ -56,17 +56,17 @@ namespace Its.Onix.Api.Authentications
             var authResult = new AuthenResult();
             try
             {
-                var orgId = ServiceUtils.GetOrgId(Request);
+                var pc = ServiceUtils.GetPathComponent(Request);
                 var credentialBytes = Convert.FromBase64String(authHeader.Parameter!);
 
                 if (authHeader.Scheme.Equals("Basic"))
                 {
-                    authResult = await Task.Run(() => AuthenticateBasic(orgId, credentialBytes, Request));
+                    authResult = await Task.Run(() => AuthenticateBasic(pc.OrgId, credentialBytes, Request));
                 }
                 else
                 {
                     //Bearer
-                    authResult = await Task.Run(() => AuthenticateBearer(orgId, credentialBytes, Request));
+                    authResult = await Task.Run(() => AuthenticateBearer(pc.OrgId, credentialBytes, Request));
                 }
             }
             catch (Exception e)
