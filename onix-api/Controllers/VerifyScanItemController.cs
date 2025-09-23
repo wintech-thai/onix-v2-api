@@ -71,16 +71,25 @@ namespace Its.Onix.Api.Controllers
                     return BadRequest(new { error = "No default scan-item action is set!!!" });
                 }
 
-                _ = _redis.SetObjectAsync(cacheKey, m, TimeSpan.FromMinutes(300));
+                _ = _redis.SetObjectAsync(cacheKey, m, TimeSpan.FromMinutes(10));
                 scanItemAction = m;
             }
 
             var baseUrl = scanItemAction!.RedirectUrl;
             var key = scanItemAction!.EncryptionKey;
             var iv = scanItemAction!.EncryptionIV;
-
+            //Console.WriteLine($"@@@@@@@@@@@@@@@@2 [{key}] [{iv}]");
             var result = svc.VerifyScanItem(id, serial, pin);
             result.ThemeVerify = string.IsNullOrWhiteSpace(scanItemAction.ThemeVerify) ? "default" : scanItemAction.ThemeVerify;
+
+            if (scanItemAction.RegisteredAwareFlag == "NO")
+            {
+                //เป็นตัวบอกว่าจะไม่ให้ความสำคัญกับ ALREADY_REGISTERED
+                if (result.Status == "ALREADY_REGISTERED")
+                {
+                    result.Status = "SUCCESS";
+                }
+            }
 
             if (result.ScanItem != null)
             {

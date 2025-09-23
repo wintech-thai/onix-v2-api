@@ -30,6 +30,9 @@ namespace Its.Onix.Api.Models
         [Column("theme_verify")] 
         public string? ThemeVerify { get; set; }
 
+        [Column("registered_aware_flag")] 
+        public string? RegisteredAwareFlag { get; set; } /* YES or NO, ถ้า YES จะ response ALREADY_REGISTER ถ้ามีการ register แล้ว */
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }

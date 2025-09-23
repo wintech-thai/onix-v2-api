@@ -77,6 +77,8 @@ namespace Its.Onix.Api.Database.Repositories
                 result.RedirectUrl = item.RedirectUrl;
                 result.EncryptionKey = item.EncryptionKey;
                 result.EncryptionIV = item.EncryptionIV;
+                result.RegisteredAwareFlag = item.RegisteredAwareFlag;
+                
                 context!.SaveChanges();
             }
 
