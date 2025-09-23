@@ -107,7 +107,7 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "org-password-change" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = "user-password-change" },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
                 ]
             };

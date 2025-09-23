@@ -84,7 +84,6 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.NameIdentifier, u.UserId.ToString()!),
                 new Claim(ClaimTypes.Name, user),
                 new Claim(ClaimTypes.Role, u.Role!),
-                //new Claim(ClaimTypes.Email, u.Email!),
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
