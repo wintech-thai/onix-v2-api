@@ -195,13 +195,14 @@ namespace Its.Onix.Api.Services
                 UserName = userName,
                 UserEmail = email,
                 UserId = usrResult.User!.UserId.ToString(), //ได้ค่า ID มาตอนที่ add user ก่อนหน้า
+                IsOrgInitialUser = "YES",
                 RolesList = "OWNER",
             };
             var usrAddOrgResult = _orgService.AddUserToOrganization(userOrgId!, orgUser);
             if (usrAddOrgResult.Status != "OK")
             {
-                r.Status = orgResult.Status;
-                r.Description = orgResult.Description;
+                r.Status = usrAddOrgResult.Status;
+                r.Description = usrAddOrgResult.Description;
 
                 return r;
             }

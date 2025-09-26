@@ -30,6 +30,9 @@ namespace Its.Onix.Api.Models
         [Column("roles_list")]
         public string? RolesList { get; set; }
 
+        [Column("is_org_initial_user")]
+        public string? IsOrgInitialUser { get; set; } /* YES or NO */
+        
         [NotMapped]
         public string? UserEmail { get; set; }
         public string? OrgName { get; set; }
