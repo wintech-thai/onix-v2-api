@@ -251,9 +251,9 @@ var assemblies = [
       { "name": "Its.Onix.Api.Database.Repositories.SystemVariableRepository", "rp": "onix_api_SystemVariableRepository.html", "cl": 0, "ucl": 83, "cal": 83, "tl": 132, "cb": 0, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Database.Repositories.UserRepository", "rp": "onix_api_UserRepository.html", "cl": 0, "ucl": 34, "cal": 34, "tl": 59, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Models.MCustomerRegister", "rp": "onix_api_MCustomerRegister.html", "cl": 0, "ucl": 2, "cal": 2, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Its.Onix.Api.Models.MOtp", "rp": "onix_api_MOtp.html", "cl": 0, "ucl": 2, "cal": 2, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Its.Onix.Api.Models.NameValue", "rp": "onix_api_NameValue.html", "cl": 0, "ucl": 2, "cal": 2, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Its.Onix.Api.Services.AdminService", "rp": "onix_api_AdminService.html", "cl": 20, "ucl": 142, "cal": 162, "tl": 242, "cb": 0, "tb": 18, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Its.Onix.Api.Models.MOtp", "rp": "onix_api_MOtp.html", "cl": 1, "ucl": 1, "cal": 2, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Its.Onix.Api.Models.NameValue", "rp": "onix_api_NameValue.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 8, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Its.Onix.Api.Services.AdminService", "rp": "onix_api_AdminService.html", "cl": 80, "ucl": 82, "cal": 162, "tl": 242, "cb": 3, "tb": 18, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Services.ApiKeyService", "rp": "onix_api_ApiKeyService.html", "cl": 0, "ucl": 105, "cal": 105, "tl": 164, "cb": 0, "tb": 14, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Services.AuthService", "rp": "onix_api_AuthService.html", "cl": 0, "ucl": 265, "cal": 265, "tl": 374, "cb": 0, "tb": 26, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Services.BaseService", "rp": "onix_api_BaseService.html", "cl": 3, "ucl": 0, "cal": 3, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -281,11 +281,11 @@ var assemblies = [
       { "name": "Its.Onix.Api.Services.UserLogin", "rp": "onix_api_UserLogin.html", "cl": 0, "ucl": 7, "cal": 7, "tl": 14, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Services.UserService", "rp": "onix_api_UserService.html", "cl": 0, "ucl": 91, "cal": 91, "tl": 149, "cb": 0, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Services.UserToken", "rp": "onix_api_UserToken.html", "cl": 0, "ucl": 11, "cal": 11, "tl": 19, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Its.Onix.Api.Utils.CacheHelper", "rp": "onix_api_CacheHelper.html", "cl": 0, "ucl": 10, "cal": 10, "tl": 27, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Its.Onix.Api.Utils.CacheHelper", "rp": "onix_api_CacheHelper.html", "cl": 4, "ucl": 6, "cal": 10, "tl": 27, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Utils.ConfigUtils", "rp": "onix_api_ConfigUtils.html", "cl": 0, "ucl": 17, "cal": 17, "tl": 28, "cb": 0, "tb": 6, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Utils.EncryptionUtils", "rp": "onix_api_EncryptionUtils.html", "cl": 0, "ucl": 31, "cal": 31, "tl": 50, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Utils.RedisHelper", "rp": "onix_api_RedisHelper.html", "cl": 0, "ucl": 24, "cal": 24, "tl": 49, "cb": 0, "tb": 4, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
-      { "name": "Its.Onix.Api.Utils.ServiceUtils", "rp": "onix_api_ServiceUtils.html", "cl": 0, "ucl": 69, "cal": 69, "tl": 112, "cb": 0, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
+      { "name": "Its.Onix.Api.Utils.ServiceUtils", "rp": "onix_api_ServiceUtils.html", "cl": 9, "ucl": 60, "cal": 69, "tl": 112, "cb": 2, "tb": 12, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "Its.Onix.Api.Utils.StorageUtils", "rp": "onix_api_StorageUtils.html", "cl": 0, "ucl": 51, "cal": 51, "tl": 92, "cb": 0, "tb": 8, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "onix.api.Migrations.Cycle_001", "rp": "onix_api_Cycle_001.html", "cl": 0, "ucl": 337, "cal": 337, "tl": 388, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
       { "name": "onix.api.Migrations.DataContextModelSnapshot", "rp": "onix_api_DataContextModelSnapshot.html", "cl": 0, "ucl": 914, "cal": 914, "tl": 958, "cb": 0, "tb": 0, "cm": 0, "fcm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "mfch": [], "hc": [], "metrics": { } },
@@ -338,12 +338,6 @@ var riskHotspots = [
       { "value": 18, "exceeded": true },
     ]},
   {
-    "assembly": "onix-api", "class": "Its.Onix.Api.Services.AdminService", "reportPath": "onix_api_AdminService.html", "methodName": "RegisterOrganization(System.String,Its.Onix.Api.Models.MOrganizeRegistration)", "methodShortName": "RegisterOrganization(...)", "fileIndex": 0, "line": 98,
-    "metrics": [
-      { "value": 342, "exceeded": true },
-      { "value": 18, "exceeded": true },
-    ]},
-  {
     "assembly": "onix-api", "class": "Its.Onix.Api.Services.ScanItemService", "reportPath": "onix_api_ScanItemService.html", "methodName": "GetScanItemProduct(System.String,System.String,System.String,System.String)", "methodShortName": "GetScanItemProduct(...)", "fileIndex": 0, "line": 55,
     "metrics": [
       { "value": 272, "exceeded": true },
@@ -378,6 +372,12 @@ var riskHotspots = [
     "metrics": [
       { "value": 156, "exceeded": true },
       { "value": 12, "exceeded": false },
+    ]},
+  {
+    "assembly": "onix-api", "class": "Its.Onix.Api.Services.AdminService", "reportPath": "onix_api_AdminService.html", "methodName": "RegisterOrganization(System.String,Its.Onix.Api.Models.MOrganizeRegistration)", "methodShortName": "RegisterOrganization(...)", "fileIndex": 0, "line": 98,
+    "metrics": [
+      { "value": 141, "exceeded": true },
+      { "value": 18, "exceeded": true },
     ]},
   {
     "assembly": "onix-api", "class": "Its.Onix.Api.Authorizations.GenericRbacHandler", "reportPath": "onix_api_GenericRbacHandler.html", "methodName": "IsRoleValid(System.Collections.Generic.IEnumerable`1<Its.Onix.Api.Models.MRole>,System.String)", "methodShortName": "IsRoleValid(...)", "fileIndex": 0, "line": 28,
