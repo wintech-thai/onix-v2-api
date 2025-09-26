@@ -1,12 +1,11 @@
 using Moq;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
-using Its.Onix.Api.Models;
 using Its.Onix.Api.Authentications;
 using Microsoft.AspNetCore.Http;
 using Its.Onix.Api.ModelsViews;
 
-namespace Its.Onix.Api.Test.Services;
+namespace Its.Onix.Api.Test.Authentications;
 
 public class BearerAuthenticationRepoTest
 {
