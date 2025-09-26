@@ -3,16 +3,15 @@ using System.Security.Claims;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
-using Microsoft.AspNetCore.Identity;
 
 namespace Its.Onix.Api.Authentications
 {
     public class BearerAuthenticationRepo : IBearerAuthenticationRepo
     {
         private readonly IOrganizationService? service = null;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
 
-        public BearerAuthenticationRepo(IOrganizationService svc, RedisHelper redis)
+        public BearerAuthenticationRepo(IOrganizationService svc, IRedisHelper redis)
         {
             service = svc;
             _redis = redis;
@@ -20,7 +19,6 @@ namespace Its.Onix.Api.Authentications
 
         private MVOrganizationUser? VerifyUser(string orgId, string user, HttpRequest request)
         {
-            //This has not been tested
             //จะมี API บางตัวที่ไม่ต้องสนใจ user ว่าอยู่ใน org มั้ยเช่น UpdatePassword, GetAllAllowedOrg...
 
             var pc = ServiceUtils.GetPathComponent(request);
@@ -80,14 +78,14 @@ namespace Its.Onix.Api.Authentications
                 Email = m.User.UserEmail,
             };
 
-            u.Claims = new[] {
+            u.Claims = [
                 new Claim(ClaimTypes.NameIdentifier, u.UserId.ToString()!),
                 new Claim(ClaimTypes.Name, user),
                 new Claim(ClaimTypes.Role, u.Role!),
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
-            };
+            ];
 
             return u;
         }

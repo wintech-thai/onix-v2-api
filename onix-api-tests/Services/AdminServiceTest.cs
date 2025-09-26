@@ -247,7 +247,6 @@ public class AdminServiceTest
     [InlineData("existing-org-id", "user1", "test1@gmail.com", "ORG_ADD_ERROR")]
     public void RegisterOrganizationAddOrgErrorTest(string orgId, string userName, string email, string needStatus)
     {
-        //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "UnitTest");
         var otp = "123456";
 
         var orgSvc = new Mock<IOrganizationService>();
@@ -281,7 +280,6 @@ public class AdminServiceTest
     [InlineData("orgid1", "user1", "test1@gmail.com", "USER_ADD_ERROR")]
     public void RegisterOrganizationAddUserErrorTest(string orgId, string userName, string email, string needStatus)
     {
-        //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "UnitTest");
         var otp = "123456";
 
         var orgSvc = new Mock<IOrganizationService>();
@@ -316,7 +314,6 @@ public class AdminServiceTest
     [InlineData("orgid1", "user1", "test1@gmail.com", "ORG_USER_ADD_ERROR")]
     public void RegisterOrganizationAddOrgUserErrorTest(string orgId, string userName, string email, string needStatus)
     {
-        //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "UnitTest");
         var otp = "123456";
 
         var orgSvc = new Mock<IOrganizationService>();
@@ -356,7 +353,6 @@ public class AdminServiceTest
     [InlineData("orgid1", "user1", "test1@gmail.com", "IDP_ADD_USER_ERROR")]
     public void RegisterOrganizationAddIdpUserErrorTest(string orgId, string userName, string email, string needStatus)
     {
-        //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "UnitTest");
         var otp = "123456";
 
         var orgSvc = new Mock<IOrganizationService>();
@@ -398,7 +394,6 @@ public class AdminServiceTest
     [InlineData("orgid1", "user1", "test1@gmail.com", "SUCCESS")]
     public void RegisterOrganizationSuccessTest(string orgId, string userName, string email, string needStatus)
     {
-        //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "UnitTest");
         var otp = "123456";
 
         var orgSvc = new Mock<IOrganizationService>();
@@ -440,7 +435,6 @@ public class AdminServiceTest
     [InlineData("orgid1", "user1", "test1@gmail.com", "SUCCESS")]
     public void RegisterOrganizationRetunNullTest(string orgId, string userName, string email, string needStatus)
     {
-        //Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "UnitTest");
         var otp = "123456";
 
         var orgSvc = new Mock<IOrganizationService>();
