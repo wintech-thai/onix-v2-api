@@ -89,6 +89,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
 
+            builder.Services.AddScoped<IRedisHelper, RedisHelper>();
+            
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();

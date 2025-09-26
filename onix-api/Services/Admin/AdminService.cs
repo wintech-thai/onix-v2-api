@@ -9,14 +9,14 @@ namespace Its.Onix.Api.Services
         private readonly IOrganizationService _orgService;
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
         private readonly IJobService _jobService;
 
         public AdminService(IOrganizationService orgSvc,
             IUserService userSvc,
             IJobService jobService,
             IAuthService authService,
-            RedisHelper redis) : base()
+            IRedisHelper redis) : base()
         {
             _orgService = orgSvc;
             _userService = userSvc;
