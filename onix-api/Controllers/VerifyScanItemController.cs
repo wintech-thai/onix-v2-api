@@ -51,7 +51,6 @@ namespace Its.Onix.Api.Controllers
             return url;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/Verify/{serial}/{pin}")]
         public IActionResult? Verify(string id, string serial, string pin)
@@ -119,7 +118,6 @@ namespace Its.Onix.Api.Controllers
             return Redirect(url);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/VerifyScanItem/{serial}/{pin}")]
         public MVScanItemResult? VerifyScanItem(string id, string serial, string pin)
@@ -140,7 +138,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/GetProduct/{serial}/{pin}/{otp}")]
         public MVItem? GetProduct(string id, string serial, string pin, string otp)
@@ -150,7 +147,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/GetCustomer/{serial}/{pin}/{otp}")]
         public MVEntityRestrictedInfo? GetCustomer(string id, string serial, string pin, string otp)
@@ -162,7 +158,6 @@ namespace Its.Onix.Api.Controllers
             return r;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/RegisterCustomer/{serial}/{pin}/{otp}")]
         public MVEntityRestrictedInfo? RegisterCustomer(string id, string serial, string pin, string otp, [FromBody] MCustomerRegister request)
@@ -174,7 +169,6 @@ namespace Its.Onix.Api.Controllers
             return r;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/GetOtpViaEmail/{serial}/{pin}/{otp}/{email}")]
         public MVOtp? GetOtpViaEmail(string id, string serial, string pin, string otp, string email)

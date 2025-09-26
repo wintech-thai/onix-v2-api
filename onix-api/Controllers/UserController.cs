@@ -17,22 +17,6 @@ namespace Its.Onix.Api.Controllers
             svc = service;
         }
 
-        [HttpGet]
-        [Route("org/{id}/action/AdminGetUsers")]
-        public IActionResult AdminGetUsers(string id)
-        {
-            var result = svc.GetUsers(id);
-            return Ok(result);
-        }
-
-        [HttpPost]
-        [Route("org/{id}/action/AdminAddUser")]
-        public IActionResult AdminAddUser(string id, [FromBody] MUser request)
-        {
-            var result = svc.AddUser(id, request);
-            return Ok(result);
-        }
-
         [HttpPost]
         [Route("org/{id}/action/AddUser")]
         public IActionResult AddUser(string id, [FromBody] MUser request)
