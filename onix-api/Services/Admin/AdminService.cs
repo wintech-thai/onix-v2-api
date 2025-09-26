@@ -9,14 +9,14 @@ namespace Its.Onix.Api.Services
         private readonly IOrganizationService _orgService;
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
         private readonly IJobService _jobService;
 
         public AdminService(IOrganizationService orgSvc,
             IUserService userSvc,
             IJobService jobService,
             IAuthService authService,
-            RedisHelper redis) : base()
+            IRedisHelper redis) : base()
         {
             _orgService = orgSvc;
             _userService = userSvc;
@@ -98,7 +98,7 @@ namespace Its.Onix.Api.Services
         {
             var email = user.Email;
             var userName = user.UserName;
-            var userOrgId = user.UserOrgId;
+            var userOrgId = user.UserOrgId!;
             var userOrgName = user.UserOrgName;
             var userOtp = user.ProofEmailOtp;
 
@@ -111,6 +111,7 @@ namespace Its.Onix.Api.Services
             // ตรวจสอบว่า OTP ตรงกับที่เคยให้ออกไปก่อนหน้าหรือไม่
             var emailSentOtpCacheKey = CacheHelper.CreateApiOtpKey(orgId, "SendOrgRegisterOtpEmail");
             var emailSentOtpObj = _redis.GetObjectAsync<MOtp>($"{emailSentOtpCacheKey}:{email}").Result;
+//Console.WriteLine($"1@@ [{emailSentOtpCacheKey}:{email}] --> [{userOtp}] @@@");
             if (emailSentOtpObj == null)
             {
                 r.Status = "PROVIDED_OTP_NOTFOUND";
@@ -118,6 +119,7 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+//Console.WriteLine($"2@@ [{emailSentOtpCacheKey}:{email}] --> [{userOtp}] @@@");
 
             if (userOtp != emailSentOtpObj.Otp)
             {
@@ -126,6 +128,7 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+//Console.WriteLine($"3@@ [{emailSentOtpCacheKey}:{email}] --> [{userOtp}] @@@");
 
             // ตรวจสอบว่ามี username
             var isUserExist = _userService.IsUserNameExist(orgId, userName!);
@@ -195,13 +198,14 @@ namespace Its.Onix.Api.Services
                 UserName = userName,
                 UserEmail = email,
                 UserId = usrResult.User!.UserId.ToString(), //ได้ค่า ID มาตอนที่ add user ก่อนหน้า
+                IsOrgInitialUser = "YES",
                 RolesList = "OWNER",
             };
             var usrAddOrgResult = _orgService.AddUserToOrganization(userOrgId!, orgUser);
             if (usrAddOrgResult.Status != "OK")
             {
-                r.Status = orgResult.Status;
-                r.Description = orgResult.Description;
+                r.Status = usrAddOrgResult.Status;
+                r.Description = usrAddOrgResult.Description;
 
                 return r;
             }

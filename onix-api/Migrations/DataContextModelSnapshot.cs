@@ -466,6 +466,10 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<string>("IsOrgInitialUser")
+                        .HasColumnType("text")
+                        .HasColumnName("is_org_initial_user");
+
                     b.Property<string>("OrgCustomId")
                         .HasColumnType("text")
                         .HasColumnName("org_custom_id");

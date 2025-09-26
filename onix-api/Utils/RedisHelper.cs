@@ -3,7 +3,7 @@ using StackExchange.Redis;
 
 namespace Its.Onix.Api.Utils
 {
-    public class RedisHelper
+    public class RedisHelper : IRedisHelper
     {
         private readonly IDatabase _db;
 
