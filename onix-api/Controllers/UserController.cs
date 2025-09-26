@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
@@ -13,13 +12,11 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IUserService svc;
 
-        [ExcludeFromCodeCoverage]
         public UserController(IUserService service)
         {
             svc = service;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/AdminGetUsers")]
         public IActionResult AdminGetUsers(string id)
@@ -28,7 +25,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AdminAddUser")]
         public IActionResult AdminAddUser(string id, [FromBody] MUser request)
@@ -37,7 +33,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AddUser")]
         public IActionResult AddUser(string id, [FromBody] MUser request)
@@ -51,7 +46,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
         
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdatePassword")]
         public IActionResult UpdatePassword(string id, [FromBody] MUpdatePassword request)
