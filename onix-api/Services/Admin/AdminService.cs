@@ -98,7 +98,7 @@ namespace Its.Onix.Api.Services
         {
             var email = user.Email;
             var userName = user.UserName;
-            var userOrgId = user.UserOrgId;
+            var userOrgId = user.UserOrgId!;
             var userOrgName = user.UserOrgName;
             var userOtp = user.ProofEmailOtp;
 
@@ -111,6 +111,7 @@ namespace Its.Onix.Api.Services
             // ตรวจสอบว่า OTP ตรงกับที่เคยให้ออกไปก่อนหน้าหรือไม่
             var emailSentOtpCacheKey = CacheHelper.CreateApiOtpKey(orgId, "SendOrgRegisterOtpEmail");
             var emailSentOtpObj = _redis.GetObjectAsync<MOtp>($"{emailSentOtpCacheKey}:{email}").Result;
+//Console.WriteLine($"1@@ [{emailSentOtpCacheKey}:{email}] --> [{userOtp}] @@@");
             if (emailSentOtpObj == null)
             {
                 r.Status = "PROVIDED_OTP_NOTFOUND";
@@ -118,6 +119,7 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+//Console.WriteLine($"2@@ [{emailSentOtpCacheKey}:{email}] --> [{userOtp}] @@@");
 
             if (userOtp != emailSentOtpObj.Otp)
             {
@@ -126,6 +128,7 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+//Console.WriteLine($"3@@ [{emailSentOtpCacheKey}:{email}] --> [{userOtp}] @@@");
 
             // ตรวจสอบว่ามี username
             var isUserExist = _userService.IsUserNameExist(orgId, userName!);
