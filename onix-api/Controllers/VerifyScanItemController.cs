@@ -15,18 +15,14 @@ namespace Its.Onix.Api.Controllers
     public class VerifyScanItemController : ControllerBase
     {
         private readonly IScanItemService svc;
-        private readonly IConfiguration cfg;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
         private readonly IScanItemActionService _scanItemActionService;
 
-        [ExcludeFromCodeCoverage]
         public VerifyScanItemController(IScanItemService service,
             IScanItemActionService scanItemActionService,
-            RedisHelper redis,
-            IConfiguration config)
+            IRedisHelper redis)
         {
             svc = service;
-            cfg = config;
             _redis = redis;
             _scanItemActionService = scanItemActionService;
         }
@@ -123,7 +119,6 @@ namespace Its.Onix.Api.Controllers
         public MVScanItemResult? VerifyScanItem(string id, string serial, string pin)
         {
             var result = svc.VerifyScanItem(id, serial, pin);
-            //result.RedirectUrl = cfg["ScanItem:RedirectUrl"]!;
 
             if (result.ScanItem != null)
             {
