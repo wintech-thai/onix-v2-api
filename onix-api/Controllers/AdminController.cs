@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
@@ -13,18 +12,16 @@ namespace Prom.LPR.Api.Controllers
     {
         private readonly IAdminService svc;
 
-        [ExcludeFromCodeCoverage]
         public AdminController(IAdminService service)
         {
             svc = service;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/RegisterOrganization")]
-        public IActionResult RegisterOrganization(string id, [FromBody] MOrganizeRegistration request)
+        [Route("org/global/action/RegisterOrganization")]
+        public IActionResult RegisterOrganization([FromBody] MOrganizeRegistration request)
         {
-            var result = svc.RegisterOrganization(id, request);
+            var result = svc.RegisterOrganization("global", request);
 
             Response.Headers.Append("CUST_STATUS", result.Status);
             Response.Headers.Append("CUST_DESC", result.Description);
@@ -32,12 +29,11 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/SendOrgRegisterOtpEmail/{email}")]
-        public IActionResult SendOtpViaEmail(string id, string email)
+        [Route("org/global/action/SendOrgRegisterOtpEmail/{email}")]
+        public IActionResult SendOtpViaEmail(string email)
         {
-            var result = svc.SendOrgRegisterOtpEmail(id, email);
+            var result = svc.SendOrgRegisterOtpEmail("global", email);
 
             Response.Headers.Append("CUST_STATUS", result.Status);
             Response.Headers.Append("CUST_DESC", result.Description);
@@ -45,28 +41,25 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/IsOrgIdExist/{orgid}")]
-        public IActionResult IsOrgIdExist(string id, string orgid)
+        [Route("org/global/action/IsOrgIdExist/{orgid}")]
+        public IActionResult IsOrgIdExist(string orgid)
         {
             var result = svc.IsOrganizationExist(orgid);
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/IsUserNameExist/{username}")]
-        public IActionResult IsUserNameExist(string id, string userName)
+        [Route("org/global/action/IsUserNameExist/{username}")]
+        public IActionResult IsUserNameExist(string userName)
         {
             var result = svc.IsUserNameExist(userName);
             return Ok(result);
         }
         
-        [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/IsEmailExist/{email}")]
-        public IActionResult IsEmailExist(string id, string email)
+        [Route("org/global/action/IsEmailExist/{email}")]
+        public IActionResult IsEmailExist(string email)
         {
             var result = svc.IsEmailExist(email);
             return Ok(result);
