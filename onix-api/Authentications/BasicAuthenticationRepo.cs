@@ -8,9 +8,9 @@ namespace Its.Onix.Api.Authentications
     public class BasicAuthenticationRepo : IBasicAuthenticationRepo
     {
         private readonly IApiKeyService? service = null;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
 
-        public BasicAuthenticationRepo(IApiKeyService svc, RedisHelper redis)
+        public BasicAuthenticationRepo(IApiKeyService svc, IRedisHelper redis)
         {
             service = svc;
             _redis = redis;

@@ -2,7 +2,6 @@ using Moq;
 using Its.Onix.Api.Services;
 using Microsoft.AspNetCore.Http;
 using Its.Onix.Api.Models;
-using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Authorizations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
