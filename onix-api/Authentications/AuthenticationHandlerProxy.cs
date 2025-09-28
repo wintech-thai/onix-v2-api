@@ -11,7 +11,6 @@ namespace Its.Onix.Api.Authentications
     {
         private readonly IBasicAuthenticationRepo? basicAuthenRepo = null;
         private readonly IBearerAuthenticationRepo? bearerAuthRepo = null;
-        private readonly IConfiguration config;
         private readonly IAuthService _authService;
         private JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 
@@ -22,13 +21,11 @@ namespace Its.Onix.Api.Authentications
             UrlEncoder encoder,
             IBasicAuthenticationRepo bsAuthRepo,
             IBearerAuthenticationRepo brAuthRepo,
-            IConfiguration cfg,
             IAuthService authService,
             ISystemClock clock) : base(options, logger, encoder, clock)
         {
             basicAuthenRepo = bsAuthRepo;
             bearerAuthRepo = brAuthRepo;
-            config = cfg;
             _authService = authService;
         }
 

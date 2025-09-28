@@ -32,14 +32,14 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var group = matches[0].Groups[1].Value;
         var api = matches[0].Groups[3].Value;
 
+        var keyword = $"{group}:{api}";
+        apiCalled = keyword;
+
         if (ServiceUtils.IsWhiteListedAPI(group, api))
         {
             //No need to check for permission just only for this API
             return "TEMP";
         }
-
-        var keyword = $"{group}:{api}";
-        apiCalled = keyword;
 
         foreach (var role in roles!)
         {
