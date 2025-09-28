@@ -7,8 +7,8 @@ namespace Its.Onix.Api.Utils
     public static class ServiceUtils
     {
         private static readonly string[] whiteListedApi = [
-                "Organization:GetUserAllowedOrg",
-                "User:UpdatePassword"
+                "OnlyUser:GetUserAllowedOrg",
+                "OnlyUser:UpdatePassword"
             ];
 
         public static bool IsWhiteListedAPI(string controller, string api)

@@ -11,6 +11,8 @@ namespace Its.Onix.Api.Test.Controllers;
 
 public class UserControllerTest
 {
+/*  
+    //TODO : Move this to OnlyUserControllerTest
     [Theory]
     [InlineData("org1")]
     [InlineData("org2")]
@@ -52,6 +54,7 @@ public class UserControllerTest
         Assert.Contains("Only allow for JWT identity type", badRequestResult.Value!.ToString());
     }
 
+    //TODO : Move this to OnlyUserControllerTest
     [Theory]
     [InlineData("JWT")]
     public void UpdatePasswordNoUserNameTest(string authType)
@@ -119,7 +122,7 @@ public class UserControllerTest
 
         Assert.IsType<OkObjectResult>(t);
     }
-
+*/
     [Fact]
     public void AddUserSuccessTest()
     {

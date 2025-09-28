@@ -28,7 +28,7 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
+        //TODO : Remove this API and use OnlyUserController.GetUserAllowedOrg instead
         [HttpGet]
         [Route("org/{id}/action/GetUserAllowedOrg")]
         public IActionResult GetUserAllowedOrg()

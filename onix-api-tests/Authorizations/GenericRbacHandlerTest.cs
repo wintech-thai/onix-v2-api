@@ -14,7 +14,7 @@ public class GenericRbacHandlerTest
     [InlineData("org1", "/api/User/org/org1/action/AddUser", "OWNER")]
     [InlineData("org2", "/api/Organization/org/org2/action/GetUserAllowedOrg", "TEMP")] // API นี้ไม่ต้องการสิทธิ์
     [InlineData("org2", "/api/User/org/org2/action/UpdatePassword", "TEMP")] // API นี้ไม่ต้องการสิทธิ์
-    [InlineData("global", "/api/Admin/org/global/action/UpdatePassword", "OWNER")] // Admin only API
+    [InlineData("global", "/api/OnlyAdmin/org/global/action/UpdatePassword", "OWNER")] // Admin only API
     public async Task HandleRequirementTest(string orgId, string uri, string roleMatch)
     {
         var random = new Random();
@@ -68,7 +68,7 @@ public class GenericRbacHandlerTest
 
     [Theory]
     [InlineData("org1", "/api/User/org/org1/action/AddUser")]
-    [InlineData("org1", "/api/Admin/org/org1/action/GetUserAllowedOrg")] // Admin only API แต่ไม่ใช้ global org
+    [InlineData("org1", "/api/OnlyAdmin/org/org1/action/GetUserAllowedOrg")] // Admin only API แต่ไม่ใช้ global org
     public async Task HandleRequirementRoleNotMatchTest(string orgId, string uri)
     {
         var userRole = "DUMMY";
@@ -119,7 +119,7 @@ public class GenericRbacHandlerTest
 
     [Theory]
     [InlineData("org1", "/api/User/org/org1/action/AddUser")]
-    [InlineData("org1", "/api/Admin/org/org1/action/GetUserAllowedOrg")] // Admin only API แต่ไม่ใช้ global org
+    [InlineData("org1", "/api/OnlyAdmin/org/org1/action/GetUserAllowedOrg")] // Admin only API แต่ไม่ใช้ global org
     public async Task HandleRequirementRolesIsEmptyTest(string orgId, string uri)
     {
         var userRole = "DUMMY";
@@ -163,7 +163,7 @@ public class GenericRbacHandlerTest
 
     [Theory]
     [InlineData("org1", "/api/User/org/org1/action/AddUser")]
-    [InlineData("org1", "/api/Admin/org/org1/action/GetUserAllowedOrg")] // Admin only API แต่ไม่ใช้ global org
+    [InlineData("org1", "/api/OnlyAdmin/org/org1/action/GetUserAllowedOrg")] // Admin only API แต่ไม่ใช้ global org
     public async Task HandleRequirementAllRoleNotMatchTest(string orgId, string uri)
     {
         var userRole = "DUMMY";

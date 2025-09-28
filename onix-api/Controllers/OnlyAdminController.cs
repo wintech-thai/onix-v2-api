@@ -8,11 +8,11 @@ namespace Prom.LPR.Api.Controllers
     [ApiController]
     [Authorize(Policy = "GenericRolePolicy")]
     [Route("/api/[controller]")]
-    public class AdminController : ControllerBase
+    public class OnlyAdminController : ControllerBase
     {
         private readonly IAdminService svc;
 
-        public AdminController(IAdminService service)
+        public OnlyAdminController(IAdminService service)
         {
             svc = service;
         }
