@@ -10,8 +10,8 @@ namespace Its.Onix.Api.Test.Authentications;
 public class BearerAuthenticationRepoTest
 {
     [Theory]
-    [InlineData("temp", "user1", "/api/User/org/temp/action/UpdatePassword")]
-    [InlineData("temp", "user1", "/api/Organization/org/temp/action/GetUserAllowedOrg")]
+    [InlineData("temp", "user1", "/api/OnlyUser/org/temp/action/UpdatePassword")]
+    [InlineData("temp", "user1", "/api/OnlyUser/org/temp/action/GetUserAllowedOrg")]
     public void AuthenticateBearerWhiteListTest(string orgId, string userName, string path)
     {
         var context = new DefaultHttpContext();
