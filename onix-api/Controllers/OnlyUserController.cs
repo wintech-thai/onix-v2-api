@@ -49,6 +49,7 @@ namespace Its.Onix.Api.Controllers
                 return BadRequest("User name is empty!!!");
             }
 
+            //ใช้ userName ที่มาจาก JWT เท่านั้น
             var result = _orgSvc.GetUserAllowedOrganization(userName!);
             return Ok(result);
         }
