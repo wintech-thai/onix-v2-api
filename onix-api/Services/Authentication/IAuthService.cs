@@ -11,5 +11,6 @@ namespace Its.Onix.Api.Services
         public SecurityToken ValidateAccessToken(string accessToken, JwtSecurityTokenHandler tokenHandler);
         public Task<IdpResult> AddUserToIDP(MOrganizeRegistration orgUser);
         public Task<IdpResult> ChangeUserPasswordIdp(MUpdatePassword password);
+        public Task<IdpResult> UserLogoutIdp(string userName);
     }
 }

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http;
 using Its.Onix.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.ModelsViews;
-using System.Text.Json;
 
 namespace Its.Onix.Api.Test.Controllers;
 

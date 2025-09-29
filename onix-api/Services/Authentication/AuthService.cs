@@ -370,5 +370,44 @@ namespace Its.Onix.Api.Services
             var logoutResult = await LogoutUserAsync(userToken.Token.AccessToken, userId!);
             return logoutResult;
         }
+
+        public async Task<IdpResult> UserLogoutIdp(string userName)
+        {
+            // คนเรียก function จะส่ง userName ที่ตรงกับใน accessToken มาให้เอง
+
+            var r = new IdpResult()
+            {
+                Success = true,
+                Message = "",
+            };
+
+            //เอา admin access token
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "client_credentials"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+            };
+            var adminToken = GetToken(form);
+            if (adminToken.Status != "Success")
+            {
+                r.Success = false;
+                r.Message = $"Unable to get access token for user logout [{adminToken.Message}]";
+                return r;
+            }
+
+            // อ่านค่า UserId จาก UserName
+            var userIdResult = GetUserIdByUsernameAsync(userName, adminToken.Token.AccessToken).Result;
+            if (!userIdResult.Success)
+            {
+                return userIdResult;
+            }
+
+            // logout โดยใช้ UserId เป็น input
+            var userId = userIdResult.UserId;
+            var logoutResult = await LogoutUserAsync(adminToken.Token.AccessToken, userId!);
+
+            return logoutResult;
+        }
     }
 }

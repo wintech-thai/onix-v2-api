@@ -111,6 +111,110 @@ public class OnlyUserControllerTest
         Assert.IsType<OkObjectResult>(t);
     }
 
+    [Theory]
+    [InlineData("JWT", "user1")]
+    public void LogoutOkTest(string authType, string jwtUser)
+    {
+        IOrganizationService orgService = Mock.Of<IOrganizationService>();
+        var service = new Mock<IUserService>();
+        service.Setup(s => s.UserLogout(jwtUser)).Returns(new MVLogout()
+        {
+            Status = "SUCCESS",
+        });
+
+        var uc = new OnlyUserController(service.Object, orgService);
+
+        uc.ControllerContext.HttpContext = new DefaultHttpContext();
+
+        var response = uc.ControllerContext.HttpContext.Response;
+        response.HttpContext.Items["Temp-Identity-Type"] = authType;
+        response.HttpContext.Items["Temp-Identity-Name"] = jwtUser;
+
+        var t = uc.Logout("temp");
+
+        Assert.IsType<OkObjectResult>(t);
+    }
+
+    //==================================================================
+
+    [Theory]
+    [InlineData("org1")]
+    [InlineData("org2")]
+    public void LogoutNoIdentityTypeTest(string orgId)
+    {
+        IUserService service = Mock.Of<IUserService>();
+        IOrganizationService orgService = Mock.Of<IOrganizationService>();
+
+        var uc = new OnlyUserController(service, orgService);
+        uc.ControllerContext.HttpContext = new DefaultHttpContext();
+
+        var t = uc.Logout(orgId);
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(t);
+        Assert.Contains("Unable to identify identity type", badRequestResult.Value!.ToString());
+    }
+
+    [Theory]
+    [InlineData("API-KEY")]
+    [InlineData("XXX")]
+    public void LogoutNoJwtTest(string authType)
+    {
+        IOrganizationService orgService = Mock.Of<IOrganizationService>();
+        IUserService service = Mock.Of<IUserService>();
+        var uc = new OnlyUserController(service, orgService);
+
+        uc.ControllerContext.HttpContext = new DefaultHttpContext();
+
+        var response = uc.ControllerContext.HttpContext.Response;
+        response.HttpContext.Items["Temp-Identity-Type"] = authType;
+
+        var request = new MUpdatePassword();
+
+        var t = uc.Logout("temp");
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(t);
+        Assert.Contains("Only allow for JWT identity type", badRequestResult.Value!.ToString());
+    }
+
+    [Theory]
+    [InlineData("JWT")]
+    public void LogoutNoUserNameTest(string authType)
+    {
+        IOrganizationService orgService = Mock.Of<IOrganizationService>();
+        IUserService service = Mock.Of<IUserService>();
+        var uc = new OnlyUserController(service, orgService);
+
+        uc.ControllerContext.HttpContext = new DefaultHttpContext();
+
+        var response = uc.ControllerContext.HttpContext.Response;
+        response.HttpContext.Items["Temp-Identity-Type"] = authType;
+
+        var t = uc.Logout("temp");
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(t);
+        Assert.Contains("Unable to find user name", badRequestResult.Value!.ToString());
+    }
+
+    [Theory]
+    [InlineData("JWT")]
+    public void LogoutUserNameEmptyTest(string authType)
+    {
+        IOrganizationService orgService = Mock.Of<IOrganizationService>();
+        IUserService service = Mock.Of<IUserService>();
+        var uc = new OnlyUserController(service, orgService);
+
+        uc.ControllerContext.HttpContext = new DefaultHttpContext();
+
+        var response = uc.ControllerContext.HttpContext.Response;
+        response.HttpContext.Items["Temp-Identity-Type"] = authType;
+        response.HttpContext.Items["Temp-Identity-Name"] = "";
+
+        var t = uc.Logout("temp");
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(t);
+        Assert.Contains("User name is empty", badRequestResult.Value!.ToString());
+    }
+
     //==================================================================
 
     [Theory]

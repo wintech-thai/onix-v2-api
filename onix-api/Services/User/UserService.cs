@@ -145,5 +145,23 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public MVLogout UserLogout(string userName)
+        {
+            var result = new MVLogout()
+            {
+                Status = "SUCCESS",
+                Description = $"Logout for user [{userName}]",
+            };
+
+            var r = _authService.UserLogoutIdp(userName).Result;
+            if (!r.Success)
+            {
+                result.Description = r.Message;
+                result.Status = "IDP_LOGOUT_ERROR";
+            }
+
+            return result;
+        }
     }
 }

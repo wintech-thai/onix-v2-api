@@ -5,6 +5,7 @@ using Its.Onix.Api.Services;
 
 namespace Prom.LPR.Api.Controllers
 {
+    //ต้องใช้ org level API key เท่านั้นในการใช้งาน และต้องส่ง org_id เป็น 'global' เท่านั้น
     [ApiController]
     [Authorize(Policy = "GenericRolePolicy")]
     [Route("/api/[controller]")]

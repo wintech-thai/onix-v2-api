@@ -12,5 +12,6 @@ namespace Its.Onix.Api.Services
         public bool IsUserIdExist(string orgId, string userId);
         public MUser GetUserByName(string orgId, string userName);
         public MVUpdatePassword UpdatePassword(string userName, MUpdatePassword password);
+        public MVLogout UserLogout(string userName);
     }
 }
