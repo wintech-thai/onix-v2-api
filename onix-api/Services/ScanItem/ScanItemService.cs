@@ -15,7 +15,7 @@ namespace Its.Onix.Api.Services
         private readonly IItemImageRepository _imageItemRepo;
         private readonly IEntityRepository _entityRepo;
         private readonly IStorageUtils _storageUtil;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
         private readonly IJobService _jobService;
 
         public ScanItemService(IScanItemRepository repo,
@@ -24,7 +24,7 @@ namespace Its.Onix.Api.Services
             IEntityRepository entityRepo,
             IStorageUtils storageUtil,
             IJobService jobService,
-            RedisHelper redis) : base()
+            IRedisHelper redis) : base()
         {
             repository = repo;
             _itemRepo = itemRepo;
@@ -91,7 +91,7 @@ namespace Its.Onix.Api.Services
             }
 
             var productId = result.ItemId.ToString();
-            if (productId == null)
+            if (string.IsNullOrEmpty(productId))
             {
                 r.Status = "PRODUCT_NOT_ATTACH";
                 r.Description = $"No product attached to this scan item!!!";
@@ -99,16 +99,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (!ServiceUtils.IsGuidValid(productId))
-            {
-                r.Status = "PRODUCT_ID_INVALID";
-                r.Description = $"Product ID [{productId}] invalid!!!";
-
-                return r;
-            }
-
             var product = _itemRepo.GetItemById(productId!);
-
             if (product == null)
             {
                 r.Status = "PRODUCT_NOTFOUND";
@@ -184,18 +175,10 @@ namespace Its.Onix.Api.Services
             }
 
             var customerId = result.CustomerId.ToString();
-            if (customerId == null)
+            if (string.IsNullOrEmpty(customerId))
             {
                 r.Status = "CUSTOMER_NOT_ATTACH";
                 r.Description = $"No product attached to this scan item!!!";
-
-                return r;
-            }
-
-            if (!ServiceUtils.IsGuidValid(customerId))
-            {
-                r.Status = "CUSTOMER_ID_INVALID";
-                r.Description = $"Customer ID [{customerId}] invalid!!!";
 
                 return r;
             }

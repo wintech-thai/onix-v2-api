@@ -1,0 +1,959 @@
+using Moq;
+using Its.Onix.Api.Services;
+using Its.Onix.Api.Models;
+using Its.Onix.Api.Database.Repositories;
+using Its.Onix.Api.Utils;
+using Its.Onix.Api.ViewsModels;
+
+namespace Its.Onix.Api.Test.Services;
+
+public class ScanItemServiceTest
+{
+    [Theory]
+    [InlineData("org1")]
+    public void AttachScanItemToProductTest(string orgId)
+    {
+        var scanItemId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var m = new MScanItem() { ItemId = productId };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.AttachScanItemToProduct(scanItemId.ToString(), productId.ToString())).Returns(m);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AttachScanItemToProduct(orgId, scanItemId.ToString(), productId.ToString());
+
+        Assert.NotNull(result);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemOtpNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ว่าไม่มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_NOTFOUND_OR_EXPIRE", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemOtpInvalidTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = "99999999" };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemSerialPinNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns((MScanItem?)null);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemProductNotAttachTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+        // Simulate product not attached
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, ItemId = null };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("PRODUCT_NOT_ATTACH", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemProductNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+        // Simulate product attached
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, ItemId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee") };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        // Simulate ว่าไม่มี product ใน DB
+        itemRepo.Setup(s => s.GetItemById(scanItem.ItemId.ToString()!)).Returns((MItem)null!);
+
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("PRODUCT_NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemProductOkTest(string orgId, string serial, string pin, string otp)
+    {
+        string jsonStr = """
+        {
+            "DimensionUnit": "cm",
+            "WeightUnit": "gram",
+            "Category": "XXXX",
+            "SupplierUrl": "https://xxxx",
+            "ProductUrl": "https://yyyy"
+        }
+        """;
+
+        var itemId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+        //var imageItem = new VMItemImage() { ItemId = itemId.ToString() };
+        var product = new MItem() { Id = itemId, Properties = jsonStr };
+
+        var motp = new MOtp() { Otp = otp };
+        // Simulate product attached
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, ItemId = itemId };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        // Simulate ว่ามี product ใน DB
+        itemRepo.Setup(s => s.GetItemById(itemId.ToString()!)).Returns(product);
+
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        itemImageRepo.Setup(s => s.GetImages(It.IsAny<VMItemImage>())).Returns([
+            new MImage() { ImagePath = "this/is/path1" },
+            new MImage() { ImagePath = "this/is/path2" },
+        ]);
+
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE")]
+    public void VerifyScanItemNotFoundTest(string orgId, string serial, string pin)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns((MScanItem?)null);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.VerifyScanItem(orgId, serial, pin);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE")]
+    public void VerifyScanItemAlreadyRegisteredTest(string orgId, string serial, string pin)
+    {
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, RegisteredFlag = "TRUE" };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.VerifyScanItem(orgId, serial, pin);
+
+        Assert.NotNull(result);
+        Assert.Equal("ALREADY_REGISTERED", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "FALSE")]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "NO")]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "")]
+    //[InlineData("org1", "A000001", "42AIDS3SeE", null)] --> อันนี้ยังไม่ผ่านเพราะ code ไม่ได้ handle null
+    public void VerifyScanItemOkTest(string orgId, string serial, string pin, string registerFlag)
+    {
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, RegisteredFlag = registerFlag };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.VerifyScanItem(orgId, serial, pin);
+
+        Assert.NotNull(result);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222", "test@gmail.com")]
+    public void GetOtpViaEmailNotFoundTest(string orgId, string serial, string pin, string otp, string email)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ว่าไม่มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetOtpViaEmail(orgId, serial, pin, otp, email);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_NOTFOUND_OR_EXPIRE", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222", "test@gmail.com")]
+    public void GetOtpViaEmailInvalidOtpTest(string orgId, string serial, string pin, string otp, string email)
+    {
+        var motp = new MOtp() { Otp = "0000000" };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ว่าไม่มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetOtpViaEmail(orgId, serial, pin, otp, email);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222", "test@gmail.com")]
+    public void GetOtpViaEmailOkTest(string orgId, string serial, string pin, string otp, string email)
+    {
+        var motp = new MOtp() { Otp = otp };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ว่าไม่มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetOtpViaEmail(orgId, serial, pin, otp, email);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.OTP);
+        Assert.NotEmpty(result.OTP);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1")]
+    public void AttachScanItemToCustomerTest(string orgId)
+    {
+        var scanItemId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+
+        var scanItem = new MScanItem() { Serial = "yyyy", Pin = "xxxx", CustomerId = customerId, Id = scanItemId };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.AttachScanItemToCustomer(scanItemId.ToString(), customerId.ToString())).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AttachScanItemToCustomer(orgId, scanItemId.ToString(), customerId.ToString());
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.ScanItem);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerOtpNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ไม่มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, null!);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_NOTFOUND_OR_EXPIRE", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerOtpInvalidTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = "999999" };
+        var scanItemRepo = new Mock<IScanItemRepository>();
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, null!);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_INVALID", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerOtpEmailOtpNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var cust = new MCustomerRegister() { EmailOtp = "000000" };
+        var motp = new MOtp() { Otp = otp };
+        var scanItemRepo = new Mock<IScanItemRepository>();
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync((MOtp?)null);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
+
+        Assert.NotNull(result);
+        Assert.Equal("CUSTOMER_OTP_NOTFOUND", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerOtpEmailOtpInvalidTest(string orgId, string serial, string pin, string otp)
+    {
+        var cust = new MCustomerRegister() { EmailOtp = "000000" };
+        var motp = new MOtp() { Otp = otp };
+        var scanItemRepo = new Mock<IScanItemRepository>();
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
+
+        Assert.NotNull(result);
+        Assert.Equal("CUSTOMER_OTP_INVALID", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerSerialPinNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var cust = new MCustomerRegister() { EmailOtp = otp };
+        var motp = new MOtp() { Otp = otp };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns((MScanItem?)null);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerScanItemInUsedTest(string orgId, string serial, string pin, string otp)
+    {
+        var cust = new MCustomerRegister() { EmailOtp = otp };
+        var motp = new MOtp() { Otp = otp };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, CustomerId = Guid.NewGuid() };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
+
+        Assert.NotNull(result);
+        Assert.Equal("SCAN_ITEM_IS_ALREADY_OCCUPIED", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "222222")]
+    public void RegisterCustomerOkTest(string orgId, string serial, string pin, string otp)
+    {
+        var cust = new MCustomerRegister() { EmailOtp = otp };
+        var motp = new MOtp() { Otp = otp };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, CustomerId = null, Id = Guid.NewGuid() };
+        var customer = new MEntity() { Id = Guid.NewGuid() };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+
+        var entityRepo = new Mock<IEntityRepository>();
+        entityRepo.Setup(s => s.GetOrCreateEntityByEmail(It.IsAny<MEntity>())).Returns(customer);
+
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
+
+        Assert.NotNull(result);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+
+    //=== GetScanItemCustomer() ===
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemCustomerOtpNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync((MOtp?)null);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_NOTFOUND_OR_EXPIRE", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemCustomerOtpInvalidTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = "99999999" };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("OTP_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemProductSerialPinNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns((MScanItem?)null);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemCustomerNotAttachTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+        // Simulate customer not attached
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, CustomerId = null };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("CUSTOMER_NOT_ATTACH", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemCustomerNotFoundTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+        // Simulate product attached
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, CustomerId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee") };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+
+        var entityRepo = new Mock<IEntityRepository>();
+        entityRepo.Setup(s => s.GetEntityById(scanItem.CustomerId.ToString()!)).Returns((MEntity)null!);
+
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("CUSTOMER_NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "A000001", "42AIDS3SeE", "091234")]
+    public void GetScanItemCustomerOkTest(string orgId, string serial, string pin, string otp)
+    {
+        var motp = new MOtp() { Otp = otp };
+        // Simulate product attached
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, CustomerId = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee") };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemBySerialPin(serial, pin)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+
+        var entityRepo = new Mock<IEntityRepository>();
+        entityRepo.Setup(s => s.GetEntityById(scanItem.CustomerId.ToString()!)).Returns(new MEntity());
+
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate มีข้อมูล ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
+
+        Assert.NotNull(result);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+    //===
+}
