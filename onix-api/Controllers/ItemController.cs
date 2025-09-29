@@ -16,14 +16,12 @@ namespace Its.Onix.Api.Controllers
         private readonly IItemService svc;
         private readonly IItemImageService _itemImgService;
 
-        [ExcludeFromCodeCoverage]
         public ItemController(IItemService service, IItemImageService itemImgService)
         {
             svc = service;
             _itemImgService = itemImgService;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AddItem")]
         public MVItem? AddItem(string id, [FromBody] MItem request)
@@ -32,7 +30,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AddItemImage/{itemId}")]
         public MVItemImage? AddItemImage(string id, Guid itemId, [FromBody] MItemImage request)
@@ -42,7 +39,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/DeleteItemById/{itemId}")]
         public IActionResult DeleteItemById(string id, string itemId)
@@ -51,17 +47,16 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/DeleteItemCascadeById/{itemId}")]
         public IActionResult DeleteItemCascadeById(string id, string itemId)
         {
-            //TODO : Change the implementiation here...
+            _itemImgService.DeleteItemImageByItemId(id, itemId);
             var result = svc.DeleteItemById(id, itemId);
+
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateItemById/{itemId}")]
         public IActionResult UpdateItemById(string id, string itemId, [FromBody] MItem request)
@@ -100,6 +95,7 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetItems")]
         public IActionResult GetItems(string id, [FromBody] VMItem param)
@@ -113,6 +109,7 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetItemCount")]
         public IActionResult GetItemCount(string id, [FromBody] VMItem param)
