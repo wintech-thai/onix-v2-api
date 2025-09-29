@@ -42,7 +42,7 @@ namespace Its.Onix.Api.Controllers
             _ = _redis.SetObjectAsync($"{cacheKey}:{serial}:{pin}", otpObj, TimeSpan.FromMinutes(30));
 
             url = $"{url}/{otp}";
-            Console.WriteLine($"===== [{url}] =====");
+            //Console.WriteLine($"===== [{url}] =====");
 
             return url;
         }

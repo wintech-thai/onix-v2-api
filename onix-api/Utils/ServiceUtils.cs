@@ -8,7 +8,8 @@ namespace Its.Onix.Api.Utils
     {
         private static readonly string[] whiteListedApi = [
                 "OnlyUser:GetUserAllowedOrg",
-                "OnlyUser:UpdatePassword"
+                "OnlyUser:UpdatePassword",
+                "OnlyUser:Logout"
             ];
 
         public static bool IsWhiteListedAPI(string controller, string api)

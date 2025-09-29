@@ -5,6 +5,12 @@ using Its.Onix.Api.Services;
 
 namespace Its.Onix.Api.Controllers
 {
+    public class IdentityValidationResult
+    {
+        public string? UserName { get; set; }
+        public ObjectResult? RequestResult { get; set; }
+    }
+
     [ApiController]
     [Authorize(Policy = "GenericRolePolicy")]
     [Route("/api/[controller]")]
@@ -21,33 +27,62 @@ namespace Its.Onix.Api.Controllers
             _orgSvc = orgService;
         }
 
-        [HttpGet]
-        [Route("org/{id}/action/GetUserAllowedOrg")]
-        public IActionResult GetUserAllowedOrg()
+        private IdentityValidationResult ValidateUserIdentity()
         {
+            var result = new IdentityValidationResult();
+
             var idTypeObj = Response.HttpContext.Items["Temp-Identity-Type"];
             if (idTypeObj == null)
             {
-                return BadRequest("Unable to identify identity type!!!");
+                var obj = BadRequest("Unable to identify identity type!!!");
+                result.RequestResult = obj;
+
+                return result;
             }
 
             var idType = idTypeObj.ToString();
             if (idType != "JWT")
             {
-                return BadRequest("Only allow for JWT identity type!!!");
+                var obj = BadRequest("Only allow for JWT identity type!!!");
+                result.RequestResult = obj;
+
+                return result;
             }
 
             var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
             if (nameObj == null)
             {
-                return BadRequest("Unable to find user name!!!");
+                var obj = BadRequest("Unable to find user name!!!");
+                result.RequestResult = obj;
+
+                return result;
             }
 
             var userName = nameObj.ToString();
             if (userName == "")
             {
-                return BadRequest("User name is empty!!!");
+                var obj = BadRequest("User name is empty!!!");
+                result.RequestResult = obj;
+
+                return result;
             }
+
+            result.UserName = userName;
+
+            return result;
+        }
+
+        [HttpGet]
+        [Route("org/{id}/action/GetUserAllowedOrg")]
+        public IActionResult GetUserAllowedOrg()
+        {
+            var validateResult = ValidateUserIdentity();
+            if (string.IsNullOrEmpty(validateResult.UserName))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var userName = validateResult.UserName;
 
             //ใช้ userName ที่มาจาก JWT เท่านั้น
             var result = _orgSvc.GetUserAllowedOrganization(userName!);
@@ -58,34 +93,18 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/UpdatePassword")]
         public IActionResult UpdatePassword(string id, [FromBody] MUpdatePassword request)
         {
-            var idTypeObj = Response.HttpContext.Items["Temp-Identity-Type"];
-            if (idTypeObj == null)
+            var validateResult = ValidateUserIdentity();
+            if (string.IsNullOrEmpty(validateResult.UserName))
             {
-                return BadRequest("Unable to identify identity type!!!");
+                return validateResult.RequestResult!;
             }
 
-            var idType = idTypeObj.ToString();
-            if (idType != "JWT")
-            {
-                return BadRequest("Only allow for JWT identity type!!!");
-            }
-
-            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
-            if (nameObj == null)
-            {
-                return BadRequest("Unable to find user name!!!");
-            }
-
-            var userName = nameObj.ToString();
-            if (string.IsNullOrEmpty(userName))
-            {
-                return BadRequest("User name is empty!!!");
-            }
+            var userName = validateResult.UserName;
 
             //ใช้ userName ที่มาจาก JWT เท่านั้นเพื่อรับประกันว่าเปลี่ยน password เฉพาะของตัวเองเท่านั้น
             var result = svc.UpdatePassword(userName, request);
             Response.Headers.Append("CUST_STATUS", result.Status);
-            
+
             var message = $"{result.Description}";
             if (!string.IsNullOrEmpty(request.UserName) && (userName != request.UserName))
             {
@@ -93,6 +112,26 @@ namespace Its.Onix.Api.Controllers
                 message = $"{message}, JWT user [{userName}] but injected user is [{request.UserName}]";
             }
             Response.Headers.Append("CUST_DESC", message);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/Logout")]
+        public IActionResult Logout(string id)
+        {
+            var validateResult = ValidateUserIdentity();
+            if (string.IsNullOrEmpty(validateResult.UserName))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var userName = validateResult.UserName;
+
+            //ใช้ userName ที่มาจาก JWT เท่านั้น
+            var result = svc.UserLogout(userName);
+            Response.Headers.Append("CUST_STATUS", result.Status);
+            Response.Headers.Append("CUST_DESC", result.Description);
 
             return Ok(result);
         }
