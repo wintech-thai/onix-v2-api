@@ -12,5 +12,14 @@ namespace Its.Onix.Api.Database.Repositories
         public MScanItem AttachScanItemToProduct(string itemId, string productId);
         public MScanItem AttachScanItemToCustomer(string itemId, string customerId);
         public MScanItem? GetScanItemBySerialPin(string serial, string pin);
+
+        public MScanItem AddScanItem(MScanItem scanItem);
+        public int GetScanItemCount(VMScanItem param);
+        public IEnumerable<MScanItem> GetScanItems(VMScanItem param);
+        public MScanItem GetScanItemById(string scanItemId);
+        public MScanItem? DeleteScanItemById(string scanItemId);
+        public MScanItem? UnVerifyScanItemById(string scanItemId);
+        public bool IsSerialExist(string serial);
+        public bool IsPinExist(string pin);
     }
 }

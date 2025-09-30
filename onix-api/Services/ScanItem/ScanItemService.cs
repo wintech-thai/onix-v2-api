@@ -408,5 +408,132 @@ namespace Its.Onix.Api.Services
             r.Entity = customer;
             return r;
         }
+
+        public MVScanItem? GetScanItemById(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetScanItemById(scanItemId);
+            result.Pin = ServiceUtils.MaskScanItemPin(result.Pin!);
+
+            r.ScanItem = result;
+            return r;
+        }
+
+        public MVScanItem AddScanItem(string orgId, MScanItem scanItem)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var pinExist = repository!.IsPinExist(scanItem.Pin!);
+            if (pinExist)
+            {
+                r.Status = "PIN_ALREADY_EXIST";
+                r.Description = $"Pin [{scanItem.Pin}] already exist in our database!!!";
+
+                return r;
+            }
+
+            var serialExist = repository!.IsSerialExist(scanItem.Serial!);
+            if (serialExist)
+            {
+                r.Status = "SERIAL_ALREADY_EXIST";
+                r.Description = $"Serial [{scanItem.Serial}] already exist in our database!!!";
+
+                return r;
+            }
+
+            var result = repository!.AddScanItem(scanItem);
+            r.ScanItem = result;
+
+            return r;
+        }
+
+        public MVScanItem DeleteScanItemById(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = repository!.DeleteScanItemById(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
+        public MVScanItem UnVerifyScanItemById(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = repository!.UnVerifyScanItemById(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
+        public int GetScanItemCount(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetScanItemCount(param);
+
+            return result;
+        }
+
+        public IEnumerable<MScanItem> GetScanItems(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetScanItems(param);
+
+            //Masking PIN
+            result.ToList().ForEach(item => item.Pin = ServiceUtils.MaskScanItemPin(item.Pin!));
+
+            return result;
+        }
     }
 }

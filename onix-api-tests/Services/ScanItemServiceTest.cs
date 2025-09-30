@@ -956,4 +956,404 @@ public class ScanItemServiceTest
         Assert.Equal("SUCCESS", result.Status);
     }
     //===
+
+    //=== GetScanItemById()
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeff")]
+    public void GetScanItemByIdOkTest(string orgId, string scanItemId)
+    {
+        var scanItem = new MScanItem() { Serial = "xxx", Pin = "thisispin", Id = Guid.Parse(scanItemId) };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemById(scanItemId)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+
+        Assert.NotNull(result.ScanItem);
+        Assert.Equal("xxx", result.ScanItem.Serial);
+        //Test masking PIN
+        Assert.Equal("*********", result.ScanItem.Pin);
+    }
+    //===
+
+    //=== AddScanItem()
+    [Theory]
+    [InlineData("org1", "S099011", "ADESEESSS")]
+    [InlineData("org2", "S090011", "ADESDESSS")]
+    public void AddScanItemPinExistTest(string orgId, string serial, string pin)
+    {
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.IsPinExist(pin)).Returns(true);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AddScanItem(orgId, scanItem);
+
+        Assert.NotNull(result);
+        Assert.Equal("PIN_ALREADY_EXIST", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "S099011", "ADESEESSS")]
+    [InlineData("org2", "S090011", "ADESDESSS")]
+    public void AddScanItemSerialExistTest(string orgId, string serial, string pin)
+    {
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.IsSerialExist(serial)).Returns(true);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AddScanItem(orgId, scanItem);
+
+        Assert.NotNull(result);
+        Assert.Equal("SERIAL_ALREADY_EXIST", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "S099011", "ADESEESSS")]
+    [InlineData("org2", "S090011", "ADESDESSS")]
+    public void AddScanItemOkTest(string orgId, string serial, string pin)
+    {
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.IsPinExist(pin)).Returns(false);
+        scanItemRepo.Setup(s => s.IsSerialExist(serial)).Returns(false);
+        scanItemRepo.Setup(s => s.AddScanItem(scanItem)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AddScanItem(orgId, scanItem);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+    }
+    //===
+
+    //=== DeleteScanItemById()
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeex")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeay")]
+    public void DeleteScanItemByIdInvalidTest(string orgId, string scanItemId)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.DeleteScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeab")]
+    public void DeleteScanItemByIdNotFoundTest(string orgId, string scanItemId)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.DeleteScanItemById(scanItemId)).Returns((MScanItem?)null);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.DeleteScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeab")]
+    public void DeleteScanItemByIdOkTest(string orgId, string scanItemId)
+    {
+        var scanItem = new MScanItem() { Serial = "", Pin = "" };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.DeleteScanItemById(scanItemId)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.DeleteScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+    }
+    //===
+
+    //=== UnVerifyScanItemById()
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeex")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeay")]
+    public void UnVerifyScanItemByIdInvalidTest(string orgId, string scanItemId)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.UnVerifyScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeab")]
+    public void UnVerifyScanItemByIdNotFoundTest(string orgId, string scanItemId)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.UnVerifyScanItemById(scanItemId)).Returns((MScanItem?)null);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.UnVerifyScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeab")]
+    public void UnVerifyScanItemByIdOkTest(string orgId, string scanItemId)
+    {
+        var scanItem = new MScanItem() { Serial = "", Pin = "" };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.UnVerifyScanItemById(scanItemId)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.UnVerifyScanItemById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+    }
+    //===
+
+    //=== GetScanItemCount()
+    [Theory]
+    [InlineData("org1")]
+    [InlineData("org2")]
+    public void GetScanItemCountOkTest(string orgId)
+    {
+        var query = new VMScanItem();
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemCount(query)).Returns(5);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemCount(orgId, query);
+
+        Assert.Equal(5, result);
+    }
+    //===
+
+    //=== GetScanItems()
+    [Theory]
+    [InlineData("org1")]
+    [InlineData("org2")]
+    public void GetScanItemsOkTest(string orgId)
+    {
+        var maskingPin = "**********";
+        var query = new VMScanItem();
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItems(query)).Returns([
+            new MScanItem() { Serial = "S33333333", Pin = "THISISPIN1" },
+            new MScanItem() { Serial = "S33333333", Pin = "THISISPIN1" }
+        ]);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItems(orgId, query);
+
+        int errorCnt = 0;
+        foreach (var item in result.ToArray())
+        {
+            if (item.Pin != maskingPin) errorCnt++;
+        }
+
+        Assert.Equal(0, errorCnt);
+        Assert.Equal(2, result.ToArray().Length);
+    }
+    //===
 }
