@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -18,13 +19,16 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IUserService svc;
         private readonly IOrganizationService _orgSvc;
+        private readonly IRedisHelper _redis;
 
         public OnlyUserController(
             IUserService service,
+            IRedisHelper redis,
             IOrganizationService orgService)
         {
             svc = service;
             _orgSvc = orgService;
+            _redis = redis;
         }
 
         private IdentityValidationResult ValidateUserIdentity()
@@ -132,6 +136,9 @@ namespace Its.Onix.Api.Controllers
             var result = svc.UserLogout(userName);
             Response.Headers.Append("CUST_STATUS", result.Status);
             Response.Headers.Append("CUST_DESC", result.Description);
+
+            var sessionKey = CacheHelper.CreateLoginSessionKey(userName);
+            _ = _redis.DeleteAsync(sessionKey);
 
             return Ok(result);
         }

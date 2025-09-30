@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.Models;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -48,6 +49,29 @@ namespace Its.Onix.Api.Authentications
                 _ = _redis.SetObjectAsync(key, m, TimeSpan.FromMinutes(5));
 
                 orgUser = m;
+            }
+
+            if (orgUser != null)
+            {
+                // Check ตรงนี้หลังจากที่มี verify แล้วมี user อยู่ใน Organization
+                // Check ต่อว่ามี Session อยู่ใน Redis ที่ setup ไว้ตอนที่ login หรือไม่
+                // ต้องเช็คตรงนี้เพื่อทำเรื่องการ logout (เรียก API /logout) แบบทันที session ต้องหลุด
+
+                var sessionKey = CacheHelper.CreateLoginSessionKey(user);
+                var session = _redis.GetObjectAsync<UserToken>(sessionKey);
+                if (session.Result == null)
+                {
+                    var ou = new MVOrganizationUser()
+                    {
+                        Status = "USER_SESSION_NOT_FOUND",
+                        Description = $"Session not found please re-login for username [{user}]",
+
+                        User = new MUser() { UserName = user },
+                        OrgUser = new MOrganizationUser() { OrgCustomId = orgId },
+                    };
+
+                    return ou;
+                }
             }
 
             return orgUser;

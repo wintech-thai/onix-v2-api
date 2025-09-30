@@ -67,12 +67,42 @@ public class BearerAuthenticationRepoTest
 
         var orgSvc = new Mock<IOrganizationService>();
         //Simulate ไม่พบ user ใน DB (OrganizationsUsers table)
-        orgSvc.Setup(s => s.VerifyUserInOrganization(It.IsAny<string>(), It.IsAny<string>())).Returns((MVOrganizationUser) null!);
+        orgSvc.Setup(s => s.VerifyUserInOrganization(It.IsAny<string>(), It.IsAny<string>())).Returns((MVOrganizationUser)null!);
 
         var redisHelper = new Mock<IRedisHelper>();
         var cacheKey = $"{orgId}:VerifyUser:{userName}";
         //Simulate ไม่พบ user ใน Redis
-        redisHelper.Setup(s => s.GetObjectAsync<MVOrganizationUser>(It.IsAny<string>())).ReturnsAsync((MVOrganizationUser) null!);
+        redisHelper.Setup(s => s.GetObjectAsync<MVOrganizationUser>(It.IsAny<string>())).ReturnsAsync((MVOrganizationUser)null!);
+
+        var authRepo = new BearerAuthenticationRepo(orgSvc.Object, redisHelper.Object);
+        var user = authRepo.Authenticate(orgId, userName, "", request);
+
+        Assert.Null(user);
+    }
+
+    [Theory]
+    [InlineData("temp", "user1", "/api/User/org/temp/action/ThisIsApiAxxx")]
+    [InlineData("temp", "user1", "/api/Axxxxx/org/temp/action/UpdatePassword")]
+    public void AuthenticateUserFoundTest(string orgId, string userName, string path)
+    {
+        var context = new DefaultHttpContext();
+        var request = context.Request;
+        request.Path = path;
+
+        var orgSvc = new Mock<IOrganizationService>();
+
+        var redisHelper = new Mock<IRedisHelper>();
+        //var cacheKey1 = $"{orgId}:VerifyUser:{userName}";
+        redisHelper.Setup(s => s.GetObjectAsync<MVOrganizationUser>(It.IsAny<string>())).ReturnsAsync(new MVOrganizationUser()
+        {
+            Status = "ERROR"
+        });
+
+        //var cacheKey2 = $"LoginSession:Local:{userName}";
+        redisHelper.Setup(s => s.GetObjectAsync<UserToken>(It.IsAny<string>())).ReturnsAsync(new UserToken()
+        {
+            Status = "ERROR"
+        });
 
         var authRepo = new BearerAuthenticationRepo(orgSvc.Object, redisHelper.Object);
         var user = authRepo.Authenticate(orgId, userName, "", request);
