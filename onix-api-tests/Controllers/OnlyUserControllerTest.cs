@@ -6,6 +6,7 @@ using Its.Onix.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.ModelsViews;
 using System.Text.Json;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Test.Controllers;
 
@@ -16,8 +17,9 @@ public class OnlyUserControllerTest
     {
         IUserService service = Mock.Of<IUserService>();
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
 
-        var uc = new OnlyUserController(service, orgService);
+        var uc = new OnlyUserController(service, redis, orgService);
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
         var t = uc.GetUserAllowedOrg();
@@ -33,7 +35,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
         var response = uc.ControllerContext.HttpContext.Response;
@@ -51,7 +54,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -70,7 +74,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -97,8 +102,8 @@ public class OnlyUserControllerTest
         });
 
         var service = new Mock<IUserService>();
-
-        var uc = new OnlyUserController(service.Object, orgService.Object);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service.Object, redis, orgService.Object);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -122,7 +127,8 @@ public class OnlyUserControllerTest
             Status = "SUCCESS",
         });
 
-        var uc = new OnlyUserController(service.Object, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service.Object, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -145,7 +151,8 @@ public class OnlyUserControllerTest
         IUserService service = Mock.Of<IUserService>();
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
 
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
         var t = uc.Logout(orgId);
@@ -161,7 +168,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -182,7 +190,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -201,7 +210,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -225,7 +235,8 @@ public class OnlyUserControllerTest
         IUserService service = Mock.Of<IUserService>();
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
 
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
         var request = new MUpdatePassword();
@@ -243,7 +254,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -264,7 +276,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -285,7 +298,8 @@ public class OnlyUserControllerTest
     {
         IOrganizationService orgService = Mock.Of<IOrganizationService>();
         IUserService service = Mock.Of<IUserService>();
-        var uc = new OnlyUserController(service, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
@@ -314,7 +328,8 @@ public class OnlyUserControllerTest
             Status = "SUCCESS",
         });
 
-        var uc = new OnlyUserController(service.Object, orgService);
+        IRedisHelper redis = Mock.Of<IRedisHelper>();
+        var uc = new OnlyUserController(service.Object, redis, orgService);
 
         uc.ControllerContext.HttpContext = new DefaultHttpContext();
 
