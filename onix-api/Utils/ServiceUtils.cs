@@ -20,6 +20,14 @@ namespace Its.Onix.Api.Utils
             return whiteListedApi.Contains(whiteListedKey);
         }
 
+        public static string MaskScanItemPin(string pin)
+        {
+            if (string.IsNullOrEmpty(pin))
+                return pin;
+
+            return new string('*', pin.Length);
+        }
+
         public static string MaskEmail(string email)
         {
             if (string.IsNullOrWhiteSpace(email))
