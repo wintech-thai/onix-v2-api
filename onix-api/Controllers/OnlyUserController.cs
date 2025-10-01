@@ -115,7 +115,8 @@ namespace Its.Onix.Api.Controllers
                 //เอาไว้ดูว่ามีใครลองส่ง username เข้ามาเพื่อ hack ระบบหรือไม่
                 message = $"{message}, JWT user [{userName}] but injected user is [{request.UserName}]";
             }
-            Response.Headers.Append("CUST_DESC", message);
+            //Comment ไว้ก่อนเพราะถ้า validation password ผิด มันจะมีอักขระพิเศษที่ใส่ใน header ไม่ได้ 
+            //Response.Headers.Append("CUST_DESC", message);
 
             return Ok(result);
         }
