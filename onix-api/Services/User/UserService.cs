@@ -1,6 +1,7 @@
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Services
 {
@@ -22,10 +23,26 @@ namespace Its.Onix.Api.Services
 
         public MVUser AddUser(string orgId, MUser user)
         {
-            //Improvement(validation) : Added validation here
-
             repository!.SetCustomOrgId(orgId);
             var r = new MVUser();
+
+            var userValidateResult = ValidationUtils.ValidateUserName(user.UserName!);
+            if (userValidateResult.Status != "OK")
+            {
+                r.Status = userValidateResult.Status;
+                r.Description = userValidateResult.Description;
+
+                return r;
+            }
+
+            var emailValidateResult = ValidationUtils.ValidateEmail(user.UserEmail!);
+            if (emailValidateResult.Status != "OK")
+            {
+                r.Status = emailValidateResult.Status;
+                r.Description = emailValidateResult.Description;
+
+                return r;
+            }
 
             var f1 = IsEmailExist(orgId, user!.UserEmail!);
             var f2 = IsUserNameExist(orgId, user!.UserName!);
@@ -124,11 +141,22 @@ namespace Its.Onix.Api.Services
                 Description = $"Updated password for user [{userName}]",
             };
 
+            var validateResult = ValidationUtils.ValidatePassword(password.NewPassword);
+            if (validateResult.Status != "OK")
+            {
+                result.Status = validateResult.Status;
+                result.Description = validateResult.Description;
+
+                return result;
+            }
+
             var r = _authService.ChangeUserPasswordIdp(password).Result;
             if (!r.Success)
             {
                 result.Description = r.Message;
                 result.Status = "IDP_UPDATE_PASSWORD_ERROR";
+
+                return result;
             }
 
             //Send email to user to notify password change
