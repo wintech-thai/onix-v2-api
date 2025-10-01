@@ -10,9 +10,9 @@ namespace Its.Onix.Api.Services
     public class JobService : BaseService, IJobService
     {
         private readonly IJobRepository? repository = null;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
 
-        public JobService(IJobRepository repo, RedisHelper redis) : base()
+        public JobService(IJobRepository repo, IRedisHelper redis) : base()
         {
             repository = repo;
             _redis = redis;
