@@ -150,6 +150,7 @@ namespace Its.Onix.Api.Services
                 return result;
             }
 
+            password.UserName = userName;
             var r = _authService.ChangeUserPasswordIdp(password).Result;
             if (!r.Success)
             {

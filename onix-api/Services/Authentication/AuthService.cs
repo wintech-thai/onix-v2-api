@@ -321,7 +321,7 @@ namespace Its.Onix.Api.Services
                 Success = true,
                 Message = "",
             };
-
+            //Console.WriteLine($"@@@@@ [{password.UserName}] [{password.CurrentPassword}] [{password.NewPassword}] @@@@@");
             // เอา current password มา login ก่อนเพื่อดูว่าจะ login ได้มั้ย เพื่อมั่นใจว่าเค้ารู้ password เก่าจริง ๆ 
             var userLogin = new UserLogin()
             {
