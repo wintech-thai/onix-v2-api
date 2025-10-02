@@ -409,6 +409,17 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private string MaskUrl(string pin, string maskPin, string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return "";
+            }
+
+            var maskUrl = url.Replace(pin, maskPin);
+            return maskUrl;
+        }
+
         public MVScanItem? GetScanItemById(string orgId, string scanItemId)
         {
             var r = new MVScanItem()
@@ -419,7 +430,10 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetScanItemById(scanItemId);
-            result.Pin = ServiceUtils.MaskScanItemPin(result.Pin!);
+
+            var maskPin = ServiceUtils.MaskScanItemPin(result.Pin!);
+            result.Url = MaskUrl(result.Pin!, maskPin, result.Url!);
+            result.Pin = maskPin;
 
             r.ScanItem = result;
             return r;
@@ -530,8 +544,13 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetScanItems(param);
 
-            //Masking PIN
-            result.ToList().ForEach(item => item.Pin = ServiceUtils.MaskScanItemPin(item.Pin!));
+            //Masking PIN & URL
+            result.ToList().ForEach(item =>
+            {
+                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
+                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
+                item.Pin = maskPin;
+            });
 
             return result;
         }
