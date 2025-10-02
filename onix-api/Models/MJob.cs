@@ -67,13 +67,13 @@ namespace Its.Onix.Api.Models
         public DateTime? EndDate { get; set; }
 
         [NotMapped]
-        public NameValue[] Parameters { get; set; }
+        public List<NameValue> Parameters { get; set; }
 
         public MJob()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
-            Parameters = Array.Empty<NameValue>();
+            Parameters = new();
         }
     }
 }

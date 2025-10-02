@@ -20,9 +20,10 @@ public class JobServiceTest
         var repo = new Mock<IJobRepository>();
         repo.Setup(s => s.GetJobById(jobId)).Returns(job);
 
+        var userRepo = new Mock<IUserRepository>();
         var redisHelper = new Mock<IRedisHelper>();
 
-        var jobSvc = new JobService(repo.Object, redisHelper.Object);
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
         var result = jobSvc.GetJobById(orgId, jobId);
 
         Assert.NotNull(result);
@@ -41,8 +42,9 @@ public class JobServiceTest
         repo.Setup(s => s.GetJobCount(param)).Returns(5);
 
         var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
 
-        var jobSvc = new JobService(repo.Object, redisHelper.Object);
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
         var result = jobSvc.GetJobCount(orgId, param);
 
         Assert.Equal(5, result);
@@ -60,8 +62,9 @@ public class JobServiceTest
         repo.Setup(s => s.GetJobs(param)).Returns([]);
 
         var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
 
-        var jobSvc = new JobService(repo.Object, redisHelper.Object);
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
         var result = jobSvc.GetJobs(orgId, param);
 
         Assert.Empty(result.ToArray());
@@ -79,13 +82,73 @@ public class JobServiceTest
         repo.Setup(s => s.AddJob(job)).Returns(job);
 
         var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
 
-        var jobSvc = new JobService(repo.Object, redisHelper.Object);
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
         var result = jobSvc.AddJob(orgId, job);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Job);
         Assert.Equal(jobName, result.Job.Name);
+    }
+    //=====
+
+    //===== AddJob() ====
+    [Theory]
+    [InlineData("org1", "", "ScanItemGenerator")]
+    public void GetJobTemplateUserNameBlankTest(string orgId, string userName, string jobType)
+    {
+        var email = "your-email@email-xxx.com";
+
+        var repo = new Mock<IJobRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.GetJobTemplate(orgId, jobType, userName);
+
+        var defaultEmail = "";
+        foreach (var parm in result.Parameters)
+        {
+            if (parm.Name == "EMAIL_NOTI_ADDRESS")
+            {
+                defaultEmail = parm.Value;
+                break;
+            }
+        }
+
+        Assert.NotNull(result);
+        Assert.Equal(email, defaultEmail);
+    }
+
+    [Theory]
+    [InlineData("org1", "user1", "ScanItemGenerator")]
+    public void GetJobTemplateUserNameInDbTest(string orgId, string userName, string jobType)
+    {
+        var email = "xxx@please-scan.com";
+        var user = new MUser() { UserName = userName, UserEmail = email };
+
+        var repo = new Mock<IJobRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userRepo = new Mock<IUserRepository>();
+        userRepo.Setup(s => s.GetUserByName(userName)).Returns(user);
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.GetJobTemplate(orgId, jobType, userName);
+
+        var defaultEmail = "";
+        foreach (var parm in result.Parameters)
+        {
+            if (parm.Name == "EMAIL_NOTI_ADDRESS")
+            {
+                defaultEmail = parm.Value;
+                break;
+            }
+        }
+
+        Assert.NotNull(result);
+        Assert.Equal(email, defaultEmail);
     }
     //=====
 }
