@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Services
     {
         public MScanItemTemplate GetScanItemTemplateById(string orgId, string actionId);
         public MScanItemTemplate GetScanItemTemplate(string orgId);
+        public MScanItemTemplate GetScanItemTemplateDefault(string orgId, string userName);
         public MVScanItemTemplate? AddScanItemTemplate(string orgId, MScanItemTemplate action);
         public MVScanItemTemplate? DeleteScanItemTemplateById(string orgId, string actionId);
         public int GetScanItemTemplateCount(string orgId, VMScanItemTemplate param);

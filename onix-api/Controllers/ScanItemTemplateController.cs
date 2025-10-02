@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
@@ -14,13 +13,11 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IScanItemTemplateService svc;
 
-        [ExcludeFromCodeCoverage]
         public ScanItemTemplateController(IScanItemTemplateService service)
         {
             svc = service;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemTemplate")]
         public MScanItemTemplate GetScanItemTemplate(string id)
@@ -29,7 +26,21 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetScanItemTemplateDefault")]
+        public MScanItemTemplate GetScanItemTemplateDefault(string id)
+        {
+            var userName = "";
+            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (nameObj != null)
+            {
+                userName = nameObj.ToString()!;;
+            }
+
+            var result = svc.GetScanItemTemplateDefault(id, userName);
+            return result;
+        }
+
         [HttpPost]
         [Route("org/{id}/action/AddScanItemTemplate")]
         public MVScanItemTemplate? AddScanItemTemplate(string id, [FromBody] MScanItemTemplate request)
@@ -40,7 +51,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateScanItemTemplateById/{actionId}")]
         public IActionResult UpdateScanItemTemplateById(string id, string actionId, [FromBody] MScanItemTemplate request)

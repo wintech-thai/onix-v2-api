@@ -9,12 +9,14 @@ namespace Its.Onix.Api.Services
     public class ScanItemTemplateService : BaseService, IScanItemTemplateService
     {
         private readonly IScanItemTemplateRepository? repository = null;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
+        private readonly IUserRepository _userRepo;
 
-        public ScanItemTemplateService(IScanItemTemplateRepository repo, RedisHelper redis) : base()
+        public ScanItemTemplateService(IScanItemTemplateRepository repo, IRedisHelper redis, IUserRepository userRepo) : base()
         {
             repository = repo;
             _redis = redis;
+            _userRepo = userRepo;
         }
 
         public MScanItemTemplate GetScanItemTemplateById(string orgId, string actionId)
@@ -33,8 +35,50 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MScanItemTemplate GetScanItemTemplateDefault(string orgId, string userName)
+        {
+            var scanDomain = "scan";
+
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                scanDomain = "scan-dev";
+            }
+
+            //เพื่อป้องกัน string interpolate
+            var serial = "{VAR_SERIAL}";
+            var pin = "{VAR_PIN}";
+
+            var email = "your-email@email-xxx.com";
+            _userRepo.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(userName))
+            {
+                //หา email ของ user คนนั้นเพื่อใส่เป็นค่า default
+                var user = _userRepo.GetUserByName(userName);
+                if (user != null)
+                {
+                    email = user.UserEmail!;
+                }
+            }
+
+            var t = new MScanItemTemplate()
+            {
+                SerialPrefixDigit = 2,
+                GeneratorCount = 100,
+                SerialDigit = 7,
+                PinDigit = 7,
+                UrlTemplate = $"https://{scanDomain}.please-scan.com/org/{orgId}/Verify/{serial}/{pin}",
+                NotificationEmail = email
+            };
+
+            return t;
+        }
+
         public MVScanItemTemplate? AddScanItemTemplate(string orgId, MScanItemTemplate action)
         {
+            //TODO : Validate email format
+
             //Allow only 1 in organization
             var param = new VMScanItemTemplate()
             {

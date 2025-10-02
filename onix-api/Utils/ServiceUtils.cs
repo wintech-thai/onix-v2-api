@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Its.Onix.Api.ModelsViews;
@@ -6,6 +7,9 @@ namespace Its.Onix.Api.Utils
 {
     public static class ServiceUtils
     {
+        private static readonly Random _random = new Random();
+        private const string _chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
         private static readonly string[] whiteListedApi = [
                 "OnlyUser:GetUserAllowedOrg",
                 "OnlyUser:UpdatePassword",
@@ -29,6 +33,26 @@ namespace Its.Onix.Api.Utils
                 return pin;
 
             return pin[0] + new string('*', pin.Length - 2) + pin[^1];
+        }
+
+        public static string GenerateSecureRandomString(int length)
+        {
+            if (length <= 0) throw new ArgumentException("Length must be greater than zero.");
+
+            char[] result = new char[length];
+            byte[] randomBytes = new byte[length];
+
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+
+            for (int i = 0; i < length; i++)
+            {
+                result[i] = _chars[randomBytes[i] % _chars.Length];
+            }
+
+            return new string(result);
         }
 
         public static string MaskEmail(string email)
