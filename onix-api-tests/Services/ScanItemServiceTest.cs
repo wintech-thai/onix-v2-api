@@ -992,7 +992,7 @@ public class ScanItemServiceTest
         Assert.NotNull(result.ScanItem);
         Assert.Equal("xxx", result.ScanItem.Serial);
         //Test masking PIN
-        Assert.Equal("*********", result.ScanItem.Pin);
+        Assert.Equal("t*******n", result.ScanItem.Pin);
     }
     //===
 
@@ -1002,7 +1002,7 @@ public class ScanItemServiceTest
     [InlineData("org2", "S090011", "ADESDESSS")]
     public void AddScanItemPinExistTest(string orgId, string serial, string pin)
     {
-        var scanItem = new MScanItem() { Serial = serial, Pin = pin };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, Url = pin };
 
         var scanItemRepo = new Mock<IScanItemRepository>();
         scanItemRepo.Setup(s => s.IsPinExist(pin)).Returns(true);
@@ -1034,7 +1034,7 @@ public class ScanItemServiceTest
     [InlineData("org2", "S090011", "ADESDESSS")]
     public void AddScanItemSerialExistTest(string orgId, string serial, string pin)
     {
-        var scanItem = new MScanItem() { Serial = serial, Pin = pin };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, Url = pin };
 
         var scanItemRepo = new Mock<IScanItemRepository>();
         scanItemRepo.Setup(s => s.IsSerialExist(serial)).Returns(true);
@@ -1067,7 +1067,7 @@ public class ScanItemServiceTest
     [InlineData("org2", "S090011", "ADESDESSS")]
     public void AddScanItemOkTest(string orgId, string serial, string pin)
     {
-        var scanItem = new MScanItem() { Serial = serial, Pin = pin };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, Url = pin };
 
         var scanItemRepo = new Mock<IScanItemRepository>();
         scanItemRepo.Setup(s => s.IsPinExist(pin)).Returns(false);
@@ -1161,7 +1161,7 @@ public class ScanItemServiceTest
     [InlineData("org2", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeab")]
     public void DeleteScanItemByIdOkTest(string orgId, string scanItemId)
     {
-        var scanItem = new MScanItem() { Serial = "", Pin = "" };
+        var scanItem = new MScanItem() { Serial = "", Pin = "", Url = "" };
 
         var scanItemRepo = new Mock<IScanItemRepository>();
         scanItemRepo.Setup(s => s.DeleteScanItemById(scanItemId)).Returns(scanItem);
@@ -1319,13 +1319,13 @@ public class ScanItemServiceTest
     [InlineData("org2")]
     public void GetScanItemsOkTest(string orgId)
     {
-        var maskingPin = "**********";
+        var maskingPin = "T********1";
         var query = new VMScanItem();
 
         var scanItemRepo = new Mock<IScanItemRepository>();
         scanItemRepo.Setup(s => s.GetScanItems(query)).Returns([
-            new MScanItem() { Serial = "S33333333", Pin = "THISISPIN1" },
-            new MScanItem() { Serial = "S33333333", Pin = "THISISPIN1" }
+            new MScanItem() { Serial = "S33333333", Pin = "THISISPIN1", Url = "THISISPIN1" },
+            new MScanItem() { Serial = "S33333333", Pin = "THISISPIN1", Url = "THISISPIN1" }
         ]);
 
         var itemRepo = new Mock<IItemRepository>();
@@ -1350,6 +1350,9 @@ public class ScanItemServiceTest
         foreach (var item in result.ToArray())
         {
             if (item.Pin != maskingPin) errorCnt++;
+
+            //ทดสอบ URL ก็ต้องถูก masking ด้วย
+            Assert.Contains(item.Pin!, item.Url);
         }
 
         Assert.Equal(0, errorCnt);

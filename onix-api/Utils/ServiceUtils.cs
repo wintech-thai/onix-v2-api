@@ -25,7 +25,10 @@ namespace Its.Onix.Api.Utils
             if (string.IsNullOrEmpty(pin))
                 return pin;
 
-            return new string('*', pin.Length);
+            if (string.IsNullOrEmpty(pin) || pin.Length <= 2)
+                return pin;
+
+            return pin[0] + new string('*', pin.Length - 2) + pin[^1];
         }
 
         public static string MaskEmail(string email)
