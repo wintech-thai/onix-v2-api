@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Services
     {
         public MScanItemAction GetScanItemActionById(string orgId, string actionId);
         public MScanItemAction GetScanItemAction(string orgId);
+        public MScanItemAction GetScanItemActionDefault(string orgId);
         public MVScanItemAction? AddScanItemAction(string orgId, MScanItemAction action);
         public MVScanItemAction? DeleteScanItemActionById(string orgId, string actionId);
         public int GetScanItemActionCount(string orgId, VMScanItemAction param);

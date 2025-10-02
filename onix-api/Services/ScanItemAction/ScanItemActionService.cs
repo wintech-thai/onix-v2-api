@@ -33,6 +33,28 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MScanItemAction GetScanItemActionDefault(string orgId)
+        {
+            var verifyDomain = "verify";
+
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                verifyDomain = "verify-dev";
+            }
+
+            var action = new MScanItemAction()
+            {
+                RedirectUrl = $"https://{verifyDomain}.please-scan.com/verify",
+                EncryptionKey = ServiceUtils.GenerateSecureRandomString(16),
+                EncryptionIV = ServiceUtils.GenerateSecureRandomString(16),
+                ThemeVerify = "default",
+                RegisteredAwareFlag = "TRUE"
+            };
+
+            return action;
+        }
+
         public MVScanItemAction? AddScanItemAction(string orgId, MScanItemAction action)
         {
             //Allow only 1 in organization

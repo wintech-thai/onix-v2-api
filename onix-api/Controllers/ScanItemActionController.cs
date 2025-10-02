@@ -14,13 +14,11 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IScanItemActionService svc;
 
-        [ExcludeFromCodeCoverage]
         public ScanItemActionController(IScanItemActionService service)
         {
             svc = service;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemAction")]
         public MScanItemAction GetScanItemAction(string id)
@@ -29,7 +27,14 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetScanItemActionDefault")]
+        public MScanItemAction GetScanItemActionDefault(string id)
+        {
+            var result = svc.GetScanItemActionDefault(id);
+            return result;
+        }
+
         [HttpPost]
         [Route("org/{id}/action/AddScanItemAction")]
         public MVScanItemAction? AddScanItemAction(string id, [FromBody] MScanItemAction request)
@@ -40,7 +45,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateScanItemActionById/{actionId}")]
         public IActionResult UpdateScanItemActionById(string id, string actionId, [FromBody] MScanItemAction request)
