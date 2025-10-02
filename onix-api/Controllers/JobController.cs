@@ -24,20 +24,20 @@ namespace Its.Onix.Api.Controllers
             _scanItemTemplateService = scanItemTemplateService;
         }
 
-        private NameValue[] ConfigDefaultParams(string orgId, MScanItemTemplate template, MJob job)
+        private List<NameValue> ConfigDefaultParams(string orgId, MScanItemTemplate template, MJob job)
         {
             var exceptionFields = new string[] { "SCAN_ITEM_ORG", "SERIAL_NUMBER_DIGIT" }; /* Fields not allow to pass by user */
 
             var userParams = job.Parameters;
             var userFields = userParams.ToDictionary(item => item.Name!, item => item.Value);
 
-            var customParams = new NameValue[]
+            var customParams = new List<NameValue>()
             {
-                new NameValue() { Name = "SCAN_ITEM_ORG", Value = orgId },
-                new NameValue() { Name = "SCAN_ITEM_COUNT", Value = template.GetPropertyValue("GeneratorCount", "10") },
-                new NameValue() { Name = "SCAN_ITEM_URL", Value = template.GetPropertyValue("UrlTemplate", "") },
-                new NameValue() { Name = "EMAIL_NOTI_ADDRESS", Value = template.GetPropertyValue("NotificationEmail", "") },
-                new NameValue() { Name = "SERIAL_NUMBER_DIGIT", Value = template.GetPropertyValue("SerialDigit", "7") },
+                new() { Name = "SCAN_ITEM_ORG", Value = orgId },
+                new() { Name = "SCAN_ITEM_COUNT", Value = template.GetPropertyValue("GeneratorCount", "10") },
+                new() { Name = "SCAN_ITEM_URL", Value = template.GetPropertyValue("UrlTemplate", "") },
+                new() { Name = "EMAIL_NOTI_ADDRESS", Value = template.GetPropertyValue("NotificationEmail", "") },
+                new() { Name = "SERIAL_NUMBER_DIGIT", Value = template.GetPropertyValue("SerialDigit", "7") },
             };
 
             foreach (var param in customParams)
@@ -55,17 +55,17 @@ namespace Its.Onix.Api.Controllers
             return customParams;
         }
 
-        private NameValue[] ConfigDefaultParamsCacheLoader(string orgId, MJob job)
+        private List<NameValue> ConfigDefaultParamsCacheLoader(string orgId, MJob job)
         {
             var exceptionFields = new string[] { "ORG_ID" }; /* Fields not allow to pass by user */
 
             var userParams = job.Parameters;
             var userFields = userParams.ToDictionary(item => item.Name!, item => item.Value);
 
-            var customParams = new NameValue[]
+            var customParams = new List<NameValue>()
             {
-                new NameValue() { Name = "ORG_ID", Value = orgId },
-                new NameValue() { Name = "DATA_SECTION", Value = "ALL" },
+                new() { Name = "ORG_ID", Value = orgId },
+                new() { Name = "DATA_SECTION", Value = "ALL" },
             };
 
             foreach (var param in customParams)
@@ -83,7 +83,6 @@ namespace Its.Onix.Api.Controllers
             return customParams;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/CreateJobScanItemGenerator")]
         public MVJob? CreateJobScanItemGenerator(string id, [FromBody] MJob request)
@@ -104,7 +103,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/CreateJobCacheLoaderTrigger")]
         public MVJob? CreateJobCacheLoaderTrigger(string id, [FromBody] MJob request)
@@ -118,7 +116,6 @@ namespace Its.Onix.Api.Controllers
             return result;
         }
 
-        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/CreateJobOtpEmailSend")]
         public MVJob? CreateJobOtpEmailSend(string id, [FromBody] MJob request)
@@ -131,7 +128,22 @@ namespace Its.Onix.Api.Controllers
             return null;
         }
 
-        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetJobTemplate/ScanItemGenerator")]
+        public MJob GetJobTemplate(string id)
+        {
+            var userName = "";
+            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (nameObj != null)
+            {
+                userName = nameObj.ToString()!;;
+            }
+
+            var result = svc.GetJobTemplate(id, "ScanItemGenerator", userName);
+            //Console.WriteLine($"@@@@@ [{result.Parameters.Count}] @@@@@");
+            return result;
+        }
+
         [HttpGet]
         [Route("org/{id}/action/GetJobById/{jobId}")]
         public MJob GetJobById(string id, string jobId)

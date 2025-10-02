@@ -4,6 +4,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
+using Its.Onix.Api.Authentications;
 
 namespace Its.Onix.Api.Services
 {
@@ -11,11 +12,13 @@ namespace Its.Onix.Api.Services
     {
         private readonly IJobRepository? repository = null;
         private readonly IRedisHelper _redis;
+        private readonly IUserRepository _userRepo;
 
-        public JobService(IJobRepository repo, IRedisHelper redis) : base()
+        public JobService(IJobRepository repo, IRedisHelper redis, IUserRepository userRepo) : base()
         {
             repository = repo;
             _redis = redis;
+            _userRepo = userRepo;
         }
 
         public MJob GetJobById(string orgId, string jobId)
@@ -24,6 +27,43 @@ namespace Its.Onix.Api.Services
             var result = repository!.GetJobById(jobId);
 
             return result;
+        }
+
+        public MJob GetJobTemplate(string orgId, string jobType, string userName)
+        {
+            var email = "your-email@email-xxx.com";
+            _userRepo.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(userName))
+            {
+                //หา email ของ user คนนั้นเพื่อใส่เป็นค่า default
+                var user = _userRepo.GetUserByName(userName);
+                if (user != null)
+                {
+                    email = user.UserEmail!;
+                }
+            }
+
+            var parameters = new[]
+            {
+                new { Name = "EMAIL_NOTI_ADDRESS", Value = email },
+                new { Name = "SCAN_ITEM_COUNT", Value = "100" },
+            };
+
+            var jobKey = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var job = new MJob()
+            {
+                Name = $"{jobType}-{jobKey}",
+                Description = $"Job to generate Scan Items",
+            };
+
+            foreach (var p in parameters)
+            {
+                var o = new NameValue() { Name = p.Name, Value = p.Value };
+                job.Parameters.Add(o);
+            }
+
+            return job;
         }
 
         public MVJob? AddJob(string orgId, MJob job)
@@ -36,7 +76,7 @@ namespace Its.Onix.Api.Services
             job.Configuration = JsonSerializer.Serialize(job.Parameters);
             var result = repository!.AddJob(job);
             result.Configuration = "";
-            
+
             r.Job = result;
 
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
