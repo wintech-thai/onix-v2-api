@@ -5,7 +5,6 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
-using System.Net;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -17,7 +16,6 @@ namespace Its.Onix.Api.Controllers
         private readonly IJobService svc;
         private readonly IScanItemTemplateService _scanItemTemplateService;
 
-        [ExcludeFromCodeCoverage]
         public JobController(IJobService service, IScanItemTemplateService scanItemTemplateService)
         {
             svc = service;
@@ -91,6 +89,7 @@ namespace Its.Onix.Api.Controllers
             if (m == null)
             {
                 Response.Headers.Append("CUST_STATUS", "NO_SCAN_ITEM_TEMPLATE");
+                return new MVJob() { Status = "NO_SCAN_ITEM_TEMPLATE_FOUND", Description = "" };
             }
 
             var customParams = ConfigDefaultParams(id, m!, request);
@@ -129,8 +128,8 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpGet]
-        [Route("org/{id}/action/GetJobTemplate/ScanItemGenerator")]
-        public MJob GetJobTemplate(string id)
+        [Route("org/{id}/action/GetJobDefault/ScanItemGenerator")]
+        public MJob GetJobDefault(string id)
         {
             var userName = "";
             var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
