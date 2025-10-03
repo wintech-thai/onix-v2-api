@@ -75,6 +75,19 @@ namespace Its.Onix.Api.Models
         [Column("user_name")]
         public string? UserName { get; set; }
 
+        [Column("api_name")]
+        public string? ApiName { get; set; }
+
+        [Column("controller_name")]
+        public string? ControllerName { get; set; }
+
+        [Column("serial")]
+        public string? Serial { get; set; }
+
+        [Column("pin")]
+        public string? Pin { get; set; }
+
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
