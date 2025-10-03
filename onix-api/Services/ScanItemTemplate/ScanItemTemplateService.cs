@@ -19,10 +19,10 @@ namespace Its.Onix.Api.Services
             _userRepo = userRepo;
         }
 
-        public MScanItemTemplate GetScanItemTemplateById(string orgId, string actionId)
+        public MScanItemTemplate GetScanItemTemplateById(string orgId, string templateId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemTemplateById(actionId);
+            var result = repository!.GetScanItemTemplateById(templateId);
 
             return result;
         }
@@ -75,9 +75,29 @@ namespace Its.Onix.Api.Services
             return t;
         }
 
-        public MVScanItemTemplate? AddScanItemTemplate(string orgId, MScanItemTemplate action)
+        public MVScanItemTemplate? AddScanItemTemplate(string orgId, MScanItemTemplate template)
         {
-            //TODO : Validate email format
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItemTemplate();
+            r.Status = "OK";
+            r.Description = "Success";
+
+            var email = template.NotificationEmail;
+            if (email == null)
+            {
+                //เพื่อให้ validate error
+                email = "";
+            }
+            
+            var emailValidateResult = ValidationUtils.ValidateEmail(email);
+            if (emailValidateResult.Status != "OK")
+            {
+                r.Status = emailValidateResult.Status;
+                r.Description = emailValidateResult.Description;
+
+                return r;
+            }
 
             //Allow only 1 in organization
             var param = new VMScanItemTemplate()
@@ -85,28 +105,22 @@ namespace Its.Onix.Api.Services
                 FullTextSearch = ""
             };
 
-            repository!.SetCustomOrgId(orgId);
-
-            var r = new MVScanItemTemplate();
-            r.Status = "OK";
-            r.Description = "Success";
-
-            var actionCount = GetScanItemTemplateCount(orgId, param);
-            if (actionCount > 0)
+            var templateCount = GetScanItemTemplateCount(orgId, param);
+            if (templateCount > 0)
             {
                 r.Status = "NOT_ALLOW_MORE_THAN_ONE";
-                r.Description = $"Found more than 1 scan-item ({actionCount}) template in organization [{orgId}]";
+                r.Description = $"Found more than 1 scan-item ({templateCount}) template in organization [{orgId}]";
 
                 return r;
             }
 
-            var result = repository!.AddScanItemTemplate(action);
+            var result = repository!.AddScanItemTemplate(template);
             r.ScanItemTemplate = result;
 
             return r;
         }
 
-        public MVScanItemTemplate? UpdateScanItemTemplateById(string orgId, string actionId, MScanItemTemplate action)
+        public MVScanItemTemplate? UpdateScanItemTemplateById(string orgId, string templateId, MScanItemTemplate template)
         {
             var r = new MVScanItemTemplate()
             {
@@ -114,13 +128,37 @@ namespace Its.Onix.Api.Services
                 Description = "Success"
             };
 
+            if (!ServiceUtils.IsGuidValid(templateId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
+
+                return r;
+            }
+
+            var email = template.NotificationEmail;
+            if (email == null)
+            {
+                //เพื่อให้ validate error
+                email = "";
+            }
+            
+            var emailValidateResult = ValidationUtils.ValidateEmail(email);
+            if (emailValidateResult.Status != "OK")
+            {
+                r.Status = emailValidateResult.Status;
+                r.Description = emailValidateResult.Description;
+
+                return r;
+            }
+
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.UpdateScanItemTemplateById(actionId, action);
+            var result = repository!.UpdateScanItemTemplateById(templateId, template);
 
             if (result == null)
             {
                 r.Status = "NOTFOUND";
-                r.Description = $"ScanItemTemplate ID [{actionId}] not found for the organization [{orgId}]";
+                r.Description = $"ScanItemTemplate ID [{templateId}] not found for the organization [{orgId}]";
 
                 return r;
             }
@@ -131,7 +169,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItemTemplate? DeleteScanItemTemplateById(string orgId, string actionId)
+        public MVScanItemTemplate? DeleteScanItemTemplateById(string orgId, string templateId)
         {
             var r = new MVScanItemTemplate()
             {
@@ -139,22 +177,22 @@ namespace Its.Onix.Api.Services
                 Description = "Success"
             };
 
-            if (!ServiceUtils.IsGuidValid(actionId))
+            if (!ServiceUtils.IsGuidValid(templateId))
             {
                 r.Status = "UUID_INVALID";
-                r.Description = $"ScanItemTemplate ID [{actionId}] format is invalid";
+                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
 
                 return r;
             }
 
             repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteScanItemTemplateById(actionId);
+            var m = repository!.DeleteScanItemTemplateById(templateId);
 
             r.ScanItemTemplate = m;
             if (m == null)
             {
                 r.Status = "NOTFOUND";
-                r.Description = $"ScanItemTemplate ID [{actionId}] not found for the organization [{orgId}]";
+                r.Description = $"ScanItemTemplate ID [{templateId}] not found for the organization [{orgId}]";
             }
 
             _redis.DeleteAsync(CacheHelper.CreateScanItemTemplateKey(orgId));
