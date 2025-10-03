@@ -4,7 +4,6 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
-using Its.Onix.Api.Authentications;
 
 namespace Its.Onix.Api.Services
 {
@@ -66,12 +65,38 @@ namespace Its.Onix.Api.Services
             return job;
         }
 
+        private string? GetEmail(MJob job, string varName)
+        {
+            foreach (var parm in job.Parameters)
+            {
+                if (parm.Name == varName)
+                {
+                    return parm.Value;
+                }
+            }
+
+            return null;
+        }
+
         public MVJob? AddJob(string orgId, MJob job)
         {
             repository!.SetCustomOrgId(orgId);
             var r = new MVJob();
             r.Status = "OK";
             r.Description = "Success";
+
+            var email = GetEmail(job, "EMAIL_NOTI_ADDRESS");
+            if (email != null)
+            {
+                var emailValidateResult = ValidationUtils.ValidateEmail(email);
+                if (emailValidateResult.Status != "OK")
+                {
+                    r.Status = emailValidateResult.Status;
+                    r.Description = emailValidateResult.Description;
+
+                    return r;
+                }
+            }
 
             job.Configuration = JsonSerializer.Serialize(job.Parameters);
             var result = repository!.AddJob(job);

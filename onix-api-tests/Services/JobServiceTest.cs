@@ -91,6 +91,110 @@ public class JobServiceTest
         Assert.NotNull(result.Job);
         Assert.Equal(jobName, result.Job.Name);
     }
+
+    [Theory]
+    [InlineData("org1", "JOB1", "email.com")]
+    [InlineData("org1", "JOB1", "email")]
+    [InlineData("org1", "JOB1", "x@com")]
+    public void AddJobValidateEmailErrorTest(string orgId, string jobName, string email)
+    {
+        var job = new MJob()
+        {
+            Name = jobName,
+            Description = jobName,
+            Parameters = [new NameValue() { Name = "EMAIL_NOTI_ADDRESS", Value = email }]
+        };
+
+        var repo = new Mock<IJobRepository>();
+        repo.Setup(s => s.AddJob(job)).Returns(job);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.AddJob(orgId, job);
+
+        Assert.NotNull(result);
+        Assert.Null(result.Job);
+        Assert.Equal("ERROR_VALIDATION_EMAIL", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "JOB1")]
+    public void AddJobParametersEmptyTest(string orgId, string jobName)
+    {
+        var job = new MJob()
+        {
+            Name = jobName,
+            Description = jobName,
+            Parameters = [new NameValue() { Name = "XXXXXX", Value = "xxxx" }]
+        };
+
+        var repo = new Mock<IJobRepository>();
+        repo.Setup(s => s.AddJob(job)).Returns(job);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.AddJob(orgId, job);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Job);
+        Assert.Equal("OK", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "JOB1")]
+    public void AddJobParametersNullTest(string orgId, string jobName)
+    {
+        var job = new MJob()
+        {
+            Name = jobName,
+            Description = jobName
+        };
+
+        var repo = new Mock<IJobRepository>();
+        repo.Setup(s => s.AddJob(job)).Returns(job);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.AddJob(orgId, job);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Job);
+        Assert.Equal("OK", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "JOB1", "aaa@email.com")]
+    [InlineData("org1", "JOB1", "sss.email@gmail.com.xxx")]
+    [InlineData("org1", "JOB1", "x@aaa.com")]
+    public void AddJobValidateEmailOkTest(string orgId, string jobName, string email)
+    {
+        var job = new MJob()
+        {
+            Name = jobName,
+            Description = jobName,
+            Parameters = [new NameValue() { Name = "EMAIL_NOTI_ADDRESS", Value = email }]
+        };
+
+        var repo = new Mock<IJobRepository>();
+        repo.Setup(s => s.AddJob(job)).Returns(job);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.AddJob(orgId, job);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Job);
+        Assert.Equal("OK", result.Status);
+    }
     //=====
 
     //===== AddJob() ====
