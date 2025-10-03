@@ -134,7 +134,7 @@ namespace Its.Onix.Api.AuditLogs
             Log.Information(logJson);
 
             PublishMessage(logObject);
-            await SendAuditLog(logJson);
+            //await SendAuditLog(logJson);
         }
 
         private void PublishMessage(AuditLog auditLog)
