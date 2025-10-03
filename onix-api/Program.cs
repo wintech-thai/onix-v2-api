@@ -60,6 +60,7 @@ namespace Its.Onix.Api
                                     .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
             });
             builder.Services.AddSingleton<IStorageUtils, StorageUtils>();
+            builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -88,9 +89,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IJobService, JobService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
+            builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
-            builder.Services.AddScoped<IRedisHelper, RedisHelper>();
-            
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();
@@ -108,6 +108,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IScanItemActionRepository, ScanItemActionRepository>();
             builder.Services.AddScoped<IScanItemTemplateRepository, ScanItemTemplateRepository>();
             builder.Services.AddScoped<IJobRepository, JobRepository>();
+            builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();

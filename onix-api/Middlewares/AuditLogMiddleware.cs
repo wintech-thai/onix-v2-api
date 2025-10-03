@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using Its.Onix.Api.Utils;
 using Serilog;
 
 
@@ -10,11 +11,15 @@ namespace Its.Onix.Api.AuditLogs
     {
         private readonly RequestDelegate _next;
         private readonly HttpClient _httpClient;
+        private readonly IRedisHelper _redis;
 
-        public AuditLogMiddleware(RequestDelegate next, IHttpClientFactory httpClientFactory)
+        public AuditLogMiddleware(RequestDelegate next,
+            IHttpClientFactory httpClientFactory,
+            IRedisHelper redis)
         {
             _next = next;
             _httpClient = httpClientFactory.CreateClient();
+            _redis = redis;
         }
 
         private string? GetValue(HttpContext context, string key, string defaultValue)
@@ -128,7 +133,16 @@ namespace Its.Onix.Api.AuditLogs
             var logJson = JsonSerializer.Serialize(logObject);
             Log.Information(logJson);
 
+            PublishMessage(logObject);
             await SendAuditLog(logJson);
+        }
+
+        private void PublishMessage(AuditLog auditLog)
+        {
+            var stream = CacheHelper.CreateAuditLogStreamKey();
+            var message = JsonSerializer.Serialize(auditLog);
+
+            _ = _redis.PublishMessageAsync(stream!, message);
         }
 
         private async Task SendAuditLog(string logJson)
@@ -138,7 +152,7 @@ namespace Its.Onix.Api.AuditLogs
             {
                 return;
             }
-            
+
             try
             {
                 var content = new StringContent(logJson, Encoding.UTF8, "application/json");

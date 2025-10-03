@@ -31,6 +31,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MJob>? Jobs { get; set; }
     public DbSet<MScanItemTemplate>? ScanItemTemplates { get; set; }
     public DbSet<MScanItemAction>? ScanItemActions { get; set; }
+    public DbSet<MAuditLog>? AuditLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,5 +87,7 @@ public class DataContext : DbContext, IDataContext
             .WithMany(i => i.PricingPlanItems)
             .HasForeignKey(pi => pi.PricingPlanId)
             .HasPrincipalKey(i => i.Id);
+
+        modelBuilder.Entity<MAuditLog>();
     }
 }
