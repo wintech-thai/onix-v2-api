@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251003052751_AuditLog_001")]
+    partial class AuditLog_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -61,104 +64,6 @@ namespace onix.api.Migrations
                     b.HasIndex("OrgId");
 
                     b.ToTable("ApiKeys");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MAuditLog", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("log_id");
-
-                    b.Property<string>("CfClientIp")
-                        .HasColumnType("text")
-                        .HasColumnName("client_ip_cf");
-
-                    b.Property<string>("ClientIp")
-                        .HasColumnType("text")
-                        .HasColumnName("client_ip");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("CustomDesc")
-                        .HasColumnType("text")
-                        .HasColumnName("custom_desc");
-
-                    b.Property<string>("CustomStatus")
-                        .HasColumnType("text")
-                        .HasColumnName("custom_status");
-
-                    b.Property<string>("Environment")
-                        .HasColumnType("text")
-                        .HasColumnName("environment");
-
-                    b.Property<string>("Host")
-                        .HasColumnType("text")
-                        .HasColumnName("host");
-
-                    b.Property<string>("HttpMethod")
-                        .HasColumnType("text")
-                        .HasColumnName("http_method");
-
-                    b.Property<string>("IdentityType")
-                        .HasColumnType("text")
-                        .HasColumnName("identity_type");
-
-                    b.Property<long?>("LatencyMs")
-                        .HasColumnType("bigint")
-                        .HasColumnName("latency_ms");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("Path")
-                        .HasColumnType("text")
-                        .HasColumnName("path");
-
-                    b.Property<string>("QueryString")
-                        .HasColumnType("text")
-                        .HasColumnName("query_string");
-
-                    b.Property<long?>("RequestSize")
-                        .HasColumnType("bigint")
-                        .HasColumnName("request_size");
-
-                    b.Property<long?>("ResponseSize")
-                        .HasColumnType("bigint")
-                        .HasColumnName("response_size");
-
-                    b.Property<string>("Role")
-                        .HasColumnType("text")
-                        .HasColumnName("role");
-
-                    b.Property<string>("Scheme")
-                        .HasColumnType("text")
-                        .HasColumnName("scheme");
-
-                    b.Property<int?>("StatusCode")
-                        .HasColumnType("integer")
-                        .HasColumnName("status_code");
-
-                    b.Property<string>("UserAgent")
-                        .HasColumnType("text")
-                        .HasColumnName("user_agent");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("text")
-                        .HasColumnName("user_id");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("text")
-                        .HasColumnName("user_name");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("AuditLogs");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MCycle", b =>
