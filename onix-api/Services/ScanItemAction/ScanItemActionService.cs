@@ -57,8 +57,28 @@ namespace Its.Onix.Api.Services
 
         public MVScanItemAction? AddScanItemAction(string orgId, MScanItemAction action)
         {
-            //TODO : Verify KEY and INV here
-            
+            var r = new MVScanItemAction();
+            r.Status = "OK";
+            r.Description = "Success";
+
+            var keyValidationResult = ValidationUtils.ValidateKeyAndIV(action.EncryptionKey);
+            if (keyValidationResult.Status != "OK")
+            {
+                r.Status = keyValidationResult.Status;
+                r.Description = keyValidationResult.Description;
+
+                return r;
+            }
+
+            var ivValidationResult = ValidationUtils.ValidateKeyAndIV(action.EncryptionIV);
+            if (ivValidationResult.Status != "OK")
+            {
+                r.Status = ivValidationResult.Status;
+                r.Description = ivValidationResult.Description;
+
+                return r;
+            }
+
             //Allow only 1 in organization
             var param = new VMScanItemAction()
             {
@@ -66,10 +86,6 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-
-            var r = new MVScanItemAction();
-            r.Status = "OK";
-            r.Description = "Success";
 
             var actionCount = GetScanItemActionCount(orgId, param);
             if (actionCount > 0)
@@ -88,13 +104,29 @@ namespace Its.Onix.Api.Services
 
         public MVScanItemAction? UpdateScanItemActionById(string orgId, string actionId, MScanItemAction action)
         {
-            //TODO : Verify KEY and INV here
-
             var r = new MVScanItemAction()
             {
                 Status = "OK",
                 Description = "Success"
             };
+
+            var keyValidationResult = ValidationUtils.ValidateKeyAndIV(action.EncryptionKey);
+            if (keyValidationResult.Status != "OK")
+            {
+                r.Status = keyValidationResult.Status;
+                r.Description = keyValidationResult.Description;
+
+                return r;
+            }
+
+            var ivValidationResult = ValidationUtils.ValidateKeyAndIV(action.EncryptionIV);
+            if (ivValidationResult.Status != "OK")
+            {
+                r.Status = ivValidationResult.Status;
+                r.Description = ivValidationResult.Description;
+
+                return r;
+            }
 
             if (!ServiceUtils.IsGuidValid(actionId))
             {
