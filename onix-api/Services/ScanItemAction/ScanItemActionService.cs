@@ -9,9 +9,9 @@ namespace Its.Onix.Api.Services
     public class ScanItemActionService : BaseService, IScanItemActionService
     {
         private readonly IScanItemActionRepository? repository = null;
-        private readonly RedisHelper _redis;
+        private readonly IRedisHelper _redis;
 
-        public ScanItemActionService(IScanItemActionRepository repo, RedisHelper redis) : base()
+        public ScanItemActionService(IScanItemActionRepository repo, IRedisHelper redis) : base()
         {
             repository = repo;
             _redis = redis;
@@ -57,6 +57,8 @@ namespace Its.Onix.Api.Services
 
         public MVScanItemAction? AddScanItemAction(string orgId, MScanItemAction action)
         {
+            //TODO : Verify KEY and INV here
+            
             //Allow only 1 in organization
             var param = new VMScanItemAction()
             {
@@ -86,11 +88,21 @@ namespace Its.Onix.Api.Services
 
         public MVScanItemAction? UpdateScanItemActionById(string orgId, string actionId, MScanItemAction action)
         {
+            //TODO : Verify KEY and INV here
+
             var r = new MVScanItemAction()
             {
                 Status = "OK",
                 Description = "Success"
             };
+
+            if (!ServiceUtils.IsGuidValid(actionId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemAction ID [{actionId}] format is invalid";
+
+                return r;
+            }
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.UpdateScanItemActionById(actionId, action);
