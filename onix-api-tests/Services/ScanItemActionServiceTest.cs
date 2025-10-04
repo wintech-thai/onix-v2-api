@@ -130,7 +130,7 @@ public class ScanItemActionServiceTest
     [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
     public void UpdateScanItemActionByIdIdOkTest(string orgId, string actionId)
     {
-        var template = new MScanItemAction() { ThemeVerify = "xxxx" };
+        var template = new MScanItemAction() { ThemeVerify = "xxxx", EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890ABCDEF" };
 
         var redisHelper = new Mock<IRedisHelper>();
 
@@ -149,7 +149,7 @@ public class ScanItemActionServiceTest
     [InlineData("org1", "xxxx")]
     public void UpdateScanItemActionByIdInvalidIdTest(string orgId, string actionId)
     {
-        var template = new MScanItemAction() { ThemeVerify = "xxxxx" };
+        var template = new MScanItemAction() { ThemeVerify = "xxxxx", EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890ABCDEF" };
 
         var redisHelper = new Mock<IRedisHelper>();
 
@@ -168,7 +168,7 @@ public class ScanItemActionServiceTest
     public void UpdateScanItemActionByIdNotFoundTest(string orgId, string actionId)
     {
         MScanItemAction? template = null;
-        MScanItemAction inputAction = new() { ThemeVerify = "xxx" };
+        MScanItemAction inputAction = new() { ThemeVerify = "xxx", EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890ABCDEF" };
 
         var redisHelper = new Mock<IRedisHelper>();
 
@@ -180,6 +180,44 @@ public class ScanItemActionServiceTest
 
         Assert.Equal("NOTFOUND", result!.Status);
     }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-aaaa-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-dddd-cccc-aaaa-eeeeeeeeeeee")]
+    public void UpdateScanItemActionByIdKeyErrorTest(string orgId, string actionId)
+    {
+        MScanItemAction? template = null;
+        MScanItemAction inputAction = new() { ThemeVerify = "xxx", EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890" };
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciActRepo = new Mock<IScanItemActionRepository>();
+        sciActRepo.Setup(s => s.UpdateScanItemActionById(actionId, inputAction)).Returns(template);
+
+        var sciActSvc = new ScanItemActionService(sciActRepo.Object, redisHelper.Object);
+        var result = sciActSvc.UpdateScanItemActionById(orgId, actionId, inputAction);
+
+        Assert.Equal("ERROR_KEY_TOO_SHORT", result!.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-aaaa-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-dddd-cccc-aaaa-eeeeeeeeeeee")]
+    public void UpdateScanItemActionByIdIvErrorTest(string orgId, string actionId)
+    {
+        MScanItemAction? template = null;
+        MScanItemAction inputAction = new() { ThemeVerify = "xxx", EncryptionIV = "1234567890", EncryptionKey = "1234567890ABCDEF" };
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciActRepo = new Mock<IScanItemActionRepository>();
+        sciActRepo.Setup(s => s.UpdateScanItemActionById(actionId, inputAction)).Returns(template);
+
+        var sciActSvc = new ScanItemActionService(sciActRepo.Object, redisHelper.Object);
+        var result = sciActSvc.UpdateScanItemActionById(orgId, actionId, inputAction);
+
+        Assert.Equal("ERROR_KEY_TOO_SHORT", result!.Status);
+    }
     //=====
 
     //===== AddScanItemAction()
@@ -189,7 +227,7 @@ public class ScanItemActionServiceTest
     [InlineData("org1", "xxx")]
     public void AddScanItemActionMultipleTest(string orgId, string theme)
     {
-        var template = new MScanItemAction() { ThemeVerify = theme };
+        var template = new MScanItemAction() { ThemeVerify = theme, EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890ABCDEF" };
 
         var redisHelper = new Mock<IRedisHelper>();
 
@@ -208,7 +246,7 @@ public class ScanItemActionServiceTest
     [InlineData("org1", "xxx")]
     public void AddScanItemActionOkTest(string orgId, string theme)
     {
-        var template = new MScanItemAction() { ThemeVerify = theme };
+        var template = new MScanItemAction() { ThemeVerify = theme, EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890ABCDEF" };
 
         var redisHelper = new Mock<IRedisHelper>();
 
@@ -220,9 +258,47 @@ public class ScanItemActionServiceTest
 
         Assert.Equal("OK", result!.Status);
     }
+
+    [Theory]
+    [InlineData("org1", "test")]
+    [InlineData("org1", "a")]
+    [InlineData("org1", "xxx")]
+    public void AddScanItemActionKeyErrorTest(string orgId, string theme)
+    {
+        var template = new MScanItemAction() { ThemeVerify = theme, EncryptionIV = "1234567890ABCDEF", EncryptionKey = "1234567890" };
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciActRepo = new Mock<IScanItemActionRepository>();
+        sciActRepo.Setup(s => s.GetScanItemActionCount(It.IsAny<VMScanItemAction>())).Returns(0);
+
+        var sciActSvc = new ScanItemActionService(sciActRepo.Object, redisHelper.Object);
+        var result = sciActSvc.AddScanItemAction(orgId, template);
+
+        Assert.Equal("ERROR_KEY_TOO_SHORT", result!.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "test")]
+    [InlineData("org1", "a")]
+    [InlineData("org1", "xxx")]
+    public void AddScanItemActionIvErrorTest(string orgId, string theme)
+    {
+        var template = new MScanItemAction() { ThemeVerify = theme, EncryptionIV = "1234567890", EncryptionKey = "1234567890ABCDEF" };
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var sciActRepo = new Mock<IScanItemActionRepository>();
+        sciActRepo.Setup(s => s.GetScanItemActionCount(It.IsAny<VMScanItemAction>())).Returns(0);
+
+        var sciActSvc = new ScanItemActionService(sciActRepo.Object, redisHelper.Object);
+        var result = sciActSvc.AddScanItemAction(orgId, template);
+
+        Assert.Equal("ERROR_KEY_TOO_SHORT", result!.Status);
+    }
     //=====
 
-    //===== AddScanItemAction()
+    //===== GetScanItemActionDefault()
     [Theory]
     [InlineData("org1")]
     [InlineData("org2")]

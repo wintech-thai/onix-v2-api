@@ -25,6 +25,27 @@ namespace Its.Onix.Api.Utils
             return result;
         }
 
+        public static ValidationResult ValidateKeyAndIV(string? keyIV)
+        {
+            var result = new ValidationResult() { Status = "OK", Description = "" };
+
+            if (string.IsNullOrEmpty(keyIV))
+            {
+                result.Status = "ERROR_KEY_EMPTY";
+                result.Description = "Key or input vector need to be 16 characters long";
+                return result;
+            }
+
+            if (keyIV.Length < 16)
+            {
+                result.Status = "ERROR_KEY_TOO_SHORT";
+                result.Description = "Key or input vector need to be 16 characters long";
+                return result;
+            }
+
+            return result;
+        }
+
         public static ValidationResult ValidateUserName(string userName)
         {
             var result = new ValidationResult() { Status = "OK", Description = "" };
