@@ -90,6 +90,9 @@ public class DataContext : DbContext, IDataContext
             .HasPrincipalKey(i => i.Id);
 
         modelBuilder.Entity<MAuditLog>();
+
         modelBuilder.Entity<MStat>();
+        modelBuilder.Entity<MStat>()
+            .HasIndex(t => new { t.OrgId, t.StatCode, t.BalanceDateKey }).IsUnique();
     }
 }
