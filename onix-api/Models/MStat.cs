@@ -26,6 +26,9 @@ namespace Its.Onix.Api.Models
         [Column("balance_date")]
         public DateTime? BalanceDate { get; set; }
 
+        [Column("balance_date_key")] //000000 for current balance
+        public string? BalanceDateKey { get; set; }
+
         [Column("tx_in")]
         public long? TxIn { get; set; }
 
