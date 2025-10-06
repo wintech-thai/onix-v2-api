@@ -17,6 +17,7 @@ namespace Its.Onix.Api.Services
         private readonly IStorageUtils _storageUtil;
         private readonly IRedisHelper _redis;
         private readonly IJobService _jobService;
+        private readonly IScanItemTemplateService _sciTemplateSvc;
 
         public ScanItemService(IScanItemRepository repo,
             IItemRepository itemRepo,
@@ -24,6 +25,7 @@ namespace Its.Onix.Api.Services
             IEntityRepository entityRepo,
             IStorageUtils storageUtil,
             IJobService jobService,
+            IScanItemTemplateService sciTemplateService,
             IRedisHelper redis) : base()
         {
             repository = repo;
@@ -33,6 +35,7 @@ namespace Its.Onix.Api.Services
             _storageUtil = storageUtil;
             _redis = redis;
             _jobService = jobService;
+            _sciTemplateSvc = sciTemplateService;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
@@ -516,6 +519,30 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            //สร้าง URL ให้อัตโนมัติเลย
+            var m = _sciTemplateSvc!.GetScanItemTemplate(orgId);
+            if (m == null)
+            {
+                r.Status = "NO_SCAN_ITEM_TEMPLATE_FOUND";
+                r.Description = $"No scan item template found!!!";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(m.UrlTemplate))
+            {
+                r.Status = "URL_TEMPLATE_EMPTY";
+                r.Description = $"Scan item template URL is empty!!!";
+
+                return r;
+            }
+
+            var url = m.UrlTemplate!;
+            url = url.Replace("{VAR_ORG}", orgId);
+            url = url.Replace("{VAR_SERIAL}", scanItem.Serial);
+            url = url.Replace("{VAR_PIN}", scanItem.Pin);
+            scanItem.Url = url;
 
             var result = repository!.AddScanItem(scanItem);
             r.ScanItem = result;
