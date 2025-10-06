@@ -118,7 +118,10 @@ namespace Its.Onix.Api.Services
 
             foreach (var item in result)
             {
-                item.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(item.Properties!);
+                if (!string.IsNullOrEmpty(item.Properties))
+                {
+                    item.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(item.Properties!);
+                }
                 item.Properties = "";
             }
 
