@@ -53,7 +53,7 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        public MScanItem AttachScanItemToProduct(string itemId, string productId)
+        public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product)
         {
             Guid pid = Guid.Parse(productId);
             Guid id = Guid.Parse(itemId);
@@ -63,14 +63,16 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.UsedFlag = "TRUE";
                 result.ItemId = pid;
+                result.ProductCode = product.Code;
                 context!.SaveChanges();
             }
 
             return result!;
         }
 
-        public MScanItem AttachScanItemToCustomer(string itemId, string customerId)
+        public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer)
         {
+            //TODO : Use customer in the future to get customer code
             Guid cid = Guid.Parse(customerId);
             Guid id = Guid.Parse(itemId);
             var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();

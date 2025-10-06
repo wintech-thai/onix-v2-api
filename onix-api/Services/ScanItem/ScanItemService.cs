@@ -35,7 +35,7 @@ namespace Its.Onix.Api.Services
             _jobService = jobService;
         }
 
-        public MVScanItem AttachScanItemToProduct(string orgId, string itemId, string productId)
+        public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
         {
             var r = new MVScanItem()
             {
@@ -43,8 +43,33 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(productId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Product ID [{productId}] format is invalid";
+
+                return r;
+            }
+
+            var product = _itemRepo.GetItemById(productId!);
+            if (product == null)
+            {
+                r.Status = "PRODUCT_NOTFOUND";
+                r.Description = $"Product ID [{productId}] not found!!!";
+
+                return r;
+            }
+
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.AttachScanItemToProduct(itemId, productId);
+            var result = repository!.AttachScanItemToProduct(scanItemId, productId, product);
 
             r.ScanItem = result;
 
@@ -307,7 +332,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItem AttachScanItemToCustomer(string orgId, string itemId, string customerId)
+        public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
         {
             var r = new MVScanItem()
             {
@@ -315,8 +340,33 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(customerId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Customer ID [{customerId}] format is invalid";
+
+                return r;
+            }
+
+            var customer = _entityRepo.GetEntityById(customerId!);
+            if (customer == null)
+            {
+                r.Status = "CUSTOMER_NOTFOUND";
+                r.Description = $"Customer ID [{customer}] not found!!!";
+
+                return r;
+            }
+
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.AttachScanItemToCustomer(itemId, customerId);
+            var result = repository!.AttachScanItemToCustomer(scanItemId, customerId, customer);
 
             r.ScanItem = result;
 

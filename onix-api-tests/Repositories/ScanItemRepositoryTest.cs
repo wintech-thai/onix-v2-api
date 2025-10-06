@@ -127,6 +127,7 @@ public class ScanItemRepositoryTest
     [InlineData("org1", 1, false, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeebb")] //org ไม่ตรงเลยไม่เจอ
     public void AttachScanItemToProductTest(string orgId, int idx, bool found, string productId)
     {
+        var product = new MItem() { Code = "This is product code" };
         var ctx = GetDataContext(Guid.NewGuid().ToString());
         var items = AddMockedData(ctx);
         var item = items[idx];
@@ -134,13 +135,14 @@ public class ScanItemRepositoryTest
         var repo = new ScanItemRepository(ctx);
 
         repo.SetCustomOrgId(orgId);
-        var scanItem = repo.AttachScanItemToProduct(item.Id.ToString()!, productId);
+        var scanItem = repo.AttachScanItemToProduct(item.Id.ToString()!, productId, product);
         var isExist = scanItem != null;
 
         if (scanItem != null)
         {
             Assert.Equal("TRUE", scanItem.UsedFlag);
             Assert.Equal(productId, scanItem.ItemId.ToString());
+            Assert.Equal(product.Code, scanItem.ProductCode);
         }
 
         Assert.Equal(found, isExist);
@@ -160,7 +162,7 @@ public class ScanItemRepositoryTest
         var repo = new ScanItemRepository(ctx);
 
         repo.SetCustomOrgId(orgId);
-        var scanItem = repo.AttachScanItemToCustomer(item.Id.ToString()!, customerId);
+        var scanItem = repo.AttachScanItemToCustomer(item.Id.ToString()!, customerId, new MEntity() { });
         var isExist = scanItem != null;
 
         if (scanItem != null)

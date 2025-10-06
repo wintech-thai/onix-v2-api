@@ -9,8 +9,8 @@ namespace Its.Onix.Api.Database.Repositories
 
         public MScanItem RegisterScanItem(string itemId);
         public MScanItem IncreaseScanCount(string itemId);
-        public MScanItem AttachScanItemToProduct(string itemId, string productId);
-        public MScanItem AttachScanItemToCustomer(string itemId, string customerId);
+        public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product);
+        public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
         public MScanItem? GetScanItemBySerialPin(string serial, string pin);
 
         public MScanItem AddScanItem(MScanItem scanItem);
