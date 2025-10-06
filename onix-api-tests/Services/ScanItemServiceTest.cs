@@ -29,6 +29,7 @@ public class ScanItemServiceTest
         var entityRepo = new Mock<IEntityRepository>();
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
         var redisHelper = new Mock<IRedisHelper>();
 
         var sciService = new ScanItemService(
@@ -38,6 +39,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToProduct(orgId, scanItemId.ToString(), productId.ToString());
@@ -59,6 +61,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -67,6 +70,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToProduct(orgId, scanItemId.ToString(), productId.ToString());
@@ -88,6 +92,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -96,6 +101,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToProduct(orgId, scanItemId.ToString(), productId);
@@ -123,6 +129,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -131,6 +138,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToProduct(orgId, scanItemId.ToString(), productId.ToString());
@@ -155,6 +163,8 @@ public class ScanItemServiceTest
         // Simulate ว่าไม่มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -162,6 +172,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
@@ -188,6 +199,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -195,6 +208,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
@@ -222,6 +236,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -229,6 +245,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
@@ -258,6 +275,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -265,6 +284,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
@@ -297,6 +317,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -304,6 +326,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
@@ -355,6 +378,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -362,6 +387,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemProduct(orgId, serial, pin, otp);
@@ -384,6 +410,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -392,6 +419,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.VerifyScanItem(orgId, serial, pin);
@@ -415,6 +443,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -423,6 +452,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.VerifyScanItem(orgId, serial, pin);
@@ -449,6 +479,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -457,6 +488,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.VerifyScanItem(orgId, serial, pin);
@@ -479,6 +511,7 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         // Simulate ว่าไม่มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -487,6 +520,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetOtpViaEmail(orgId, serial, pin, otp, email);
@@ -511,6 +545,7 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         // Simulate ว่าไม่มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -519,6 +554,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetOtpViaEmail(orgId, serial, pin, otp, email);
@@ -543,6 +579,7 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         // Simulate ว่าไม่มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -551,6 +588,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetOtpViaEmail(orgId, serial, pin, otp, email);
@@ -580,6 +618,7 @@ public class ScanItemServiceTest
 
         var entityRepo = new Mock<IEntityRepository>();
         entityRepo.Setup(s => s.GetEntityById(customerId.ToString())).Returns(customer);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
@@ -592,6 +631,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToCustomer(orgId, scanItemId.ToString(), customerId.ToString());
@@ -618,6 +658,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -626,6 +667,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToCustomer(orgId, scanItemId, customerId.ToString());
@@ -653,6 +695,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -661,6 +704,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AttachScanItemToCustomer(orgId, scanItemId.ToString(), customerId);
@@ -686,6 +730,7 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         // Simulate ไม่มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -694,6 +739,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, null!);
@@ -719,6 +765,7 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(motp);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -727,6 +774,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, null!);
@@ -754,6 +802,7 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync((MOtp?)null);
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -762,6 +811,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
@@ -790,6 +840,8 @@ public class ScanItemServiceTest
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -797,6 +849,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
@@ -826,6 +879,8 @@ public class ScanItemServiceTest
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -833,6 +888,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
@@ -863,6 +919,8 @@ public class ScanItemServiceTest
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -870,6 +928,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
@@ -904,6 +963,8 @@ public class ScanItemServiceTest
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:RegisterCustomer:{serial}:{pin}")).ReturnsAsync(motp);
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:ReceivedOtpViaEmail:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -911,6 +972,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.RegisterCustomer(orgId, serial, pin, otp, cust);
@@ -935,6 +997,8 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync((MOtp?)null);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -942,6 +1006,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
@@ -967,6 +1032,8 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -974,6 +1041,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
@@ -1000,6 +1068,8 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -1007,6 +1077,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
@@ -1035,6 +1106,8 @@ public class ScanItemServiceTest
         var redisHelper = new Mock<IRedisHelper>();
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -1042,6 +1115,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
@@ -1074,6 +1148,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -1081,6 +1157,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
@@ -1113,6 +1190,8 @@ public class ScanItemServiceTest
         // Simulate มีข้อมูล ใน redis
         redisHelper.Setup(s => s.GetObjectAsync<MOtp>($"{orgId}:Local:GetCustomer:{serial}:{pin}")).ReturnsAsync(motp);
 
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
         var sciService = new ScanItemService(
             scanItemRepo.Object,
             itemRepo.Object,
@@ -1120,6 +1199,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCustomer(orgId, serial, pin, otp);
@@ -1146,6 +1226,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1154,6 +1235,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemById(orgId, scanItemId);
@@ -1185,6 +1267,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1193,6 +1276,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AddScanItem(orgId, scanItem);
@@ -1217,6 +1301,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1225,6 +1310,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AddScanItem(orgId, scanItem);
@@ -1233,11 +1319,10 @@ public class ScanItemServiceTest
         Assert.Equal("SERIAL_ALREADY_EXIST", result.Status);
     }
 
-
     [Theory]
     [InlineData("org1", "S099011", "ADESEESSS")]
     [InlineData("org2", "S090011", "ADESDESSS")]
-    public void AddScanItemOkTest(string orgId, string serial, string pin)
+    public void AddScanItemTemplateNotFoundTest(string orgId, string serial, string pin)
     {
         var scanItem = new MScanItem() { Serial = serial, Pin = pin, Url = pin };
 
@@ -1252,6 +1337,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1260,11 +1346,95 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.AddScanItem(orgId, scanItem);
 
         Assert.NotNull(result);
+        Assert.Equal("NO_SCAN_ITEM_TEMPLATE_FOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "S099011", "ADESEESSS")]
+    [InlineData("org2", "S090011", "ADESDESSS")]
+    public void AddScanItemTemplateUrlEmptyTest(string orgId, string serial, string pin)
+    {
+        var sciTpl = new MScanItemTemplate() { UrlTemplate = "" };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, Url = pin };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.IsPinExist(pin)).Returns(false);
+        scanItemRepo.Setup(s => s.IsSerialExist(serial)).Returns(false);
+        scanItemRepo.Setup(s => s.AddScanItem(scanItem)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+        sciTplService.Setup(s => s.GetScanItemTemplate(orgId)).Returns(sciTpl);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AddScanItem(orgId, scanItem);
+
+        Assert.NotNull(result);
+        Assert.Equal("URL_TEMPLATE_EMPTY", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "S099011", "ADESEESSS")]
+    [InlineData("org2", "S090011", "ADESDESSS")]
+    public void AddScanItemOkTest(string orgId, string serial, string pin)
+    {
+        var sciTpl = new MScanItemTemplate() { UrlTemplate = "https://scan-dev.please-scan.com/org/{VAR_ORG}/Verify/{VAR_SERIAL}/{VAR_PIN}" };
+        var scanItem = new MScanItem() { Serial = serial, Pin = pin, Url = pin };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.IsPinExist(pin)).Returns(false);
+        scanItemRepo.Setup(s => s.IsSerialExist(serial)).Returns(false);
+        scanItemRepo.Setup(s => s.AddScanItem(scanItem)).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+        sciTplService.Setup(s => s.GetScanItemTemplate(orgId)).Returns(sciTpl);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.AddScanItem(orgId, scanItem);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.ScanItem);
+        Assert.NotNull(result.ScanItem.Url);
+
+        var url = $"https://scan-dev.please-scan.com/org/{orgId}/Verify/{serial}/{pin}";
+        Assert.Equal(url, result.ScanItem.Url);
+
         Assert.Equal("OK", result.Status);
     }
     //===
@@ -1282,6 +1452,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1290,6 +1461,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.DeleteScanItemById(orgId, scanItemId);
@@ -1312,6 +1484,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1320,6 +1493,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.DeleteScanItemById(orgId, scanItemId);
@@ -1344,6 +1518,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1352,6 +1527,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.DeleteScanItemById(orgId, scanItemId);
@@ -1374,6 +1550,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1382,6 +1559,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.UnVerifyScanItemById(orgId, scanItemId);
@@ -1404,6 +1582,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1412,6 +1591,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.UnVerifyScanItemById(orgId, scanItemId);
@@ -1436,6 +1616,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1444,6 +1625,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.UnVerifyScanItemById(orgId, scanItemId);
@@ -1469,6 +1651,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1477,6 +1660,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItemCount(orgId, query);
@@ -1506,6 +1690,7 @@ public class ScanItemServiceTest
         var storageUtil = new Mock<IStorageUtils>();
         var jobService = new Mock<IJobService>();
         var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
 
         var sciService = new ScanItemService(
             scanItemRepo.Object,
@@ -1514,6 +1699,7 @@ public class ScanItemServiceTest
             entityRepo.Object,
             storageUtil.Object,
             jobService.Object,
+            sciTplService.Object,
             redisHelper.Object);
 
         var result = sciService.GetScanItems(orgId, query);
