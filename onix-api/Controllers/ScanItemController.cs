@@ -40,10 +40,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/AddScanItem/{scanItemId}")]
-        public IActionResult AddScanItem(string id, Guid scanItemId, [FromBody] MScanItem request)
+        [Route("org/{id}/action/AddScanItem")]
+        public IActionResult AddScanItem(string id, [FromBody] MScanItem request)
         {
-            request.Id = scanItemId;
+            //request.Id = scanItemId;
             var result = svc.AddScanItem(id, request);
 
             return Ok(result);
