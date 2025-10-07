@@ -249,7 +249,7 @@ namespace Its.Onix.Api.Services
             r.ScanItem = result;
             var id = result.Id.ToString();
 
-            if (result.RegisteredFlag!.Equals("TRUE"))
+            if ((result.RegisteredFlag != null) && result.RegisteredFlag!.Equals("TRUE"))
             {
                 r.Status = "ALREADY_REGISTERED";
                 r.DescriptionEng = $"Your product serial=[{serial}] and pin=[{pin}] is already registered!!!";

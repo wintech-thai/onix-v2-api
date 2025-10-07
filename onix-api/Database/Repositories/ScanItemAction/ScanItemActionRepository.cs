@@ -78,6 +78,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.EncryptionKey = item.EncryptionKey;
                 result.EncryptionIV = item.EncryptionIV;
                 result.RegisteredAwareFlag = item.RegisteredAwareFlag;
+                result.ThemeVerify = item.ThemeVerify;
                 
                 context!.SaveChanges();
             }
