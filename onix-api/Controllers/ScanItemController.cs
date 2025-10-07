@@ -43,8 +43,8 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/AddScanItem")]
         public IActionResult AddScanItem(string id, [FromBody] MScanItem request)
         {
-            //request.Id = scanItemId;
             var result = svc.AddScanItem(id, request);
+            Response.Headers.Append("CUST_STATUS", result.Status);
 
             return Ok(result);
         }

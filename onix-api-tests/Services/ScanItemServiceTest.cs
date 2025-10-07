@@ -465,6 +465,7 @@ public class ScanItemServiceTest
     [InlineData("org1", "A000001", "42AIDS3SeE", "FALSE")]
     [InlineData("org1", "A000001", "42AIDS3SeE", "NO")]
     [InlineData("org1", "A000001", "42AIDS3SeE", "")]
+    [InlineData("org1", "A000001", "42AIDS3SeE", null)]
     //[InlineData("org1", "A000001", "42AIDS3SeE", null)] --> อันนี้ยังไม่ผ่านเพราะ code ไม่ได้ handle null
     public void VerifyScanItemOkTest(string orgId, string serial, string pin, string registerFlag)
     {
