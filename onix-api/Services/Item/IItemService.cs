@@ -10,6 +10,7 @@ namespace Its.Onix.Api.Services
         public MVItem? AddItem(string orgId, MItem item);
         public MVItem? DeleteItemById(string orgId, string itemId);
         public IEnumerable<MItem> GetItems(string orgId, VMItem param);
+        public IEnumerable<NameValue> GetAllowItemPropertyNames(string orgId);
         public int GetItemCount(string orgId, VMItem param);
         public MVItem? UpdateItemById(string orgId, string itemId, MItem item);
     }

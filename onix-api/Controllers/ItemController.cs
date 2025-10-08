@@ -88,6 +88,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/{id}/action/GetAllowItemPropertyNames")]
+        public IActionResult GetAllowItemPropertyNames(string id)
+        {
+            var result = svc.GetAllowItemPropertyNames(id);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/{id}/action/GetItemImageUploadPresignedUrl/{itemId}")]
         public IActionResult GetItemImageUploadPresignedUrl(string id, string itemId)
         {
