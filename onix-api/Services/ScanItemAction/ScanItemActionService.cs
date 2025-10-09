@@ -6,6 +6,12 @@ using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Services
 {
+    public class CacheLoaderEncryptionConfig
+    {
+        public string? Encryption_Key { get; set; }
+        public string? Encryption_Iv { get; set; }
+    }
+
     public class ScanItemActionService : BaseService, IScanItemActionService
     {
         private readonly IScanItemActionRepository? repository = null;
@@ -147,7 +153,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //Controller เป็นคนใช้อันนี้ตอน verify scan item
             _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
+
+            //ตัว verify เป็นคนใช้ cache ตรงนี้
+            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+            var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
+            _redis.SetObjectAsync(cacheLoaderKey, ec);
 
             r.ScanItemAction = result;
             return r;
