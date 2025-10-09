@@ -1,7 +1,6 @@
 using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
-using System;
 
 namespace Its.Onix.Api.Utils
 {
@@ -11,6 +10,7 @@ namespace Its.Onix.Api.Utils
         bool IsObjectExist(string objectName);
         public string GenerateDownloadUrl(string objectName, TimeSpan validFor, string? contentType = null);
         public void UpdateMetaData(string bucketName, string objectName, string metaName, string metaValue);
+        public void DeleteObject(string bucketName, string objectName);
     }
 
     public class StorageUtils : IStorageUtils
@@ -61,6 +61,11 @@ namespace Its.Onix.Api.Utils
             obj.Metadata[metaName] = metaValue;
 
             _storageClient.UpdateObject(obj);
+        }
+
+        public void DeleteObject(string bucketName, string objectName)
+        {
+            _storageClient.DeleteObject(bucketName, objectName);
         }
 
         public bool IsObjectExist(string objectName)

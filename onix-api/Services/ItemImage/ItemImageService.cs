@@ -83,7 +83,7 @@ namespace Its.Onix.Api.Services
 
         public MVItemImage? UpdateItemImageById(string orgId, string itemImageId, MItemImage itemImage)
         {
-            //เพื่อความสะดวก จะไม่ให้มีการอัพเดตรูป ให้อัพเดตแค่เฉพาะ metadata ของรูป
+            //เพื่อความสะดวก จะไม่ให้มีการอัพเดตรูป แต่ให้อัพเดตแค่เฉพาะ metadata ของรูป
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -122,24 +122,27 @@ namespace Its.Onix.Api.Services
             }
 
             repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteItemImageByItemId(itemId);
+            var images = repository!.DeleteItemImageByItemId(itemId);
 
-            r.ItemImages = m;
-            if (m == null)
+            r.ItemImages = images;
+            if (images == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+                return r;
             }
 
-            //TODO : ให้วนลูปลบไฟล์ออกจาก storage
+            // images จะมีค่าเดิมก่อนที่จะถูก deleted ใน DB 
+            foreach (var image in images)
+            {
+                DeleteStorageObject(image);
+            }
 
             return r;
         }
 
         public MVItemImage? DeleteItemImageById(string orgId, string itemImageId)
         {
-            //TODO : ให้ลบไฟล์ออกจาก storage
-
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -162,9 +165,30 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"Item image ID [{itemImageId}] not found for the organization [{orgId}]";
+                return r;
             }
 
+            // m จะมีค่าเป็น object เดิมก่อน delete อยู่แล้ว
+            DeleteStorageObject(m);
+
             return r;
+        }
+
+        private void DeleteStorageObject(MItemImage m)
+        {
+            if (m == null)
+            {
+                return;
+            }
+
+            var objectName = m.ImagePath;
+            if (string.IsNullOrEmpty(objectName))
+            {
+                return;
+            }
+
+            var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
+            _storageUtil.DeleteObject(bucket, objectName);
         }
 
         public IEnumerable<MItemImage> GetItemImages(string orgId, VMItemImage param)

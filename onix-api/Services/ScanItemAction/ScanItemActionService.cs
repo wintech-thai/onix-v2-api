@@ -105,6 +105,11 @@ namespace Its.Onix.Api.Services
             var result = repository!.AddScanItemAction(action);
             r.ScanItemAction = result;
 
+            //ตัว verify เป็นคนใช้ cache ตรงนี้
+            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+            var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
+            _redis.SetObjectAsync(cacheLoaderKey, ec);
+
             return r;
         }
 
