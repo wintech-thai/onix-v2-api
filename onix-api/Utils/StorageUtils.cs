@@ -69,8 +69,9 @@ namespace Its.Onix.Api.Utils
             {
                 return "";
             }
-            
+ 
             var bucketName = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
+/*
             var options = UrlSigner.Options.FromDuration(validFor);
 
             var template = UrlSigner.RequestTemplate
@@ -86,7 +87,9 @@ namespace Its.Onix.Api.Utils
                 ]);
             }
 
-            return _urlSigner.Sign(template, options);
+            //return _urlSigner.Sign(template, options);
+*/
+            return _urlSigner.Sign(bucketName, objectName, validFor, HttpMethod.Get);
         }
     }
 }
