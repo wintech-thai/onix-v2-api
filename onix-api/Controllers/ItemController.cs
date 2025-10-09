@@ -57,6 +57,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteItemImagesByItemId/{itemId}")]
+        public IActionResult DeleteItemImagesByItemId(string id, string itemId)
+        {
+            var result = _itemImgService.DeleteItemImageByItemId(id, itemId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/UpdateItemById/{itemId}")]
         public IActionResult UpdateItemById(string id, string itemId, [FromBody] MItem request)
