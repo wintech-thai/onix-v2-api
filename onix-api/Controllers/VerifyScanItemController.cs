@@ -77,7 +77,7 @@ namespace Its.Onix.Api.Controllers
             var result = svc.VerifyScanItem(id, serial, pin);
             result.ThemeVerify = string.IsNullOrWhiteSpace(scanItemAction.ThemeVerify) ? "default" : scanItemAction.ThemeVerify;
 
-            if (scanItemAction.RegisteredAwareFlag == "NO")
+            if (scanItemAction.RegisteredAwareFlag == "FALSE")
             {
                 //เป็นตัวบอกว่าจะไม่ให้ความสำคัญกับ ALREADY_REGISTERED
                 if (result.Status == "ALREADY_REGISTERED")

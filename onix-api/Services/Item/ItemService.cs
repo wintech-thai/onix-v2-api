@@ -21,7 +21,11 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetItemById(itemId);
 
-            result.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(result.Properties!);
+            if (!string.IsNullOrEmpty(result.Properties))
+            {
+                result.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(result.Properties!);
+            }
+
             result.Properties = "";
 
             return result;
@@ -43,6 +47,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (item.PropertiesObj == null)
+            {
+                item.PropertiesObj = new MItemProperties();
+            }
             item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
 
             var result = repository!.AddItem(item);
@@ -65,9 +73,13 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
 
+            if (item.PropertiesObj == null)
+            {
+                item.PropertiesObj = new MItemProperties();
+            }
             item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
             var result = repository!.UpdateItemById(itemId, item);
-            
+
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -123,6 +135,8 @@ namespace Its.Onix.Api.Services
                     item.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(item.Properties!);
                 }
                 item.Properties = "";
+                //เพื่อไม่ให้ข้อมูลที่ response กลับไปใหญ่จนเกินไป
+                item.Narrative = "";
             }
 
             return result;
@@ -134,6 +148,24 @@ namespace Its.Onix.Api.Services
             var result = repository!.GetItemCount(param);
 
             return result;
+        }
+
+        public IEnumerable<NameValue> GetAllowItemPropertyNames(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var props = new NameValue[]
+            {
+                new() { Name = "DimensionUnit", Value = "cm" },
+                new() { Name = "WeightUnit", Value = "gram" },
+                new() { Name = "Category", Value = "" },
+                new() { Name = "SupplierUrl", Value = "" },
+                new() { Name = "ProductUrl", Value = "" },
+                new() { Name = "Width", Value = "" },
+                new() { Name = "Weight", Value = "" },
+            };
+
+            return props;
         }
     }
 }

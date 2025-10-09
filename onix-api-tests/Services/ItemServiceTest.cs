@@ -111,6 +111,38 @@ public class ItemServiceTest
 
     [Theory]
     [InlineData("org1")]
+    public void AddItemPropertiesNullOkTest(string orgId)
+    {
+        var code = "new-code";
+        var item = new MItem()
+        {
+            Code = code,
+            Properties = "anything-does-not-matter",
+            PropertiesObj = null
+        };
+
+        var repo = new Mock<IItemRepository>();
+        repo.Setup(s => s.IsItemCodeExist(code)).Returns(false);
+
+        repo.Setup(s => s.AddItem(item)).Returns(new MItem()
+        {
+            Properties = null,
+        });
+
+        var itemSvc = new ItemService(repo.Object);
+        var result = itemSvc.AddItem(orgId, item);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+
+        // ฟีลด์ Properties จะต้องเป็น empty เสมอ เพราะฟีลด์นี้คือ internal field ที่เก็บ json string
+        Assert.NotNull(result.Item);
+        Assert.NotNull(result.Item.Properties);
+        Assert.Empty(result.Item.Properties);
+    }
+
+    [Theory]
+    [InlineData("org1")]
     public void UpdateItemIdNotFoundTest(string orgId)
     {
         var code = "not-found-code";
@@ -240,6 +272,11 @@ public class ItemServiceTest
         var itemSvc = new ItemService(repo.Object);
         var result = itemSvc.GetItems(orgId, itemQuery);
 
+        foreach (var item in result)
+        {
+            Assert.Empty(item.Narrative!);
+        }
+
         Assert.Equal(2, result.ToArray().Length);
     }
 
@@ -261,4 +298,18 @@ public class ItemServiceTest
 
         Assert.Equal(itemCount, result);
     }
+
+    //====
+    [Theory]
+    [InlineData("org1")]
+    public void GetAllowItemPropertyNamesTest(string orgId)
+    {
+        var repo = new Mock<IItemRepository>();
+
+        var itemSvc = new ItemService(repo.Object);
+        var result = itemSvc.GetAllowItemPropertyNames(orgId);
+
+        Assert.Equal(7, result.ToArray().Length);
+    }
+    //====
 }

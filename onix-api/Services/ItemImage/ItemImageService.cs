@@ -19,14 +19,16 @@ namespace Its.Onix.Api.Services
 
         public MVPresignedUrl GetItemImageUploadPresignedUrl(string orgId, string itemId)
         {
+            var type = "png";
             var sec = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
-            var objectName = $"{Environment.GetEnvironmentVariable("ENV_GROUP")}/{orgId}/Products/{itemId}.{sec}.img";
+            var objectName = $"{Environment.GetEnvironmentVariable("ENV_GROUP")}/{orgId}/Products/{itemId}.{sec}.{type}";
             var validFor = TimeSpan.FromMinutes(15);
-            var contentType = "application/octet-stream";
+            var contentType = $"image/{type}";
 
             var url = _storageUtil.GenerateUploadUrl(bucket, objectName, validFor, contentType);
+            //var previewUrl = _storageUtil.GenerateDownloadUrl(objectName, validFor, contentType);
 
             var result = new MVPresignedUrl()
             {
@@ -34,6 +36,8 @@ namespace Its.Onix.Api.Services
                 Description = "",
                 PresignedUrl = url,
                 ObjectName = objectName,
+                ImagePath = objectName,
+                //PreviewUrl = previewUrl,
             };
 
             return result;
@@ -63,9 +67,13 @@ namespace Its.Onix.Api.Services
                     r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
                     return r;
                 }
-            }
 
-            //TODO : Allow only image .png to be uploaded
+                //Update metadata onix-is-temp-file to 'false'
+                var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
+                _storageUtil.UpdateMetaData(bucket, itemImage.ImagePath, "onix-is-temp-file", "false");
+                
+                //TODO : Allow only image .png to be uploaded
+            }
 
             var result = repository!.AddItemImage(itemImage);
             r.ItemImage = result;
@@ -75,6 +83,7 @@ namespace Its.Onix.Api.Services
 
         public MVItemImage? UpdateItemImageById(string orgId, string itemImageId, MItemImage itemImage)
         {
+            //เพื่อความสะดวก จะไม่ให้มีการอัพเดตรูป ให้อัพเดตแค่เฉพาะ metadata ของรูป
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -83,20 +92,7 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
 
-            if (!string.IsNullOrEmpty(itemImage.ImagePath))
-            {
-                if (!_storageUtil.IsObjectExist(itemImage.ImagePath))
-                {
-                    r.Status = "OBJECT_NOT_FOUND";
-                    r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
-                    return r;
-                }
-            }
-
-            //TODO : Allow only image .png to be uploaded
-
-            var result = repository!.UpdateItemImageById(itemImageId, itemImage);
-
+            var result = repository!.UpdateItemImageById(itemImageId, itemImage);            
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -135,11 +131,15 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
             }
 
+            //TODO : ให้วนลูปลบไฟล์ออกจาก storage
+
             return r;
         }
 
         public MVItemImage? DeleteItemImageById(string orgId, string itemImageId)
         {
+            //TODO : ให้ลบไฟล์ออกจาก storage
+
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -181,8 +181,16 @@ namespace Its.Onix.Api.Services
                     img.ImageUrl = _storageUtil.GenerateDownloadUrl(img.ImagePath!, validFor, contentType);
                 }
             }
-            
+
             return images;
+        }
+        
+        public IEnumerable<MItemImage> GetItemImagesByItemId(string orgId, string itemId)
+        {
+            var param = new VMItemImage() { ItemId = itemId } ;
+            var result = GetItemImages(orgId, param);
+
+            return result;
         }
 
         public int GetItemImageCount(string orgId, VMItemImage param)

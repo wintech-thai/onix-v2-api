@@ -10,6 +10,7 @@ namespace Its.Onix.Api.Utils
         string GenerateUploadUrl(string bucketName, string objectName, TimeSpan validFor, string? contentType = null);
         bool IsObjectExist(string objectName);
         public string GenerateDownloadUrl(string objectName, TimeSpan validFor, string? contentType = null);
+        public void UpdateMetaData(string bucketName, string objectName, string metaName, string metaValue);
     }
 
     public class StorageUtils : IStorageUtils
@@ -45,7 +46,21 @@ namespace Its.Onix.Api.Utils
                 ]);
             }
 
+            template = template.WithRequestHeaders(
+            [
+                new KeyValuePair<string, IEnumerable<string>>("x-goog-meta-onix-is-temp-file", ["true"])
+            ]);
+
             return _urlSigner.Sign(template, options);
+        }
+
+        public void UpdateMetaData(string bucketName, string objectName, string metaName, string metaValue)
+        {
+            var obj = _storageClient.GetObject(bucketName, objectName);
+            obj.Metadata = obj.Metadata ?? new Dictionary<string, string>();
+            obj.Metadata[metaName] = metaValue;
+
+            _storageClient.UpdateObject(obj);
         }
 
         public bool IsObjectExist(string objectName)
@@ -69,24 +84,9 @@ namespace Its.Onix.Api.Utils
             {
                 return "";
             }
-            
+ 
             var bucketName = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
-            var options = UrlSigner.Options.FromDuration(validFor);
-
-            var template = UrlSigner.RequestTemplate
-                .FromBucket(bucketName)
-                .WithObjectName(objectName)
-                .WithHttpMethod(HttpMethod.Get);
-
-            if (!string.IsNullOrEmpty(contentType))
-            {
-                template = template.WithContentHeaders(
-                [
-                    new KeyValuePair<string, IEnumerable<string>>("Content-Type", [contentType])
-                ]);
-            }
-
-            return _urlSigner.Sign(template, options);
+            return _urlSigner.Sign(bucketName, objectName, validFor, HttpMethod.Get);
         }
     }
 }

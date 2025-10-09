@@ -9,5 +9,7 @@ namespace Its.Onix.Api.ModelsViews
         public string? Description { get; set; }
         public string? PresignedUrl { get; set; }
         public string? ObjectName { get; set; }
+        public string? ImagePath { get; set; }
+        public string? PreviewUrl { get; set; }
     }
 }

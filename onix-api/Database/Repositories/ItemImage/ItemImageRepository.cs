@@ -91,7 +91,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             var predicate = ItemImagePredicate(param!);
             var arr = context!.ItemImages!.Where(predicate)
-                .OrderByDescending(e => e.CreatedDate)
+                .OrderBy(e => e.SortingOrder)
                 .Skip(offset)
                 .Take(limit)
                 .ToList();
@@ -125,7 +125,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(itemId);
 
-            var r = context!.ItemImages!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).ToList();
+            var r = context!.ItemImages!.Where(x => x.OrgId!.Equals(orgId) && x.ItemId.Equals(id)).ToList();
             if (r != null)
             {
                 context!.ItemImages!.RemoveRange(r);
@@ -145,7 +145,11 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Category = item.Category;
                 result.Narative = item.Narative;
                 result.Tags = item.Tags;
-                result.ImagePath = item.ImagePath;
+                result.ImageUrl = item.ImageUrl;
+                
+                //ไม่ให้อัพเดตรูป เพื่อลดความยุ่งยากในการจะต้องมานั่งลบรูปเก่า
+                //result.ImagePath = item.ImagePath; 
+                
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();
             }

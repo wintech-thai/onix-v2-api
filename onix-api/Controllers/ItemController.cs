@@ -57,6 +57,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteItemImagesByItemId/{itemId}")]
+        public IActionResult DeleteItemImagesByItemId(string id, string itemId)
+        {
+            var result = _itemImgService.DeleteItemImageByItemId(id, itemId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/UpdateItemById/{itemId}")]
         public IActionResult UpdateItemById(string id, string itemId, [FromBody] MItem request)
@@ -83,6 +91,15 @@ namespace Its.Onix.Api.Controllers
             param.ItemId = itemId;
 
             var result = _itemImgService.GetItemImages(id, param);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetAllowItemPropertyNames")]
+        public IActionResult GetAllowItemPropertyNames(string id)
+        {
+            var result = svc.GetAllowItemPropertyNames(id);
             return Ok(result);
         }
 
