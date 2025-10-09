@@ -28,7 +28,7 @@ namespace Its.Onix.Api.Services
             var contentType = $"image/{type}";
 
             var url = _storageUtil.GenerateUploadUrl(bucket, objectName, validFor, contentType);
-            var previewUrl = _storageUtil.GenerateDownloadUrl(objectName, validFor, contentType);
+            //var previewUrl = _storageUtil.GenerateDownloadUrl(objectName, validFor, contentType);
 
             var result = new MVPresignedUrl()
             {
@@ -37,7 +37,7 @@ namespace Its.Onix.Api.Services
                 PresignedUrl = url,
                 ObjectName = objectName,
                 ImagePath = objectName,
-                PreviewUrl = previewUrl,
+                //PreviewUrl = previewUrl,
             };
 
             return result;
@@ -68,7 +68,7 @@ namespace Its.Onix.Api.Services
                     return r;
                 }
 
-                //TODO : Rename file เอา .tmp ออก
+                //TODO : Update metadata onix-is-temp-file
                 //TODO : Allow only image .png to be uploaded
             }
 

@@ -47,7 +47,7 @@ namespace Its.Onix.Api.Utils
 
             template = template.WithRequestHeaders(
             [
-                new KeyValuePair<string, IEnumerable<string>>("onix-custom-is-temp", ["true"])
+                new KeyValuePair<string, IEnumerable<string>>("x-goog-meta-onix-is-temp-file", ["true"])
             ]);
 
             return _urlSigner.Sign(template, options);

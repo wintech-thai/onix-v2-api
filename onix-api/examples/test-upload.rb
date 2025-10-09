@@ -37,7 +37,7 @@ def make_request(method, apiName, data)
   request.basic_auth("api", apiKey)
 
   if (!data.nil?)
-    request.set_form_data(data)
+    request.body = data.to_json
   end
 
   http = Net::HTTP.new(uri.host, uri.port)  
@@ -66,6 +66,7 @@ def upload_file_to_gcs(presigned_url, file_path, content_type)
 
   request = Net::HTTP::Put.new(uri.request_uri)
   request['Content-Type'] = content_type
+  request['onix-custom-is-temp'] = 'true'
   request.body = File.read(file_path, mode: "rb")   # อ่านเป็น binary
 
   response = http.request(request)
@@ -84,13 +85,41 @@ orgId = "napbiotec"
 itemId = "99b5dbd5-7a79-4560-9a89-8c24b0393229"
 imageFile = "file_example_PNG_500kB.png"
 
+### DeleteItemImagesByItemId
+#apiDeleteItemImagesUrl = "api/Item/org/#{orgId}/action/DeleteItemImagesByItemId/#{itemId}"
+#result = make_request(:delete, apiDeleteItemImagesUrl, nil)
+#puts(result)
+
+### GetItemImageUploadPresignedUrl
 apiGetPresignUrl = "api/Item/org/#{orgId}/action/GetItemImageUploadPresignedUrl/#{itemId}"
 result = make_request(:get, apiGetPresignUrl, nil)
 
 imagePath = result["imagePath"]
 presignedUrl = result["presignedUrl"]
+previewUrl = result["previewUrl"]
 
+### Upload file to GCS
 puts("Image path  : [#{imagePath}]")
-puts("Presign URL : [#{presignedUrl}]")
+upload_file_to_gcs(presignedUrl, imageFile, 'image/png')
 
-upload_file_to_gcs(presignedUrl, imageFile, 'application/octet-stream')
+#puts("Preview URL : [#{previewUrl}]") # อันนี้เอาไว้ใช้สำหรับ preview ในหน้าเว็บหลังจากที่ upload file เสร็จแล้วแต่ยังไม่ได้ AddItemImage() จริง ๆ
+
+### AddItemImage
+apiAddItemImageUrl = "api/Item/org/#{orgId}/action/AddItemImage/#{itemId}"
+itemImage =  {
+  imagePath: imagePath,
+  category: 1,
+  narative: "ทดสอบอัพโหลดรูป",
+  tags: "ทดสอบ",
+  sortingOrder: 1,
+}
+result = make_request(:post, apiAddItemImageUrl, itemImage)
+
+### GetItemImagesByItemId
+apiGetItemImagesUrl = "api/Item/org/#{orgId}/action/GetItemImagesByItemId/#{itemId}"
+result = make_request(:get, apiGetItemImagesUrl, nil)
+
+image = result[0]
+newPreviewUrl = image["imageUrl"]
+
+puts("New preview URL : [#{newPreviewUrl}]")
