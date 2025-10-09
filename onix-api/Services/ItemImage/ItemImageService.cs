@@ -28,6 +28,7 @@ namespace Its.Onix.Api.Services
             var contentType = $"image/{type}";
 
             var url = _storageUtil.GenerateUploadUrl(bucket, objectName, validFor, contentType);
+            var previewUrl = _storageUtil.GenerateDownloadUrl(objectName, validFor, contentType);
 
             var result = new MVPresignedUrl()
             {
@@ -36,6 +37,7 @@ namespace Its.Onix.Api.Services
                 PresignedUrl = url,
                 ObjectName = objectName,
                 ImagePath = objectName,
+                PreviewUrl = previewUrl,
             };
 
             return result;
@@ -114,7 +116,7 @@ namespace Its.Onix.Api.Services
         public MVItemImage? DeleteItemImageByItemId(string orgId, string itemId)
         {
             //TODO : ให้ลบไฟล์ออกจาก storage
-            
+
             var r = new MVItemImage()
             {
                 Status = "OK",
