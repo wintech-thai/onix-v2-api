@@ -45,6 +45,11 @@ namespace Its.Onix.Api.Utils
                 ]);
             }
 
+            template = template.WithRequestHeaders(
+            [
+                new KeyValuePair<string, IEnumerable<string>>("onix-custom-is-temp", ["true"])
+            ]);
+
             return _urlSigner.Sign(template, options);
         }
 
@@ -71,24 +76,6 @@ namespace Its.Onix.Api.Utils
             }
  
             var bucketName = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
-/*
-            var options = UrlSigner.Options.FromDuration(validFor);
-
-            var template = UrlSigner.RequestTemplate
-                .FromBucket(bucketName)
-                .WithObjectName(objectName)
-                .WithHttpMethod(HttpMethod.Get);
-
-            if (!string.IsNullOrEmpty(contentType))
-            {
-                template = template.WithContentHeaders(
-                [
-                    new KeyValuePair<string, IEnumerable<string>>("Content-Type", [contentType])
-                ]);
-            }
-
-            //return _urlSigner.Sign(template, options);
-*/
             return _urlSigner.Sign(bucketName, objectName, validFor, HttpMethod.Get);
         }
     }

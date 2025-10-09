@@ -67,9 +67,10 @@ namespace Its.Onix.Api.Services
                     r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
                     return r;
                 }
-            }
 
-            //TODO : Allow only image .png to be uploaded
+                //TODO : Rename file เอา .tmp ออก
+                //TODO : Allow only image .png to be uploaded
+            }
 
             var result = repository!.AddItemImage(itemImage);
             r.ItemImage = result;
@@ -95,12 +96,12 @@ namespace Its.Onix.Api.Services
                     r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
                     return r;
                 }
+
+                //TODO : ถ้า imagePath เป็น .tmp ให้ rename file เอา .tmp ออก
+                //TODO : Allow only image .png to be uploaded
             }
 
-            //TODO : Allow only image .png to be uploaded
-
-            var result = repository!.UpdateItemImageById(itemImageId, itemImage);
-
+            var result = repository!.UpdateItemImageById(itemImageId, itemImage);            
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -109,14 +110,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : ถ้า imagePath เป็น .tmp ให้ลบ file เก่าก่อน update ออกด้วย
+
             r.ItemImage = result;
             return r;
         }
 
         public MVItemImage? DeleteItemImageByItemId(string orgId, string itemId)
         {
-            //TODO : ให้ลบไฟล์ออกจาก storage
-
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -140,6 +141,8 @@ namespace Its.Onix.Api.Services
                 r.Status = "NOTFOUND";
                 r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
             }
+
+            //TODO : ให้วนลูปลบไฟล์ออกจาก storage
 
             return r;
         }
