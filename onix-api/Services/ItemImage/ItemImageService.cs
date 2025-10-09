@@ -113,6 +113,8 @@ namespace Its.Onix.Api.Services
 
         public MVItemImage? DeleteItemImageByItemId(string orgId, string itemId)
         {
+            //TODO : ให้ลบไฟล์ออกจาก storage
+            
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -142,6 +144,8 @@ namespace Its.Onix.Api.Services
 
         public MVItemImage? DeleteItemImageById(string orgId, string itemImageId)
         {
+            //TODO : ให้ลบไฟล์ออกจาก storage
+
             var r = new MVItemImage()
             {
                 Status = "OK",

@@ -125,7 +125,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(itemId);
 
-            var r = context!.ItemImages!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).ToList();
+            var r = context!.ItemImages!.Where(x => x.OrgId!.Equals(orgId) && x.ItemId.Equals(id)).ToList();
             if (r != null)
             {
                 context!.ItemImages!.RemoveRange(r);
