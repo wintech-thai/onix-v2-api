@@ -19,12 +19,13 @@ namespace Its.Onix.Api.Services
 
         public MVPresignedUrl GetItemImageUploadPresignedUrl(string orgId, string itemId)
         {
+            var type = "png";
             var sec = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
             var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
-            var objectName = $"{Environment.GetEnvironmentVariable("ENV_GROUP")}/{orgId}/Products/{itemId}.{sec}.img";
+            var objectName = $"{Environment.GetEnvironmentVariable("ENV_GROUP")}/{orgId}/Products/{itemId}.{sec}.{type}";
             var validFor = TimeSpan.FromMinutes(15);
-            var contentType = "application/octet-stream";
+            var contentType = $"image/{type}";
 
             var url = _storageUtil.GenerateUploadUrl(bucket, objectName, validFor, contentType);
 
