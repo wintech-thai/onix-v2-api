@@ -68,7 +68,10 @@ namespace Its.Onix.Api.Services
                     return r;
                 }
 
-                //TODO : Update metadata onix-is-temp-file
+                //Update metadata onix-is-temp-file to 'false'
+                var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
+                _storageUtil.UpdateMetaData(bucket, itemImage.ImagePath, "onix-is-temp-file", "false");
+                
                 //TODO : Allow only image .png to be uploaded
             }
 
@@ -80,6 +83,7 @@ namespace Its.Onix.Api.Services
 
         public MVItemImage? UpdateItemImageById(string orgId, string itemImageId, MItemImage itemImage)
         {
+            //เพื่อความสะดวก จะไม่ให้มีการอัพเดตรูป ให้อัพเดตแค่เฉพาะ metadata ของรูป
             var r = new MVItemImage()
             {
                 Status = "OK",
@@ -87,19 +91,6 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-
-            if (!string.IsNullOrEmpty(itemImage.ImagePath))
-            {
-                if (!_storageUtil.IsObjectExist(itemImage.ImagePath))
-                {
-                    r.Status = "OBJECT_NOT_FOUND";
-                    r.Description = $"Object name [{itemImage.ImagePath}] not found!!!";
-                    return r;
-                }
-
-                //TODO : ถ้า imagePath เป็น .tmp ให้ rename file เอา .tmp ออก
-                //TODO : Allow only image .png to be uploaded
-            }
 
             var result = repository!.UpdateItemImageById(itemImageId, itemImage);            
             if (result == null)
@@ -109,8 +100,6 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            //TODO : ถ้า imagePath เป็น .tmp ให้ลบ file เก่าก่อน update ออกด้วย
 
             r.ItemImage = result;
             return r;

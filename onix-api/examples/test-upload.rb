@@ -66,7 +66,7 @@ def upload_file_to_gcs(presigned_url, file_path, content_type)
 
   request = Net::HTTP::Put.new(uri.request_uri)
   request['Content-Type'] = content_type
-  request['onix-custom-is-temp'] = 'true'
+  request['x-goog-meta-onix-is-temp-file'] = 'true'
   request.body = File.read(file_path, mode: "rb")   # อ่านเป็น binary
 
   response = http.request(request)
@@ -86,8 +86,8 @@ itemId = "99b5dbd5-7a79-4560-9a89-8c24b0393229"
 imageFile = "file_example_PNG_500kB.png"
 
 ### DeleteItemImagesByItemId
-#apiDeleteItemImagesUrl = "api/Item/org/#{orgId}/action/DeleteItemImagesByItemId/#{itemId}"
-#result = make_request(:delete, apiDeleteItemImagesUrl, nil)
+apiDeleteItemImagesUrl = "api/Item/org/#{orgId}/action/DeleteItemImagesByItemId/#{itemId}"
+result = make_request(:delete, apiDeleteItemImagesUrl, nil)
 #puts(result)
 
 ### GetItemImageUploadPresignedUrl

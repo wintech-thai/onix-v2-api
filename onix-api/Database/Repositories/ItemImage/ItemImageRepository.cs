@@ -145,7 +145,11 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Category = item.Category;
                 result.Narative = item.Narative;
                 result.Tags = item.Tags;
-                result.ImagePath = item.ImagePath;
+                result.ImageUrl = item.ImageUrl;
+                
+                //ไม่ให้อัพเดตรูป เพื่อลดความยุ่งยากในการจะต้องมานั่งลบรูปเก่า
+                //result.ImagePath = item.ImagePath; 
+                
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();
             }
