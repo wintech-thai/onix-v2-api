@@ -34,6 +34,7 @@ namespace Its.Onix.Api.Services
                 Description = "",
                 PresignedUrl = url,
                 ObjectName = objectName,
+                ImagePath = objectName,
             };
 
             return result;
@@ -181,8 +182,16 @@ namespace Its.Onix.Api.Services
                     img.ImageUrl = _storageUtil.GenerateDownloadUrl(img.ImagePath!, validFor, contentType);
                 }
             }
-            
+
             return images;
+        }
+        
+        public IEnumerable<MItemImage> GetItemImagesByItemId(string orgId, string itemId)
+        {
+            var param = new VMItemImage() { ItemId = itemId } ;
+            var result = GetItemImages(orgId, param);
+
+            return result;
         }
 
         public int GetItemImageCount(string orgId, VMItemImage param)

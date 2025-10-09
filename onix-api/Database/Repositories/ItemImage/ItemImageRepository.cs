@@ -91,7 +91,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             var predicate = ItemImagePredicate(param!);
             var arr = context!.ItemImages!.Where(predicate)
-                .OrderByDescending(e => e.CreatedDate)
+                .OrderBy(e => e.SortingOrder)
                 .Skip(offset)
                 .Take(limit)
                 .ToList();

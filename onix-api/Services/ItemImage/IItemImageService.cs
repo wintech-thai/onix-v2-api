@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Services
         public MVItemImage? DeleteItemImageById(string orgId, string itemImageId);
         public MVItemImage? DeleteItemImageByItemId(string orgId, string itemId);
         public IEnumerable<MItemImage> GetItemImages(string orgId, VMItemImage param);
+        public IEnumerable<MItemImage> GetItemImagesByItemId(string orgId, string itemId);
         public int GetItemImageCount(string orgId, VMItemImage param);
         public MVItemImage? UpdateItemImageById(string orgId, string itemImageId, MItemImage itemImage);
         public MVPresignedUrl GetItemImageUploadPresignedUrl(string orgId, string itemId);

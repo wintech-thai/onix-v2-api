@@ -38,6 +38,8 @@ namespace Its.Onix.Api.Models
         [Column("category")] 
         public int? Category { get; set; }
 
+        [Column("sorting_order")]
+        public int? SortingOrder { get; set; }
 
         //System fields
         [Column("created_date")]
