@@ -151,7 +151,6 @@ public class ItemImageServiceTest
         Assert.Equal("FILE_TYPE_NOT_PNG", result.Status);
     }
 
-
     [Theory]
     [InlineData("org1", "aaa/b/c/d")]
     [InlineData("org1", "hell/o/world")]
@@ -161,7 +160,7 @@ public class ItemImageServiceTest
         Google.Apis.Storage.v1.Data.Object storageObj = new()
         {
             Size = 1000,
-            ContentType = "image/jpg"
+            ContentType = "image/png"
         };
 
         var header = new byte[10];
@@ -179,6 +178,46 @@ public class ItemImageServiceTest
 
         Assert.NotNull(result);
         Assert.Equal("NOT_VALID_PNG_FILE", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaa/b/c/d")]
+    [InlineData("org1", "hell/o/world")]
+    public void AddItemInvalidDimensionTest(string orgId, string? imagePath)
+    {
+        var itemImage = new MItemImage() { ImagePath = imagePath };
+        Google.Apis.Storage.v1.Data.Object storageObj = new()
+        {
+            Size = 1000,
+            ContentType = "image/png"
+        };
+
+        var header = new byte[24];
+        // 1500 decimal
+        header[16] = 0x00;
+        header[17] = 0x00;
+        header[18] = 0x05;
+        header[19] = 0xDC;
+
+        // 1500 decimal
+        header[20] = 0x00;
+        header[21] = 0x00;
+        header[22] = 0x05;
+        header[23] = 0xDC; 
+
+        var storageUtil = new Mock<IStorageUtils>();
+        storageUtil.Setup(s => s.GetStorageObject(It.IsAny<string>(), imagePath!)).Returns(storageObj);
+        storageUtil.Setup(s => s.IsObjectExist(imagePath!)).Returns(true);
+        storageUtil.Setup(s => s.PartialDownloadToStream(It.IsAny<string>(), imagePath!, 0, 24)).ReturnsAsync(header);
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.AddItemImage(itemImage)).Returns(itemImage);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.AddItemImage(orgId, itemImage);
+
+        Assert.NotNull(result);
+        Assert.Equal("INVALID_IMAGE_DIMENSION", result.Status);
     }
 
     [Theory]
