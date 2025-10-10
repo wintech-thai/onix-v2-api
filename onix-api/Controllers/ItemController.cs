@@ -90,6 +90,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult UpdateItemImagesSortingOrder(string id, string itemId, [FromBody] IEnumerable<string> itemImageIdList)
         {
             var result = _itemImgService.UpdateItemImagesSortingOrder(id, itemId, itemImageIdList);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
 

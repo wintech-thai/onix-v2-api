@@ -304,6 +304,8 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = repository!.UpdateItemImagesSortingOrder(itemId, imagesItemId);
 
+            r.Ids = result;
+
             return r;
         }
     }
