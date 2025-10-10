@@ -121,7 +121,7 @@ namespace Its.Onix.Api.Controllers
         public IActionResult GetItemImageUploadPresignedUrl(string id, string itemId)
         {
             var result = _itemImgService.GetItemImageUploadPresignedUrl(id, itemId);
-            //Response.Headers.Append("CUST_STATUS", result!.Status);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return Ok(result);
         }

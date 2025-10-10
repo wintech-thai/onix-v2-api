@@ -17,7 +17,7 @@ apiGetItemsUrl = "api/Item/org/#{orgId}/action/GetItems"
 apiGetItemByIdUrl = "api/Item/org/#{orgId}/action/GetItemById"
 
 param =  {
-  FullTextSearch: "EMG-002"
+  FullTextSearch: ""
 }
 
 result = make_request(:post, apiGetItemsUrl, param)
