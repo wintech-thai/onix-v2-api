@@ -3,6 +3,7 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
+using Microsoft.Extensions.Options;
 
 namespace Its.Onix.Api.Services
 {
@@ -68,11 +69,19 @@ namespace Its.Onix.Api.Services
                     return r;
                 }
 
-                //Update metadata onix-is-temp-file to 'false'
                 var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
+
+                //Allow only PNG to be uploaded
+                var validateResult = ValidateImageFormat(bucket, itemImage.ImagePath);
+                if (validateResult.Status != "OK")
+                {
+                    r.Status = validateResult.Status;
+                    r.Description = validateResult.Description;
+                    return r;
+                }
+
+                //Update metadata onix-is-temp-file to 'false'
                 _storageUtil.UpdateMetaData(bucket, itemImage.ImagePath, "onix-is-temp-file", "false");
-                
-                //TODO : Allow only image .png to be uploaded
             }
 
             var result = repository!.AddItemImage(itemImage);
@@ -80,6 +89,60 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        private ValidationResult ValidateImageFormat(string bucket, string objectName)
+        {
+            ulong maxFileSize = 1 * 1024 * 1024; // 1 MB
+            int maxWidth = 1200;
+            int maxHeight = 1200;
+
+            //วิธีนี้ใช้ได้แต่เฉพาะไฟล์ PNG เท่านั้น
+            var r = new ValidationResult() { Status = "OK", Description = "" };
+
+            var obj = _storageUtil.GetStorageObject(bucket, objectName);
+            if (obj == null)
+            {
+                r.Status = "OBJECT_NOT_FOUND";
+                r.Description = $"Object name [{objectName}] not found !!!";
+                return r;
+            }
+
+            if (obj.Size > maxFileSize)
+            {
+                r.Status = "FILE_TOO_BIG";
+                r.Description = $"File must be less than 1MB !!!";
+                return r;
+            }
+
+            if (obj.ContentType != "image/png")
+            {
+                r.Status = "FILE_TYPE_NOT_PNG";
+                r.Description = $"Content type must be 'image/png' !!!";
+                return r;
+            }
+        
+            var t = _storageUtil.PartialDownloadToStream(bucket, objectName, 0, 24);
+            var header = t.Result;
+
+            if (header.Length < 24)
+            {
+                r.Status = "NOT_VALID_PNG_FILE";
+                r.Description = "File is not a valid PNG image!!!";
+                return r;
+            }
+    
+            int width = ServiceUtils.ReadInt32BigEndian(header, 16);
+            int height = ServiceUtils.ReadInt32BigEndian(header, 20);
+
+            if (width > maxWidth || height > maxHeight)
+            {
+                r.Status = "INVALID_IMAGE_DIMENSION";
+                r.Description = $"Image dimention [w={width},h={height}] must be less than [w={maxWidth},h={maxHeight}]";
+                return r;
+            }
+        
+            return r;
+        } 
 
         public MVItemImage? UpdateItemImageById(string orgId, string itemImageId, MItemImage itemImage)
         {
