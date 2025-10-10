@@ -14,5 +14,6 @@ namespace Its.Onix.Api.Database.Repositories
         public MItemImage? DeleteItemImageById(string itemImageId);
         public List<MItemImage>? DeleteItemImageByItemId(string itemId);
         public MItemImage? UpdateItemImageById(string itemImageId, MItemImage itemImage);
+        public IEnumerable<string> UpdateItemImagesSortingOrder(string itemId, IEnumerable<string> imagesItemId);
     }
 }

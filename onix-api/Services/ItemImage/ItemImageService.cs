@@ -285,5 +285,26 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public MVUpdateSortingOrder UpdateItemImagesSortingOrder(string orgId, string itemId, IEnumerable<string> imagesItemId)
+        {
+            var r = new MVUpdateSortingOrder() { Status = "OK", Description = "" };
+
+            foreach (var imageId in imagesItemId)
+            {
+                if (!ServiceUtils.IsGuidValid(imageId))
+                {
+                    r.Status = "UUID_INVALID";
+                    r.Description = $"ID [{imageId}] format is invalid";
+
+                    return r;
+                }
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateItemImagesSortingOrder(itemId, imagesItemId);
+
+            return r;
+        }
     }
 }

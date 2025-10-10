@@ -1,6 +1,8 @@
 using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using System.Collections;
+using System.Linq;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -133,6 +135,31 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return r;
+        }
+
+        public IEnumerable<string> UpdateItemImagesSortingOrder(string itemId, IEnumerable<string> imagesItemId)
+        {
+            var updatedIds  = new List<string>();
+            Guid parentId = Guid.Parse(itemId);
+
+            var ids = imagesItemId.Select(Guid.Parse).ToList();
+            var images = context!.ItemImages!
+                .Where(x => x.OrgId == orgId && x.ItemId == parentId && ids.Contains((Guid) x.Id!))
+                .ToList();
+        
+            int index = 1;
+            foreach (var id in ids)
+            {
+                var img = images.FirstOrDefault(x => x.Id == id);
+                if (img != null)
+                {
+                    img.SortingOrder = index++;
+                    updatedIds.Add(id.ToString());
+                }
+            }
+
+            context!.SaveChanges();
+            return updatedIds ;
         }
 
         public MItemImage? UpdateItemImageById(string itemId, MItemImage item)

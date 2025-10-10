@@ -1,7 +1,0 @@
-{
-    "Name":"CacheLoader-001",
-    "Description":"Test-001",
-    "Parameters": [
-        {"Name":"ORG_ID", "Value": "xxxx"}
-    ]
-}
