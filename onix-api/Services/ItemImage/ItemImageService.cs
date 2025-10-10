@@ -75,6 +75,9 @@ namespace Its.Onix.Api.Services
                 var validateResult = ValidateImageFormat(bucket, itemImage.ImagePath);
                 if (validateResult.Status != "OK")
                 {
+                    //ให้ลบไฟล์ที่ upload มาออกไปเลย ไม่เก็บไว้ให้เป็นภาระ
+                    DeleteStorageObject(itemImage);
+
                     r.Status = validateResult.Status;
                     r.Description = validateResult.Description;
                     return r;
