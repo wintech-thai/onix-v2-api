@@ -83,7 +83,7 @@ end
 
 orgId = "napbiotec"
 itemId = "99b5dbd5-7a79-4560-9a89-8c24b0393229"
-imageFile = "1729533908_14096.jpg" #"file_example_PNG_500kB.png"
+imageFile = "file_example_PNG_500kB.png" #"1729533908_14096.jpg" 
 
 ### DeleteItemImagesByItemId
 #apiDeleteItemImagesUrl = "api/Item/org/#{orgId}/action/DeleteItemImagesByItemId/#{itemId}"
