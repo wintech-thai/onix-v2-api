@@ -1,5 +1,4 @@
 using Serilog;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ModelsViews;

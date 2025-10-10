@@ -26,7 +26,13 @@ namespace Its.Onix.Api.Services
                 result.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(result.Properties!);
             }
 
+            if (!string.IsNullOrEmpty(result.Narrative))
+            {
+                result.Narratives = [.. result.Narrative.Split('|')];
+            }
+
             result.Properties = "";
+            result.Narrative = "";
 
             return result;
         }
@@ -52,6 +58,7 @@ namespace Its.Onix.Api.Services
                 item.PropertiesObj = new MItemProperties();
             }
             item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
+            item.Narrative = string.Join("|", item.Narratives ?? Array.Empty<string>());
 
             var result = repository!.AddItem(item);
             result.Properties = "";
@@ -77,7 +84,10 @@ namespace Its.Onix.Api.Services
             {
                 item.PropertiesObj = new MItemProperties();
             }
+
             item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
+            item.Narrative = string.Join("|", item.Narratives ?? Array.Empty<string>());
+
             var result = repository!.UpdateItemById(itemId, item);
 
             if (result == null)
@@ -130,13 +140,17 @@ namespace Its.Onix.Api.Services
 
             foreach (var item in result)
             {
-                if (!string.IsNullOrEmpty(item.Properties))
-                {
-                    item.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(item.Properties!);
-                }
+                // ไม่จำเป็นต้องส่งออกไป
+                //if (!string.IsNullOrEmpty(item.Properties))
+                //{
+                //    item.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(item.Properties!);
+                //}
+
                 item.Properties = "";
+                
                 //เพื่อไม่ให้ข้อมูลที่ response กลับไปใหญ่จนเกินไป
                 item.Narrative = "";
+                item.Content = "";
             }
 
             return result;

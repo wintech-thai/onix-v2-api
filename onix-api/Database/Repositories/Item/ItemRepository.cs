@@ -130,6 +130,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.Description = item.Description;
                 result.Narrative = item.Narrative;
+                result.Content = item.Content;
                 result.Tags = item.Tags;
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();

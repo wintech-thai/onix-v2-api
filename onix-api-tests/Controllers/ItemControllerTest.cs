@@ -4,6 +4,7 @@ using Its.Onix.Api.Controllers;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace Its.Onix.Api.Test.Controllers;
 
@@ -22,6 +23,7 @@ public class ItemControllerTest
         service.Setup(s => s.AddItem(orgId, m)).Returns(mv);
 
         var ic = new ItemController(service.Object, itemImageSvc.Object);
+        ic.ControllerContext.HttpContext = new DefaultHttpContext();
         var t = ic.AddItem(orgId, m);
 
         Assert.IsType<MVItem>(t);
@@ -43,6 +45,7 @@ public class ItemControllerTest
         var service = new Mock<IItemService>();
 
         var ic = new ItemController(service.Object, itemImageSvc.Object);
+        ic.ControllerContext.HttpContext = new DefaultHttpContext();
         var t = ic.AddItemImage(orgId, itemId, m);
 
         Assert.IsType<MVItemImage>(t);
@@ -62,10 +65,33 @@ public class ItemControllerTest
         service.Setup(s => s.DeleteItemById(orgId, itemId)).Returns(mv);
 
         var ic = new ItemController(service.Object, itemImageSvc.Object);
+        ic.ControllerContext.HttpContext = new DefaultHttpContext();
         var t = ic.DeleteItemById(orgId, itemId);
 
         var r = Assert.IsType<OkObjectResult>(t);
         var i = Assert.IsType<MVItem>(r.Value);
+        Assert.Equal("OK", i.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1")]
+    public void DeleteItemByItemIdSuccessTest(string orgId)
+    {
+        var itemId = Guid.NewGuid().ToString();
+        var mv = new MVItemImage() { Status = "OK" };
+
+        var itemImageSvc = new Mock<IItemImageService>();
+        itemImageSvc.Setup(s => s.DeleteItemImageByItemId(orgId, itemId)).Returns(mv);
+
+        var service = new Mock<IItemService>();
+    
+        var ic = new ItemController(service.Object, itemImageSvc.Object);
+        ic.ControllerContext.HttpContext = new DefaultHttpContext();
+        var t = ic.DeleteItemImagesByItemId(orgId, itemId);
+
+        var r = Assert.IsType<OkObjectResult>(t);
+        var i = Assert.IsType<MVItemImage>(r.Value);
         Assert.Equal("OK", i.Status);
     }
 
@@ -83,6 +109,7 @@ public class ItemControllerTest
         service.Setup(s => s.DeleteItemById(orgId, itemId)).Returns(mv);
 
         var ic = new ItemController(service.Object, itemImageSvc.Object);
+        ic.ControllerContext.HttpContext = new DefaultHttpContext();
         var t = ic.DeleteItemCascadeById(orgId, itemId);
 
         var r = Assert.IsType<OkObjectResult>(t);
@@ -104,6 +131,7 @@ public class ItemControllerTest
         service.Setup(s => s.UpdateItemById(orgId, itemId, m)).Returns(mv);
 
         var ic = new ItemController(service.Object, itemImageSvc.Object);
+        ic.ControllerContext.HttpContext = new DefaultHttpContext();
         var t = ic.UpdateItemById(orgId, itemId, m);
 
         var r = Assert.IsType<OkObjectResult>(t);

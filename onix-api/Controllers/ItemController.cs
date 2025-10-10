@@ -27,6 +27,8 @@ namespace Its.Onix.Api.Controllers
         public MVItem? AddItem(string id, [FromBody] MItem request)
         {
             var result = svc.AddItem(id, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return result;
         }
 
@@ -36,6 +38,8 @@ namespace Its.Onix.Api.Controllers
         {
             request.ItemId = itemId;
             var result = _itemImgService.AddItemImage(id, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return result;
         }
 
@@ -44,6 +48,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult DeleteItemById(string id, string itemId)
         {
             var result = svc.DeleteItemById(id, itemId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
 
@@ -54,6 +60,8 @@ namespace Its.Onix.Api.Controllers
             _itemImgService.DeleteItemImageByItemId(id, itemId);
             var result = svc.DeleteItemById(id, itemId);
 
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
 
@@ -62,6 +70,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult DeleteItemImagesByItemId(string id, string itemId)
         {
             var result = _itemImgService.DeleteItemImageByItemId(id, itemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -70,6 +80,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult UpdateItemById(string id, string itemId, [FromBody] MItem request)
         {
             var result = svc.UpdateItemById(id, itemId, request);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
 
@@ -109,6 +121,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult GetItemImageUploadPresignedUrl(string id, string itemId)
         {
             var result = _itemImgService.GetItemImageUploadPresignedUrl(id, itemId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
 

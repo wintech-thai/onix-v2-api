@@ -242,11 +242,6 @@ namespace Its.Onix.Api.Services
 
         private void DeleteStorageObject(MItemImage m)
         {
-            if (m == null)
-            {
-                return;
-            }
-
             var objectName = m.ImagePath;
             if (string.IsNullOrEmpty(objectName))
             {

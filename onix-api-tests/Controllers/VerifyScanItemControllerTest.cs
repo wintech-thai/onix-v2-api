@@ -351,7 +351,7 @@ public class VerifyScanItemControllerTest
             EncryptionKey = "1234567890123456",
             EncryptionIV = "1234567890123456",
             ThemeVerify = themeVerify,
-            RegisteredAwareFlag = "NO",
+            RegisteredAwareFlag = "FALSE",
         });
 
         var redisHelper = new Mock<IRedisHelper>();
