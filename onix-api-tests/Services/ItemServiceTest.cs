@@ -27,7 +27,8 @@ public class ItemServiceTest
         var repo = new Mock<IItemRepository>();
         repo.Setup(s => s.GetItemById(itemId)).Returns(new MItem()
         {
-            Properties = jsonStr
+            Properties = jsonStr,
+            Narrative = "XXXX|SSS",
         });
 
         var itemSvc = new ItemService(repo.Object);
@@ -65,9 +66,16 @@ public class ItemServiceTest
     }
 
     [Theory]
-    [InlineData("org1")]
-    public void AddItemOkTest(string orgId)
+    [InlineData("org1", "sss|xx")]
+    [InlineData("org1", null)]
+    public void AddItemOkTest(string orgId, string narrative)
     {
+        string[] narratives = null!;
+        if (narrative != null)
+        {
+            narratives = narrative.Split('|');
+        }
+
         string jsonStr = """
         {
             "DimensionUnit": "cm",
@@ -86,7 +94,9 @@ public class ItemServiceTest
             PropertiesObj = new MItemProperties()
             {
                 Category = "test"
-            }
+            },
+
+            Narratives = narratives,
         };
 
         var repo = new Mock<IItemRepository>();
@@ -163,14 +173,22 @@ public class ItemServiceTest
     }
 
     [Theory]
-    [InlineData("org1")]
-    public void UpdateItemIdOkTest(string orgId)
+    [InlineData("org1", "aa|aaa")]
+    [InlineData("org1", null)]
+    public void UpdateItemIdOkTest(string orgId, string narrative)
     {
+        string[] narratives = null!;
+        if (narrative != null)
+        {
+            narratives = narrative.Split('|');
+        }
+
         var code = "code1";
         var item = new MItem()
         {
             Id = Guid.NewGuid(),
             Code = code,
+            Narratives = narratives,
         };
 
         var repo = new Mock<IItemRepository>();

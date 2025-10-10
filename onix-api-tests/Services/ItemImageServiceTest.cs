@@ -17,7 +17,7 @@ public class ItemImageServiceTest
         var itemId = Guid.NewGuid().ToString();
 
         var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
-        var contentType = "application/octet-stream";
+        var contentType = "image/png";
 
         var storageUtil = new Mock<IStorageUtils>();
         storageUtil.Setup(s => s.GenerateUploadUrl(bucket, It.IsAny<string>(), It.IsAny<TimeSpan>(), contentType)).Returns(presignedUrl);
@@ -78,6 +78,110 @@ public class ItemImageServiceTest
     }
 
     [Theory]
+    [InlineData("org1", "aaa/b/c/d")]
+    [InlineData("org1", "hell/o/world")]
+    public void AddItemValidateObjectNotFoundTest(string orgId, string? imagePath)
+    {
+        var itemImage = new MItemImage() { ImagePath = imagePath };
+        Google.Apis.Storage.v1.Data.Object storageObj = null!;
+
+        var storageUtil = new Mock<IStorageUtils>();
+        storageUtil.Setup(s => s.GetStorageObject(It.IsAny<string>(), imagePath!)).Returns(storageObj);
+        storageUtil.Setup(s => s.IsObjectExist(imagePath!)).Returns(true);
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.AddItemImage(itemImage)).Returns(itemImage);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.AddItemImage(orgId, itemImage);
+
+        Assert.NotNull(result);
+        Assert.Equal("OBJECT_NOT_FOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaa/b/c/d")]
+    [InlineData("org1", "hell/o/world")]
+    public void AddItemValidateFileTooBigTest(string orgId, string? imagePath)
+    {
+        var itemImage = new MItemImage() { ImagePath = imagePath };
+        Google.Apis.Storage.v1.Data.Object storageObj = new()
+        {
+            Size = 2 * 1024 * 1024,
+            ContentType = "image/png"
+        };
+
+        var storageUtil = new Mock<IStorageUtils>();
+        storageUtil.Setup(s => s.GetStorageObject(It.IsAny<string>(), imagePath!)).Returns(storageObj);
+        storageUtil.Setup(s => s.IsObjectExist(imagePath!)).Returns(true);
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.AddItemImage(itemImage)).Returns(itemImage);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.AddItemImage(orgId, itemImage);
+
+        Assert.NotNull(result);
+        Assert.Equal("FILE_TOO_BIG", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaa/b/c/d")]
+    [InlineData("org1", "hell/o/world")]
+    public void AddItemValidateFileNotPngTest(string orgId, string? imagePath)
+    {
+        var itemImage = new MItemImage() { ImagePath = imagePath };
+        Google.Apis.Storage.v1.Data.Object storageObj = new()
+        {
+            Size = 1000,
+            ContentType = "image/jpg"
+        };
+
+        var storageUtil = new Mock<IStorageUtils>();
+        storageUtil.Setup(s => s.GetStorageObject(It.IsAny<string>(), imagePath!)).Returns(storageObj);
+        storageUtil.Setup(s => s.IsObjectExist(imagePath!)).Returns(true);
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.AddItemImage(itemImage)).Returns(itemImage);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.AddItemImage(orgId, itemImage);
+
+        Assert.NotNull(result);
+        Assert.Equal("FILE_TYPE_NOT_PNG", result.Status);
+    }
+
+
+    [Theory]
+    [InlineData("org1", "aaa/b/c/d")]
+    [InlineData("org1", "hell/o/world")]
+    public void AddItemValidateFileNotValidPngTest(string orgId, string? imagePath)
+    {
+        var itemImage = new MItemImage() { ImagePath = imagePath };
+        Google.Apis.Storage.v1.Data.Object storageObj = new()
+        {
+            Size = 1000,
+            ContentType = "image/jpg"
+        };
+
+        var header = new byte[10];
+
+        var storageUtil = new Mock<IStorageUtils>();
+        storageUtil.Setup(s => s.GetStorageObject(It.IsAny<string>(), imagePath!)).Returns(storageObj);
+        storageUtil.Setup(s => s.IsObjectExist(imagePath!)).Returns(true);
+        storageUtil.Setup(s => s.PartialDownloadToStream(It.IsAny<string>(), imagePath!, 0, 24)).ReturnsAsync(header);
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.AddItemImage(itemImage)).Returns(itemImage);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.AddItemImage(orgId, itemImage);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOT_VALID_PNG_FILE", result.Status);
+    }
+
+    [Theory]
     [InlineData("org1", "")]
     [InlineData("org1", null)]
     public void AddItemImageOkTest(string orgId, string? imagePath)
@@ -101,9 +205,29 @@ public class ItemImageServiceTest
     public void AddItemImageOkWithImagePathTest(string orgId, string imagePath)
     {
         var itemImage = new MItemImage() { ImagePath = imagePath };
+        var header = new byte[24];
+        // ตั้งค่าให้ offset 16 = 100
+        header[16] = 0x00;
+        header[17] = 0x00;
+        header[18] = 0x00;
+        header[19] = 0x64; // 100 decimal
+
+        // ตั้งค่าให้ offset 20 = 100
+        header[20] = 0x00;
+        header[21] = 0x00;
+        header[22] = 0x00;
+        header[23] = 0x64; // 100 decimal
+
+        Google.Apis.Storage.v1.Data.Object storageObj = new()
+        {
+            Size = 100,
+            ContentType = "image/png"
+        };
 
         var storageUtil = new Mock<IStorageUtils>();
         storageUtil.Setup(s => s.IsObjectExist(imagePath)).Returns(true);
+        storageUtil.Setup(s => s.GetStorageObject(It.IsAny<string>(), imagePath)).Returns(storageObj);
+        storageUtil.Setup(s => s.PartialDownloadToStream(It.IsAny<string>(), imagePath, 0, 24)).ReturnsAsync(header);
 
         var repo = new Mock<IItemImageRepository>();
         repo.Setup(s => s.AddItemImage(itemImage)).Returns(itemImage);
@@ -113,25 +237,6 @@ public class ItemImageServiceTest
 
         Assert.NotNull(result);
         Assert.Equal("OK", result.Status);
-    }
-
-    [Theory]
-    [InlineData("org1", "this/is/image/path.jpg")]
-    public void UpdateItemImageObjectNotFoundTest(string orgId, string imagePath)
-    {
-        var id = Guid.NewGuid();
-        var itemImage = new MItemImage() { ImagePath = imagePath, Id = id };
-
-        var storageUtil = new Mock<IStorageUtils>();
-        storageUtil.Setup(s => s.IsObjectExist(imagePath)).Returns(false);
-
-        var repo = new Mock<IItemImageRepository>();
-
-        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
-        var result = itemSvc.UpdateItemImageById(orgId, id.ToString(), itemImage);
-
-        Assert.NotNull(result);
-        Assert.Equal("OBJECT_NOT_FOUND", result.Status);
     }
 
     [Theory]
