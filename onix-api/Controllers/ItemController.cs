@@ -85,6 +85,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("org/{id}/action/UpdateItemImagesSortingOrder/{itemId}")]
+        public IActionResult UpdateItemImagesSortingOrder(string id, string itemId, [FromBody] IEnumerable<string> itemImageIdList)
+        {
+            var result = _itemImgService.UpdateItemImagesSortingOrder(id, itemId, itemImageIdList);
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetItemById/{itemId}")]

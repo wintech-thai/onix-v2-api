@@ -285,5 +285,13 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public IEnumerable<string> UpdateItemImagesSortingOrder(string orgId, string itemId, IEnumerable<string> imagesItemId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateItemImagesSortingOrder(itemId, imagesItemId);
+
+            return result;
+        }
     }
 }

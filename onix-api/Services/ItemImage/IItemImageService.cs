@@ -15,5 +15,6 @@ namespace Its.Onix.Api.Services
         public int GetItemImageCount(string orgId, VMItemImage param);
         public MVItemImage? UpdateItemImageById(string orgId, string itemImageId, MItemImage itemImage);
         public MVPresignedUrl GetItemImageUploadPresignedUrl(string orgId, string itemId);
+        public IEnumerable<string> UpdateItemImagesSortingOrder(string orgId, string itemId, IEnumerable<string> imagesItemId);
     }
 }
