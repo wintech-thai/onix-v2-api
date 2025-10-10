@@ -431,6 +431,30 @@ public class ItemImageServiceTest
         Assert.Equal("OK", result.Status);
     }
 
+ 
+    [Theory]
+    [InlineData("org1", "this/is/image/path")]
+    public void GetItemImagesByItemIdOkTest(string orgId, string imagePath)
+    {
+        var itemId = Guid.NewGuid().ToString();
+        var presignedUrl = "https://this/is/presigned/url.jpg";
+
+        var storageUtil = new Mock<IStorageUtils>();
+        storageUtil.Setup(s => s.GenerateDownloadUrl(imagePath, It.IsAny<TimeSpan>(), "image/png")).Returns(presignedUrl);
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.GetItemImages(It.IsAny<VMItemImage>())).Returns(
+            [
+                new MItemImage() { ImagePath = imagePath },
+                new MItemImage() { ImagePath = imagePath },
+            ]);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.GetItemImagesByItemId(orgId, itemId);
+
+        Assert.Equal(2, result.ToArray().Length);
+    }
+    
     [Theory]
     [InlineData("org1", "this/is/image/path")]
     public void GetItemImagesOkTest(string orgId, string imagePath)
