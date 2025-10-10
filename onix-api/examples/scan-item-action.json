@@ -1,5 +1,0 @@
-{
-    "RedirectUrl": "https://verify-dev.please-scan.com/verify",
-    "EncryptionKey": "<ENCRYPTION_KEY>",
-    "EncryptionIV": "<ENCRYPTION_IV>"
-}
