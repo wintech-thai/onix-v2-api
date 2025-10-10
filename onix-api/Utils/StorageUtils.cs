@@ -1,7 +1,7 @@
+using System.Net.Http.Headers;
 using Google;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
-using System;
 
 namespace Its.Onix.Api.Utils
 {
@@ -11,6 +11,9 @@ namespace Its.Onix.Api.Utils
         bool IsObjectExist(string objectName);
         public string GenerateDownloadUrl(string objectName, TimeSpan validFor, string? contentType = null);
         public void UpdateMetaData(string bucketName, string objectName, string metaName, string metaValue);
+        public void DeleteObject(string bucketName, string objectName);
+        public Task<byte[]> PartialDownloadToStream(string bucketName, string objectName, long start, long end);
+        public Google.Apis.Storage.v1.Data.Object? GetStorageObject(string bucketName, string objectName);
     }
 
     public class StorageUtils : IStorageUtils
@@ -61,6 +64,37 @@ namespace Its.Onix.Api.Utils
             obj.Metadata[metaName] = metaValue;
 
             _storageClient.UpdateObject(obj);
+        }
+
+        public async Task<byte[]> PartialDownloadToStream(string bucketName, string objectName, long start, long end)
+        {
+            using var ms = new MemoryStream();
+            await _storageClient.DownloadObjectAsync(
+                bucket: bucketName,
+                objectName: objectName,
+                destination: ms,
+                options: new DownloadObjectOptions { Range = new RangeHeaderValue(start, end) }
+                );
+
+            return ms.ToArray();
+        }
+
+        public void DeleteObject(string bucketName, string objectName)
+        {
+            _storageClient.DeleteObject(bucketName, objectName);
+        }
+
+        public Google.Apis.Storage.v1.Data.Object? GetStorageObject(string bucketName, string objectName)
+        {
+            try
+            {
+                var obj = _storageClient.GetObject(bucketName, objectName);
+                return obj;
+            }
+            catch (Exception)
+            {
+                return null; // ไม่พบ object
+            }
         }
 
         public bool IsObjectExist(string objectName)

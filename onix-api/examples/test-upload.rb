@@ -83,11 +83,11 @@ end
 
 orgId = "napbiotec"
 itemId = "99b5dbd5-7a79-4560-9a89-8c24b0393229"
-imageFile = "file_example_PNG_500kB.png"
+imageFile = "file_example_PNG_500kB.png" #"1729533908_14096.jpg" 
 
 ### DeleteItemImagesByItemId
-apiDeleteItemImagesUrl = "api/Item/org/#{orgId}/action/DeleteItemImagesByItemId/#{itemId}"
-result = make_request(:delete, apiDeleteItemImagesUrl, nil)
+#apiDeleteItemImagesUrl = "api/Item/org/#{orgId}/action/DeleteItemImagesByItemId/#{itemId}"
+#result = make_request(:delete, apiDeleteItemImagesUrl, nil)
 #puts(result)
 
 ### GetItemImageUploadPresignedUrl
@@ -114,12 +114,13 @@ itemImage =  {
   sortingOrder: 1,
 }
 result = make_request(:post, apiAddItemImageUrl, itemImage)
+puts("Added image status : [#{result['status']}] [#{result['description']}]")
 
 ### GetItemImagesByItemId
-apiGetItemImagesUrl = "api/Item/org/#{orgId}/action/GetItemImagesByItemId/#{itemId}"
-result = make_request(:get, apiGetItemImagesUrl, nil)
+#apiGetItemImagesUrl = "api/Item/org/#{orgId}/action/GetItemImagesByItemId/#{itemId}"
+#result = make_request(:get, apiGetItemImagesUrl, nil)
 
-image = result[0]
-newPreviewUrl = image["imageUrl"]
+#image = result[0]
+#newPreviewUrl = image["imageUrl"]
 
-puts("New preview URL : [#{newPreviewUrl}]")
+#puts("New preview URL : [#{newPreviewUrl}]")
