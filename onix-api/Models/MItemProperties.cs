@@ -20,8 +20,8 @@ namespace Its.Onix.Api.Models
 
         public MItemProperties()
         {
-            DimensionUnit = "cm";
-            WeightUnit = "gram";
+            //DimensionUnit = "cm";
+            //WeightUnit = "gram";
         }
     }
 }
