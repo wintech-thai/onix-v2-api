@@ -129,6 +129,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (result != null)
             {
+                result.Properties = item.Properties;
                 result.Description = item.Description;
                 result.Narrative = item.Narrative;
                 result.Content = item.Content;
