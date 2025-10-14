@@ -96,6 +96,16 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/{id}/action/UpdateItemImageByItemImageId/{itemImageId}")]
+        public IActionResult UpdateItemImageByItemImageId(string id, string itemImageId, [FromBody] MItemImage request)
+        {
+            var result = _itemImgService.UpdateItemImageById(id, itemImageId, request);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/{id}/action/UpdateItemImagesSortingOrder/{itemId}")]
         public IActionResult UpdateItemImagesSortingOrder(string id, string itemId, [FromBody] IEnumerable<string> itemImageIdList)
         {
