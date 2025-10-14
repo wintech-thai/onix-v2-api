@@ -35,6 +35,7 @@ namespace Its.Onix.Api.Database.Repositories
                 var fullTextPd = PredicateBuilder.New<MItem>();
                 fullTextPd = fullTextPd.Or(p => p.Code!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
