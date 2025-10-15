@@ -664,7 +664,7 @@ namespace Its.Onix.Api.Services
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "IsDryRunTokenValid");
             var key = $"{cacheKey}:{token}";
-            _redis.SetObjectAsync(key, otpObj);
+            _redis.SetObjectAsync(key, otpObj, TimeSpan.FromMinutes(5));
 
             result.Url = $"{result.Url}?dryrun_token={token}";
             r.ScanItem = result;

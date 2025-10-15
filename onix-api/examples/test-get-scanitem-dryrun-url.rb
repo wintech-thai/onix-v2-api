@@ -11,10 +11,10 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = "napbiotec"
-scanItemId = "0ff730a0-f2a8-47a8-b9fc-b45efdcc1254"
+scanItemId = "e2eb2b18-6435-4c36-8c0a-04861b35fac9"
 
 ### GetScanItemUrlDryRunById
-apiGetScanItemUrlDryRun = "api/Item/org/#{orgId}/action/GetScanItemUrlDryRunById/#{scanItemId}"
+apiGetScanItemUrlDryRun = "api/ScanItem/org/#{orgId}/action/GetScanItemUrlDryRunById/#{scanItemId}"
 
 result = make_request(:get, apiGetScanItemUrlDryRun, nil)
 puts(result)
