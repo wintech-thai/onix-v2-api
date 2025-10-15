@@ -422,7 +422,7 @@ public class ScanItemServiceTest
             sciTplService.Object,
             redisHelper.Object);
 
-        var result = sciService.VerifyScanItem(orgId, serial, pin);
+        var result = sciService.VerifyScanItem(orgId, serial, pin, false);
 
         Assert.NotNull(result);
         Assert.Equal("NOTFOUND", result.Status);
@@ -455,7 +455,7 @@ public class ScanItemServiceTest
             sciTplService.Object,
             redisHelper.Object);
 
-        var result = sciService.VerifyScanItem(orgId, serial, pin);
+        var result = sciService.VerifyScanItem(orgId, serial, pin, false);
 
         Assert.NotNull(result);
         Assert.Equal("ALREADY_REGISTERED", result.Status);
@@ -492,7 +492,7 @@ public class ScanItemServiceTest
             sciTplService.Object,
             redisHelper.Object);
 
-        var result = sciService.VerifyScanItem(orgId, serial, pin);
+        var result = sciService.VerifyScanItem(orgId, serial, pin, false);
 
         Assert.NotNull(result);
         Assert.Equal("SUCCESS", result.Status);
@@ -1716,6 +1716,86 @@ public class ScanItemServiceTest
 
         Assert.Equal(0, errorCnt);
         Assert.Equal(2, result.ToArray().Length);
+    }
+    //===
+
+    //=== GetScanItemUrlDryRunById()
+    [Theory]
+    [InlineData("org1")]
+    [InlineData("org2")]
+    public void GetScanItemUrlDryRunByIdNotFoundTest(string orgId)
+    {
+        var scanItemId = Guid.NewGuid().ToString();
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemById(scanItemId)).Returns((MScanItem?)null!);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemUrlDryRunById(orgId, scanItemId);
+
+        Assert.NotNull(result);
+        Assert.Equal("SCAN_ITEM_NOT_FOUND", result.Status);
+    }
+    
+    [Theory]
+    [InlineData("org1")]
+    [InlineData("org2")]
+    public void GetScanItemUrlDryRunByIdOkTest(string orgId)
+    {
+        var scanItemId = Guid.NewGuid();
+        var scanItem = new MScanItem()
+        {
+            Id = scanItemId,
+            Url = "https://verify.please-scan.com/verify/xxxx/yyyy"
+        };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        scanItemRepo.Setup(s => s.GetScanItemById(scanItemId.ToString())).Returns(scanItem);
+
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.GetScanItemUrlDryRunById(orgId, scanItemId.ToString());
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.ScanItem);
+
+        Assert.Equal("OK", result.Status);
+
+        var token = $"?dryrun_token={scanItem.Id}-";
+        Assert.Contains(token, result.ScanItem.Url);
     }
     //===
 }

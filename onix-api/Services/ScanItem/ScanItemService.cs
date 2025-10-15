@@ -647,6 +647,14 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetScanItemById(scanItemId);
+
+            if (result == null)
+            {
+                r.Status = "SCAN_ITEM_NOT_FOUND";
+                r.Description = $"Scan item ID [{scanItemId}] not found!!!";
+                return r;
+            }
+            
             //จะไม่ทำการ masking URL ใน API นี้
             result.Pin = "";
 
@@ -659,7 +667,6 @@ namespace Its.Onix.Api.Services
             _redis.SetObjectAsync(key, otpObj);
 
             result.Url = $"{result.Url}?dryrun_token={token}";
-
             r.ScanItem = result;
             return r;
         }

@@ -49,10 +49,6 @@ namespace Its.Onix.Api.Controllers
         private bool IsDryRunTokenValid(string orgId)
         {
             string? dryrunToken = HttpContext.Request.Query["dryrun_token"].FirstOrDefault();
-            if (string.IsNullOrEmpty(dryrunToken))
-            {
-                return false;
-            }
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "IsDryRunTokenValid");
             var otpObj = _redis.GetObjectAsync<MOtp>($"{cacheKey}:{dryrunToken}").Result;
