@@ -6,7 +6,7 @@ namespace Its.Onix.Api.Services
 {
     public interface IScanItemService
     {
-        public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin);
+        public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin, bool isDryRun);
         public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId);
         public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId);
         public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp);
@@ -22,5 +22,7 @@ namespace Its.Onix.Api.Services
         public MVScanItem UnVerifyScanItemById(string orgId, string scanItemId);
         public int GetScanItemCount(string orgId, VMScanItem param);
         public IEnumerable<MScanItem> GetScanItems(string orgId, VMScanItem param);
+
+        public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId);
     }
 }
