@@ -225,7 +225,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin)
+        public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin, bool isDryRun)
         {
             var r = new MVScanItemResult()
             {
@@ -260,7 +260,12 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            r.ScanItem = repository.RegisterScanItem(id!);
+            //ถ้าเป็น dryrun ไม่ต้องเรียก RegisterScanItem()
+            if (!isDryRun)
+            {
+                r.ScanItem = repository.RegisterScanItem(id!);
+            }
+
             return r;
         }
 
@@ -630,6 +635,40 @@ namespace Its.Onix.Api.Services
             });
 
             return result;
+        }
+
+        public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetScanItemById(scanItemId);
+
+            if (result == null)
+            {
+                r.Status = "SCAN_ITEM_NOT_FOUND";
+                r.Description = $"Scan item ID [{scanItemId}] not found!!!";
+                return r;
+            }
+            
+            //จะไม่ทำการ masking URL ใน API นี้
+            result.Pin = "";
+
+            var otp = ServiceUtils.CreateOTP(6);
+            var otpObj = new MOtp() { Id = result.Id.ToString(), Otp = otp };
+            var token = $"{otpObj.Id}-{otpObj.Otp}";
+
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "IsDryRunTokenValid");
+            var key = $"{cacheKey}:{token}";
+            _redis.SetObjectAsync(key, otpObj, TimeSpan.FromMinutes(5));
+
+            result.Url = $"{result.Url}?dryrun_token={token}";
+            r.ScanItem = result;
+            return r;
         }
     }
 }

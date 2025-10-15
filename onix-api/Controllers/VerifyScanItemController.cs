@@ -46,6 +46,26 @@ namespace Its.Onix.Api.Controllers
             return url;
         }
 
+        private bool IsDryRunTokenValid(string orgId)
+        {
+            string? dryrunToken = HttpContext.Request.Query["dryrun_token"].FirstOrDefault();
+
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "IsDryRunTokenValid");
+            var otpObj = _redis.GetObjectAsync<MOtp>($"{cacheKey}:{dryrunToken}").Result;
+            if (otpObj == null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        
+        private bool IsDryRun()
+        {
+            string? dryrunToken = HttpContext.Request.Query["dryrun_token"].FirstOrDefault();
+            return !string.IsNullOrEmpty(dryrunToken);
+        }
+
         [HttpGet]
         [Route("org/{id}/Verify/{serial}/{pin}")]
         public IActionResult? Verify(string id, string serial, string pin)
@@ -69,11 +89,22 @@ namespace Its.Onix.Api.Controllers
                 scanItemAction = m;
             }
 
+            var isDryRun = IsDryRun();
+            if (isDryRun)
+            {
+                //ต้องเช็คตรงนี้ว่า dry-run token ต้องมีอยู่และ valid ด้วยนะ
+                if (!IsDryRunTokenValid(id))
+                {
+                    Response.Headers.Append("CUST_STATUS", "INVALID_DRYRUN_TOKEN");
+                    return BadRequest(new { error = "No default scan-item action is set!!!" });
+                }
+            }
+
             var baseUrl = scanItemAction!.RedirectUrl;
             var key = scanItemAction!.EncryptionKey;
             var iv = scanItemAction!.EncryptionIV;
-            //Console.WriteLine($"@@@@@@@@@@@@@@@@2 [{key}] [{iv}]");
-            var result = svc.VerifyScanItem(id, serial, pin);
+
+            var result = svc.VerifyScanItem(id, serial, pin, isDryRun);
             result.ThemeVerify = string.IsNullOrWhiteSpace(scanItemAction.ThemeVerify) ? "default" : scanItemAction.ThemeVerify;
 
             if (scanItemAction.RegisteredAwareFlag == "FALSE")
@@ -96,8 +127,8 @@ namespace Its.Onix.Api.Controllers
 
             var jsonString = JsonSerializer.Serialize(result);
 
-            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
-            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+            //byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            //string jsonStringB64 = Convert.ToBase64String(jsonBytes);
 
             var encryptedB64 = EncryptionUtils.Encrypt(jsonString, key!, iv!);
             //var decryptText = EncryptionUtils.Decrypt(encryptedB64, key, iv);
@@ -117,7 +148,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/VerifyScanItem/{serial}/{pin}")]
         public MVScanItemResult? VerifyScanItem(string id, string serial, string pin)
         {
-            var result = svc.VerifyScanItem(id, serial, pin);
+            var result = svc.VerifyScanItem(id, serial, pin, false);
 
             if (result.ScanItem != null)
             {

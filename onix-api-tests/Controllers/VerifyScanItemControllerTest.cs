@@ -19,7 +19,7 @@ public class VerifyScanItemControllerTest
     public void VerifyScanItemOkTest(string orgId, string serial, string pin)
     {
         var service = new Mock<IScanItemService>();
-        service.Setup(s => s.VerifyScanItem(orgId, serial, pin)).Returns(new MVScanItemResult()
+        service.Setup(s => s.VerifyScanItem(orgId, serial, pin, false)).Returns(new MVScanItemResult()
         {
             Status = pin, //เอา pin มาใส่เพื่อเช็คว่าค่าถูกส่งมา เพื่อ unit test ได้ง่าย ๆ
             ScanItem = new MScanItem()
@@ -200,7 +200,7 @@ public class VerifyScanItemControllerTest
     public void VerifyWithScanItemActionInCacheTest(string orgId, string serial, string pin, string themeVerify)
     {
         var service = new Mock<IScanItemService>();
-        service.Setup(s => s.VerifyScanItem(orgId, serial, pin)).Returns(new MVScanItemResult()
+        service.Setup(s => s.VerifyScanItem(orgId, serial, pin, false)).Returns(new MVScanItemResult()
         {
             Status = "SUCCESS",
             ScanItem = new MScanItem()
@@ -263,7 +263,7 @@ public class VerifyScanItemControllerTest
     public void VerifyWithScanItemActionInDbTest(string orgId, string serial, string pin, string themeVerify, string scanStatus)
     {
         var service = new Mock<IScanItemService>();
-        service.Setup(s => s.VerifyScanItem(orgId, serial, pin)).Returns(new MVScanItemResult()
+        service.Setup(s => s.VerifyScanItem(orgId, serial, pin, false)).Returns(new MVScanItemResult()
         {
             Status = scanStatus,
             ScanItem = new MScanItem()
@@ -334,7 +334,7 @@ public class VerifyScanItemControllerTest
     public void VerifyWithRegisteredAwareTest(string orgId, string serial, string pin, string themeVerify, string scanStatus)
     {
         var service = new Mock<IScanItemService>();
-        service.Setup(s => s.VerifyScanItem(orgId, serial, pin)).Returns(new MVScanItemResult()
+        service.Setup(s => s.VerifyScanItem(orgId, serial, pin, false)).Returns(new MVScanItemResult()
         {
             Status = scanStatus,
             ScanItem = new MScanItem()
@@ -385,6 +385,119 @@ public class VerifyScanItemControllerTest
         {
             Assert.Equal(theme, themeVerify);
         }
+
+        var org = queryParams["org"];
+        Assert.NotNull(org);
+        Assert.NotEmpty(org);
+        //ต้อง redirect ไปที่ orgId ที่ส่งมา
+        Assert.Equal(orgId, org);
+
+        //TODO : test ต่อว่า data มีการเข้ารหัสถูกต้อง
+        var data = queryParams["data"];
+        Assert.NotNull(data);
+        Assert.NotEmpty(data);
+    }
+
+    //=== VerifyScanItem() ===
+    [Theory]
+    [InlineData("default", "A0000001", "EKEOSKDIDLSI")]
+    [InlineData("abcdefg", "A0000002", "EKEOSK124LSI")]
+    public void VerifyDryRunInvalidTokenTest(string orgId, string serial, string pin)
+    {
+        var service = new Mock<IScanItemService>();
+        service.Setup(s => s.VerifyScanItem(orgId, serial, pin, true)).Returns(new MVScanItemResult()
+        {
+            Status = pin, //เอา pin มาใส่เพื่อเช็คว่าค่าถูกส่งมา เพื่อ unit test ได้ง่าย ๆ
+            ScanItem = new MScanItem()
+            {
+                Url = $"https://verify.its.com/verify/{orgId}/{serial}/{pin}",
+            },
+        });
+
+        var actionService = new Mock<IScanItemActionService>();
+        actionService.Setup(s => s.GetScanItemAction(orgId)).Returns(new MScanItemAction()
+        {
+            OrgId = orgId,
+            RedirectUrl = $"https://verify.its.com/verify",
+            EncryptionKey = "1234567890123456",
+            EncryptionIV = "1234567890123456",
+            ThemeVerify = "default",
+            RegisteredAwareFlag = "YES",
+        });
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ว่าไม่มีข้อมูล action ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync((MOtp?)null);
+
+        var vc = new VerifyScanItemController(service.Object, actionService.Object, redisHelper.Object);
+        vc.ControllerContext.HttpContext = new DefaultHttpContext();
+        vc.ControllerContext.HttpContext.Request.QueryString = new QueryString("?dryrun_token=abc123");
+
+        var t = vc.Verify(orgId, serial, pin);
+
+        var custStatus = vc.Response.Headers["CUST_STATUS"];
+
+        Assert.NotEmpty(custStatus);
+        Assert.Equal("INVALID_DRYRUN_TOKEN", custStatus.ToString());
+    }
+
+
+    [Theory]
+    [InlineData("default", "A0000001", "EKEOSKDIDLSI", "greenlight")]
+    [InlineData("abcdefg", "A0000002", "EKEOSK124LSI", "darkangle")]
+    public void VerifyDryRunOkTest(string orgId, string serial, string pin, string themeVerify)
+    {
+        var service = new Mock<IScanItemService>();
+        service.Setup(s => s.VerifyScanItem(orgId, serial, pin, true)).Returns(new MVScanItemResult()
+        {
+            Status = "SUCCESS",
+            ScanItem = new MScanItem()
+            {
+                Url = $"https://scan.its.com/verify/{orgId}/{serial}/{pin}",
+            },
+        });
+
+        var actionService = new Mock<IScanItemActionService>();
+        actionService.Setup(s => s.GetScanItemAction(orgId)).Returns((MScanItemAction)null!);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        // Simulate ว่ามีข้อมูล action ใน redis
+        redisHelper.Setup(s => s.GetObjectAsync<MScanItemAction>(It.IsAny<string>())).ReturnsAsync(new MScanItemAction()
+        {
+            OrgId = orgId,
+            RedirectUrl = $"https://verify.its.com/verify",
+            EncryptionKey = "1234567890123456",
+            EncryptionIV = "1234567890123456",
+            ThemeVerify = themeVerify,
+            RegisteredAwareFlag = "YES",
+        });
+
+        redisHelper.Setup(s => s.GetObjectAsync<MOtp>(It.IsAny<string>())).ReturnsAsync(new MOtp()
+        {
+            Id = "",
+            Otp = ""
+        });
+
+        var vc = new VerifyScanItemController(service.Object, actionService.Object, redisHelper.Object);
+        vc.ControllerContext.HttpContext = new DefaultHttpContext();
+        vc.ControllerContext.HttpContext.Request.QueryString = new QueryString("?dryrun_token=abc123");
+        var t = vc.Verify(orgId, serial, pin);
+
+        var custStatus = vc.Response.Headers["CUST_STATUS"];
+
+        Assert.NotEmpty(custStatus);
+        Assert.Equal("SUCCESS", custStatus.ToString());
+        var redirect = Assert.IsType<RedirectResult>(t);
+
+        var uri = new Uri(redirect.Url!);
+
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+        //Console.WriteLine($"@@@@@@@@@@@@@@@@@@ [{redirect.Url}] @@@@@@@@@@@@@@@@@@@@@@");
+
+        var theme = queryParams["theme"];
+        Assert.NotNull(theme);
+        Assert.NotEmpty(theme);
+        Assert.Equal(theme, themeVerify);
 
         var org = queryParams["org"];
         Assert.NotNull(org);

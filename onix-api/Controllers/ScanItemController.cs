@@ -89,5 +89,14 @@ namespace Its.Onix.Api.Controllers
             var result = svc.GetScanItems(id, param);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetScanItemUrlDryRunById/{scanItemId}")]
+        public IActionResult GetScanItemUrlDryRunById(string id, string scanItemId)
+        {
+            var result = svc.GetScanItemUrlDryRunById(id, scanItemId);
+            return Ok(result);
+        }
     }
 }

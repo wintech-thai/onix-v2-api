@@ -494,4 +494,46 @@ public class ItemImageServiceTest
 
         Assert.Equal(10, cnt);
     }
+
+    //=== UpdateItemImagesSortingOrder() ===
+    [Theory]
+    [InlineData("org1")]
+    public void UpdateItemImagesSortingOrderInvalidIdTest(string orgId)
+    {
+        List<string> imageIdInvalids = ["aaaaaaaa-bbbb-cccc"];
+
+        var itemId = Guid.NewGuid();
+        var storageUtil = new Mock<IStorageUtils>();
+
+        var repo = new Mock<IItemImageRepository>();
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.UpdateItemImagesSortingOrder(orgId, itemId.ToString(), imageIdInvalids);
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1")]
+    public void UpdateItemImagesSortingOrderOkTest(string orgId)
+    {
+        List<string> imageIds = ["aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"];
+
+        var itemId = Guid.NewGuid();
+        var storageUtil = new Mock<IStorageUtils>();
+
+        var repo = new Mock<IItemImageRepository>();
+        repo.Setup(s => s.UpdateItemImagesSortingOrder(itemId.ToString(), imageIds)).Returns([]);
+
+        var itemSvc = new ItemImageService(repo.Object, storageUtil.Object);
+        var result = itemSvc.UpdateItemImagesSortingOrder(orgId, itemId.ToString(), imageIds);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.Ids);
+
+        Assert.Equal("OK", result.Status);
+        Assert.Empty(result.Ids!);
+    }
+    //===
 }
