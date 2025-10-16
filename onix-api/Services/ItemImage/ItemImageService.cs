@@ -72,7 +72,7 @@ namespace Its.Onix.Api.Services
                 var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
 
                 //Allow only PNG to be uploaded
-                var validateResult = ValidateImageFormat(bucket, itemImage.ImagePath);
+                var validateResult = ValidateImageFormat(bucket, itemImage);
                 if (validateResult.Status != "OK")
                 {
                     //ให้ลบไฟล์ที่ upload มาออกไปเลย ไม่เก็บไว้ให้เป็นภาระ
@@ -93,7 +93,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private ValidationResult ValidateImageFormat(string bucket, string objectName)
+        private ValidationResult ValidateImageFormat(string bucket, MItemImage item)
         {
             ulong maxFileSize = 1 * 1024 * 1024; // 1 MB
             int maxWidth = 1200;
@@ -102,11 +102,11 @@ namespace Its.Onix.Api.Services
             //วิธีนี้ใช้ได้แต่เฉพาะไฟล์ PNG เท่านั้น
             var r = new ValidationResult() { Status = "OK", Description = "" };
 
-            var obj = _storageUtil.GetStorageObject(bucket, objectName);
+            var obj = _storageUtil.GetStorageObject(bucket, item.ImagePath!);
             if (obj == null)
             {
                 r.Status = "OBJECT_NOT_FOUND";
-                r.Description = $"Object name [{objectName}] not found !!!";
+                r.Description = $"Object name [{item.ImagePath}] not found !!!";
                 return r;
             }
 
@@ -124,7 +124,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
         
-            var t = _storageUtil.PartialDownloadToStream(bucket, objectName, 0, 24);
+            var t = _storageUtil.PartialDownloadToStream(bucket, item.ImagePath!, 0, 24);
             var header = t.Result;
 
             if (header.Length < 24)
@@ -143,6 +143,11 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Image dimention [w={width},h={height}] must be less than [w={maxWidth},h={maxHeight}]";
                 return r;
             }
+
+            item.ImageWidth = width;
+            item.ImageHeight = height;
+            item.FileSizeByte = obj.Size;
+            item.FileType = obj.ContentType;
         
             return r;
         } 

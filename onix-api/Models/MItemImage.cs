@@ -38,6 +38,19 @@ namespace Its.Onix.Api.Models
         [Column("category")] 
         public int? Category { get; set; }
 
+        [Column("file_type")]
+        public string? FileType { get; set; }
+        
+        [Column("image_width")]
+        public int? ImageWidth { get; set; }
+
+        [Column("image_height")]
+        public int? ImageHeight { get; set; }
+
+        [Column("file_size_byte")]
+        public ulong? FileSizeByte { get; set; }
+
+
         [Column("sorting_order")]
         public int? SortingOrder { get; set; }
 
