@@ -40,6 +40,9 @@ namespace Its.Onix.Api.Services
 
         public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
         {
+            _itemRepo.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVScanItem()
             {
                 Status = "SUCCESS",
@@ -70,10 +73,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            repository!.SetCustomOrgId(orgId);
+           
             var result = repository!.AttachScanItemToProduct(scanItemId, productId, product);
-
             r.ScanItem = result;
 
             return r;
