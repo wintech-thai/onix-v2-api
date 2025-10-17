@@ -20,10 +20,22 @@ namespace Its.Onix.Api.Services
             _userRepo = userRepo;
         }
 
-        public MJob GetJobById(string orgId, string jobId)
+        public MJob? GetJobById(string orgId, string jobId)
         {
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetJobById(jobId);
+
+            if (result != null)
+            {
+                var parameters = JsonSerializer.Deserialize<List<NameValue>>(result.Configuration!);
+                if (parameters == null)
+                {
+                    parameters = new List<NameValue>();
+                }
+
+                result.Parameters = parameters;
+                result.Configuration = "";
+            }
 
             return result;
         }
