@@ -151,6 +151,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteJobById/{jobId}")]
+        public IActionResult DeleteJobById(string id, string jobId)
+        {
+            var result = svc.DeleteJobById(id, jobId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/GetJobs")]
         public IActionResult GetJobs(string id, [FromBody] VMJob param)

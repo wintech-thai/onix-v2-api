@@ -40,6 +40,35 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MVJob? DeleteJobById(string orgId, string jobId)
+        {
+            var r = new MVJob()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(jobId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Job ID [{jobId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = repository!.DeleteJobById(jobId);
+
+            r.Job = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Job ID [{jobId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
         public MJob GetJobTemplate(string orgId, string jobType, string userName)
         {
             var email = "your-email@email-xxx.com";
