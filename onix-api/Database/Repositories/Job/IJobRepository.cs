@@ -10,5 +10,6 @@ namespace Its.Onix.Api.Database.Repositories
         public int GetJobCount(VMJob param);
         public IEnumerable<MJob> GetJobs(VMJob param);
         public MJob GetJobById(string cycleId);
+        public MJob? DeleteJobById(string jobId);
     }
 }

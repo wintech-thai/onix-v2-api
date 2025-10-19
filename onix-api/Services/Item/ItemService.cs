@@ -176,6 +176,7 @@ namespace Its.Onix.Api.Services
                 new() { Name = "SupplierUrl", Value = "" },
                 new() { Name = "ProductUrl", Value = "" },
                 new() { Name = "Width", Value = "" },
+                new() { Name = "Height", Value = "" },
                 new() { Name = "Weight", Value = "" },
             };
 

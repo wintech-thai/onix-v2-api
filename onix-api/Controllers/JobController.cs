@@ -145,10 +145,18 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/{id}/action/GetJobById/{jobId}")]
-        public MJob GetJobById(string id, string jobId)
+        public IActionResult GetJobById(string id, string jobId)
         {
             var result = svc.GetJobById(id, jobId);
-            return result;
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteJobById/{jobId}")]
+        public IActionResult DeleteJobById(string id, string jobId)
+        {
+            var result = svc.DeleteJobById(id, jobId);
+            return Ok(result);
         }
 
         [HttpPost]

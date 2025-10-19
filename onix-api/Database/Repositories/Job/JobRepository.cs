@@ -93,5 +93,19 @@ namespace Its.Onix.Api.Database.Repositories
             var u = context!.Jobs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
             return u!;
         }
+
+        public MJob? DeleteJobById(string jobId)
+        {
+            Guid id = Guid.Parse(jobId);
+
+            var r = context!.Jobs!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefault();
+            if (r != null)
+            {
+                context!.Jobs!.Remove(r);
+                context.SaveChanges();
+            }
+
+            return r;
+        }
     }
 }
