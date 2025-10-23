@@ -69,8 +69,14 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName, string invitedBy)
+        private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName, string invitedBy, string regCase)
         {
+            var regType = "user-signup-confirm";
+            if (regCase == "")
+            {
+                regType = "user-invite-confirm";
+            }
+            
             var cacheObj = new MRegistrationParam()
             {
                 UserEmail = email,
@@ -93,7 +99,7 @@ namespace Its.Onix.Api.Services
             }
 
             var token = Guid.NewGuid().ToString();
-            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/user-signup/{token}?data={dataUrlSafe}";
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/${regType}/{token}?data={dataUrlSafe}";
 
             var job = new MJob()
             {
@@ -219,7 +225,7 @@ namespace Its.Onix.Api.Services
 
             var result = repository!.AddUser(user);
 
-            CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName, user.InvitedBy!);
+            CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName, user.InvitedBy!, registrationCase);
 
             r.OrgUser = result;
             //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
