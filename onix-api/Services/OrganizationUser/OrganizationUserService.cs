@@ -100,7 +100,7 @@ namespace Its.Onix.Api.Services
             }
 
             var token = Guid.NewGuid().ToString();
-            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/${regType}/{token}?data={dataUrlSafe}";
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
 
             var job = new MJob()
             {
