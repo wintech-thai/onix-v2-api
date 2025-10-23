@@ -19,7 +19,7 @@ namespace Its.Onix.Api.Models
         public string? OrgCustomId { get; set; }
 
         [Column("user_id")]
-        public string? UserId { get; set; }
+        public string? UserId { get; set; } /* ถ้าเป็น NULL คือ Pending user */
 
         [Column("user_name")]
         public string? UserName { get; set; }
@@ -32,17 +32,36 @@ namespace Its.Onix.Api.Models
 
         [Column("is_org_initial_user")]
         public string? IsOrgInitialUser { get; set; } /* YES or NO */
-        
+
+        [Column("user_status")]
+        public string? UserStatus { get; set; } /* Pending, Active, Disable */
+
+        [Column("tmp_user_email")]
+        public string? TmpUserEmail { get; set; } /* เก็บ email ชั่วคราวที่ได้ invite ไปหา user */
+
+        [Column("previous_user_status")]
+        public string? PreviousUserStatus { get; set; } /* เก็บ UserStatus ก่อนที่จะถูก Disable ถ้า Enable ก็จะกลับมาใช้ PreviousUserStatus */
+
+        [Column("invited_date")]
+        public DateTime? InvitedDate { get; set; }
+
+        [Column("invited_by")]
+        public string? InvitedBy { get; set; }
+
         [NotMapped]
         public string? UserEmail { get; set; }
         public string? OrgName { get; set; }
         public string? OrgDesc { get; set; }
+
+        [NotMapped]
+        public List<string> Roles { get; set; }
 
         public MOrganizationUser()
         {
             OrgUserId = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             RolesList = "";
+            Roles = [];
         }
     }
 }

@@ -35,6 +35,36 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
+        public Task<MOrganizationUser> GetUserByIdLeftJoin(string orgUserId)
+        {
+            Guid id = Guid.Parse(orgUserId);
+
+            var result = (
+                from ou in context!.OrganizationUsers
+                join u in context.Users!
+                    on ou.UserName equals u.UserName into userGroup
+                from u in userGroup.DefaultIfEmpty()  // 👈 ตรงนี้ทำให้เป็น LEFT JOIN
+                where ou.OrgCustomId == orgId && ou.OrgUserId == id
+                select new MOrganizationUser
+                {
+                    OrgUserId = ou.OrgUserId,
+                    OrgCustomId = ou.OrgCustomId,
+                    UserId = ou.UserId,
+                    UserName = ou.UserName,
+                    RolesList = ou.RolesList,
+                    CreatedDate = ou.CreatedDate,
+                    UserEmail = u != null ? u.UserEmail : null,
+                    UserStatus = ou.UserStatus,
+                    PreviousUserStatus = ou.PreviousUserStatus,
+                    InvitedDate = ou.InvitedDate,
+                    IsOrgInitialUser = ou.IsOrgInitialUser,
+                    TmpUserEmail = ou.TmpUserEmail,
+                }
+            ).FirstOrDefaultAsync();
+
+            return result!;
+        }
+
         public MOrganizationUser AddUser(MOrganizationUser user)
         {
             user.OrgUserId = Guid.NewGuid();
@@ -70,7 +100,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (param.Offset > 0)
             {
                 //Convert to zero base
-                offset = param.Offset-1;
+                offset = param.Offset - 1;
             }
 
             if (param.Limit > 0)
@@ -96,6 +126,52 @@ namespace Its.Onix.Api.Database.Repositories
                     })
                 .AsQueryable()
                 .AsExpandable()
+                .Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToList();
+
+            return arr;
+        }
+
+        public IEnumerable<MOrganizationUser> GetUsersLeftJoin(VMOrganizationUser param)
+        {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset - 1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = UserPredicate(param!);
+
+            var arr = (from ou in context!.OrganizationUsers
+                       join u in context.Users!
+                       on ou.UserName equals u.UserName into userGroup
+                       from user in userGroup.DefaultIfEmpty()
+                       select new MOrganizationUser
+                       {
+                           OrgUserId = ou.OrgUserId,
+                           OrgCustomId = ou.OrgCustomId,
+                           UserId = ou.UserId,
+                           UserName = ou.UserName,
+                           RolesList = ou.RolesList,
+                           CreatedDate = ou.CreatedDate,
+                           UserEmail = user != null ? user.UserEmail : null,
+                           UserStatus = ou.UserStatus,
+                           PreviousUserStatus = ou.PreviousUserStatus,
+                           InvitedDate = ou.InvitedDate,
+                           IsOrgInitialUser = ou.IsOrgInitialUser,
+                       })
                 .Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
@@ -131,6 +207,27 @@ namespace Its.Onix.Api.Database.Repositories
             return cnt;
         }
 
+        public int GetUserCountLeftJoin(VMOrganizationUser param)
+        {
+            var predicate = UserPredicate(param);
+
+            var cnt = (
+                from ou in context!.OrganizationUsers
+                join u in context.Users!
+                    on ou.UserName equals u.UserName into userGroup
+                from user in userGroup.DefaultIfEmpty()
+                select new MOrganizationUser
+                {
+                    OrgUserId = ou.OrgUserId,
+                    OrgCustomId = ou.OrgCustomId,
+                }
+            )
+            .Where(predicate)
+            .Count();
+
+            return cnt;
+        }
+
         public MOrganizationUser? UpdateUserById(string orgUserId, MOrganizationUser user)
         {
             Guid id = Guid.Parse(orgUserId);
@@ -144,6 +241,12 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return result!;
+        }
+
+        public bool IsUserNameExist(string userName)
+        {
+            var cnt = context!.OrganizationUsers!.Where(p => p.OrgCustomId!.Equals(orgId) && p!.UserName!.Equals(userName)).Count();
+            return cnt >= 1;
         }
     }
 }

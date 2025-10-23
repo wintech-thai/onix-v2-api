@@ -13,5 +13,6 @@ namespace Its.Onix.Api.Database.Repositories
         public bool IsUserIdExist(string userId);
 
         public MUser GetUserByName(string userName);
+        public MUser GetUserByEmail(string email);
     }
 }

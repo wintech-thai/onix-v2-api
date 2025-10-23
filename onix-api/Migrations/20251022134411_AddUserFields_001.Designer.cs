@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251022134411_AddUserFields_001")]
+    partial class AddUserFields_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -604,10 +607,6 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<string>("InvitedBy")
-                        .HasColumnType("text")
-                        .HasColumnName("invited_by");
-
                     b.Property<DateTime?>("InvitedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("invited_date");
@@ -633,10 +632,6 @@ namespace onix.api.Migrations
                     b.Property<string>("RolesList")
                         .HasColumnType("text")
                         .HasColumnName("roles_list");
-
-                    b.Property<string>("TmpUserEmail")
-                        .HasColumnType("text")
-                        .HasColumnName("tmp_user_email");
 
                     b.Property<string>("UserId")
                         .HasColumnType("text")
