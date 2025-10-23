@@ -137,13 +137,16 @@ namespace Its.Onix.Api.Services
             user.IsOrgInitialUser = "NO";
             user.PreviousUserStatus = "Pending";
             user.RolesList = string.Join(",", user.Roles ?? []);
+            //Console.WriteLine($"@@@@@@ [{user.RolesList}] @@@@@@");
             var result = repository!.AddUser(user);
-
-            result.RolesList = "";
 
             CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName);
 
+            //TODO : ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+
             r.OrgUser = result;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.OrgUser.RolesList = "";
 
             return r;
         }
@@ -273,9 +276,10 @@ namespace Its.Onix.Api.Services
             {
                 result.Roles = [.. result.RolesList.Split(',')];
             }
-            result.RolesList = "";
 
             r.OrgUser = result;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.OrgUser.RolesList = "";
 
             return r;
         }
