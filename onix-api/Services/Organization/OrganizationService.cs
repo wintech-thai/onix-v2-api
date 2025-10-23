@@ -129,11 +129,21 @@ namespace Its.Onix.Api.Services
             var m = repository!.GetUserInOrganization(userName);
             if (m == null)
             {
-
-                var o = new MVOrganizationUser() 
+                var o = new MVOrganizationUser()
                 {
                     Status = "NOTFOUND_INORG",
                     Description = $"User [{userName}] has not been added to the organization [{orgId}] !!!",
+                };
+
+                return o;
+            }
+
+            if (m.UserStatus != "Active")
+            {
+                var o = new MVOrganizationUser()
+                {
+                    Status = "NOT_ACTIVE_STATUS_USER",
+                    Description = $"User [{userName}] has status [{m.UserStatus}] in the organization [{orgId}] !!!",
                 };
 
                 return o;
