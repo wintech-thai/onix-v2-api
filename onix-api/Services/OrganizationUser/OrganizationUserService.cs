@@ -78,6 +78,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org" },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "REGISTRATION_URL", Value = $"https://register.please-scan.com/{orgId}/signup/will-change" },
                 ]
             };
 
