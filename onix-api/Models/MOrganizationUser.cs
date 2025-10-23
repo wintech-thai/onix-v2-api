@@ -36,6 +36,9 @@ namespace Its.Onix.Api.Models
         [Column("user_status")]
         public string? UserStatus { get; set; } /* Pending, Active, Disable */
 
+        [Column("tmp_user_email")]
+        public string? TmpUserEmail { get; set; } /* เก็บ email ชั่วคราวที่ได้ invite ไปหา user */
+
         [Column("previous_user_status")]
         public string? PreviousUserStatus { get; set; } /* เก็บ UserStatus ก่อนที่จะถูก Disable ถ้า Enable ก็จะกลับมาใช้ PreviousUserStatus */
 
@@ -47,11 +50,15 @@ namespace Its.Onix.Api.Models
         public string? OrgName { get; set; }
         public string? OrgDesc { get; set; }
 
+        [NotMapped]
+        public List<string> Roles { get; set; }
+
         public MOrganizationUser()
         {
             OrgUserId = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             RolesList = "";
+            Roles = [];
         }
     }
 }

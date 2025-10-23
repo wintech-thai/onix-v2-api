@@ -31,6 +31,15 @@ namespace Prom.LPR.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/InviteUser")]
+        public MVOrganizationUser? Inviteuser(string id, [FromBody] MOrganizationUser request)
+        {
+            var result = svc.InviteUser(id, request);
+            return result;
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/DeleteUserById/{userId}")]
         public IActionResult DeleteUserById(string id, string userId)
@@ -42,10 +51,10 @@ namespace Prom.LPR.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetUserById/{userId}")]
-        public MOrganizationUser GetUserById(string id, string userId)
+        public IActionResult GetUserById(string id, string userId)
         {
-            var result = svc.GetUserById(id, userId);
-            return result;
+            var result = svc.GetUserByIdLeftJoin(id, userId);
+            return Ok(result);
         }
 
         [HttpPost]
@@ -57,7 +66,7 @@ namespace Prom.LPR.Api.Controllers
                 param.Limit = 100;
             }
 
-            var result = svc.GetUsers(id, param);
+            var result = svc.GetUsersLeftJoin(id, param);
             return Ok(result);
         }
 
@@ -65,7 +74,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/GetUserCount")]
         public IActionResult GetUserCount(string id, [FromBody] VMOrganizationUser param)
         {
-            var result = svc.GetUserCount(id, param);
+            var result = svc.GetUserCountLeftJoin(id, param);
             return Ok(result);
         }
 
