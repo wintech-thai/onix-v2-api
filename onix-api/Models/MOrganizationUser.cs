@@ -45,6 +45,9 @@ namespace Its.Onix.Api.Models
         [Column("invited_date")]
         public DateTime? InvitedDate { get; set; }
 
+        [Column("invited_by")]
+        public string? InvitedBy { get; set; }
+
         [NotMapped]
         public string? UserEmail { get; set; }
         public string? OrgName { get; set; }

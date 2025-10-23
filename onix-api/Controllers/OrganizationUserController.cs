@@ -35,6 +35,14 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/InviteUser")]
         public MVOrganizationUser? Inviteuser(string id, [FromBody] MOrganizationUser request)
         {
+            var invitedByName = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (invitedByName == null)
+            {
+                invitedByName = "Unknown";
+            }
+
+            request.InvitedBy = invitedByName.ToString();
+
             var result = svc.InviteUser(id, request);
             return result;
         }

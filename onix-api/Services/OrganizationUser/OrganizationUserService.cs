@@ -62,7 +62,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName)
+        private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName, string invitedBy)
         {
             var job = new MJob()
             {
@@ -79,6 +79,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
                     new NameValue { Name = "REGISTRATION_URL", Value = $"https://register.please-scan.com/{orgId}/signup/will-change" },
+                    new NameValue { Name = "INVITED_BY", Value = invitedBy },
                 ]
             };
 
@@ -140,7 +141,7 @@ namespace Its.Onix.Api.Services
             //Console.WriteLine($"@@@@@@ [{user.RolesList}] @@@@@@");
             var result = repository!.AddUser(user);
 
-            CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName);
+            CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName, user.InvitedBy!);
 
             //TODO : ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
 
