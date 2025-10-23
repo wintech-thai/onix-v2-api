@@ -3,6 +3,10 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using onix.api.Migrations;
+using System.Text.Json;
+using System.Web;
+using System.Text;
 
 namespace Its.Onix.Api.Services
 {
@@ -11,15 +15,18 @@ namespace Its.Onix.Api.Services
         private readonly IOrganizationUserRepository? repository = null;
         private readonly IUserRepository? userRepository = null;
         private readonly IJobService _jobService;
+        private readonly IRedisHelper _redis;
 
         public OrganizationUserService(
             IOrganizationUserRepository repo,
             IUserRepository userRepo,
-            IJobService jobService) : base()
+            IJobService jobService,
+            IRedisHelper redis) : base()
         {
             repository = repo;
             userRepository = userRepo;
             _jobService = jobService;
+            _redis = redis;
         }
 
         public IEnumerable<MOrganizationUser> GetUsers(string orgId, VMOrganizationUser param)
@@ -64,6 +71,30 @@ namespace Its.Onix.Api.Services
 
         private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName, string invitedBy)
         {
+            var cacheObj = new MRegistrationParam()
+            {
+                UserEmail = email,
+                UserName = userName,
+                InvitedBy = invitedBy,
+            };
+
+            var jsonString = JsonSerializer.Serialize(cacheObj);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "register";
+
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                registerDomain = "register-dev";
+            }
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/signup/{token}?data={dataUrlSafe}";
+
             var job = new MJob()
             {
                 Name = $"EmailUserInvitationJob:{Guid.NewGuid()}",
@@ -78,13 +109,51 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org" },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
-                    new NameValue { Name = "REGISTRATION_URL", Value = $"https://register.please-scan.com/{orgId}/signup/will-change" },
+                    new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
                     new NameValue { Name = "INVITED_BY", Value = invitedBy },
                 ]
             };
 
             var result = _jobService.AddJob(orgId, job);
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "UserSignUp");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", cacheObj, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
             return result;
+        }
+
+        public string IdentifyRegistrationCase(MOrganizationUser user)
+        {
+            var userName = user.UserName!;
+            var email = user.TmpUserEmail!;
+
+            var userByNameObj = userRepository!.GetUserByName(userName);
+            if (userByNameObj != null)
+            {
+                //มี username นั้นอยู่แล้วใน table Users
+                var userEmail = userByNameObj.UserEmail;
+                if (userEmail != email)
+                {
+                    //case3 : (username, email) มี username แต่ email ไม่ตรง => Error "username ถูกใช้โดย คนอื่นแล้ว"
+                    return "ERROR_NAME_IS_USED_BY_ANOTHER";
+                }
+
+                //case1 : (username, email) มีอยู่แล้วใน table Users => Ok "สร้างใน OrganizationsUsers เท่านั้น"
+                return "OK_TO_ADD_IN_ORG1";
+            }
+
+            //ยังไม่เคยมี username นี้อยู่ใน table Users เลย
+            var userByEmailObj = userRepository!.GetUserByEmail(email);
+            if (userByEmailObj == null)
+            {
+                //ยังไม่เคยมี username หรือ email นี้อยู่ใน table Users เลย
+                //case2 : (username, email) ไม่มี username และ ไม่มี email เลย => Ok "สร้างใน table Users ด้วย"
+                return "OK_TO_ADD_IN_ORG2";
+            }
+            
+            //case4 : (username, email) ไมมี username แต่มี email ใน Users แล้ว => Error "Email ถูกใช้โดย user อื่นแล้ว"
+            return "ERROR_EMAIL_IS_USED_BY_ANOTHER";
         }
 
         public MVOrganizationUser? InviteUser(string orgId, MOrganizationUser user)
@@ -102,6 +171,16 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "INVALID_USERNAME_EMPTY";
                 r.Description = "Username is blank, please check your UserName field!!!";
+                return r;
+            }
+
+            //Validate if user exist in org
+            var isUserExist = repository!.IsUserNameExist(userName);
+            if (isUserExist)
+            {
+                r.Status = "USERNAME_DUPLICATE";
+                r.Description = $"User name [{userName}] is already exist in org [{orgId}]!!!";
+
                 return r;
             }
 
@@ -123,12 +202,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //Validate if user exist in org
-            var isUserExist = repository!.IsUserNameExist(userName);
-            if (isUserExist)
+            var registrationCase = IdentifyRegistrationCase(user);
+            if (registrationCase.Contains("ERROR"))
             {
-                r.Status = "USERNAME_DUPLICATE";
-                r.Description = $"User name [{userName}] is already exist in org [{orgId}]!!!";
+                r.Status = registrationCase;
+                r.Description = "Email or username is being by another!!!";
 
                 return r;
             }
@@ -138,12 +216,10 @@ namespace Its.Onix.Api.Services
             user.IsOrgInitialUser = "NO";
             user.PreviousUserStatus = "Pending";
             user.RolesList = string.Join(",", user.Roles ?? []);
-            //Console.WriteLine($"@@@@@@ [{user.RolesList}] @@@@@@");
+
             var result = repository!.AddUser(user);
 
             CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName, user.InvitedBy!);
-
-            //TODO : ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
 
             r.OrgUser = result;
             //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที

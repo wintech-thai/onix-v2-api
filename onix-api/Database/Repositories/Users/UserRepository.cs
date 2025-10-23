@@ -55,5 +55,11 @@ namespace Its.Onix.Api.Database.Repositories
             var u = context!.Users!.Where(p => p!.UserName!.Equals(userName)).FirstOrDefault();
             return u!;
         }
+
+        public MUser GetUserByEmail(string email)
+        {
+            var u = context!.Users!.Where(p => p!.UserEmail!.Equals(email)).FirstOrDefault();
+            return u!;
+        }
     }
 }
