@@ -19,6 +19,6 @@ param =  {
 }
 
 ### Inviteuser
-apiUrl = "api/OrganizationUser/org/#{orgId}/action/Inviteuser"
+apiUrl = "api/OrganizationUser/org/#{orgId}/action/InviteUser"
 result = make_request(:post, apiUrl, param)
 puts(result)

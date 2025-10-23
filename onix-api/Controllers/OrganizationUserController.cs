@@ -44,6 +44,9 @@ namespace Prom.LPR.Api.Controllers
             request.InvitedBy = invitedByName.ToString();
 
             var result = svc.InviteUser(id, request);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            Response.Headers.Append("CUST_DESC", result!.Description);
+
             return result;
         }
 
