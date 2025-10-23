@@ -73,10 +73,11 @@ namespace Its.Onix.Api.Services
 
                 Parameters =
                 [
-                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = email },
+                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org" },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
-                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
                 ]
             };
 
