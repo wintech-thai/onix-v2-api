@@ -72,8 +72,9 @@ namespace Its.Onix.Api.Services
         private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName, string invitedBy, string regCase)
         {
             var regType = "user-signup-confirm";
-            if (regCase == "")
+            if (regCase == "OK_TO_ADD_IN_ORG1")
             {
+                //เป็น link ที่ให้กด accept เท่านั้น ไม่ต้องให้กรอก user/password
                 regType = "user-invite-confirm";
             }
             
