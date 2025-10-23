@@ -13,12 +13,10 @@ load_env(".env")
 orgId = ENV['API_ORG']
 
 param =  {
-  UserName: "pjamenaja136",
-  TmpUserEmail: "pjame.fb136@gmail.com",
-  Roles: [ "OWNER" ],
+  FullTextSearch: ""
 }
 
-### Inviteuser
-apiUrl = "api/OrganizationUser/org/#{orgId}/action/InviteUser"
+### GetUsers
+apiUrl = "api/Role/org/#{orgId}/action/GetRoles"
 result = make_request(:post, apiUrl, param)
 puts(result)
