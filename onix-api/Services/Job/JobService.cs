@@ -27,13 +27,14 @@ namespace Its.Onix.Api.Services
 
             if (result != null)
             {
-                var parameters = JsonSerializer.Deserialize<List<NameValue>>(result.Configuration!);
-                if (parameters == null)
+                if (string.IsNullOrEmpty(result.Configuration))
                 {
-                    parameters = new List<NameValue>();
+                    result.Configuration = "[]";
                 }
+                
+                var parameters = JsonSerializer.Deserialize<List<NameValue>>(result.Configuration!);
 
-                result.Parameters = parameters;
+                result.Parameters = parameters!;
                 result.Configuration = "";
             }
 

@@ -145,10 +145,12 @@ public class JobControllerTest
         service.Setup(s => s.GetJobById(orgId, jobId)).Returns(job);
 
         var jc = new JobController(service.Object, sciService.Object);
-        var result = jc.GetJobById(orgId, jobId);
+        var result = (OkObjectResult) jc.GetJobById(orgId, jobId);
 
-        Assert.IsType<MJob>(result);
-        Assert.Equal(jobId, result.Name);
+        var j = (MJob) result.Value!;
+
+        Assert.IsType<MJob>(j);
+        Assert.Equal(jobId, j.Name);
     }
     //===
 
@@ -191,6 +193,28 @@ public class JobControllerTest
 
         Assert.NotNull(result);
         Assert.Equal("HELLO", result.Name);
+    }
+    //===
+
+    //=== DeleteJobById() ===
+    [Theory]
+    [InlineData("org1")]
+    public void DeleteJobByIdOkTest(string orgId)
+    {
+        var jobId = Guid.NewGuid().ToString();
+        var job = new VMJob();
+        var mvJob = new MVJob() { Status = "OK" };
+
+        var sciService = new Mock<IScanItemTemplateService>();
+
+        var service = new Mock<IJobService>();
+        service.Setup(s => s.DeleteJobById(orgId, jobId)).Returns(mvJob);
+
+        var jc = new JobController(service.Object, sciService.Object);
+        var result = jc.DeleteJobById(orgId, jobId);
+
+        var t = Assert.IsType<OkObjectResult>(result);
+        Assert.IsType<MVJob>(t.Value);
     }
     //===
 }
