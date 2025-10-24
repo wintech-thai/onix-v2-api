@@ -254,7 +254,7 @@ namespace Its.Onix.Api.Services
             }
 
             var u = repository!.GetUserById(userId);
-            if (u == null)
+            if (u.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"User ID [{userId}] not found for the organization [{orgId}]";
@@ -360,6 +360,14 @@ namespace Its.Onix.Api.Services
                 Description = "Success"
             };
 
+            if (!ServiceUtils.IsGuidValid(userId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"User ID [{userId}] format is invalid";
+
+                return r;
+            }
+            
             repository!.SetCustomOrgId(orgId);
             user.RolesList = string.Join(",", user.Roles ?? []);
 

@@ -11,11 +11,12 @@ public class JobServiceTest
 {
     //===== GetJobById() ====
     [Theory]
-    [InlineData("org1")]
-    public void GetJobByIdTest(string orgId)
+    [InlineData("org1", "")]
+    [InlineData("org1", "[]")]
+    public void GetJobByIdTest(string orgId, string jobConfig)
     {
         var jobId = Guid.NewGuid().ToString();
-        var job = new MJob() { Name = "jobnamehere" };
+        var job = new MJob() { Name = "jobnamehere", Configuration = jobConfig };
 
         var repo = new Mock<IJobRepository>();
         repo.Setup(s => s.GetJobById(jobId)).Returns(job);
@@ -253,6 +254,57 @@ public class JobServiceTest
 
         Assert.NotNull(result);
         Assert.Equal(email, defaultEmail);
+    }
+    //=====
+
+    //===== DeleteJobById() ====
+    [Theory]
+    [InlineData("org1", "aaaa-bbbb-cccc-dddd")]
+    public void DeleteJobByIdInvalidIdTest(string orgId, string jobId)
+    {
+        var repo = new Mock<IJobRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+        var result = jobSvc.DeleteJobById(orgId, jobId);
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    public void DeleteJobByIdNotFoundTest(string orgId, string jobId)
+    {
+        var repo = new Mock<IJobRepository>();
+        repo.Setup(s => s.DeleteJobById(jobId)).Returns((MJob?)null);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+
+        var result = jobSvc.DeleteJobById(orgId, jobId);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+    
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    public void DeleteJobByIdOkTest(string orgId, string jobId)
+    {
+        var repo = new Mock<IJobRepository>();
+        repo.Setup(s => s.DeleteJobById(jobId)).Returns(new MJob() {});
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var userRepo = new Mock<IUserRepository>();
+        var jobSvc = new JobService(repo.Object, redisHelper.Object, userRepo.Object);
+
+        var result = jobSvc.DeleteJobById(orgId, jobId);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
     }
     //=====
 }

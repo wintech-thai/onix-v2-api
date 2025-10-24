@@ -327,7 +327,7 @@ public class ItemServiceTest
         var itemSvc = new ItemService(repo.Object);
         var result = itemSvc.GetAllowItemPropertyNames(orgId);
 
-        Assert.Equal(7, result.ToArray().Length);
+        Assert.Equal(8, result.ToArray().Length);
     }
     //====
 }
