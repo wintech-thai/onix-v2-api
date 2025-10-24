@@ -237,6 +237,8 @@ namespace Its.Onix.Api.Services
 
         public MVOrganizationUser? DeleteUserById(string orgId, string userId)
         {
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVOrganizationUser()
             {
                 Status = "OK",
@@ -251,9 +253,24 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteUserById(userId);
+            var u = repository!.GetUserById(userId);
+            if (u == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"User ID [{userId}] not found for the organization [{orgId}]";
 
+                return r;
+            }
+
+            if (u.Result.IsOrgInitialUser == "YES")
+            {
+                r.Status = "NOT_ALLOW_DELETE_INITIAL_USER";
+                r.Description = $"Unable to delete initial user for the organization [{orgId}]";
+
+                return r;
+            }
+            
+            var m = repository!.DeleteUserById(userId);
             r.OrgUser = m;
             if (m == null)
             {
