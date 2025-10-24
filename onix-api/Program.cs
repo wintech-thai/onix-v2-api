@@ -15,6 +15,7 @@ using StackExchange.Redis;
 using Its.Onix.Api.Utils;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
+using Microsoft.AspNetCore.ResponseCompression;
 
 namespace Its.Onix.Api
 {
@@ -165,6 +166,13 @@ namespace Its.Onix.Api
                 });
             });
             //End rate limit
+
+            // เปิด middleware สำหรับ gzip
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true; // ให้บีบอัดแม้เป็น HTTPS
+                options.Providers.Add<GzipCompressionProvider>();
+            });
 
             builder.Services.AddHttpClient();
             builder.Services.AddHealthChecks();
