@@ -366,7 +366,7 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-            
+
             repository!.SetCustomOrgId(orgId);
             user.RolesList = string.Join(",", user.Roles ?? []);
 
@@ -376,6 +376,53 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"User ID [{userId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (!string.IsNullOrEmpty(result.RolesList))
+            {
+                result.Roles = [.. result.RolesList.Split(',')];
+            }
+
+            r.OrgUser = result;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.OrgUser.RolesList = "";
+
+            return r;
+        }
+
+        public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string userId, string status)
+        {
+            var r = new MVOrganizationUser()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(orgUserId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Org user ID [{orgUserId}] format is invalid";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(userId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"User ID [{userId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateUserStatusById(orgUserId, userId, status);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"User ID [{orgUserId}] not found for the organization [{orgId}]";
 
                 return r;
             }
