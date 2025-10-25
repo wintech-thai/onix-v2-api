@@ -31,7 +31,11 @@ def make_request(method, apiName, data)
 
   request = request_class.new(uri.request_uri)
   request['Content-Type'] = 'application/json'
-  request.basic_auth("api", apiKey)
+  
+  if (!apiKey.nil?)
+    request.basic_auth("api", apiKey)
+    puts("===== Using API KEY =====")
+  end
 
   if (!data.nil?)
     request.body = data.to_json

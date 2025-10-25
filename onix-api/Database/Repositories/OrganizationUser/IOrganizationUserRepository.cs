@@ -1,6 +1,7 @@
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -16,6 +17,7 @@ namespace Its.Onix.Api.Database.Repositories
         public int GetUserCount(VMOrganizationUser param);
         public int GetUserCountLeftJoin(VMOrganizationUser param);
         public MOrganizationUser? UpdateUserById(string orgUserId, MOrganizationUser user);
+        public MOrganizationUser? UpdateUserStatusById(string orgUserId, string userId, string status);
         public bool IsUserNameExist(string userName);
     }
 }
