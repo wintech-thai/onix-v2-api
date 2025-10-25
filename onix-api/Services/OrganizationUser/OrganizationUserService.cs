@@ -222,7 +222,8 @@ namespace Its.Onix.Api.Services
             {
                 Email = email,
                 UserName = userName,
-                OrgUserId = result.OrgUserId.ToString()
+                OrgUserId = result.OrgUserId.ToString(),
+                InvitedBy = user.InvitedBy,
             };
             CreateEmailUserInvitationJob(orgId, registrationCase, reg);
 
