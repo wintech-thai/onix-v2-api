@@ -8,6 +8,6 @@ namespace Its.Onix.Api.Models
         public string? Name { get; set; }
         public string? Lastname { get; set; }
         public string? InvitedBy { get; set; }
-        public string? UserId { get; set; }
+        public string? OrgUserId { get; set; }
     }
 }

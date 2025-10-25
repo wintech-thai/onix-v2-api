@@ -220,10 +220,9 @@ namespace Its.Onix.Api.Services
 
             var reg = new MUserRegister()
             {
-                Email = user.TmpUserEmail,
+                Email = email,
                 UserName = userName,
-                InvitedBy = user.InvitedBy,
-                UserId = result.UserId!.ToString()
+                OrgUserId = result.OrgUserId.ToString()
             };
             CreateEmailUserInvitationJob(orgId, registrationCase, reg);
 
