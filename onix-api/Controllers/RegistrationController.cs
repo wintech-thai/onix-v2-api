@@ -26,7 +26,7 @@ namespace Its.Onix.Api.Controllers
             _orgUserService = orgUserService;
         }
 
-        private MVRegistration ValidateRegistrationToken(string orgId, string token, string usrName, MUserRegister request, string cacheKey)
+        private MVRegistration ValidateRegistrationToken(string usrName, MUserRegister request, string cacheKey)
         {
             var result = new MVRegistration()
             {
@@ -74,12 +74,12 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/{id}/action/ConfirmExistingUserInvitation/{token}/{userName}")]
-        public IActionResult ConfirmExistingUserInvitation(string id, string token, string usrName, [FromBody] MUserRegister request)
+        public IActionResult ConfirmExistingUserInvitation(string id, string token, string userName, [FromBody] MUserRegister request)
         {
             var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "UserSignUp");
             var cacheKey = $"{cacheSuffix}:{token}";
 
-            var v = ValidateRegistrationToken(id, token, usrName, request, cacheKey);
+            var v = ValidateRegistrationToken(userName, request, cacheKey);
             if (v.Status != "OK")
             {
                 Response.Headers.Append("CUST_STATUS", v.Status);
@@ -87,11 +87,11 @@ namespace Its.Onix.Api.Controllers
             }
 
             //Get user by user name เพื่อเอาค่า userId มาอัพเดตใน OrgUser
-            var mUser = _userService.GetUserByName(id, usrName);
+            var mUser = _userService.GetUserByName(id, userName);
             if (mUser == null)
             {
                 v.Status = "USER_NOTFOUND";
-                v.Description = $"User name [{usrName}] not found";
+                v.Description = $"User name [{userName}] not found";
 
                 Response.Headers.Append("CUST_STATUS", v.Status);
                 return Ok(v);
@@ -113,12 +113,12 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/{id}/action/ConfirmNewUserInvitation/{token}/{userName}")]
-        public IActionResult ConfirmNewUserInvitation(string id, string token, string usrName, [FromBody] MUserRegister request)
+        public IActionResult ConfirmNewUserInvitation(string id, string token, string userName, [FromBody] MUserRegister request)
         {
             var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "UserSignUp");
             var cacheKey = $"{cacheSuffix}:{token}";
 
-            var v = ValidateRegistrationToken(id, token, usrName, request, cacheKey);
+            var v = ValidateRegistrationToken(userName, request, cacheKey);
             if (v.Status != "OK")
             {
                 Response.Headers.Append("CUST_STATUS", v.Status);
