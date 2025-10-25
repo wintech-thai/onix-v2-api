@@ -69,7 +69,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private MVJob? CreateEmailUserInvitationJob(string orgId, string email, string userName, string invitedBy, string regCase)
+        private MVJob? CreateEmailUserInvitationJob(string orgId, string regCase, MUserRegister reg)
         {
             var regType = "user-signup-confirm";
             if (regCase == "OK_TO_ADD_IN_ORG1")
@@ -78,21 +78,13 @@ namespace Its.Onix.Api.Services
                 regType = "user-invite-confirm";
             }
             
-            var cacheObj = new MRegistrationParam()
-            {
-                UserEmail = email,
-                UserName = userName,
-                InvitedBy = invitedBy,
-            };
-
-            var jsonString = JsonSerializer.Serialize(cacheObj);
+            var jsonString = JsonSerializer.Serialize(reg);
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
             string jsonStringB64 = Convert.ToBase64String(jsonBytes);
 
             var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
 
             var registerDomain = "register";
-
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             if (environment != "Production")
             {
@@ -112,12 +104,12 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
-                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org" },
-                    new NameValue { Name = "ORG_USER_NAMME", Value = userName },
+                    new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
                     new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
-                    new NameValue { Name = "INVITED_BY", Value = invitedBy },
+                    new NameValue { Name = "INVITED_BY", Value = reg.InvitedBy },
                 ]
             };
 
@@ -125,7 +117,7 @@ namespace Its.Onix.Api.Services
 
             //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "UserSignUp");
-            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", cacheObj, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
 
             return result;
         }
@@ -226,7 +218,14 @@ namespace Its.Onix.Api.Services
 
             var result = repository!.AddUser(user);
 
-            CreateEmailUserInvitationJob(orgId, user.TmpUserEmail!, userName, user.InvitedBy!, registrationCase);
+            var reg = new MUserRegister()
+            {
+                Email = user.TmpUserEmail,
+                UserName = userName,
+                InvitedBy = user.InvitedBy,
+                UserId = result.UserId!.ToString()
+            };
+            CreateEmailUserInvitationJob(orgId, registrationCase, reg);
 
             r.OrgUser = result;
             //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
