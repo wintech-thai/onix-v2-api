@@ -13,8 +13,8 @@ load_env(".env")
 orgId = ENV['API_ORG']
 
 param =  {
-  UserName: "pjamenaja136",
-  TmpUserEmail: "pjame.fb136@gmail.com",
+  UserName: "pjamenaja18",
+  TmpUserEmail: "pjame.fb138@gmail.com",
   Roles: [ "OWNER" ],
 }
 
