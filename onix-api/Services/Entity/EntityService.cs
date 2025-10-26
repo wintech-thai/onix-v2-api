@@ -105,6 +105,12 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetEntities(param);
 
+            foreach (var entity in result)
+            {
+                //เพื่อไม่ให้ข้อมูลที่ response กลับไปใหญ่จนเกินไป
+                entity.Content = "";
+            }
+
             return result;
         }
 
