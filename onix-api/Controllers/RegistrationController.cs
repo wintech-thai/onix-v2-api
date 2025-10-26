@@ -122,6 +122,26 @@ namespace Its.Onix.Api.Controllers
                 return Ok(v);
             }
 
+            var userValidateResult = ValidationUtils.ValidateUserName(userName);
+            if (userValidateResult.Status != "OK")
+            {
+                v.Status = userValidateResult.Status;
+                v.Description = userValidateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
             //Get user by user name เพื่อเอาค่า userId มาอัพเดตใน OrgUser
             var mUser = _userService.GetUserByName(id, userName);
             if (mUser == null)
@@ -158,6 +178,26 @@ namespace Its.Onix.Api.Controllers
             var v = ValidateRegistrationToken(userName, request, cacheKey);
             if (v.Status != "OK")
             {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var userValidateResult = ValidationUtils.ValidateUserName(userName);
+            if (userValidateResult.Status != "OK")
+            {
+                v.Status = userValidateResult.Status;
+                v.Description = userValidateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
                 Response.Headers.Append("CUST_STATUS", v.Status);
                 return Ok(v);
             }

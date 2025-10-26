@@ -165,11 +165,13 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            var userName = user.UserName;
-            if (string.IsNullOrEmpty(userName))
+            var userName = user.UserName!;
+            var userValidateResult = ValidationUtils.ValidateUserName(userName);
+            if (userValidateResult.Status != "OK")
             {
-                r.Status = "INVALID_USERNAME_EMPTY";
-                r.Description = "Username is blank, please check your UserName field!!!";
+                r.Status = userValidateResult.Status;
+                r.Description = userValidateResult.Description;
+
                 return r;
             }
 
