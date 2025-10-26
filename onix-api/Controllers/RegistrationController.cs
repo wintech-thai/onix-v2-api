@@ -14,18 +14,54 @@ namespace Its.Onix.Api.Controllers
         private readonly IRedisHelper _redis;
         private readonly IAuthService _authService;
         private readonly IOrganizationUserService _orgUserService;
+        private readonly IJobService _jobService;
 
         public RegistrationController(IUserService userService,
             IAuthService authService,
             IOrganizationUserService orgUserService,
+            IJobService jobService,
             IRedisHelper redis)
         {
             _userService = userService;
             _redis = redis;
             _authService = authService;
             _orgUserService = orgUserService;
+            _jobService = jobService;
         }
 
+        private MVJob? CreateEmailUserGreetingJob(string orgId, MUserRegister reg)
+        {
+            var consoleDomain = "console";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                consoleDomain = "console-dev";
+            }
+
+            var consoleUrl = $"https://{consoleDomain}.please-scan.com";
+
+            var job = new MJob()
+            {
+                Name = $"EmailUserGreetingJob:{Guid.NewGuid()}",
+                Description = "Registration.CreateEmailUserGreetingJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org-welcome" },
+                    new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "CONSOLE_URL", Value = consoleUrl },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+            return result;
+        }
+        
         private MVRegistration ValidateRegistrationToken(string usrName, MUserRegister request, string cacheKey)
         {
             var result = new MVRegistration()
@@ -100,7 +136,8 @@ namespace Its.Onix.Api.Controllers
             var newUserId = mUser.UserId!.ToString();
             _ = _orgUserService.UpdateUserStatusById(id, request.OrgUserId!, newUserId!, "Active");
 
-            //TODO : สร้าง email แจ้ง user ว่าการสมัครเสร็จสมบูรณ์
+            //สร้าง email แจ้ง user ว่าการสมัครเสร็จสมบูรณ์
+            CreateEmailUserGreetingJob(id, request);
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
             _redis.DeleteAsync(cacheKey);
@@ -167,7 +204,8 @@ namespace Its.Onix.Api.Controllers
                 return Ok(v);
             }
 
-            //TODO : สร้าง email แจ้ง user ว่าการสมัครเสร็จสมบูรณ์
+            //สร้าง email แจ้ง user ว่าการสมัครเสร็จสมบูรณ์
+            CreateEmailUserGreetingJob(id, request);
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
             _redis.DeleteAsync(cacheKey);

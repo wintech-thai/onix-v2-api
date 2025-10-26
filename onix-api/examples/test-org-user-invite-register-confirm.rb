@@ -12,7 +12,8 @@ $stdout.sync = true
 ################### Main #######################
 load_env(".env")
 
-url = "https://register-dev.please-scan.com/napbiotec/user-signup-confirm/0ff2b5ca-3df9-4364-b777-66fc93cce967?data=eyJFbWFpbCI6InBqYW1lLmZiMTQwQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoicGphbWVuYWphMTQwIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJhcGkiLCJPcmdVc2VySWQiOiIxMDJiZTYwYi04ZjMzLTQwZTUtYjE5My00OGY3ODk0YTU2NDUifQ%3d%3d";
+url = "https://register-dev.please-scan.com/napbiotec/user-invite-confirm/9714ec5f-2174-442a-ae93-3e0d096d911d?data=eyJFbWFpbCI6InBqYW1lLmZiQGdtYWlsLmNvbXh4eCIsIlVzZXJOYW1lIjoicGphbWVuYWphIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJhcGkiLCJPcmdVc2VySWQiOiI4MDQzN2M3Zi1lMTE4LTQ0MzYtODEyMC0zNDYxZjFhYTQwMGQifQ%3d%3d"
+#"https://register-dev.please-scan.com/napbiotec/user-signup-confirm/0ff2b5ca-3df9-4364-b777-66fc93cce967?data=eyJFbWFpbCI6InBqYW1lLmZiMTQwQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoicGphbWVuYWphMTQwIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJhcGkiLCJPcmdVc2VySWQiOiIxMDJiZTYwYi04ZjMzLTQwZTUtYjE5My00OGY3ODk0YTU2NDUifQ%3d%3d";
 uri = URI.parse(url)
 
 # แปลง query string เป็น hash
@@ -43,6 +44,7 @@ param =  {
   Password: "Abc12345$343#1",
   Name: "Seubpong",
   LastName: "Monsar",
+  OrgUserId: dataObj['OrgUserId'],
 }
 
 #puts(param)
