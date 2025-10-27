@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Models
     [ExcludeFromCodeCoverage]
     [Table("ApiKeys")]
     [Index(nameof(ApiKey), IsUnique = true)]
+    [Index(nameof(KeyName), IsUnique = true)]
     [Index(nameof(OrgId))]
     public class MApiKey
     {
@@ -20,6 +21,9 @@ namespace Its.Onix.Api.Models
 
         [Column("org_id")]
         public string? OrgId { get; set; }
+
+        [Column("key_name")]
+        public string? KeyName { get; set; }
 
         [Column("key_created_date")]
         public DateTime? KeyCreatedDate { get; set; }

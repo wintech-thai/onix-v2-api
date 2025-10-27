@@ -18,6 +18,12 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
+        public Task<MApiKey> GetApiKeyByName(string keyName)
+        {
+            var result = context!.ApiKeys!.Where(x => x.OrgId!.Equals(orgId) && x.KeyName!.Equals(keyName)).FirstOrDefaultAsync();
+            return result!;
+        }
+
         public MApiKey AddApiKey(MApiKey apiKey)
         {
             apiKey.KeyId = Guid.NewGuid();
@@ -54,6 +60,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 var fullTextPd = PredicateBuilder.New<MApiKey>();
                 fullTextPd = fullTextPd.Or(p => p.KeyDescription!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.KeyName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.RolesList!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
