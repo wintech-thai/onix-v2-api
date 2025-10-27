@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-id = 'fe21126e-51d3-42f5-98d1-3152634c291b'
+id = '6978a49b-66a0-4511-b4de-37059caf1c33'
 
 ### GetApiKeyById
 apiUrl = "api/ApiKey/org/#{orgId}/action/GetApiKeyById/#{id}"

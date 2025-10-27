@@ -15,7 +15,7 @@ id = '6978a49b-66a0-4511-b4de-37059caf1c33'
 
 param =  nil
 
-apiUrl = "api/ApiKey/org/#{orgId}/action/EnableApiKeyById/#{id}"
-result = make_request(:post, apiUrl, param)
+apiUrl = "api/ApiKey/org/#{orgId}/action/DeleteApiKeyById/#{id}"
+result = make_request(:delete, apiUrl, param)
 
 puts(result)

@@ -13,7 +13,7 @@ load_env(".env")
 orgId = ENV['API_ORG']
 
 param =  {
-  Roles: [ "VIEWER" ],
+  Roles: [ "OWNER" ],
   KeyDescription: "Test API Key from Ruby script",
 }
 

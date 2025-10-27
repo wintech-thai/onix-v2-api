@@ -81,7 +81,6 @@ namespace Its.Onix.Api.Authentications
             if (authResult!.UserAuthen == null)
             {
                 var msg = $"User not found [{authResult.UserName}], scheme=[{authHeader.Scheme}]";
-                await Response.WriteAsync(msg);
 
                 return AuthenticateResult.Fail(msg);
             }
