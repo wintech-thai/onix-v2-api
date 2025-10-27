@@ -388,8 +388,6 @@ namespace Its.Onix.Api.Services
             }
 
             r.OrgUser = result;
-            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
-            r.OrgUser.RolesList = "";
 
             return r;
         }
@@ -435,8 +433,6 @@ namespace Its.Onix.Api.Services
             }
 
             r.OrgUser = result;
-            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
-            r.OrgUser.RolesList = "";
 
             return r;
         }
