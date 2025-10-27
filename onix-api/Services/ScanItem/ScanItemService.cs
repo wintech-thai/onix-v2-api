@@ -272,17 +272,19 @@ namespace Its.Onix.Api.Services
 
         private MVJob? CreateEmailSendOtpJob(string orgId, string serial, string pin, string emailOtp, string email)
         {
+            var templateType = "customer-registration-otp";
             var job = new MJob()
             {
                 Name = $"EmailSendOtpJob:{Guid.NewGuid()}",
                 Description = "ScanItemService.CreateEmailSendOtpJob()",
                 Type = "OtpEmailSend",
                 Status = "Pending",
+                Tags = $"{templateType},{templateType}",
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "customer-registration-otp" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "OTP", Value = emailOtp },
                     new NameValue { Name = "SERIAL", Value = serial },
                     new NameValue { Name = "PIN", Value = pin },

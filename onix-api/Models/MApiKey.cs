@@ -30,13 +30,20 @@ namespace Its.Onix.Api.Models
         [Column("key_description")]
         public string? KeyDescription { get; set; }
 
+        [Column("key_status")]
+        public string? KeyStatus { get; set; } /* Active, Disabled */
+
         [Column("roles_list")]
         public string? RolesList { get; set; }
+
+        [NotMapped]
+        public List<string> Roles { get; set; }
 
         public MApiKey()
         {
             KeyId = Guid.NewGuid();
             KeyCreatedDate = DateTime.UtcNow;
+            Roles = [];
         }
     }
 }

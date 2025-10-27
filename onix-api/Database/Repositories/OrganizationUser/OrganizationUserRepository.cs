@@ -260,6 +260,22 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
+        public MOrganizationUser? UpdateUserStatusById(string orgUserId, string status)
+        {
+            Guid id = Guid.Parse(orgUserId);
+            var result = context!.OrganizationUsers!.Where(x => x.OrgCustomId!.Equals(orgId) && x.OrgUserId!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.PreviousUserStatus = result.UserStatus;
+                result.UserStatus = status;
+
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
         public bool IsUserNameExist(string userName)
         {
             var cnt = context!.OrganizationUsers!.Where(p => p.OrgCustomId!.Equals(orgId) && p!.UserName!.Equals(userName)).Count();

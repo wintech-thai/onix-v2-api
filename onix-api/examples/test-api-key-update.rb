@@ -11,14 +11,14 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
+id = '6978a49b-66a0-4511-b4de-37059caf1c33'
 
 param =  {
-  UserName: "pjamenaja144",
-  TmpUserEmail: "pjame.fb144@gmail.com",
   Roles: [ "OWNER" ],
+  KeyDescription: "Test update API Key from Ruby script",
 }
 
-### Inviteuser
-apiUrl = "api/OrganizationUser/org/#{orgId}/action/InviteUser"
+apiUrl = "api/ApiKey/org/#{orgId}/action/UpdateApiKeyById/#{id}"
 result = make_request(:post, apiUrl, param)
+
 puts(result)

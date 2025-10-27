@@ -97,5 +97,23 @@ namespace Prom.LPR.Api.Controllers
             var result = svc.UpdateUserById(id, userId, request);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/EnableUserById/{userId}")]
+        public IActionResult EnableUserById(string id, string userId)
+        {
+            var result = svc.UpdateUserStatusById(id, userId, "Active");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/DisableUserById/{userId}")]
+        public IActionResult DisableUserById(string id, string userId)
+        {
+            var result = svc.UpdateUserStatusById(id, userId, "Disabled");
+            return Ok(result);
+        }
     }
 }

@@ -94,18 +94,20 @@ namespace Its.Onix.Api.Services
             var token = Guid.NewGuid().ToString();
             var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
 
+            var templateType = "user-invitation-to-org";
             var job = new MJob()
             {
                 Name = $"EmailUserInvitationJob:{Guid.NewGuid()}",
                 Description = "OrgUser.CreateEmailUserInvitationJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",
+                Tags = templateType,
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
                     new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
@@ -388,9 +390,43 @@ namespace Its.Onix.Api.Services
             }
 
             r.OrgUser = result;
-            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
-            r.OrgUser.RolesList = "";
 
+            return r;
+        }
+
+        public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string status)
+        {
+            var r = new MVOrganizationUser()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(orgUserId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Org user ID [{orgUserId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateUserStatusById(orgUserId, status);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"User ID [{orgUserId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (!string.IsNullOrEmpty(result.RolesList))
+            {
+                result.Roles = [.. result.RolesList.Split(',')];
+            }
+
+            r.OrgUser = result;
             return r;
         }
 
@@ -435,8 +471,6 @@ namespace Its.Onix.Api.Services
             }
 
             r.OrgUser = result;
-            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
-            r.OrgUser.RolesList = "";
 
             return r;
         }

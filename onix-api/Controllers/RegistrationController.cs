@@ -40,18 +40,20 @@ namespace Its.Onix.Api.Controllers
 
             var consoleUrl = $"https://{consoleDomain}.please-scan.com";
 
+            var templateType = "user-invitation-to-org-welcome";
             var job = new MJob()
             {
                 Name = $"EmailUserGreetingJob:{Guid.NewGuid()}",
                 Description = "Registration.CreateEmailUserGreetingJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",
+                Tags = templateType,
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org-welcome" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
                     new NameValue { Name = "CONSOLE_URL", Value = consoleUrl },

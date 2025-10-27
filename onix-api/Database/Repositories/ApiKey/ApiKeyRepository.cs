@@ -121,5 +121,19 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result!;
         }
+
+        public MApiKey? UpdateApiKeyStatusById(string keyId, string status)
+        {
+            Guid id = Guid.Parse(keyId);
+            var result = context!.ApiKeys!.Where(x => x.OrgId!.Equals(orgId) && x.KeyId!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.KeyStatus = status;
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
     }
 }

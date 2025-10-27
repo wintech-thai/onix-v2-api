@@ -81,10 +81,16 @@ namespace Its.Onix.Api.Authentications
             if (authResult!.UserAuthen == null)
             {
                 var msg = $"User not found [{authResult.UserName}], scheme=[{authHeader.Scheme}]";
-                await Response.WriteAsync(msg);
 
                 return AuthenticateResult.Fail(msg);
             }
+            else if (authResult!.UserAuthen.Status != "OK")
+            {
+                var msg = $"User status invalid [{authResult.UserName}] status=[{authResult.UserAuthen.Status}]";
+                await Response.WriteAsync(msg);
+
+                return AuthenticateResult.Fail(msg);
+            } 
 
             var identity = new ClaimsIdentity(authResult.UserAuthen.Claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);

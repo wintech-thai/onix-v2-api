@@ -51,7 +51,9 @@ namespace Its.Onix.Api.Models
         [Column("secondary_email")]
         public string? SecondaryEmail { get; set; }
 
-
+        [Column("content")]
+        public string? Content { get; set; }
+        
         //Navigation Properties
         public ICollection<MPricingPlan> PricingPlans { get; set; } = new List<MPricingPlan>();
 

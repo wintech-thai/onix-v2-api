@@ -168,6 +168,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.NationalCardId = item.NationalCardId;
                 result.PrimaryEmail = item.PrimaryEmail;
                 result.SecondaryEmail = item.SecondaryEmail;
+                result.Content = item.Content;
                 
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();
