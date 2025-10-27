@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
         public Task<MApiKey> GetApiKey(string apiKey);
+        public Task<MApiKey> GetApiKeyByName(string keyName);
         public MApiKey AddApiKey(MApiKey apiKey);
         public MApiKey? DeleteApiKeyById(string keyId);
         public IEnumerable<MApiKey> GetApiKeys(VMApiKey param);

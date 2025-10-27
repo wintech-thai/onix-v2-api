@@ -34,6 +34,14 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public Task<MApiKey> GetApiKeyByName(string orgId, string keyName)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetApiKeyByName(keyName);
+
+            return result;
+        }
+
         public MVApiKey VerifyApiKey(string orgId, string apiKey)
         {
             repository!.SetCustomOrgId(orgId);
@@ -59,7 +67,6 @@ namespace Its.Onix.Api.Services
             }
             else if ((m.KeyStatus != null) && m.KeyStatus!.Equals("Disabled"))
             {
-Console.WriteLine("##################### DISABLED #######################");
                 status = "DISABLED";
                 description = $"API key for the organization is disabled [{orgId}]";
             }
@@ -84,8 +91,18 @@ Console.WriteLine("##################### DISABLED #######################");
 
             if (m != null)
             {
-                r.Status = "DUPLICATE";
+                r.Status = "KEY_DUPLICATE";
                 r.Description = "API Key is duplicate";
+
+                return r;
+            }
+
+            t = repository!.GetApiKeyByName(apiKey.KeyName!);
+            m = t.Result;
+            if (m != null)
+            {
+                r.Status = "NAME_DUPLICATE";
+                r.Description = "API Key name is duplicate";
 
                 return r;
             }

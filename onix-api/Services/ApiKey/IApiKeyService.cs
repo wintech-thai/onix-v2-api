@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     public interface IApiKeyService
     {
         public Task<MApiKey> GetApiKey(string orgId, string apiKey);
+        public Task<MApiKey> GetApiKeyByName(string orgId, string keyName);
         public MVApiKey VerifyApiKey(string orgId, string apiKey);
         public MVApiKey? AddApiKey(string orgId, MApiKey apiKey);
         public MVApiKey? DeleteApiKeyById(string orgId, string keyId);
