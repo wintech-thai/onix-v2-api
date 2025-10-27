@@ -122,14 +122,14 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         if (!roleMatch!.Equals(""))
         {
             context.Succeed(requirement);
-
-            var mvcContext = context.Resource as DefaultHttpContext;
-            mvcContext!.HttpContext.Items["Temp-Authorized-Role"] = roleMatch;
-            mvcContext!.HttpContext.Items["Temp-API-Called"] = apiCalled;
-            mvcContext!.HttpContext.Items["Temp-Identity-Type"] = method;
-            mvcContext!.HttpContext.Items["Temp-Identity-Id"] = uid;
-            mvcContext!.HttpContext.Items["Temp-Identity-Name"] = userName;
         }
+
+        var mvcContext = context.Resource as DefaultHttpContext;
+        mvcContext!.HttpContext.Items["Temp-Authorized-Role"] = roleMatch;
+        mvcContext!.HttpContext.Items["Temp-API-Called"] = apiCalled;
+        mvcContext!.HttpContext.Items["Temp-Identity-Type"] = method;
+        mvcContext!.HttpContext.Items["Temp-Identity-Id"] = uid;
+        mvcContext!.HttpContext.Items["Temp-Identity-Name"] = userName;
 
         return Task.CompletedTask;
     }
