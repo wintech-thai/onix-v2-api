@@ -11,14 +11,12 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
+id = '6ff52772-3389-466f-b6e8-cbce250f4df7'
 
-param =  {
-  UserName: "pjamenaja144",
-  TmpUserEmail: "pjame.fb144@gmail.com",
-  Roles: [ "OWNER" ],
-}
+param = nil
 
-### Inviteuser
-apiUrl = "api/OrganizationUser/org/#{orgId}/action/InviteUser"
+### UpdateUserById
+apiUrl = "api/OrganizationUser/org/#{orgId}/action/EnableUserById/#{id}"
 result = make_request(:post, apiUrl, param)
+
 puts(result)

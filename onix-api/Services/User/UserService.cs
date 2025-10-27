@@ -114,17 +114,19 @@ namespace Its.Onix.Api.Services
 
         private MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName)
         {
+            var templateType = "user-password-change";
             var job = new MJob()
             {
                 Name = $"EmailPasswordChangeJob:{Guid.NewGuid()}",
                 Description = "User.CreateEmailPasswordChangeJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",
+                Tags = templateType,
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "user-password-change" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
                 ]
             };

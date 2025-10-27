@@ -94,18 +94,20 @@ namespace Its.Onix.Api.Services
             var token = Guid.NewGuid().ToString();
             var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
 
+            var templateType = "user-invitation-to-org";
             var job = new MJob()
             {
                 Name = $"EmailUserInvitationJob:{Guid.NewGuid()}",
                 Description = "OrgUser.CreateEmailUserInvitationJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",
+                Tags = templateType,
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "user-invitation-to-org" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
                     new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },

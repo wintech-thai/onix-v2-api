@@ -12,7 +12,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env(".env")
 
-url = "https://register-dev.please-scan.com/napbiotec/user-signup-confirm/c7e0ba68-728e-4cf3-b11e-67a497b1cc73?data=eyJFbWFpbCI6InBqYW1lLmZiMTQyQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoicGphbWVuYWphMTQyIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJhcGkiLCJPcmdVc2VySWQiOiI2N2I0ZWFiOS0zMTUwLTQ3NGYtYmU5YS0yNDk5ZmViMGJhZGYifQ%3d%3d"
+url = "https://register-dev.please-scan.com/napbiotec/user-signup-confirm/fd58a842-b5fe-43ba-8682-d366a74d7bfd?data=eyJFbWFpbCI6InBqYW1lLmZiMTQ0QGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoicGphbWVuYWphMTQ0IiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJhcGkiLCJPcmdVc2VySWQiOiI2ZmY1Mjc3Mi0zMzg5LTQ2NmYtYjZlOC1jYmNlMjUwZjRkZjcifQ%3d%3d"
 uri = URI.parse(url)
 
 # แปลง query string เป็น hash

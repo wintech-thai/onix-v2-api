@@ -27,17 +27,19 @@ namespace Its.Onix.Api.Services
 
         private MVJob? CreateEmailSendOtpJob(string orgId, string emailOtp, string email)
         {
+            var templateType = "org-registration-otp";
             var job = new MJob()
             {
                 Name = $"EmailSendOtpJob:{Guid.NewGuid()}",
                 Description = "Admin.CreateEmailSendOtpJob()",
                 Type = "OtpEmailSend",
                 Status = "Pending",
+                Tags = $"{emailOtp},{templateType}",
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "org-registration-otp" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "OTP", Value = emailOtp },
                 ]
             };
@@ -48,17 +50,19 @@ namespace Its.Onix.Api.Services
 
         private MVJob? CreateEmailSendWelcomeJob(string orgId, string email, string userOrgId, string userName)
         {
+            var templateType = "org-registration-welcome";
             var job = new MJob()
             {
                 Name = $"EmailSendWelcomeJob:{Guid.NewGuid()}",
                 Description = "Admin.CreateEmailSendWelcomeJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",
+                Tags = templateType,
 
                 Parameters =
                 [
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
-                    new NameValue { Name = "TEMPLATE_TYPE", Value = "org-registration-welcome" },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "USER_ORG_ID", Value = userOrgId },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
                 ]
