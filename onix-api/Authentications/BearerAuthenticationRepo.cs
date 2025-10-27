@@ -100,6 +100,9 @@ namespace Its.Onix.Api.Authentications
                 AuthenType = "JWT",
                 OrgId = m.OrgUser.OrgCustomId,
                 Email = m.User.UserEmail,
+
+                Status = m.Status,
+                Description = m.Description,
             };
 
             u.Claims = [
