@@ -392,6 +392,42 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string status)
+        {
+            var r = new MVOrganizationUser()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(orgUserId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Org user ID [{orgUserId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateUserStatusById(orgUserId, status);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"User ID [{orgUserId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (!string.IsNullOrEmpty(result.RolesList))
+            {
+                result.Roles = [.. result.RolesList.Split(',')];
+            }
+
+            r.OrgUser = result;
+            return r;
+        }
+
         public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string userId, string status)
         {
             var r = new MVOrganizationUser()

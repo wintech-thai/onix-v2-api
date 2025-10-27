@@ -18,6 +18,7 @@ namespace Its.Onix.Api.Database.Repositories
         public int GetUserCountLeftJoin(VMOrganizationUser param);
         public MOrganizationUser? UpdateUserById(string orgUserId, MOrganizationUser user);
         public MOrganizationUser? UpdateUserStatusById(string orgUserId, string userId, string status);
+        public MOrganizationUser? UpdateUserStatusById(string orgUserId, string status);
         public bool IsUserNameExist(string userName);
     }
 }

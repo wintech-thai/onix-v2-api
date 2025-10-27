@@ -15,6 +15,7 @@ namespace Its.Onix.Api.Services
         public int GetUserCountLeftJoin(string orgId, VMOrganizationUser param);
         public MVOrganizationUser? UpdateUserById(string orgId, string userId, MOrganizationUser user);
         public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string userId, string status);
+        public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string status);
         public MOrganizationUser GetUserById(string orgId, string userId);
         public MVOrganizationUser GetUserByIdLeftJoin(string orgId, string userId);
     }
