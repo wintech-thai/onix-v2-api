@@ -10,10 +10,14 @@ namespace Its.Onix.Api.Services
     {
         private readonly IApiKeyRepository? repository = null;
         private DateTime compareDate = DateTime.Now;
+        private readonly IRedisHelper _redis;
 
-        public ApiKeyService(IApiKeyRepository repo) : base()
+        public ApiKeyService(
+            IApiKeyRepository repo,
+            IRedisHelper redis) : base()
         {
             repository = repo;
+            _redis = redis;
         }
 
         public void SetCompareDate(DateTime dtm)
@@ -55,6 +59,7 @@ namespace Its.Onix.Api.Services
             }
             else if ((m.KeyStatus != null) && m.KeyStatus!.Equals("Disabled"))
             {
+Console.WriteLine("##################### DISABLED #######################");
                 status = "DISABLED";
                 description = $"API key for the organization is disabled [{orgId}]";
             }
@@ -99,6 +104,12 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private void DeleteApiKeyCache(string orgId, string apiKey)
+        {
+            var key = $"#{orgId}:VerifyKey:#{apiKey}";
+            _redis.DeleteAsync(key);
+        }
+
         public MVApiKey? DeleteApiKeyById(string orgId, string keyId)
         {
             var r = new MVApiKey()
@@ -123,6 +134,11 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"Key ID [{keyId}] not found for the organization [{orgId}]";
+            }
+            else
+            {
+                DeleteApiKeyCache(orgId, r.ApiKey!.ApiKey!);
+                r.ApiKey!.ApiKey = "";
             }
 
             return r;
@@ -171,6 +187,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            DeleteApiKeyCache(orgId, result.ApiKey!);
+
             r.ApiKey = result;
             r.ApiKey.RolesList = "";
             r.ApiKey.ApiKey = "";
@@ -198,6 +216,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            DeleteApiKeyCache(orgId, result.ApiKey!);
+
             r.ApiKey = result;
             r.ApiKey.RolesList = "";
             r.ApiKey.ApiKey = "";
@@ -211,6 +231,11 @@ namespace Its.Onix.Api.Services
             var result = repository!.GetApiKeyById(keyId);
 
             var key = result.Result;
+
+            if (key == null)
+            {
+                return null!;
+            }
 
             if (!string.IsNullOrEmpty(key.RolesList))
             {
