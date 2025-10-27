@@ -14,5 +14,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MApiKey> GetApiKeyById(string keyId);
         public int GetApiKeyCount(VMApiKey param);
         public MApiKey? UpdateApiKeyById(string keyId, MApiKey apiKey);
+        public MApiKey? UpdateApiKeyStatusById(string keyId, string status);
     }
 }

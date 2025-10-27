@@ -76,6 +76,24 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/EnableApiKeyById/{keyId}")]
+        public IActionResult EnableApiKeyById(string id, string keyId)
+        {
+            var result = svc.UpdateApiKeyStatusById(id, keyId, "Active");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/DisableApiKeyById/{keyId}")]
+        public IActionResult DisableApiKeyById(string id, string keyId)
+        {
+            var result = svc.UpdateApiKeyStatusById(id, keyId, "Disabled");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetApiKeyById/{keyId}")]
         public MApiKey GetApiKeyById(string id, string keyId)

@@ -48,7 +48,17 @@ namespace Its.Onix.Api.Services
                 status = "EXPIRED";
                 description = $"API key for the organization is expire [{orgId}] since [{m.KeyExpiredDate}]";
             }
-
+            else if ((m.KeyExpiredDate != null) && (DateTime.Compare(compareDate, (DateTime)m.KeyExpiredDate!) > 0))
+            {
+                status = "EXPIRED";
+                description = $"API key for the organization is expire [{orgId}] since [{m.KeyExpiredDate}]";
+            }
+            else if ((m.KeyStatus != null) && m.KeyStatus!.Equals("Disabled"))
+            {
+                status = "DISABLED";
+                description = $"API key for the organization is disabled [{orgId}]";
+            }
+            
             var mv = new MVApiKey()
             {
                 ApiKey = m,
@@ -75,13 +85,17 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            apiKey.RolesList = string.Join(",", apiKey.Roles ?? []);
+            apiKey.KeyStatus = "Active"; //Default status
+            apiKey.ApiKey = Guid.NewGuid().ToString(); //ให้ return ออกไปด้วยเพื่อให้ user ใช้งานได้เลย
             var result = repository!.AddApiKey(apiKey);
 
             r.Status = "OK";
             r.Description = "Success";
             r.ApiKey = result;
 
-            //Demo
+            r.ApiKey.RolesList = "";
+
             return r;
         }
 
@@ -119,6 +133,12 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetApiKeys(param);
 
+            foreach (var key in result)
+            {
+                //เพื่อไม่ให้ return ค่า ApiKey กลับไป
+                key.ApiKey = "";
+            }
+
             return result;
         }
 
@@ -139,6 +159,8 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
+
+            apiKey.RolesList = string.Join(",", apiKey.Roles ?? []);
             var result = repository!.UpdateApiKeyById(keyId, apiKey);
 
             if (result == null)
@@ -150,6 +172,36 @@ namespace Its.Onix.Api.Services
             }
 
             r.ApiKey = result;
+            r.ApiKey.RolesList = "";
+            r.ApiKey.ApiKey = "";
+
+            return r;
+        }
+
+        public MVApiKey? UpdateApiKeyStatusById(string orgId, string keyId, string status)
+        {
+            var r = new MVApiKey()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+
+            var result = repository!.UpdateApiKeyStatusById(keyId, status);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Key ID [{keyId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.ApiKey = result;
+            r.ApiKey.RolesList = "";
+            r.ApiKey.ApiKey = "";
+
             return r;
         }
 
@@ -157,6 +209,15 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
             var result = repository!.GetApiKeyById(keyId);
+
+            var key = result.Result;
+
+            if (!string.IsNullOrEmpty(key.RolesList))
+            {
+                key.Roles = [.. key.RolesList.Split(',')];
+            }
+            key.RolesList = "";
+            key.ApiKey = ""; //ไม่ต้อง return ค่า api key กลับไป
 
             return result.Result;
         }
