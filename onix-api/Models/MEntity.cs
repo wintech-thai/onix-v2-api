@@ -48,12 +48,24 @@ namespace Its.Onix.Api.Models
         [Column("primary_email")]
         public string? PrimaryEmail { get; set; }
 
+        [Column("primary_phone")]
+        public string? PrimaryPhone { get; set; }
+
+        [Column("primary_phone_status")]
+        public string? PrimaryPhoneStatus { get; set; } /* VERIFIED, UNVERIFIED */
+
         [Column("secondary_email")]
         public string? SecondaryEmail { get; set; }
 
+        [Column("primary_email_status")]
+        public string? PrimaryEmailStatus { get; set; } /* VERIFIED, UNVERIFIED */
+
         [Column("content")]
         public string? Content { get; set; }
-        
+
+        [Column("total_point")]
+        public long? TotalPoint { get; set; }
+
         //Navigation Properties
         public ICollection<MPricingPlan> PricingPlans { get; set; } = new List<MPricingPlan>();
 

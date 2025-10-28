@@ -15,5 +15,6 @@ namespace Its.Onix.Api.Database.Repositories
         public MEntity? DeleteEntityById(string entityId);
         public bool IsEntityCodeExist(string entityCode);
         public MEntity? UpdateEntityById(string entityId, MEntity entity);
+        public MEntity? UpdateEntityEmailById(string entityId, string email);
     }
 }
