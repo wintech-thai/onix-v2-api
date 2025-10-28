@@ -256,10 +256,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var u = repository!.GetUserById(userId);
+            var u = repository!.GetUserByIdLeftJoin(userId);
             if (u.Result == null)
             {
-                r.Status = "NOTFOUND";
+                r.Status = "NOTFOUND_GET_USER";
                 r.Description = $"User ID [{userId}] not found for the organization [{orgId}]";
 
                 return r;
@@ -277,7 +277,7 @@ namespace Its.Onix.Api.Services
             r.OrgUser = m;
             if (m == null)
             {
-                r.Status = "NOTFOUND";
+                r.Status = "NOTFOUND_DELTE_USER";
                 r.Description = $"User ID [{userId}] not found for the organization [{orgId}]";
             }
 
