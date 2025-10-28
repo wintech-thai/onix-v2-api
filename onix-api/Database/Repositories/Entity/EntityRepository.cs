@@ -51,6 +51,7 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.TaxId!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PrimaryEmail!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.SecondaryEmail!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PrimaryPhone!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
@@ -166,10 +167,12 @@ namespace Its.Onix.Api.Database.Repositories
                 result.CreditAmount = item.CreditAmount;
                 result.TaxId = item.TaxId;
                 result.NationalCardId = item.NationalCardId;
-                result.PrimaryEmail = item.PrimaryEmail;
-                result.SecondaryEmail = item.SecondaryEmail;
                 result.Content = item.Content;
-                
+
+                //จะไม่อนุญาตให้แก้ไข email และ phone ผ่านทาง API ตัวนี้, จะต้องใช้ API อีกตัวแทน เพราะต้องมีการตรวจสอบความถูกต้อง
+                //result.SecondaryEmail = item.SecondaryEmail;
+                //result.PrimaryEmail = item.PrimaryEmail;
+
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();
             }

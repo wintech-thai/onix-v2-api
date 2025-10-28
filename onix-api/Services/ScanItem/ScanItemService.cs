@@ -480,6 +480,7 @@ namespace Its.Onix.Api.Services
             var entity = new MEntity()
             {
                 PrimaryEmail = cust.Email,
+                PrimaryEmailStatus = "VERIFIED", //เนื่องจากผ่านการยืนยัน OTP มาแล้ว
                 EntityType = 1,
                 EntityCategory = 1,
                 Code = $"CUST:{Guid.NewGuid()}",
