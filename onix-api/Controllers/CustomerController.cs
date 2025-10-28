@@ -60,6 +60,24 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/UpdateCustomerEmailById/{entityId}/{email}")]
+        public IActionResult UpdateCustomerEmailById(string id, string entityId, string email)
+        {
+            var result = svc.UpdateEntityEmailById(id, entityId, email, false);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/UpdateCustomerEmailWithConfirmationById/{entityId}/{email}")]
+        public IActionResult UpdateCustomerEmailWithConfirmationById(string id, string entityId, string email)
+        {
+            var result = svc.UpdateEntityEmailById(id, entityId, email, true);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetCustomerById/{entityId}")]
         public MEntity GetCustomerById(string id, string entityId)

@@ -30,6 +30,15 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AttachScanItemToCustomer/{scanItemId}/{customerId}")]
+        public IActionResult AttachScanItemToCustomer(string id, string scanItemId, string customerId)
+        {
+            var result = svc.AttachScanItemToCustomer(id, scanItemId, customerId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemById/{scanItemId}")]
         public IActionResult GetItemById(string id, string scanItemId)

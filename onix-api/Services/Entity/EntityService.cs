@@ -48,6 +48,11 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVEntity? UpdateEntityEmailById(string orgId, string entityId, string email, bool sendVerification)
+        {
+            return null;
+        }
+
         public MVEntity? UpdateEntityById(string orgId, string entityId, MEntity cycle)
         {
             var r = new MVEntity()
