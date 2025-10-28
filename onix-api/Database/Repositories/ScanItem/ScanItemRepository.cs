@@ -74,6 +74,11 @@ namespace Its.Onix.Api.Database.Repositories
 
         private string UpdateTags(string tags, string tagName, string tagValue)
         {
+            if (string.IsNullOrEmpty(tags))
+            {
+                return $"{tagName}={tagValue}";
+            }
+            
             // แยก string ด้วย comma
             var parts = tags.Split(',').ToList();
 
