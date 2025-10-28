@@ -275,11 +275,11 @@ namespace Its.Onix.Api.Services
             var templateType = "customer-registration-otp";
             var job = new MJob()
             {
-                Name = $"EmailSendOtpJob:{Guid.NewGuid()}",
+                Name = $"{Guid.NewGuid()}",
                 Description = "ScanItemService.CreateEmailSendOtpJob()",
                 Type = "OtpEmailSend",
                 Status = "Pending",
-                Tags = $"{templateType},{templateType}",
+                Tags = $"{templateType}",
 
                 Parameters =
                 [
@@ -288,6 +288,32 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "OTP", Value = emailOtp },
                     new NameValue { Name = "SERIAL", Value = serial },
                     new NameValue { Name = "PIN", Value = pin },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+            return result;
+        }
+
+        private MVJob? ProductRegisterGreetingJob(string orgId, string serial, string pin, string emailOtp, string email)
+        {
+            var templateType = "customer-registration-welcome";
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "ScanItemService.ProductRegisterGreetingJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+                Tags = $"{templateType}",
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
+                    new NameValue { Name = "OTP", Value = emailOtp },
+                    new NameValue { Name = "SERIAL", Value = serial },
+                    new NameValue { Name = "PIN", Value = pin },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
                 ]
             };
 
@@ -465,6 +491,8 @@ namespace Its.Onix.Api.Services
             customerId = customer.Id.ToString();
 
             AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
+
+            ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
 
             r.Entity = customer;
             return r;

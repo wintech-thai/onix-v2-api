@@ -1,6 +1,7 @@
 using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using System.Text.RegularExpressions;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -64,15 +65,49 @@ namespace Its.Onix.Api.Database.Repositories
                 result.UsedFlag = "TRUE";
                 result.ItemId = pid;
                 result.ProductCode = product.Code;
+                result.Tags = UpdateTags(result.Tags!, "product", product.Code!);
                 context!.SaveChanges();
             }
 
             return result!;
         }
 
+        private string UpdateTags(string tags, string tagName, string tagValue)
+        {
+            if (string.IsNullOrEmpty(tags))
+            {
+                return $"{tagName}={tagValue}";
+            }
+            
+            // แยก string ด้วย comma
+            var parts = tags.Split(',').ToList();
+
+            // regex pattern สำหรับ tag
+            var pattern = new Regex($"^{Regex.Escape(tagName)}=(.+)$");
+            bool found = false;
+
+            for (int i = 0; i < parts.Count; i++)
+            {
+                if (pattern.IsMatch(parts[i]))
+                {
+                    parts[i] = $"{tagName}={tagValue}";
+                    found = true;
+                    break;
+                }
+            }
+
+            // ถ้าไม่พบ tag ใน list ให้ append ใหม่
+            if (!found)
+            {
+                parts.Add($"{tagName}={tagValue}");
+            }
+
+            var result = string.Join(",", parts);
+            return result;
+        }
+
         public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer)
         {
-            //TODO : Use customer in the future to get customer code
             Guid cid = Guid.Parse(customerId);
             Guid id = Guid.Parse(itemId);
             var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
@@ -81,6 +116,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.AppliedFlag = "TRUE";
                 result.CustomerId = cid;
+                result.Tags = UpdateTags(result.Tags!, "email", customer.PrimaryEmail!);
                 context!.SaveChanges();
             }
 
@@ -112,6 +148,7 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Serial!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Pin!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ProductCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

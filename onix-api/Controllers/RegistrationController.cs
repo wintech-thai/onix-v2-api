@@ -43,7 +43,7 @@ namespace Its.Onix.Api.Controllers
             var templateType = "user-invitation-to-org-welcome";
             var job = new MJob()
             {
-                Name = $"EmailUserGreetingJob:{Guid.NewGuid()}",
+                Name = $"{Guid.NewGuid()}",
                 Description = "Registration.CreateEmailUserGreetingJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",

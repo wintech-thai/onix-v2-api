@@ -167,6 +167,7 @@ namespace Its.Onix.Api.Database.Repositories
                            RolesList = ou.RolesList,
                            CreatedDate = ou.CreatedDate,
                            UserEmail = user != null ? user.UserEmail : null,
+                           TmpUserEmail = ou.TmpUserEmail,
                            UserStatus = ou.UserStatus,
                            PreviousUserStatus = ou.PreviousUserStatus,
                            InvitedDate = ou.InvitedDate,
