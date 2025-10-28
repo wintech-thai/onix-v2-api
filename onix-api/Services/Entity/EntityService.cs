@@ -3,16 +3,26 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
+using System.Text.Json;
+using System.Text;
+using System.Web;
 
 namespace Its.Onix.Api.Services
 {
     public class EntityService : BaseService, IEntityService
     {
         private readonly IEntityRepository? repository = null;
+        private readonly IRedisHelper _redis;
+        private readonly IJobService _jobService;
 
-        public EntityService(IEntityRepository repo) : base()
+        public EntityService(
+            IEntityRepository repo,
+            IJobService jobService,
+            IRedisHelper redis) : base()
         {
             repository = repo;
+            _redis = redis;
+            _jobService = jobService;
         }
 
         public MEntity GetEntityById(string orgId, string entityId)
@@ -48,9 +58,88 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private MVJob? CreateEmailCustomerVerificationJob(string orgId, MEmailVerification reg)
+        {
+            var regType = "customer-email-virification";
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "register";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                registerDomain = "register-dev";
+            }
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+
+            var templateType = "customer-email-verification";
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "Entity.CreateEmailCustomerVerifyJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+                Tags = templateType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "CustomerEmailVerification");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return result;
+        }
+        
         public MVEntity? UpdateEntityEmailById(string orgId, string entityId, string email, bool sendVerification)
         {
-            return null;
+            var r = new MVEntity()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateEntityEmailById(entityId, email);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (sendVerification)
+            {
+                //Send verification email
+                var reg = new MEmailVerification()
+                {
+                    Id = result.Id.ToString(),
+                    Code = result.Code,
+                    Name = result.Name,
+                    Email = email,
+                };
+                CreateEmailCustomerVerificationJob(orgId, reg);
+            }
+
+            r.Entity = result;
+            return r;
         }
 
         public MVEntity? UpdateEntityById(string orgId, string entityId, MEntity cycle)

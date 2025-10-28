@@ -221,6 +221,16 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     OrgUserId = ou.OrgUserId,
                     OrgCustomId = ou.OrgCustomId,
+                    UserId = ou.UserId,
+                    UserName = ou.UserName,
+                    RolesList = ou.RolesList,
+                    CreatedDate = ou.CreatedDate,
+                    UserEmail = user != null ? user.UserEmail : null,
+                    TmpUserEmail = ou.TmpUserEmail,
+                    UserStatus = ou.UserStatus,
+                    PreviousUserStatus = ou.PreviousUserStatus,
+                    InvitedDate = ou.InvitedDate,
+                    IsOrgInitialUser = ou.IsOrgInitialUser,
                 }
             )
             .Where(predicate)
