@@ -65,6 +65,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.UsedFlag = "TRUE";
                 result.ItemId = pid;
                 result.ProductCode = product.Code;
+                result.Tags = UpdateTags(result.Tags!, "product", product.Code!);
                 context!.SaveChanges();
             }
 
