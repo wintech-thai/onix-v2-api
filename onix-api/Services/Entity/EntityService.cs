@@ -33,23 +33,32 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        public MVEntity? AddEntity(string orgId, MEntity cycle)
+        public MVEntity? AddEntity(string orgId, MEntity entity)
         {
             repository!.SetCustomOrgId(orgId);
 
             var r = new MVEntity();
 
-            var isExist = repository!.IsEntityCodeExist(cycle.Code!);
-
-            if (isExist)
+            var isCodeExist = repository!.IsEntityCodeExist(entity.Code!);
+            if (isCodeExist)
             {
-                r.Status = "DUPLICATE";
-                r.Description = $"Entity code [{cycle.Code}] is duplicate";
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Entity code [{entity.Code}] is duplicate";
 
                 return r;
             }
 
-            var result = repository!.AddEntity(cycle);
+            //ที่ต้องให้ email unique เพราะใช้ email ตอนลงทะเบียนในหน้า verify เพื่อผูก scan item กับ customer
+            var isEmailExist = repository!.IsPrimaryEmailExist(entity.PrimaryEmail!);
+            if (isEmailExist)
+            {
+                r.Status = "EMAIL_DUPLICATE";
+                r.Description = $"Email [{entity.PrimaryEmail}] is duplicate";
+
+                return r;
+            }
+
+            var result = repository!.AddEntity(entity);
 
             r.Status = "OK";
             r.Description = "Success";

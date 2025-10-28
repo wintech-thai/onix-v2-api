@@ -55,6 +55,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/UpdateCustomerById/{entityId}")]
         public IActionResult UpdateCustomerById(string id, string entityId, [FromBody] MEntity request)
         {
+            request.EntityType = 1;
             var result = svc.UpdateEntityById(id, entityId, request);
             return Ok(result);
         }
