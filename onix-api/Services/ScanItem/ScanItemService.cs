@@ -275,11 +275,11 @@ namespace Its.Onix.Api.Services
             var templateType = "customer-registration-otp";
             var job = new MJob()
             {
-                Name = $"EmailSendOtpJob:{Guid.NewGuid()}",
+                Name = $"{Guid.NewGuid()}",
                 Description = "ScanItemService.CreateEmailSendOtpJob()",
                 Type = "OtpEmailSend",
                 Status = "Pending",
-                Tags = $"{templateType},{templateType}",
+                Tags = $"{templateType}",
 
                 Parameters =
                 [

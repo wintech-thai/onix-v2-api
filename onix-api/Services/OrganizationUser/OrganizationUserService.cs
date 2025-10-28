@@ -97,7 +97,7 @@ namespace Its.Onix.Api.Services
             var templateType = "user-invitation-to-org";
             var job = new MJob()
             {
-                Name = $"EmailUserInvitationJob:{Guid.NewGuid()}",
+                Name = $"{Guid.NewGuid()}",
                 Description = "OrgUser.CreateEmailUserInvitationJob()",
                 Type = "SimpleEmailSend",
                 Status = "Pending",
@@ -209,7 +209,7 @@ namespace Its.Onix.Api.Services
             if (registrationCase.Contains("ERROR"))
             {
                 r.Status = registrationCase;
-                r.Description = "Email or username is being by another!!!";
+                r.Description = "Email or username is being by used another!!!";
 
                 return r;
             }
