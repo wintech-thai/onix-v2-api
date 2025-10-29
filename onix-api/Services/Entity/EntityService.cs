@@ -117,15 +117,41 @@ namespace Its.Onix.Api.Services
         
         public MVEntity? UpdateEntityEmailById(string orgId, string entityId, string email, bool sendVerification)
         {
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVEntity()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.UpdateEntityEmailById(entityId, email);
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
 
+                return r;
+            }
+
+            var emailValidation = ValidationUtils.ValidateEmail(email);
+            if (emailValidation.Status != "OK")
+            {
+                r.Status = emailValidation.Status;
+                r.Description = emailValidation.Description;
+                return r;
+            }
+
+            var en = repository!.GetEntityByEmail(email);
+            if ((en != null) && (en.Id.ToString() != entityId))
+            {
+                //ตรงนี้ คือ มี entity อื่นที่ใช้ email นี้อยู่แล้ว
+                r.Status = "EMAIL_DUPLICATE";
+                r.Description = $"Email [{email}] is duplicate";
+
+                return r;
+            }
+
+            var result = repository!.UpdateEntityEmailById(entityId, email);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -158,6 +184,14 @@ namespace Its.Onix.Api.Services
                 Status = "OK",
                 Description = "Success"
             };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.UpdateEntityById(entityId, cycle);
