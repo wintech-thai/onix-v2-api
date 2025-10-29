@@ -102,7 +102,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             var predicate = EntityPredicate(param!);
             var arr = context!.Entities!.Where(predicate)
-                .OrderByDescending(e => e.Code)
+                .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
                 .ToList();
@@ -132,9 +132,13 @@ namespace Its.Onix.Api.Database.Repositories
 
         public bool IsEntityCodeExist(string code)
         {
-            var cnt = context!.Entities!.Where(p => p!.Code!.Equals(code)
-                && p!.OrgId!.Equals(orgId)).Count();
+            var cnt = context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId)).Count();
+            return cnt >= 1;
+        }
 
+        public bool IsPrimaryEmailExist(string email)
+        {
+            var cnt = context!.Entities!.Where(p => p!.PrimaryEmail!.Equals(email) && p!.OrgId!.Equals(orgId)).Count();
             return cnt >= 1;
         }
 

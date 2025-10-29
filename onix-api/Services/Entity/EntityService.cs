@@ -33,23 +33,32 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        public MVEntity? AddEntity(string orgId, MEntity cycle)
+        public MVEntity? AddEntity(string orgId, MEntity entity)
         {
             repository!.SetCustomOrgId(orgId);
 
             var r = new MVEntity();
 
-            var isExist = repository!.IsEntityCodeExist(cycle.Code!);
-
-            if (isExist)
+            var isCodeExist = repository!.IsEntityCodeExist(entity.Code!);
+            if (isCodeExist)
             {
-                r.Status = "DUPLICATE";
-                r.Description = $"Entity code [{cycle.Code}] is duplicate";
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Entity code [{entity.Code}] is duplicate";
 
                 return r;
             }
 
-            var result = repository!.AddEntity(cycle);
+            //ที่ต้องให้ email unique เพราะใช้ email ตอนลงทะเบียนในหน้า verify เพื่อผูก scan item กับ customer
+            var isEmailExist = repository!.IsPrimaryEmailExist(entity.PrimaryEmail!);
+            if (isEmailExist)
+            {
+                r.Status = "EMAIL_DUPLICATE";
+                r.Description = $"Email [{entity.PrimaryEmail}] is duplicate";
+
+                return r;
+            }
+
+            var result = repository!.AddEntity(entity);
 
             r.Status = "OK";
             r.Description = "Success";
@@ -108,15 +117,55 @@ namespace Its.Onix.Api.Services
         
         public MVEntity? UpdateEntityEmailById(string orgId, string entityId, string email, bool sendVerification)
         {
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVEntity()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.UpdateEntityEmailById(entityId, email);
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
 
+                return r;
+            }
+
+            var emailValidation = ValidationUtils.ValidateEmail(email);
+            if (emailValidation.Status != "OK")
+            {
+                r.Status = emailValidation.Status;
+                r.Description = emailValidation.Description;
+                return r;
+            }
+
+            var en = repository!.GetEntityByEmail(email);
+            if ((en != null) && (en.Id.ToString() != entityId))
+            {
+                //ตรงนี้ คือ มี entity อื่นที่ใช้ email นี้อยู่แล้ว
+                r.Status = "EMAIL_DUPLICATE";
+                r.Description = $"Email [{email}] is duplicate";
+
+                return r;
+            }
+
+            if (en != null && en.Id.ToString() == entityId)
+            {
+                if (!sendVerification)
+                {
+                    //ตรงนี้ คือ email เดิมที่ใช้กับ entity ตัวนี้อยู่แล้ว
+                    r.Status = "EMAIL_SAMEASBEFORE";
+                    r.Description = $"Email [{email}] is same as before";
+
+                    return r;
+                }
+                
+                //แต่ถ้า sendVerification = true ก็ให้ส่ง email ยืนยันใหม่ได้
+            }
+
+            var result = repository!.UpdateEntityEmailById(entityId, email);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -149,6 +198,14 @@ namespace Its.Onix.Api.Services
                 Status = "OK",
                 Description = "Success"
             };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
 
             repository!.SetCustomOrgId(orgId);
             var result = repository!.UpdateEntityById(entityId, cycle);
