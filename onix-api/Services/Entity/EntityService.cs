@@ -153,11 +153,16 @@ namespace Its.Onix.Api.Services
 
             if (en != null && en.Id.ToString() == entityId)
             {
-                //ตรงนี้ คือ email เดิมที่ใช้กับ entity ตัวนี้อยู่แล้ว
-                r.Status = "EMAIL_SAMEASBEFORE";
-                r.Description = $"Email [{email}] is same as before";
+                if (!sendVerification)
+                {
+                    //ตรงนี้ คือ email เดิมที่ใช้กับ entity ตัวนี้อยู่แล้ว
+                    r.Status = "EMAIL_SAMEASBEFORE";
+                    r.Description = $"Email [{email}] is same as before";
 
-                return r;
+                    return r;
+                }
+                
+                //แต่ถ้า sendVerification = true ก็ให้ส่ง email ยืนยันใหม่ได้
             }
 
             var result = repository!.UpdateEntityEmailById(entityId, email);
