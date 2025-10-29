@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Services
         public IEnumerable<MEntity> GetEntities(string orgId, VMEntity param);
         public int GetEntityCount(string orgId, VMEntity param);
         public MVEntity? UpdateEntityById(string orgId, string cycleId, MEntity systemVariable);
+        public MVEntity? UpdateEntityEmailStatusById(string orgId, string entityId, string status);
         public MVEntity? UpdateEntityEmailById(string orgId, string entityId, string email, bool sendVerification);
     }
 }

@@ -15,11 +15,13 @@ namespace Its.Onix.Api.Controllers
         private readonly IAuthService _authService;
         private readonly IOrganizationUserService _orgUserService;
         private readonly IJobService _jobService;
+        private readonly IEntityService _entityService;
 
         public RegistrationController(IUserService userService,
             IAuthService authService,
             IOrganizationUserService orgUserService,
             IJobService jobService,
+            IEntityService entityService,
             IRedisHelper redis)
         {
             _userService = userService;
@@ -27,6 +29,7 @@ namespace Its.Onix.Api.Controllers
             _authService = authService;
             _orgUserService = orgUserService;
             _jobService = jobService;
+            _entityService = entityService;
         }
 
         private MVJob? CreateEmailUserGreetingJob(string orgId, MUserRegister reg)
@@ -63,7 +66,7 @@ namespace Its.Onix.Api.Controllers
             var result = _jobService.AddJob(orgId, job);
             return result;
         }
-        
+
         private MVRegistration ValidateRegistrationToken(string usrName, MUserRegister request, string cacheKey)
         {
             var result = new MVRegistration()
@@ -103,6 +106,36 @@ namespace Its.Onix.Api.Controllers
             {
                 result.Status = "USERID_MISMATCH_TOKEN";
                 result.Description = "User ID does not match the token";
+
+                return result;
+            }
+
+            return result;
+        }
+        
+        private MVRegistration ValidateCustomerEmailVerificationToken(string custId, string cacheKey)
+        {
+            var result = new MVRegistration()
+            {
+                Status = "OK",
+                Description = "Valid token",
+            };
+
+            var cacheObj = _redis.GetObjectAsync<MEmailVerification>(cacheKey);
+            var ur = cacheObj.Result;
+
+            if (ur == null)
+            {
+                result.Status = "INVALID_TOKEN_OR_EXPIRED";
+                result.Description = "Invalid or expired token";
+
+                return result;
+            }
+
+            if (ur.Id != custId)
+            {
+                result.Status = "CUST_ID_MISMATCH_TOKEN";
+                result.Description = "Customer ID does not match the token";
 
                 return result;
             }
@@ -254,6 +287,34 @@ namespace Its.Onix.Api.Controllers
 
             Response.Headers.Append("CUST_STATUS", mvOu.Status);
             return Ok(mvOu);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/ConfirmCustomerEmailVerification/{token}/{custId}")]
+        public IActionResult ConfirmNewUserInvitation(string id, string token, string custId)
+        {
+            var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "CustomerEmailVerification");
+            var cacheKey = $"{cacheSuffix}:{token}";
+
+            var v = ValidateCustomerEmailVerificationToken(custId, cacheKey);
+            if (v.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var mvCust = _entityService.UpdateEntityEmailStatusById(id, custId, "VERIFIED");
+            if (mvCust!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvCust.Status);
+                return Ok(mvCust);
+            }
+
+            //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
+            _redis.DeleteAsync(cacheKey);
+
+            Response.Headers.Append("CUST_STATUS", mvCust.Status);
+            return Ok(mvCust);
         }
     }
 }

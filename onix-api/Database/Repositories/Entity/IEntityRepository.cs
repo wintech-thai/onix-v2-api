@@ -17,5 +17,6 @@ namespace Its.Onix.Api.Database.Repositories
         public bool IsPrimaryEmailExist(string email);
         public MEntity? UpdateEntityById(string entityId, MEntity entity);
         public MEntity? UpdateEntityEmailById(string entityId, string email);
+        public MEntity? UpdateEntityEmailStatusById(string entityId, string status);
     }
 }
