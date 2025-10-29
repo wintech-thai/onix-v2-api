@@ -151,6 +151,15 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (en != null && en.Id.ToString() == entityId)
+            {
+                //ตรงนี้ คือ email เดิมที่ใช้กับ entity ตัวนี้อยู่แล้ว
+                r.Status = "EMAIL_SAMEASBEFORE";
+                r.Description = $"Email [{email}] is same as before";
+
+                return r;
+            }
+
             var result = repository!.UpdateEntityEmailById(entityId, email);
             if (result == null)
             {
