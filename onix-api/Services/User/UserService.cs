@@ -120,7 +120,7 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        private MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName)
+        public MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName)
         {
             var templateType = "user-password-change";
             var job = new MJob()
