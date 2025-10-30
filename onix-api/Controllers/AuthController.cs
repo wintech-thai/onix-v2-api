@@ -107,6 +107,7 @@ namespace Its.Onix.Api.Controllers
             {
                 Email = email,
                 UserName = user.UserName!,
+                OrgUserId = user.UserId!.ToString(),
             };
             var result = CreateEmailForgotPasswordJob("temp", reg);
 
