@@ -112,6 +112,14 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MUser GetUserByEmail(string orgId, string email)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetUserByEmail(email);
+
+            return result;
+        }
+
         private MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName)
         {
             var templateType = "user-password-change";

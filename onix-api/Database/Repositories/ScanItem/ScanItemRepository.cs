@@ -227,6 +227,30 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
+        public MScanItem DetachScanItemFromCustomer(string itemId)
+        {
+            Guid id = Guid.Parse(itemId);
+            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.AppliedFlag = "FALSE";
+                result.CustomerId = null;
+
+                // Remove email tag from Tags
+                if (!string.IsNullOrEmpty(result.Tags))
+                {
+                    var parts = result.Tags.Split(',').ToList();
+                    parts = parts.Where(part => !part.StartsWith("email=")).ToList();
+                    result.Tags = string.Join(",", parts);
+                }
+
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
         public bool IsSerialExist(string serial)
         {
             var cnt = context!.ScanItems!.Where(p => p!.Serial!.Equals(serial)

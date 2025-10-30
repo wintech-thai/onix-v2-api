@@ -316,5 +316,57 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", mvCust.Status);
             return Ok(mvCust);
         }
+
+        [HttpPost]
+        [Route("org/{id}/action/ConfirmForgotPasswordReset/{token}/{userName}")]
+        public IActionResult ConfirmForgotPasswordReset(string id, string token, string userName, [FromBody] MUserRegister request)
+        {
+            var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "UserForgotPassword");
+            var cacheKey = $"{cacheSuffix}:{token}";
+
+            var v = ValidateRegistrationToken(userName, request, cacheKey);
+            if (v.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //Call AuthService to update password to IDP
+            var user = new MUpdatePassword()
+            {
+                UserName = request.UserName!,
+                NewPassword = request.Password!,
+            };
+            var passwordChangeTask = _authService.ChangeForgotUserPasswordIdp(user);
+
+            var idpResult = passwordChangeTask.Result;
+            if (!idpResult.Success)
+            {
+                v.Status = "IDP_UPDATE_PASSWORD_FAILED";
+                v.Description = $"Failed to update password to IDP. Message: {idpResult.Message}";
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //TODO : สร้าง email แจ้ง user ว่า Password เปลี่ยนเรียบร้อยแล้ว
+            //CreateEmailUserGreetingJob(id, request);
+
+            //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
+            _redis.DeleteAsync(cacheKey);
+
+            Response.Headers.Append("CUST_STATUS", v.Status);
+            return Ok(v);
+        }
     }
 }

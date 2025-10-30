@@ -371,6 +371,49 @@ namespace Its.Onix.Api.Services
             return logoutResult;
         }
 
+        public async Task<IdpResult> ChangeForgotUserPasswordIdp(MUpdatePassword password)
+        {
+            var r = new IdpResult()
+            {
+                Success = true,
+                Message = "",
+            };
+
+            //เอา admin access token
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "client_credentials"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+            };
+            var userToken = GetToken(form);
+            if (userToken.Status != "Success")
+            {
+                r.Success = false;
+                r.Message = $"Unable to get access token for password reset [{userToken.Message}]";
+                return r;
+            }
+
+            // อ่านค่า UserId จาก UserName
+            var userIdResult = GetUserIdByUsernameAsync(password.UserName, userToken.Token.AccessToken).Result;
+            if (!userIdResult.Success)
+            {
+                return userIdResult;
+            }
+
+            // เปลี่ยน password โดยใช้ UserId เป็น input
+            var userId = userIdResult.UserId;
+            var chagePasswordResult = await ChangeOwnPasswordAsync(password, userToken.Token.AccessToken, userId!);
+            if (!chagePasswordResult.Success)
+            {
+                return chagePasswordResult;
+            }
+
+            // ต้อง logout session ของ user นั้นออกเพื่อบังคับให้ login ใหม่ (ใช้ refresh token เพื่อขอ access token ไม่ได้)
+            var logoutResult = await LogoutUserAsync(userToken.Token.AccessToken, userId!);
+            return logoutResult;
+        }
+
         public async Task<IdpResult> UserLogoutIdp(string userName)
         {
             // คนเรียก function จะส่ง userName ที่ตรงกับใน accessToken มาให้เอง

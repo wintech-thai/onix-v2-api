@@ -28,6 +28,8 @@ namespace Its.Onix.Api.Controllers
         {
             request.EntityType = 1;
             var result = svc.AddEntity(id, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return result;
         }
 
@@ -37,6 +39,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult DeleteCustomerById(string id, string entityId)
         {
             var result = svc.DeleteEntityById(id, entityId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -47,6 +51,8 @@ namespace Its.Onix.Api.Controllers
         {
             //TODO : Change the implementiation here...
             var result = svc.DeleteEntityById(id, entityId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -57,6 +63,8 @@ namespace Its.Onix.Api.Controllers
         {
             request.EntityType = 1;
             var result = svc.UpdateEntityById(id, entityId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -66,6 +74,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult UpdateCustomerEmailById(string id, string entityId, string email)
         {
             var result = svc.UpdateEntityEmailById(id, entityId, email, false);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -75,6 +85,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult UpdateCustomerEmailWithConfirmationById(string id, string entityId, string email)
         {
             var result = svc.UpdateEntityEmailById(id, entityId, email, true);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -98,6 +110,7 @@ namespace Its.Onix.Api.Controllers
 
             param.EntityType = 1;
             var result = svc.GetEntities(id, param);
+            
             return Ok(result);
         }
 

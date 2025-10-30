@@ -26,6 +26,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult AttachScanItemToProduct(string id, string scanItemId, string productId)
         {
             var result = svc.AttachScanItemToProduct(id, scanItemId, productId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -35,6 +37,19 @@ namespace Its.Onix.Api.Controllers
         public IActionResult AttachScanItemToCustomer(string id, string scanItemId, string customerId)
         {
             var result = svc.AttachScanItemToCustomer(id, scanItemId, customerId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/DetachScanItemFromCustomer/{scanItemId}")]
+        public IActionResult DetachScanItemFromCustomer(string id, string scanItemId)
+        {
+            var result = svc.DetachScanItemFromCustomer(id, scanItemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -44,6 +59,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult GetItemById(string id, string scanItemId)
         {
             var result = svc.GetScanItemById(id, scanItemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -53,8 +70,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult AddScanItem(string id, [FromBody] MScanItem request)
         {
             var result = svc.AddScanItem(id, request);
-            Response.Headers.Append("CUST_STATUS", result.Status);
 
+            Response.Headers.Append("CUST_STATUS", result.Status);
             return Ok(result);
         }
 
@@ -64,6 +81,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult DeleteScanItemById(string id, string scanItemId)
         {
             var result = svc.DeleteScanItemById(id, scanItemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -73,6 +92,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult UnVerifyScanItemById(string id, string scanItemId)
         {
             var result = svc.UnVerifyScanItemById(id, scanItemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -105,6 +126,8 @@ namespace Its.Onix.Api.Controllers
         public IActionResult GetScanItemUrlDryRunById(string id, string scanItemId)
         {
             var result = svc.GetScanItemUrlDryRunById(id, scanItemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
     }

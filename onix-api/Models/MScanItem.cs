@@ -58,7 +58,7 @@ namespace Its.Onix.Api.Models
         public Guid? ItemId { get; set; }
 
         [Column("applied_flag")]
-        public string? AppliedFlag { get; set; } /* YES or NO */
+        public string? AppliedFlag { get; set; } /* TRUE or FALSE */
         [Column("customer_id")]
         public Guid? CustomerId { get; set; }
 

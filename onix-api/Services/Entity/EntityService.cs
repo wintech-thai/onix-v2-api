@@ -69,7 +69,7 @@ namespace Its.Onix.Api.Services
 
         private MVJob? CreateEmailCustomerVerificationJob(string orgId, MEmailVerification reg)
         {
-            var regType = "customer-email-virification";
+            var regType = "customer-email-verification";
 
             var jsonString = JsonSerializer.Serialize(reg);
             byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
