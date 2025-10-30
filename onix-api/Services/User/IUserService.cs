@@ -14,5 +14,6 @@ namespace Its.Onix.Api.Services
         public MUser GetUserByEmail(string orgId, string email);
         public MVUpdatePassword UpdatePassword(string userName, MUpdatePassword password);
         public MVLogout UserLogout(string userName);
+        public MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName);
     }
 }
