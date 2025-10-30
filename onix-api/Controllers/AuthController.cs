@@ -69,7 +69,7 @@ namespace Its.Onix.Api.Controllers
                     new NameValue { Name = "USER_NAME", Value = reg.UserName },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
-                    new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
+                    new NameValue { Name = "RESET_PASSWORD_URL", Value = registrationUrl },
                 ]
             };
 
