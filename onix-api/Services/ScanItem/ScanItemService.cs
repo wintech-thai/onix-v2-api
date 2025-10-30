@@ -372,6 +372,7 @@ namespace Its.Onix.Api.Services
         public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
         {
             repository!.SetCustomOrgId(orgId);
+            _entityRepo!.SetCustomOrgId(orgId);
 
             var r = new MVScanItem()
             {
