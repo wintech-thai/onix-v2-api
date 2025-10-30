@@ -66,6 +66,7 @@ namespace Its.Onix.Api.Controllers
                 [
                     new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
+                    new NameValue { Name = "USER_NAME", Value = reg.UserName },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
                     new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
@@ -92,8 +93,8 @@ namespace Its.Onix.Api.Controllers
                 Description = "Success"
             };
 
-            var isEmailExist = _userSvc.IsEmailExist("notused", email);
-            if (!isEmailExist)
+            var user = _userSvc.GetUserByEmail("notused", email);
+            if (user == null)
             {
                 mv.Status = "EMAIL_NOT_FOUND";
                 mv.Description = "Email not found in database";
@@ -104,7 +105,8 @@ namespace Its.Onix.Api.Controllers
 
             var reg = new MUserRegister()
             {
-                Email = email
+                Email = email,
+                UserName = user.UserName!,
             };
             var result = CreateEmailForgotPasswordJob("temp", reg);
 
