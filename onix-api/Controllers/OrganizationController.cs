@@ -30,15 +30,21 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/AddUserToOrganization")]
-        public IActionResult AddUserToOrganization(string id, [FromBody] MOrganizationUser request)
+        [Route("org/{id}/action/UpdateOrganization")]
+        public async Task<IActionResult> UpdateOrganization(string id, [FromBody] MOrganization request)
         {
-            var result = svc.AddUserToOrganization(id, request);
-            if (result!.Status != "OK")
-            {
-                return BadRequest(result!.Description);
-            }
-            
+            var result = await svc.UpdateOrganization(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetLogoImageUploadPresignedUrl")]
+        public IActionResult GetLogoImageUploadPresignedUrl(string id)
+        {
+            var result = svc.GetLogoImageUploadPresignedUrl(id);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
     }

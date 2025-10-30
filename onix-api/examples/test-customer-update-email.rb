@@ -11,13 +11,14 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-id = '349788f4-64ba-4d65-9a97-0417a70294d8'
-email = 'pjamenaja@gamail.com'
+id = '375ed468-0eb1-4bb1-81ae-4b33276a3889'
+email = 'abcde2@xyz.com'
+api = 'UpdateCustomerEmailWithConfirmationById' # UpdateCustomerEmailById
 
 param =  nil
 
 ### UpdateUserById
-apiUrl = "api/Customer/org/#{orgId}/action/UpdateCustomerEmailById/#{id}/#{email}"
+apiUrl = "api/Customer/org/#{orgId}/action/#{api}/#{id}/#{email}"
 result = make_request(:post, apiUrl, param)
 
 puts(result)

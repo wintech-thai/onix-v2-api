@@ -12,7 +12,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env(".env")
 
-url = "https://register-dev.please-scan.com/temp/forgot-password/0bd5abe8-55de-443c-a243-b97892b119ed?data=eyJFbWFpbCI6InBqYW1lLmZiQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoic2V1YnBvbmcubW9uIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOm51bGwsIk9yZ1VzZXJJZCI6ImFmNzc4ZjNkLTYzMWItNGJmZC1iYWVmLTMwN2RhYjZjNWU2NiJ9"
+url = "https://register-dev.please-scan.com/temp/forgot-password/ad174742-d7b6-4f0a-ab6f-b4ebc488bce2?data=eyJFbWFpbCI6InBqYW1lLmZiQGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoic2V1YnBvbmcubW9uIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOm51bGwsIk9yZ1VzZXJJZCI6ImFmNzc4ZjNkLTYzMWItNGJmZC1iYWVmLTMwN2RhYjZjNWU2NiJ9"
 uri = URI.parse(url)
 
 # แปลง query string เป็น hash

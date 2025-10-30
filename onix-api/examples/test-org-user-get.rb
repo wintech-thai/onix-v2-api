@@ -13,15 +13,17 @@ load_env(".env")
 orgId = ENV['API_ORG']
 
 param =  {
-  FullTextSearch: ""
+  FullTextSearch: "pjame"
 }
+
+
+### GetUsers
+apiUrl = "api/OrganizationUser/org/#{orgId}/action/GetUsers"
+result = make_request(:post, apiUrl, param)
+puts(result)
 
 ### GetUserCount
 apiUrl = "api/OrganizationUser/org/#{orgId}/action/GetUserCount"
 result = make_request(:post, apiUrl, param)
 puts(result)
 
-### GetUsers
-apiUrl = "api/OrganizationUser/org/#{orgId}/action/GetUsers"
-result = make_request(:post, apiUrl, param)
-puts(result)

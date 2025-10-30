@@ -23,6 +23,27 @@ namespace Its.Onix.Api.Models
         [Column("org_description")]
         public string? OrgDescription { get; set; }
 
+
+        [Column("tags")]
+        public string? Tags { get; set; } // Comma separated string
+
+        [Column("addresses")]
+        public string? Addresses { get; set; } // JSON string
+
+        [Column("channels")]
+        public string? Channels { get; set; } // JSON string
+
+        [Column("logo_image_path")]
+        public string? LogoImagePath { get; set; } // JSON string
+
+
+        [NotMapped]
+        public List<NameValue> AddressesArray { get; set; }
+
+        [NotMapped]
+        public List<NameValue> ChannelsArray { get; set; }
+
+
         [Column("org_created_date")]
         public DateTime? OrgCreatedDate { get; set; }
 
@@ -30,6 +51,9 @@ namespace Its.Onix.Api.Models
         {
             OrgId = Guid.NewGuid();
             OrgCreatedDate = DateTime.UtcNow;
+
+            AddressesArray = [];
+            ChannelsArray = [];
         }
     }
 }

@@ -6,6 +6,7 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
         public Task<MOrganization> GetOrganization();
+        public Task<MOrganization?> UpdateOrganization(MOrganization org);
         public MOrganizationUser AddUserToOrganization(MOrganizationUser user);
         public bool IsUserNameExist(string userName);
         public bool IsCustomOrgIdExist(string orgCustomId);

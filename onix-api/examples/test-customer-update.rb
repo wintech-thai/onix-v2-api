@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 id = '349788f4-64ba-4d65-9a97-0417a70294d8'
 
 param =  {
-  Name: "พี่เจมส์ รักษ์ธรรมชาติ",
+  Name: "พี่เจมส์ นะจ๊ะ",
 }
 
 ### UpdateUserById
