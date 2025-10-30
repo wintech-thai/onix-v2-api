@@ -2,6 +2,11 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.ModelsViews;
+using Its.Onix.Api.Models;
+using System.Text;
+using System.Text.Json;
+using System.Web;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -10,15 +15,103 @@ namespace Its.Onix.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService svc;
+        private readonly IJobService _jobSvc;
+        private readonly IUserService _userSvc;
         private readonly IRedisHelper _redis;
 
         [ExcludeFromCodeCoverage]
-        public AuthController(IAuthService service, IRedisHelper redis)
+        public AuthController(
+            IAuthService service,
+            IRedisHelper redis,
+            IJobService jobSvc,
+            IUserService userSvc
+            )
         {
             svc = service;
             _redis = redis;
+            _jobSvc = jobSvc;
+            _userSvc = userSvc;
         }
 
+        private MVJob? CreateEmailForgotPasswordJob(string orgId, MUserRegister reg)
+        {
+            var regType = "forgot-password";
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "register";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                registerDomain = "register-dev";
+            }
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+
+            var templateType = "user-forgot-password";
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "Auth.CreateEmailForgotPasswordJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+                Tags = templateType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
+                ]
+            };
+
+            var result = _jobSvc.AddJob(orgId, job);
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "UserForgotPassword");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return result;
+        }
+        
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/temp/action/SendForgotPasswordEmail/{email}")]
+        public IActionResult SendForgotPasswordEmail(string email)
+        {
+            var mv = new MVRegistration()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var isEmailExist = _userSvc.IsEmailExist("notused", email);
+            if (!isEmailExist)
+            {
+                mv.Status = "EMAIL_NOT_FOUND";
+                mv.Description = "Email not found in database";
+
+                Response.Headers.Append("CUST_STATUS", mv.Status);
+                return Ok(mv);
+            }
+
+            var reg = new MUserRegister()
+            {
+                Email = email
+            };
+            var result = CreateEmailForgotPasswordJob("temp", reg);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+        
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/temp/action/Login")]
