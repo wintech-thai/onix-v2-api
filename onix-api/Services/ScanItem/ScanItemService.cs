@@ -371,6 +371,8 @@ namespace Its.Onix.Api.Services
 
         public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
         {
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVScanItem()
             {
                 Status = "SUCCESS",
@@ -402,7 +404,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            repository!.SetCustomOrgId(orgId);
             var result = repository!.AttachScanItemToCustomer(scanItemId, customerId, customer);
 
             r.ScanItem = result;
