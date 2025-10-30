@@ -43,6 +43,17 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/DetachScanItemFromCustomer/{scanItemId}")]
+        public IActionResult DetachScanItemFromCustomer(string id, string scanItemId)
+        {
+            var result = svc.DetachScanItemFromCustomer(id, scanItemId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemById/{scanItemId}")]
         public IActionResult GetItemById(string id, string scanItemId)
