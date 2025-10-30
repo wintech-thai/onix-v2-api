@@ -247,6 +247,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (result != null)
             {
                 result.RolesList = user.RolesList;
+                result.Tags = user.Tags;
 
                 context!.SaveChanges();
             }

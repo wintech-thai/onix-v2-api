@@ -27,6 +27,8 @@ namespace Prom.LPR.Api.Controllers
         public MVOrganizationUser? AddUser(string id, [FromBody] MOrganizationUser request)
         {
             var result = svc.AddUser(id, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return result;
         }
 
@@ -56,6 +58,8 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult DeleteUserById(string id, string userId)
         {
             var result = svc.DeleteUserById(id, userId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -65,6 +69,8 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult GetUserById(string id, string userId)
         {
             var result = svc.GetUserByIdLeftJoin(id, userId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -95,6 +101,8 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult UpdateUserById(string id, string userId, [FromBody] MOrganizationUser request)
         {
             var result = svc.UpdateUserById(id, userId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -104,6 +112,8 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult EnableUserById(string id, string userId)
         {
             var result = svc.UpdateUserStatusById(id, userId, "Active");
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
@@ -113,6 +123,8 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult DisableUserById(string id, string userId)
         {
             var result = svc.UpdateUserStatusById(id, userId, "Disabled");
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
     }

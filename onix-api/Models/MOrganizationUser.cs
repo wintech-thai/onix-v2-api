@@ -48,6 +48,10 @@ namespace Its.Onix.Api.Models
         [Column("invited_by")]
         public string? InvitedBy { get; set; }
 
+        [Column("tags")]
+        public string? Tags { get; set; }
+
+
         [NotMapped]
         public string? UserEmail { get; set; }
         public string? OrgName { get; set; }
