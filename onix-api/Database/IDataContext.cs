@@ -6,6 +6,7 @@ namespace Its.Onix.Api.Database
     public interface IDataContext : IDisposable
     {
         int SaveChanges();
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
         public DbSet<MOrganization>? Organizations { get; set; }
         public DbSet<MApiKey>? ApiKeys { get; set; }
         public DbSet<MRole>? Roles { get; set; }

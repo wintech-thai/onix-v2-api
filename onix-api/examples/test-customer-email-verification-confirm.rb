@@ -12,7 +12,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env(".env")
 
-url = "https://register-dev.please-scan.com/napbiotec/customer-email-virification/3ef72ddb-39f8-49bb-a512-261e2d14bd3a?data=eyJFbWFpbCI6ImFiY2RlMkB4eXouY29tIiwiTmFtZSI6Ilx1MEUxRVx1MEUzNVx1MEU0OFx1MEU0MFx1MEUwOFx1MEUyMVx1MEUyQVx1MEU0QyBcdTBFMjNcdTBFMzFcdTBFMDFcdTBFMjlcdTBFNENcdTBFMThcdTBFMjNcdTBFMjNcdTBFMjFcdTBFMEFcdTBFMzJcdTBFMTVcdTBFMzQiLCJDb2RlIjoiQ1VTVC0wMDMiLCJJZCI6IjM3NWVkNDY4LTBlYjEtNGJiMS04MWFlLTRiMzMyNzZhMzg4OSJ9"
+url = "https://register-dev.please-scan.com/napbiotec/customer-email-virification/124779e0-0c38-4b68-88b0-2b81b24af9e8?data=eyJFbWFpbCI6ImFiY2RlMkB4eXouY29tIiwiTmFtZSI6Ilx1MEUxRVx1MEUzNVx1MEU0OFx1MEU0MFx1MEUwOFx1MEUyMVx1MEUyQVx1MEU0QyBcdTBFMjNcdTBFMzFcdTBFMDFcdTBFMjlcdTBFNENcdTBFMThcdTBFMjNcdTBFMjNcdTBFMjFcdTBFMEFcdTBFMzJcdTBFMTVcdTBFMzQiLCJDb2RlIjoiQ1VTVC0wMDMiLCJJZCI6IjM3NWVkNDY4LTBlYjEtNGJiMS04MWFlLTRiMzMyNzZhMzg4OSJ9"
 uri = URI.parse(url)
 
 # แปลง query string เป็น hash

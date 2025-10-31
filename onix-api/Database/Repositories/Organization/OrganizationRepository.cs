@@ -85,6 +85,24 @@ namespace Its.Onix.Api.Database.Repositories
             return m!;
         }
 
+        public async Task<MOrganization?> UpdateOrganization(MOrganization org)
+        {
+            var result = await context!.Organizations!.Where(x => x.OrgCustomId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (result != null)
+            {
+                result.OrgName = org.OrgName;
+                result.OrgDescription = org.OrgDescription;
+                result.Tags = org.Tags;
+                result.Addresses = org.Addresses;
+                result.Channels = org.Channels;
+                result.LogoImagePath = org.LogoImagePath;
+
+                await context.SaveChangesAsync();
+            }
+
+            return result;
+        }
+
         public MOrganization AddOrganization(MOrganization org)
         {
             context!.Organizations!.Add(org);
