@@ -47,5 +47,23 @@ namespace Prom.LPR.Api.Controllers
 
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetAllowChannelNames")]
+        public IActionResult GetAllowChannelNames(string id)
+        {
+            var result = svc.GetAllowChannelNames(id);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetAllowAddressTypeNames")]
+        public IActionResult GetAllowAddressTypeNames(string id)
+        {
+            var result = svc.GetAllowAddressTypeNames(id);
+            return Ok(result);
+        }
     }
 }

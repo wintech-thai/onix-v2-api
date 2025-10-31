@@ -14,5 +14,7 @@ namespace Its.Onix.Api.Services
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName);
         public bool IsOrgIdExist(string orgId);
         public MVPresignedUrl GetLogoImageUploadPresignedUrl(string orgId);
+        public IEnumerable<NameValue> GetAllowChannelNames(string orgId);
+        public IEnumerable<NameValue> GetAllowAddressTypeNames(string orgId);
     }
 }

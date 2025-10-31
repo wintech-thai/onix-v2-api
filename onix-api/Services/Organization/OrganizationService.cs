@@ -153,7 +153,7 @@ namespace Its.Onix.Api.Services
             {
                 org.AddressesArray = [];
             }
-            org.Channels = JsonSerializer.Serialize(org.AddressesArray);
+            org.Addresses = JsonSerializer.Serialize(org.AddressesArray);
         }
         
         public Task<MVOrganization> UpdateOrganization(string orgId, MOrganization org)
@@ -278,7 +278,7 @@ namespace Its.Onix.Api.Services
             var u = userService.GetUserByName(orgId, userName);
             if (u == null)
             {
-                var o = new MVOrganizationUser() 
+                var o = new MVOrganizationUser()
                 {
                     Status = "NOTFOUND",
                     Description = $"User [{userName}] not found !!!"
@@ -310,7 +310,7 @@ namespace Its.Onix.Api.Services
                 return o;
             }
 
-            var mv = new MVOrganizationUser() 
+            var mv = new MVOrganizationUser()
             {
                 User = u,
                 OrgUser = m,
@@ -319,6 +319,37 @@ namespace Its.Onix.Api.Services
             };
 
             return mv;
+        }
+
+        public IEnumerable<NameValue> GetAllowChannelNames(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var channels = new NameValue[]
+            {
+                new() { Name = "Company Website", Value = "https://" },
+                new() { Name = "LINE", Value = "" },
+                new() { Name = "Instragram", Value = "" },
+                new() { Name = "Facebook", Value = "" },
+                new() { Name = "Tiktok", Value = "" },
+                new() { Name = "Youtube", Value = "" },
+            };
+
+            return channels;
+        }
+
+        public IEnumerable<NameValue> GetAllowAddressTypeNames(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var addresses = new NameValue[]
+            {
+                new() { Name = "Default Address", Value = "" },
+                new() { Name = "Billing Address", Value = "" },
+                new() { Name = "Delivery Address", Value = "" },
+            };
+
+            return addresses;
         }
     }
 }
