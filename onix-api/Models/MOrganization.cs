@@ -39,10 +39,10 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public List<NameValue> AddressesArray { get; set; }
-
         [NotMapped]
         public List<NameValue> ChannelsArray { get; set; }
-
+        [NotMapped]
+        public string? LogoImageUrl { get; set; }
 
         [Column("org_created_date")]
         public DateTime? OrgCreatedDate { get; set; }

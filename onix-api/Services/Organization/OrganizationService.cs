@@ -55,9 +55,18 @@ namespace Its.Onix.Api.Services
         public Task<MOrganization> GetOrganization(string orgId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetOrganization();
+            var t = repository!.GetOrganization();
 
-            return result;
+            var org = t.Result;
+
+            if (!string.IsNullOrEmpty(org.LogoImagePath))
+            {
+                var validFor = TimeSpan.FromMinutes(60);
+                var contentType = "image/png";
+                org.LogoImageUrl = _storageUtil.GenerateDownloadUrl(org.LogoImagePath!, validFor, contentType);
+            }
+                
+            return t;
         }
 
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName)

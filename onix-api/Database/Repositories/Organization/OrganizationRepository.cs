@@ -95,6 +95,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Tags = org.Tags;
                 result.Addresses = org.Addresses;
                 result.Channels = org.Channels;
+                result.LogoImagePath = org.LogoImagePath;
 
                 await context.SaveChangesAsync();
             }
