@@ -214,7 +214,7 @@ namespace Its.Onix.Api.Services
         public MVPresignedUrl GetLogoImageUploadPresignedUrl(string orgId)
         {
             var type = "png";
-            var sec = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var sec = "logo";
 
             var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
             var objectName = $"{Environment.GetEnvironmentVariable("ENV_GROUP")}/{orgId}/Organization/{orgId}.{sec}.{type}";
