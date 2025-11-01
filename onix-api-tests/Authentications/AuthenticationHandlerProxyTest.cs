@@ -302,6 +302,7 @@ public class AuthenticationHandlerProxyTest
                 OrgId = orgId,
                 UserId = Guid.NewGuid(),
                 Email = "",
+                Status = "OK",
             });
 
         var handler = new AuthenticationHandlerProxy(
@@ -391,6 +392,7 @@ public class AuthenticationHandlerProxyTest
                 OrgId = orgId,
                 UserId = Guid.NewGuid(),
                 Email = "",
+                Status = "OK",
             });
 
         var handler = new AuthenticationHandlerProxy(

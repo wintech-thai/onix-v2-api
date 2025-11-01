@@ -3,6 +3,7 @@ using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Test.Services;
 
@@ -18,11 +19,33 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = await apiKeySvc.GetApiKey(orgId, apiKey);
 
         Assert.NotNull(result);
         Assert.Equal(apiKey, result.ApiKey);
+    }
+    //=====
+
+    //===== GetApiKeyByName() ====
+    [Theory]
+    [InlineData("org1", "name1")]
+    public async Task GetApiKeyByNameOkTest(string orgId, string keyName)
+    {
+        var keyObj = new MApiKey() { KeyName = keyName, ApiKey = "xxxxx" };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.GetApiKeyByName(keyName)).ReturnsAsync(keyObj);
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+        var result = await apiKeySvc.GetApiKeyByName(orgId, keyName);
+
+        Assert.NotNull(result);
+        Assert.Equal("xxxxx", result.ApiKey);
     }
     //=====
 
@@ -33,15 +56,18 @@ public class ApiKeyServiceTest
 
     //===== VerifyApiKey() ====
     [Theory]
-    [InlineData("org1", "key1")]
-    public void VerifyApiKeyNotFoundTest(string orgId, string apiKey)
+    [InlineData("org1", "key1", "name1")]
+    public void VerifyApiKeyNotFoundTest(string orgId, string apiKey, string keyName)
     {
-        MApiKey keyObj = new() { ApiKey = apiKey };
+        MApiKey keyObj = new() { ApiKey = apiKey, KeyName = keyName };
 
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(GetApiKey());
+        repo.Setup(s => s.GetApiKeyByName(keyName)).ReturnsAsync(GetApiKey());
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.VerifyApiKey(orgId, apiKey);
 
         Assert.NotNull(result);
@@ -57,13 +83,33 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
 
         apiKeySvc.SetCompareDate(DateTime.Now);
         var result = apiKeySvc.VerifyApiKey(orgId, apiKey);
 
         Assert.NotNull(result);
         Assert.Equal("EXPIRED", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "key1")]
+    public void VerifyApiKeyDisableTest(string orgId, string apiKey)
+    {
+        MApiKey keyObj = new() { ApiKey = apiKey, KeyExpiredDate = DateTime.Now.AddDays(1), KeyStatus = "Disabled" };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(keyObj);
+
+        var redisHelper = new Mock<IRedisHelper>();
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+
+        apiKeySvc.SetCompareDate(DateTime.Now);
+        var result = apiKeySvc.VerifyApiKey(orgId, apiKey);
+
+        Assert.NotNull(result);
+        Assert.Equal("DISABLED", result.Status);
     }
 
     [Theory]
@@ -75,7 +121,9 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
 
         apiKeySvc.SetCompareDate(DateTime.Now);
         var result = apiKeySvc.VerifyApiKey(orgId, apiKey);
@@ -93,7 +141,9 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
 
         apiKeySvc.SetCompareDate(DateTime.Now);
         var result = apiKeySvc.VerifyApiKey(orgId, apiKey);
@@ -113,27 +163,63 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.AddApiKey(orgId, keyObj);
 
         Assert.NotNull(result);
-        Assert.Equal("DUPLICATE", result.Status);
+        Assert.Equal("KEY_DUPLICATE", result.Status);
+    }
+
+    //===== VerifyApiKey() ====
+    [Theory]
+    [InlineData("org1", "key1", "name1")]
+    public void AddApiKeyNameDuplicateTest(string orgId, string apiKey, string keyName)
+    {
+        MApiKey keyObj = new() { ApiKey = apiKey, KeyName = keyName };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync((MApiKey) null!);
+        repo.Setup(s => s.GetApiKeyByName(keyName)).ReturnsAsync(keyObj);
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+        var result = apiKeySvc.AddApiKey(orgId, keyObj);
+
+        Assert.NotNull(result);
+        Assert.Equal("NAME_DUPLICATE", result.Status);
     }
 
     [Theory]
-    [InlineData("org1", "key1")]
-    public void AddApiKeyOkTest(string orgId, string apiKey)
+    [InlineData("org1", "key1", "name1", "")]
+    [InlineData("org1", "key1", "name1", "A,B")]
+    public void AddApiKeyOkTest(string orgId, string apiKey, string keyName, string roleList)
     {
-        MApiKey keyObj = new() { ApiKey = apiKey };
+        var roles = roleList.Split(",").ToList();
+        if (roleList == "")
+        {
+            roles = null;
+        }
+
+        MApiKey keyObj = new() { ApiKey = apiKey, KeyName = keyName, Roles = roles! };
 
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKey(apiKey)).ReturnsAsync(GetApiKey());
+        repo.Setup(s => s.GetApiKeyByName(keyName)).ReturnsAsync(GetApiKey());
+        repo.Setup(s => s.AddApiKey(keyObj)).Returns(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.AddApiKey(orgId, keyObj);
 
         Assert.NotNull(result);
+        Assert.NotNull(result.ApiKey);
+
         Assert.Equal("OK", result.Status);
+        Assert.Equal("Active", result.ApiKey.KeyStatus);
     }
     //=====
 
@@ -143,8 +229,9 @@ public class ApiKeyServiceTest
     public void DeleteApiKeyByIdInvalidTest(string orgId, string keyId)
     {
         var repo = new Mock<IApiKeyRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.DeleteApiKeyById(orgId, keyId);
 
         Assert.NotNull(result);
@@ -158,7 +245,9 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.DeleteApiKeyById(keyId)).Returns(GetApiKey());
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.DeleteApiKeyById(orgId, keyId);
 
         Assert.NotNull(result);
@@ -174,7 +263,9 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.DeleteApiKeyById(keyId)).Returns(keyObj);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.DeleteApiKeyById(orgId, keyId);
 
         Assert.NotNull(result);
@@ -195,7 +286,9 @@ public class ApiKeyServiceTest
             new MApiKey()
         ]);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.GetApiKeys(orgId, param);
 
         Assert.NotNull(result);
@@ -213,7 +306,9 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKeyCount(param)).Returns(5);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.GetApiKeyCount(orgId, param);
 
         Assert.Equal(5, result);
@@ -225,18 +320,79 @@ public class ApiKeyServiceTest
     [InlineData("org1", "xxxx")]
     public void GetApiKeyByIdOkTest(string orgId, string keyId)
     {
-        var param = new MApiKey() { ApiKey = "XXXXX" };
+        var param = new MApiKey() { ApiKey = "XXXXX", RolesList = "A,B" };
 
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.GetApiKeyById(keyId)).ReturnsAsync(param);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.GetApiKeyById(orgId, keyId);
 
         Assert.IsType<MApiKey>(result);
-        Assert.Equal("XXXXX", result.ApiKey);
+        Assert.Equal("", result.ApiKey);
+    }
+
+    [Theory]
+    [InlineData("org1", "xxxx")]
+    public void GetApiKeyByIdNotFoundTest(string orgId, string keyId)
+    {
+        var param = new MApiKey() { ApiKey = "XXXXX" };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.GetApiKeyById(keyId)).ReturnsAsync((MApiKey) null!);
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+        var result = apiKeySvc.GetApiKeyById(orgId, keyId);
+
+        Assert.Null(result);
     }
     //=====
+
+    //===== UpdateApiKeyStatusById() ====
+    [Theory]
+    [InlineData("org1", "xxxx", "Active")]
+    public void UpdateApiKeyStatusByIdNotFoundTest(string orgId, string keyId, string status)
+    {
+        var param = new MApiKey() { ApiKey = "XXXXX" };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.UpdateApiKeyStatusById(keyId, status)).Returns((MApiKey?)null);
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+        var result = apiKeySvc.UpdateApiKeyStatusById(orgId, keyId, status);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+    
+    [Theory]
+    [InlineData("org1", "xxxx", "Active")]
+    public void UpdateApiKeyStatusByIdOkTest(string orgId, string keyId, string status)
+    {
+        var keyObj = new MApiKey() { ApiKey = "XXXXX" };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.UpdateApiKeyStatusById(keyId, status)).Returns(keyObj);
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+        var result = apiKeySvc.UpdateApiKeyStatusById(orgId, keyId, status);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result.ApiKey);
+
+        Assert.Equal("OK", result.Status);
+        Assert.Equal("", result.ApiKey.ApiKey);
+        Assert.Equal("", result.ApiKey.RolesList);
+    }
+    //===
 
     //===== UpdateApiKeyById() ====
     [Theory]
@@ -248,7 +404,9 @@ public class ApiKeyServiceTest
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.UpdateApiKeyById(keyId, param)).Returns((MApiKey?)null);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.UpdateApiKeyById(orgId, keyId, param);
 
         Assert.NotNull(result);
@@ -256,15 +414,24 @@ public class ApiKeyServiceTest
     }
 
     [Theory]
-    [InlineData("org1", "xxxx")]
-    public void UpdateApiKeyByIdOkTest(string orgId, string keyId)
+    [InlineData("org1", "xxxx", "")]
+    [InlineData("org1", "xxxx", "A,B,C")]
+    public void UpdateApiKeyByIdOkTest(string orgId, string keyId, string roleList)
     {
-        var param = new MApiKey() { ApiKey = "XXXXX" };
+        var roles = roleList.Split(",").ToList();
+        if (roleList == "")
+        {
+            roles = null;
+        }
+
+        var param = new MApiKey() { ApiKey = "XXXXX", Roles = roles! };
 
         var repo = new Mock<IApiKeyRepository>();
         repo.Setup(s => s.UpdateApiKeyById(keyId, param)).Returns(param);
 
-        var apiKeySvc = new ApiKeyService(repo.Object);
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
         var result = apiKeySvc.UpdateApiKeyById(orgId, keyId, param);
 
         Assert.NotNull(result);

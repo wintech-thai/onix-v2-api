@@ -205,7 +205,7 @@ public class OrganizationUserServiceTest
         var result = userSvc.DeleteUserById(orgId, uid);
 
         Assert.NotNull(result);
-        Assert.Equal("NOTFOUND", result.Status);
+        Assert.Equal("NOTFOUND_GET_USER", result.Status);
     }
 
     [Theory]
@@ -215,7 +215,7 @@ public class OrganizationUserServiceTest
         var ou = new MOrganizationUser() { IsOrgInitialUser = "YES" };
 
         var repo = new Mock<IOrganizationUserRepository>();
-        repo.Setup(s => s.GetUserById(uid)).ReturnsAsync(ou);
+        repo.Setup(s => s.GetUserByIdLeftJoin(uid)).ReturnsAsync(ou);
 
         var jobSvc = new Mock<IJobService>();
         var userRepo = new Mock<IUserRepository>();
@@ -236,7 +236,7 @@ public class OrganizationUserServiceTest
         MOrganizationUser ou2 = null!;
 
         var repo = new Mock<IOrganizationUserRepository>();
-        repo.Setup(s => s.GetUserById(uid)).ReturnsAsync(ou1);
+        repo.Setup(s => s.GetUserByIdLeftJoin(uid)).ReturnsAsync(ou1);
         repo.Setup(s => s.DeleteUserById(uid)).Returns(ou2);
 
         var jobSvc = new Mock<IJobService>();
@@ -247,7 +247,7 @@ public class OrganizationUserServiceTest
         var result = userSvc.DeleteUserById(orgId, uid);
 
         Assert.NotNull(result);
-        Assert.Equal("NOTFOUND", result.Status);
+        Assert.Equal("NOTFOUND_DELTE_USER", result.Status);
     }
     //=====
 
@@ -435,7 +435,7 @@ public class OrganizationUserServiceTest
         Assert.NotNull(result.OrgUser);
 
         Assert.Equal("OK", result.Status);
-        Assert.Equal("", result.OrgUser.RolesList);
+        Assert.Equal(roleList, result.OrgUser.RolesList);
     }
 
     [Theory]
@@ -484,7 +484,7 @@ public class OrganizationUserServiceTest
         var result = userSvc.InviteUser(orgId, ou1);
 
         Assert.NotNull(result);
-        Assert.Equal("INVALID_USERNAME_EMPTY", result.Status);
+        Assert.Equal("ERROR_VALIDATION_USERNAME", result.Status);
     }
 
     [Theory]

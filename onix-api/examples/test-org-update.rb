@@ -11,9 +11,22 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
+imageFile = "nap-logo.png"
+
+apiGetPresignUrl = "api/Organization/org/#{orgId}/action/GetLogoImageUploadPresignedUrl"
+result = make_request(:get, apiGetPresignUrl, nil)
+
+imagePath = result["imagePath"]
+presignedUrl = result["presignedUrl"]
+previewUrl = result["previewUrl"]
+
+### Upload file to GCS
+puts("Image path  : [#{imagePath}]")
+upload_file_to_gcs(presignedUrl, imageFile, 'image/png')
 
 param =  {
-  OrgName: "NAP-Biotec",
+  LogoImagePath: imagePath,
+  OrgName: "NAP BIOTEC",
   OrgDescription: "NAP Biotec Co., Ltd.",
   Tags: "NAP,Biotec",
   ChannelsArray: [
