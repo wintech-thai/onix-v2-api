@@ -579,7 +579,7 @@ public class OrganizationUserServiceTest
         Assert.NotNull(result);
         Assert.Equal("ERROR_EMAIL_IS_USED_BY_ANOTHER", result.Status);
     }
-    
+
     [Theory]
     [InlineData("org1", "user1", "")]
     [InlineData("org2", "user2", "OWNER,VIEWER")]
@@ -597,7 +597,7 @@ public class OrganizationUserServiceTest
             TmpUserEmail = "test1@valid-email.com",
             Roles = roles,
         };
-        
+
         MUser u1 = new MUser() { UserName = ou1.UserName, UserEmail = ou1.TmpUserEmail, UserId = Guid.NewGuid() };
 
         var repo = new Mock<IOrganizationUserRepository>();
@@ -621,4 +621,153 @@ public class OrganizationUserServiceTest
         Assert.Equal("", result.OrgUser.RolesList);
     }
     //=====
+
+    //===== UpdateUserStatusById() =====
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeex")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeey")]
+    public void UpdateUserStatusByIdInvalidIdTest(string orgId, string uid)
+    {
+        var repo = new Mock<IOrganizationUserRepository>();
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, uid, "status1");
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    public void UpdateUserStatusByIdNotFoundTest(string orgId, string uid)
+    {
+        string status = "xxxx";
+
+        var repo = new Mock<IOrganizationUserRepository>();
+        repo.Setup(s => s.UpdateUserStatusById(uid, status)).Returns((MOrganizationUser)null!);
+
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, uid, status);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    public void UpdateUserStatusByIdOkTest(string orgId, string uid)
+    {
+        string status = "xxxx";
+        var ou = new MOrganizationUser()
+        {
+            RolesList = "AXXX,BBBB"
+        };
+
+        var repo = new Mock<IOrganizationUserRepository>();
+        repo.Setup(s => s.UpdateUserStatusById(uid, status)).Returns(ou);
+
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, uid, status);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+    }
+    //====
+
+    //===== UpdateUserStatusById() =====
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeex")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeey")]
+    public void UpdateUserStatusById2InvalidIdTest(string orgId, string uid)
+    {
+        var repo = new Mock<IOrganizationUserRepository>();
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, uid, "", "status1");
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    public void UpdateUserStatusById2UserInvalidIdTest(string orgId, string uid)
+    {
+        var repo = new Mock<IOrganizationUserRepository>();
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, uid, "xxxx", "status1");
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    public void UpdateUserStatusById2NotFoundTest(string orgId, string uid)
+    {
+        string status = "xxxx";
+
+        var repo = new Mock<IOrganizationUserRepository>();
+        repo.Setup(s => s.UpdateUserStatusById(uid, status)).Returns((MOrganizationUser)null!);
+
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, uid, "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea", status);
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea")]
+    public void UpdateUserStatusById2OkTest(string orgId, string ouid)
+    {
+        string status = "xxxx";
+        var uid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeea";
+
+        var ou = new MOrganizationUser()
+        {
+            RolesList = "AXXX,BBBB"
+        };
+
+        var repo = new Mock<IOrganizationUserRepository>();
+        repo.Setup(s => s.UpdateUserStatusById(ouid, uid, status)).Returns(ou);
+
+        var jobSvc = new Mock<IJobService>();
+        var userRepo = new Mock<IUserRepository>();
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var userSvc = new OrganizationUserService(repo.Object, userRepo.Object, jobSvc.Object, redisHelper.Object);
+        var result = userSvc.UpdateUserStatusById(orgId, ouid, uid, status);
+
+        Assert.NotNull(result);
+        Assert.Equal("OK", result.Status);
+    }
+    //====
 }

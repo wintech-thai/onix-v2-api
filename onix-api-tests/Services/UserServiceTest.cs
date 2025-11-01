@@ -146,6 +146,46 @@ public class UserServiceTest
     }
     //=====
 
+    //===== GetUserByEmail() =====
+    [Theory]
+    [InlineData("org1", "email1")]
+    [InlineData("org2", "email2")]
+    public void GetUserByEmailNotFoundTest(string orgId, string email)
+    {
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(s => s.GetUserByEmail(email)).Returns((MUser)null!);
+
+        var jobSvc = new Mock<IJobService>();
+        var authSvc = new Mock<IAuthService>();
+
+        var userSvc = new UserService(repo.Object, jobSvc.Object, authSvc.Object);
+        var result = userSvc.GetUserByEmail(orgId, email);
+
+        Assert.Null(result);
+    }
+    
+    [Theory]
+    [InlineData("org1", "email1")]
+    [InlineData("org2", "email2")]
+    public void GetUserByEmailFoundTest(string orgId, string email)
+    {
+        var u = new MUser()
+        {
+        };
+
+        var repo = new Mock<IUserRepository>();
+        repo.Setup(s => s.GetUserByEmail(email)).Returns(u);
+
+        var jobSvc = new Mock<IJobService>();
+        var authSvc = new Mock<IAuthService>();
+
+        var userSvc = new UserService(repo.Object, jobSvc.Object, authSvc.Object);
+        var result = userSvc.GetUserByEmail(orgId, email);
+
+        Assert.NotNull(result);
+    }
+    //=====
+
     //===== IsUserIdExist() =====
     [Theory]
     [InlineData("org1", "user1", true)]
