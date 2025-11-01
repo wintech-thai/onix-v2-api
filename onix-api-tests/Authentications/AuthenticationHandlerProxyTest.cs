@@ -302,6 +302,7 @@ public class AuthenticationHandlerProxyTest
                 OrgId = orgId,
                 UserId = Guid.NewGuid(),
                 Email = "",
+                Status = "OK",
             });
 
         var handler = new AuthenticationHandlerProxy(
@@ -391,6 +392,66 @@ public class AuthenticationHandlerProxyTest
                 OrgId = orgId,
                 UserId = Guid.NewGuid(),
                 Email = "",
+                Status = "OK",
+            });
+
+        var handler = new AuthenticationHandlerProxy(
+            options.Object,
+            loggerFactory,
+            encoder,
+            basicRepo.Object,
+            bearerRepo.Object,
+            authService.Object,
+            clock
+        );
+
+        await handler.InitializeAsync(
+            new AuthenticationScheme("TestScheme", "TestScheme", typeof(AuthenticationHandlerProxy)),
+            context
+        );
+
+        var result = await handler.AuthenticateAsync();
+
+        // Assert
+        Assert.True(result.Succeeded);
+    }
+    
+
+    [Theory]
+    [InlineData("temp", "user1", "/api/User/org/temp/action/ThisIsApiAxxx")]
+    [InlineData("temp", "user2", "/api/Axxxxx/org/temp/action/UpdatePassword")]
+    [Obsolete]
+    public async Task AuthenticateBearerStatusNotOkTest(string orgId, string userName, string path)
+    {
+        var context = new DefaultHttpContext();
+        context.Request.Path = path;
+
+        var accessToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(CreateAccessToken(userName)));
+        context.Request.Headers["Authorization"] = $"Bearer {accessToken}";
+
+        var options = new Mock<IOptionsMonitor<AuthenticationSchemeOptions>>();
+        options.Setup(o => o.Get(It.IsAny<string>())).Returns(new AuthenticationSchemeOptions());
+
+        var loggerFactory = new LoggerFactory();
+        var encoder = UrlEncoder.Default;
+        var clock = new SystemClock();
+
+        // Mock repository/service
+        var basicRepo = new Mock<IBasicAuthenticationRepo>();
+        var bearerRepo = new Mock<IBearerAuthenticationRepo>();
+        var authService = new Mock<IAuthService>();
+
+        // ใน code จะส่ง empty string เป็น password มาให้ method Authenticate ของ bearerRepo
+        bearerRepo.Setup(r => r.Authenticate(orgId, userName, "", context.Request))
+            .Returns(new User
+            {
+                UserName = userName,
+                Role = "OWNER",
+                AuthenType = "JWT",
+                OrgId = orgId,
+                UserId = Guid.NewGuid(),
+                Email = "",
+                Status = "ERROR",
             });
 
         var handler = new AuthenticationHandlerProxy(
@@ -411,6 +472,6 @@ public class AuthenticationHandlerProxyTest
         var result = await handler.AuthenticateAsync();
 
         // Assert
-        Assert.True(result.Succeeded);
+        Assert.False(result.Succeeded);
     }
 }

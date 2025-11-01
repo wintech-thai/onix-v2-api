@@ -60,11 +60,6 @@ namespace Its.Onix.Api.Services
                 status = "EXPIRED";
                 description = $"API key for the organization is expire [{orgId}] since [{m.KeyExpiredDate}]";
             }
-            else if ((m.KeyExpiredDate != null) && (DateTime.Compare(compareDate, (DateTime)m.KeyExpiredDate!) > 0))
-            {
-                status = "EXPIRED";
-                description = $"API key for the organization is expire [{orgId}] since [{m.KeyExpiredDate}]";
-            }
             else if ((m.KeyStatus != null) && m.KeyStatus!.Equals("Disabled"))
             {
                 status = "DISABLED";

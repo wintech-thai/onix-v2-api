@@ -9,6 +9,103 @@ namespace Its.Onix.Api.Test.Services;
 
 public class ScanItemServiceTest
 {
+    //==== DetachScanItemFromCustomer()
+    [Theory]
+    [InlineData("org1", "aaaaa-bbbb")]
+    public void DetachAttachScanItemFromCustomerInvalidScanItemIdTest(string orgId, string scanItemId)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.DetachScanItemFromCustomer(orgId, scanItemId.ToString());
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    public void DetachAttachScanItemFromCustomerNotFoundTest(string orgId, string scanItemId)
+    {
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
+        scanItemRepo.Setup(s => s.DetachScanItemFromCustomer(scanItemId.ToString())).Returns((MScanItem)null!);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.DetachScanItemFromCustomer(orgId, scanItemId.ToString());
+
+        Assert.NotNull(result);
+        Assert.Equal("NOTFOUND", result.Status);
+    }
+    
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    public void DetachAttachScanItemFromCustomerOkTest(string orgId, string scanItemId)
+    {
+        var sci = new MScanItem()
+        {
+        };
+
+        var scanItemRepo = new Mock<IScanItemRepository>();
+        var itemRepo = new Mock<IItemRepository>();
+        var itemImageRepo = new Mock<IItemImageRepository>();
+        var entityRepo = new Mock<IEntityRepository>();
+        var storageUtil = new Mock<IStorageUtils>();
+        var jobService = new Mock<IJobService>();
+        var redisHelper = new Mock<IRedisHelper>();
+        var sciTplService = new Mock<IScanItemTemplateService>();
+
+        scanItemRepo.Setup(s => s.DetachScanItemFromCustomer(scanItemId.ToString())).Returns(sci);
+
+        var sciService = new ScanItemService(
+            scanItemRepo.Object,
+            itemRepo.Object,
+            itemImageRepo.Object,
+            entityRepo.Object,
+            storageUtil.Object,
+            jobService.Object,
+            sciTplService.Object,
+            redisHelper.Object);
+
+        var result = sciService.DetachScanItemFromCustomer(orgId, scanItemId.ToString());
+
+        Assert.NotNull(result);
+        Assert.Equal("SUCCESS", result.Status);
+    }
+    //====
+
     //==== AttachScanItemToProduct()
     [Theory]
     [InlineData("org1")]
