@@ -4,6 +4,8 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.ModelsViews;
+using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Test.Services;
 
@@ -316,9 +318,28 @@ public class ApiKeyServiceTest
     //=====
 
     //===== GetApiKeyById() ====
+
     [Theory]
-    [InlineData("org1", "xxxx")]
-    public void GetApiKeyByIdOkTest(string orgId, string keyId)
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeexx")]
+    public async Task GetApiKeyByIdInvalidIdTest(string orgId, string keyId)
+    {
+        var param = new MApiKey() { ApiKey = "XXXXX" };
+
+        var repo = new Mock<IApiKeyRepository>();
+        repo.Setup(s => s.GetApiKeyById(keyId)).ReturnsAsync((MApiKey)null!);
+
+        var redisHelper = new Mock<IRedisHelper>();
+
+        var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
+        var result = await apiKeySvc.GetApiKeyById(orgId, keyId);
+
+        Assert.NotNull(result);
+        Assert.Equal("UUID_INVALID", result.Status);
+    }
+    
+    [Theory]
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    public async Task GetApiKeyByIdOkTest(string orgId, string keyId)
     {
         var param = new MApiKey() { ApiKey = "XXXXX", RolesList = "A,B" };
 
@@ -328,15 +349,16 @@ public class ApiKeyServiceTest
         var redisHelper = new Mock<IRedisHelper>();
 
         var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
-        var result = apiKeySvc.GetApiKeyById(orgId, keyId);
+        var result = await apiKeySvc.GetApiKeyById(orgId, keyId);
 
-        Assert.IsType<MApiKey>(result);
-        Assert.Equal("", result.ApiKey);
+        Assert.IsType<MVApiKey>(result);
+        Assert.Equal("OK", result.Status);
+        Assert.Equal("", result.ApiKey!.ApiKey);
     }
 
     [Theory]
-    [InlineData("org1", "xxxx")]
-    public void GetApiKeyByIdNotFoundTest(string orgId, string keyId)
+    [InlineData("org1", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")]
+    public async Task GetApiKeyByIdNotFoundTest(string orgId, string keyId)
     {
         var param = new MApiKey() { ApiKey = "XXXXX" };
 
@@ -346,9 +368,10 @@ public class ApiKeyServiceTest
         var redisHelper = new Mock<IRedisHelper>();
 
         var apiKeySvc = new ApiKeyService(repo.Object, redisHelper.Object);
-        var result = apiKeySvc.GetApiKeyById(orgId, keyId);
+        var result = await apiKeySvc.GetApiKeyById(orgId, keyId);
 
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.Equal("KEY_NOTFOUND", result.Status);
     }
     //=====
 

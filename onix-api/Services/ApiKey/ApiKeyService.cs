@@ -3,6 +3,7 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
+using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Services
 {
@@ -237,16 +238,31 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MApiKey GetApiKeyById(string orgId, string keyId)
+        public async Task<MVApiKey> GetApiKeyById(string orgId, string keyId)
         {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetApiKeyById(keyId);
+            var r = new MVApiKey()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
 
-            var key = result.Result;
+            if (!ServiceUtils.IsGuidValid(keyId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Key ID [{keyId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var key = await repository!.GetApiKeyById(keyId);
 
             if (key == null)
             {
-                return null!;
+                r.Status = "KEY_NOTFOUND";
+                r.Description = $"Key ID [{keyId}] not found!!!";
+
+                return r;
             }
 
             if (!string.IsNullOrEmpty(key.RolesList))
@@ -256,7 +272,9 @@ namespace Its.Onix.Api.Services
             key.RolesList = "";
             key.ApiKey = ""; //ไม่ต้อง return ค่า api key กลับไป
 
-            return result.Result;
+            r.ApiKey = key;
+
+            return r;
         }
     }
 }

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.ModelsViews;
+using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -96,9 +98,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetApiKeyById/{keyId}")]
-        public MApiKey GetApiKeyById(string id, string keyId)
+        public async Task<MVApiKey> GetApiKeyById(string id, string keyId)
         {
-            var result = svc.GetApiKeyById(id, keyId);
+            var result = await svc.GetApiKeyById(id, keyId);
             return result;
         }
     }
