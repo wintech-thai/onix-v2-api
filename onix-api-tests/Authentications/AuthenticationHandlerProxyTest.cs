@@ -416,7 +416,6 @@ public class AuthenticationHandlerProxyTest
         Assert.True(result.Succeeded);
     }
     
-
     [Theory]
     [InlineData("temp", "user1", "/api/User/org/temp/action/ThisIsApiAxxx")]
     [InlineData("temp", "user2", "/api/Axxxxx/org/temp/action/UpdatePassword")]
