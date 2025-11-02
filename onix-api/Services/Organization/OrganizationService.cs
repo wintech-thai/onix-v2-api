@@ -140,13 +140,8 @@ namespace Its.Onix.Api.Services
         private void DeleteStorageObject(MOrganization m)
         {
             var objectName = m.LogoImagePath;
-            if (string.IsNullOrEmpty(objectName))
-            {
-                return;
-            }
-
             var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
-            _storageUtil.DeleteObject(bucket, objectName);
+            _storageUtil.DeleteObject(bucket, objectName!);
         }
 
 
