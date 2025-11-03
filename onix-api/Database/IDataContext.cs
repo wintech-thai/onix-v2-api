@@ -26,5 +26,8 @@ namespace Its.Onix.Api.Database
         public DbSet<MScanItemAction>? ScanItemActions { get; set; }
         public DbSet<MAuditLog>? AuditLogs { get; set; }
         public DbSet<MStat>? Stats { get; set; }
+        public DbSet<MPointTx>? PointTxs { get; set; }
+        public DbSet<MPointBalance>? PointBalances { get; set; }
+        public DbSet<MWallet>? Wallets { get; set; }
     }
 }

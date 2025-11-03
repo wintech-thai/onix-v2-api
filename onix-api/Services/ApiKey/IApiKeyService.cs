@@ -15,7 +15,7 @@ namespace Its.Onix.Api.Services
 
         public int GetApiKeyCount(string orgId, VMApiKey param);
         public MVApiKey? UpdateApiKeyById(string orgId, string keyId, MApiKey apiKey);
-        public MApiKey GetApiKeyById(string orgId, string keyId);
+        public Task<MVApiKey> GetApiKeyById(string orgId, string keyId);
         public MVApiKey? UpdateApiKeyStatusById(string orgId, string keyId, string status);
     }
 }
