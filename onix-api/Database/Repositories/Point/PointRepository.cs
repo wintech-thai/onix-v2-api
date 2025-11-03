@@ -66,11 +66,11 @@ namespace Its.Onix.Api.Database.Repositories
             //จะไม่มีการเรียก SaveChange() ในนี้
             if (bal.IsNew)
             {
-                context!.PointBalances!.Add(bal);
+                await context!.PointBalances!.AddAsync(bal);
             }
             else
             {
-                var result = context!.PointBalances!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(bal.Id)).FirstOrDefault();
+                var result = await context!.PointBalances!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(bal.Id)).FirstOrDefaultAsync();
                 if (result == null)
                 {
                     return null!;

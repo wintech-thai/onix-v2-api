@@ -2,6 +2,7 @@ using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using System.Text.RegularExpressions;
+using System.Data.Entity;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -154,6 +155,41 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return pd;
+        }
+
+        public async Task<int> GetScanItemCountAsync(VMScanItem param)
+        {
+            var predicate = ScanItemPredicate(param);
+            var cnt = await context!.ScanItems!.Where(predicate).CountAsync();
+
+            return cnt;
+        }
+        
+        public async Task<IEnumerable<MScanItem>> GetScanItemsAsyn(VMScanItem param)
+        {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset - 1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = ScanItemPredicate(param!);
+            var arr = await context!.ScanItems!.Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            return arr;
         }
 
         public int GetScanItemCount(VMScanItem param)

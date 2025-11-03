@@ -24,6 +24,9 @@ namespace Its.Onix.Api.Services
         public int GetScanItemCount(string orgId, VMScanItem param);
         public IEnumerable<MScanItem> GetScanItems(string orgId, VMScanItem param);
 
+        public Task<int> GetScanItemCountAsync(string orgId, VMScanItem param);
+        public Task<IEnumerable<MScanItem>> GetScanItemsAsnyc(string orgId, VMScanItem param);
+
         public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId);
     }
 }

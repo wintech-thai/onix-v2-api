@@ -100,23 +100,23 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetScanItemCount")]
-        public IActionResult GetScanItemCount(string id, [FromBody] VMScanItem param)
+        public async Task<IActionResult> GetScanItemCount(string id, [FromBody] VMScanItem param)
         {
-            var result = svc.GetScanItemCount(id, param);
+            var result = await svc.GetScanItemCountAsync(id, param);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetScanItems")]
-        public IActionResult GetScanItems(string id, [FromBody] VMScanItem param)
+        public async Task<IActionResult> GetScanItems(string id, [FromBody] VMScanItem param)
         {
             if (param.Limit <= 0)
             {
                 param.Limit = 100;
             }
-
-            var result = svc.GetScanItems(id, param);
+Console.WriteLine($"====== DEBUG ==== limit=[{param.Limit}], offset=[{param.Offset}]");
+            var result = await svc.GetScanItemsAsnyc(id, param);
             return Ok(result);
         }
 
