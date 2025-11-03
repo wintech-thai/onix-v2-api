@@ -702,6 +702,30 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<int> GetScanItemCountAsync(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemCountAsync(param);
+
+            return result;
+        }
+        
+        public async Task<IEnumerable<MScanItem>> GetScanItemsAsnyc(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemsAsyn(param);
+
+            //Masking PIN & URL
+            result.ToList().ForEach(item =>
+            {
+                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
+                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
+                item.Pin = maskPin;
+            });
+
+            return result;
+        }
+
         public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId)
         {
             var r = new MVScanItem()
@@ -719,7 +743,7 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Scan item ID [{scanItemId}] not found!!!";
                 return r;
             }
-            
+
             //จะไม่ทำการ masking URL ใน API นี้
             result.Pin = "";
 

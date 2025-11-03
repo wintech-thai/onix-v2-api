@@ -16,7 +16,9 @@ namespace Its.Onix.Api.Database.Repositories
 
         public MScanItem AddScanItem(MScanItem scanItem);
         public int GetScanItemCount(VMScanItem param);
+        public Task<int> GetScanItemCountAsync(VMScanItem param);
         public IEnumerable<MScanItem> GetScanItems(VMScanItem param);
+        public Task<IEnumerable<MScanItem>> GetScanItemsAsyn(VMScanItem param);
         public MScanItem GetScanItemById(string scanItemId);
         public MScanItem? DeleteScanItemById(string scanItemId);
         public MScanItem? UnVerifyScanItemById(string scanItemId);
