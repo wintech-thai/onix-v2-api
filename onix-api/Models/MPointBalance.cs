@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(OrgId))]
     [Index(nameof(StatCode))]
     [Index(nameof(BalanceDate))]
+    [Index(nameof(BalanceDateKey))]
     [Index(nameof(WalletId))]
     public class MPointBalance
     {
@@ -49,6 +50,9 @@ namespace Its.Onix.Api.Models
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
+
+        [NotMapped]
+        public bool IsNew { get; set; }
 
         public MPointBalance()
         {

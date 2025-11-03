@@ -33,6 +33,9 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MScanItemAction>? ScanItemActions { get; set; }
     public DbSet<MAuditLog>? AuditLogs { get; set; }
     public DbSet<MStat>? Stats { get; set; }
+    public DbSet<MPointTx>? PointTxs { get; set; }
+    public DbSet<MPointBalance>? PointBalances { get; set; }
+    public DbSet<MWallet>? Wallets { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -94,5 +97,9 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MStat>();
         modelBuilder.Entity<MStat>()
             .HasIndex(t => new { t.OrgId, t.StatCode, t.BalanceDateKey }).IsUnique();
+
+        modelBuilder.Entity<MPointTx>();
+        modelBuilder.Entity<MPointBalance>();
+        modelBuilder.Entity<MWallet>();
     }
 }
