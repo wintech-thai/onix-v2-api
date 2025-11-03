@@ -115,7 +115,7 @@ namespace Its.Onix.Api.Controllers
             {
                 param.Limit = 100;
             }
-Console.WriteLine($"====== DEBUG ==== limit=[{param.Limit}], offset=[{param.Offset}]");
+//Console.WriteLine($"====== DEBUG ==== limit=[{param.Limit}], offset=[{param.Offset}]");
             var result = await svc.GetScanItemsAsnyc(id, param);
             return Ok(result);
         }

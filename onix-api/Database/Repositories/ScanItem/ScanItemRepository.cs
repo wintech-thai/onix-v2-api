@@ -160,7 +160,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetScanItemCountAsync(VMScanItem param)
         {
             var predicate = ScanItemPredicate(param);
-            var cnt = await context!.ScanItems!.Where(predicate).CountAsync();
+            var cnt = await context!.ScanItems!.AsExpandable().Where(predicate).CountAsync();
 
             return cnt;
         }
@@ -183,7 +183,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = ScanItemPredicate(param!);
-            var arr = await context!.ScanItems!.Where(predicate)
+            var arr = await context!.ScanItems!.AsExpandable().Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
