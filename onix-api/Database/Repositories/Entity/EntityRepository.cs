@@ -41,6 +41,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Name = custId,
                 Description = $"Auto created wallet of customer ID [{custId}]",
                 Tags = $"email={item.PrimaryEmail}",
+                CustomerId = custId,
             };
 
             context!.Entities!.Add(item);
