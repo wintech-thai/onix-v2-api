@@ -11,9 +11,13 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-id = 'c916e634-19a9-48e9-97c1-3d1a1455eb6e'
 
-### GetApiKeyById
-apiUrl = "api/ApiKey/org/#{orgId}/action/GetApiKeyById/#{id}"
-result = make_request(:get, apiUrl, nil)
+apiUrl = "api/Point/org/#{orgId}/action/AddWallet"
+param =  {
+  Name: "WALLET-001",
+  Description: "Test wallet manually added",
+  Tags: "email=xxxx@gmail.com"
+}
+
+result = make_request(:post, apiUrl, param)
 puts(result)

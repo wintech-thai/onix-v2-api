@@ -63,7 +63,7 @@ namespace Prom.LPR.Api.Controllers
 
             return Ok(result);
         }
-        
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetPointBalanceByWalletId/{walletId}")]
@@ -71,7 +71,70 @@ namespace Prom.LPR.Api.Controllers
         {
             request.WalletId = walletId;
             var result = await svc.GetPointBalanceByWalletId(id, request);
-            
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddWallet")]
+        public async Task<IActionResult> AddWallet(string id, [FromBody] MWallet request)
+        {
+            var result = await svc.AddWallet(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetWallets")]
+        public async Task<IActionResult> GetWallets(string id, [FromBody] VMWallet request)
+        {
+            var result = await svc.GetWallets(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetWalletsCount")]
+        public async Task<IActionResult> GetWalletsCount(string id, [FromBody] VMWallet request)
+        {
+            var result = await svc.GetWalletsCount(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetWalletById/{walletId}")]
+        public async Task<IActionResult> GetWalletById(string id, string walletId)
+        {
+            var result = await svc.GetWalletById(id, walletId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/UpdateWalletById/{walletId}")]
+        public async Task<IActionResult> UpdateWalletById(string id, string walletId, [FromBody] MWallet request)
+        {
+            var result = await svc.UpdateWalletById(id, walletId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AttachCustomerToWalletById/{walletId}/{customerId}")]
+        public async Task<IActionResult> AttachCustomerToWalletById(string id, string walletId, string customerId)
+        {
+            var result = await svc.AttachCustomerToWalletById(id, walletId, customerId);
+            return Ok(result);
+        }
+        
+        [ExcludeFromCodeCoverage]
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteWalletById/{walletId}")]
+        public async Task<IActionResult> DeleteWalletById(string id, string walletId)
+        {
+            var result = await svc.DeleteWalletById(id, walletId);
             return Ok(result);
         }
     }

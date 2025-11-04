@@ -178,8 +178,9 @@ namespace Its.Onix.Api.Database.Repositories
             return r;
         }
 
-        public async Task<MWallet?> AttachCustomerToWalletById(string walletId, string custId)
+        public async Task<MWallet?> AttachCustomerToWalletById(string walletId, string custId, MEntity customer)
         {
+            //TODO : อนาคตเอาข้อมูลจาก customer ไปใส่ใน tag ของ wallet เช่น email=<email_address>
             Guid id = Guid.Parse(walletId);
 
             var r = await context!.Wallets!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
@@ -215,7 +216,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<List<MWallet>> GetWallets(VMWallet param)
         {
             var predicate = WalletPredicate(param!);
-            var result = await context!.Wallets!.Where(predicate).AsExpandable().ToListAsync();
+            var result = await context!.Wallets!.Where(predicate).ToListAsync();
 
             return result;
         }
@@ -223,7 +224,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetWalletsCount(VMWallet param)
         {
             var predicate = WalletPredicate(param!);
-            var result = await context!.Wallets!.Where(predicate).AsExpandable().CountAsync();
+            var result = await context!.Wallets!.Where(predicate).CountAsync();
 
             return result;
         }
