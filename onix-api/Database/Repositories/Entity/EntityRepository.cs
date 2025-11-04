@@ -25,12 +25,26 @@ namespace Its.Onix.Api.Database.Repositories
 
         public MEntity AddEntity(MEntity item)
         {
+            //ให้สร้าง wallet ให้เลยตรงนี้ เพราะว่าจะได้อยู่ใน transaction เดียวกัน
+
             item.Id = Guid.NewGuid();
             item.CreatedDate = DateTime.UtcNow;
             item.UpdatedDate = DateTime.UtcNow;
             item.OrgId = orgId;
 
+            var custId = item.Id.ToString();
+
+            var wallet = new MWallet()
+            {
+                Id = Guid.NewGuid(),
+                Name = custId,
+                Description = $"Auto created wallet of customer ID [{custId}]",
+                Tags = $"email={item.PrimaryEmail}",
+            };
+
             context!.Entities!.Add(item);
+            context!.Wallets!.Add(wallet);
+
             context.SaveChanges();
 
             return item;
