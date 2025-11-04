@@ -10,6 +10,8 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(ItemType))]
+    [Index(nameof(Status))]
+
     public class MItem
     {
         [Key]
@@ -44,6 +46,15 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public ICollection<string> Narratives { get; set; }
+
+        [Column("effective_date")]
+        public DateTime? EffectiveDate { get; set; }
+
+        [Column("expire_date")]
+        public DateTime? ExpireDate { get; set; }
+
+        [Column("status")]
+        public string? Status { get; set; } /* Pending, Approved, Disabled */
 
         //Navigation Properties
         public ICollection<MItemImage> Images { get; set; } = new List<MItemImage>();
