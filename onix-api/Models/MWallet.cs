@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("Wallets")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(CustomerId))]
     public class MWallet
     {
         [Key]
