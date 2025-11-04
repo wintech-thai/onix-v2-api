@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             var wallet = new MWallet()
             {
+                OrgId = orgId,
                 Id = Guid.NewGuid(),
                 Name = custId,
                 Description = $"Auto created wallet of customer ID [{custId}]",
