@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("Items")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(ItemType))]
     public class MItem
     {
         [Key]
@@ -27,7 +28,7 @@ namespace Its.Onix.Api.Models
         [Column("tags")]
         public string? Tags { get; set; }
 
-        [Column("item_type")] /* 1=Lottery */
+        [Column("item_type")] /* 1=Traditional, 2=Privilege */
         public int? ItemType { get; set; }
 
         [Column("narrative")]
