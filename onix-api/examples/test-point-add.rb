@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-walletId = "WALLET-000001"
+walletId = "4200d449-bc88-4937-9a45-61b7bef72c1b"
 
 apiUrl = "api/Point/org/#{orgId}/action/AddPoint/#{walletId}"
 param =  {
