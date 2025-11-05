@@ -72,14 +72,30 @@ namespace Its.Onix.Api.Services
 
         public MVItem? ApproveItemById(string orgId, string itemId)
         {
-            //TODO : ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Pending เท่านั้น
             var r = new MVItem()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
+            //ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Pending เท่านั้น
             repository!.SetCustomOrgId(orgId);
+            var it = repository!.GetItemById(itemId);
+            if (it == null)
+            {
+                r.Status = "NOTFOUND_CHECK";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (it.Status != "Pending")
+            {
+                r.Status = "INVALID_STATE";
+                r.Description = $"Item ID [{itemId}] need to be in 'Pending' state before approval!!!";
+
+                return r;
+            }
 
             var result = repository!.ApproveItemById(itemId);
             if (result == null)
@@ -98,7 +114,7 @@ namespace Its.Onix.Api.Services
 
         public MVItem? DisableItemById(string orgId, string itemId)
         {
-            //TODO : ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Approved เท่านั้น
+            //ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Approved เท่านั้น
             var r = new MVItem()
             {
                 Status = "OK",
@@ -106,6 +122,22 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
+            var it = repository!.GetItemById(itemId);
+            if (it == null)
+            {
+                r.Status = "NOTFOUND_CHECK";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (it.Status != "Approved")
+            {
+                r.Status = "INVALID_STATE";
+                r.Description = $"Item ID [{itemId}] need to be in 'Approved' state before disable!!!";
+
+                return r;
+            }
 
             var result = repository!.DisableItemById(itemId);
             if (result == null)
@@ -158,7 +190,7 @@ namespace Its.Onix.Api.Services
 
         public MVItem? UpdatePrivilegeById(string orgId, string itemId, MItem item)
         {
-            //TODO : เช็คว่าต้อง Pending เท่า่นั้นถึงจะแก้ไขได้
+            //เช็คว่าต้อง Pending เท่า่นั้นถึงจะแก้ไขได้
             var r = new MVItem()
             {
                 Status = "OK",
@@ -166,17 +198,24 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-
-            if (item.PropertiesObj == null)
+            var it = repository!.GetItemById(itemId);
+            if (it == null)
             {
-                item.PropertiesObj = new MItemProperties();
+                r.Status = "NOTFOUND_CHECK";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
             }
 
-            item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
-            item.Narrative = string.Join("|", item.Narratives ?? Array.Empty<string>());
+            if (it.Status != "Pending")
+            {
+                r.Status = "INVALID_STATE";
+                r.Description = $"Item ID [{itemId}] need to be in 'Pending' state for editable!!!";
+
+                return r;
+            }
 
             var result = repository!.UpdateItemById(itemId, item);
-
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -193,7 +232,7 @@ namespace Its.Onix.Api.Services
 
         public MVItem? DeletePrivilegeById(string orgId, string itemId)
         {
-            //TODO : ต้องเช็คก่อนว่า Status เป็น Pending กับ Disabled เท่านั้นถึงจะลบได้
+            //ต้องเช็คก่อนว่า Status ไม่ใช่ Approved เท่านั้นถึงจะลบได้
             var r = new MVItem()
             {
                 Status = "OK",
@@ -204,6 +243,24 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "UUID_INVALID";
                 r.Description = $"Item ID [{itemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var it = repository!.GetItemById(itemId);
+            if (it == null)
+            {
+                r.Status = "NOTFOUND_CHECK";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (it.Status == "Approved")
+            {
+                r.Status = "INVALID_STATE";
+                r.Description = $"Item ID [{itemId}] is in 'Approved' state, not able to delete!!!";
 
                 return r;
             }
