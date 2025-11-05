@@ -64,6 +64,16 @@ namespace Its.Onix.Api.Database.Repositories
         private async Task<MPointBalance> UpsertPointBalance(MPointBalance bal)
         {
             //จะไม่มีการเรียก SaveChange() ในนี้
+
+            //ยังไง item ต้องไม่เป็น null
+            var walletId = Guid.Parse(bal.WalletId!);
+            var item = context!.Wallets!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(walletId)).FirstOrDefault();
+            if (item != null)
+            {
+                //update ไปที่ Items ด้วย
+                item!.PointBalance = bal.BalanceEnd;
+            }
+
             if (bal.IsNew)
             {
                 await context!.PointBalances!.AddAsync(bal);

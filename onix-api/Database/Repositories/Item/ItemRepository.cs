@@ -199,6 +199,16 @@ namespace Its.Onix.Api.Database.Repositories
         private MItemBalance UpsertItemBalance(MItemBalance bal)
         {
             //จะไม่มีการเรียก SaveChange() ในนี้
+
+            //ยังไง item ต้องไม่เป็น null
+            var itemId = Guid.Parse(bal.ItemId!);
+            var item = context!.Items!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(itemId)).FirstOrDefault();
+            if (item != null)
+            {
+                //update ไปที่ Items ด้วย
+                item!.CurrentBalance = bal.BalanceEnd;
+            }
+
             if (bal.IsNew)
             {
                 context!.ItemBalances!.Add(bal);

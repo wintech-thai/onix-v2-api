@@ -56,6 +56,9 @@ namespace Its.Onix.Api.Models
         [Column("status")]
         public string? Status { get; set; } /* Pending, Approved, Disabled */
 
+        [Column("current_balance")]
+        public long? CurrentBalance { get; set; }
+
         //Navigation Properties
         public ICollection<MItemImage> Images { get; set; } = new List<MItemImage>();
 
