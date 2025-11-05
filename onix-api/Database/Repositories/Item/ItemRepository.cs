@@ -129,17 +129,47 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (result != null)
             {
-                //ไม่ต้องมี ItemType
+                //ไม่ต้องมี ItemType, Status
                 result.Properties = item.Properties;
                 result.Description = item.Description;
                 result.Narrative = item.Narrative;
                 result.Content = item.Content;
                 result.Tags = item.Tags;
                 result.UpdatedDate = DateTime.UtcNow;
+                result.EffectiveDate = item.EffectiveDate;
+                result.ExpireDate = item.ExpireDate;
                 context!.SaveChanges();
             }
 
             return result!;
+        }
+
+        public MItem? ApproveItemById(string itemId)
+        {
+            Guid id = Guid.Parse(itemId);
+            var result = context!.Items!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.Status = "Approved";
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+        
+        public MItem? DisableItemById(string itemId)
+        {
+            Guid id = Guid.Parse(itemId);
+            var result = context!.Items!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.Status = "Disabled";
+                context!.SaveChanges();
+            }
+
+            return result!; 
         }
     }
 }

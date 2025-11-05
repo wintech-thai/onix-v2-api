@@ -27,6 +27,7 @@ namespace Its.Onix.Api.Controllers
         public MVItem? AddPrivilege(string id, [FromBody] MItem request)
         {
             request.ItemType = 2;
+            request.Status = "Pending";
             var result = svc.AddItem(id, request);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
@@ -48,7 +49,27 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/DeletePrivilegeById/{itemId}")]
         public IActionResult DeletePrivilegeById(string id, string itemId)
         {
-            var result = svc.DeleteItemById(id, itemId);
+            var result = svc.DeletePrivilegeById(id, itemId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("org/{id}/action/ApprovedPrivilegeById/{itemId}")]
+        public IActionResult ApprovedPrivilegeById(string id, string itemId)
+        {
+            var result = svc.ApproveItemById(id, itemId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("org/{id}/action/DisablePrivilegeById/{itemId}")]
+        public IActionResult DisablePrivilegeById(string id, string itemId)
+        {
+            var result = svc.DisableItemById(id, itemId);
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return Ok(result);
@@ -59,7 +80,7 @@ namespace Its.Onix.Api.Controllers
         public IActionResult DeletePrivilegeCascadeById(string id, string itemId)
         {
             _itemImgService.DeleteItemImageByItemId(id, itemId);
-            var result = svc.DeleteItemById(id, itemId);
+            var result = svc.DeletePrivilegeById(id, itemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
@@ -90,7 +111,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/UpdatePrivilegeById/{itemId}")]
         public IActionResult UpdatePrivilegeById(string id, string itemId, [FromBody] MItem request)
         {
-            var result = svc.UpdateItemById(id, itemId, request);
+            var result = svc.UpdatePrivilegeById(id, itemId, request);
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return Ok(result);
@@ -134,15 +155,6 @@ namespace Its.Onix.Api.Controllers
             param.ItemId = itemId;
 
             var result = _itemImgService.GetItemImages(id, param);
-            return Ok(result);
-        }
-
-        [ExcludeFromCodeCoverage]
-        [HttpGet]
-        [Route("org/{id}/action/GetAllowPrivilegePropertyNames")]
-        public IActionResult GetAllowPrivilegePropertyNames(string id)
-        {
-            var result = svc.GetAllowItemPropertyNames(id);
             return Ok(result);
         }
 

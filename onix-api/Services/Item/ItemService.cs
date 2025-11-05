@@ -70,6 +70,58 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVItem? ApproveItemById(string orgId, string itemId)
+        {
+            //TODO : ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Pending เท่านั้น
+            var r = new MVItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+
+            var result = repository!.ApproveItemById(itemId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            result.Properties = "";
+            r.Item = result;
+
+            return r;
+        }
+        
+        public MVItem? DisableItemById(string orgId, string itemId)
+        {
+            //TODO : ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Approved เท่านั้น
+            var r = new MVItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+
+            var result = repository!.DisableItemById(itemId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            result.Properties = "";
+            r.Item = result;
+
+            return r;
+        }
+
         public MVItem? UpdateItemById(string orgId, string itemId, MItem item)
         {
             var r = new MVItem()
@@ -100,6 +152,71 @@ namespace Its.Onix.Api.Services
 
             result.Properties = "";
             r.Item = result;
+
+            return r;
+        }
+
+        public MVItem? UpdatePrivilegeById(string orgId, string itemId, MItem item)
+        {
+            //TODO : เช็คว่าต้อง Pending เท่า่นั้นถึงจะแก้ไขได้
+            var r = new MVItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+
+            if (item.PropertiesObj == null)
+            {
+                item.PropertiesObj = new MItemProperties();
+            }
+
+            item.Properties = JsonSerializer.Serialize(item.PropertiesObj);
+            item.Narrative = string.Join("|", item.Narratives ?? Array.Empty<string>());
+
+            var result = repository!.UpdateItemById(itemId, item);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            result.Properties = "";
+            r.Item = result;
+
+            return r;
+        }
+
+        public MVItem? DeletePrivilegeById(string orgId, string itemId)
+        {
+            //TODO : ต้องเช็คก่อนว่า Status เป็น Pending กับ Disabled เท่านั้นถึงจะลบได้
+            var r = new MVItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(itemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Item ID [{itemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = repository!.DeleteItemById(itemId);
+
+            r.Item = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Item ID [{itemId}] not found for the organization [{orgId}]";
+            }
 
             return r;
         }

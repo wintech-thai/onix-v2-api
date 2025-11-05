@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251104235429_Item_Balance_001")]
+    partial class Item_Balance_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -410,68 +413,6 @@ namespace onix.api.Migrations
                     b.ToTable("Items");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MItemBalance", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("balance_id");
-
-                    b.Property<long?>("BalanceBegin")
-                        .HasColumnType("bigint")
-                        .HasColumnName("balance_begin");
-
-                    b.Property<DateTime?>("BalanceDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("balance_date");
-
-                    b.Property<string>("BalanceDateKey")
-                        .HasColumnType("text")
-                        .HasColumnName("balance_date_key");
-
-                    b.Property<long?>("BalanceEnd")
-                        .HasColumnType("bigint")
-                        .HasColumnName("balance_end");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("ItemId")
-                        .HasColumnType("text")
-                        .HasColumnName("item_id");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("StatCode")
-                        .HasColumnType("text")
-                        .HasColumnName("stat_code");
-
-                    b.Property<long?>("TxIn")
-                        .HasColumnType("bigint")
-                        .HasColumnName("tx_in");
-
-                    b.Property<long?>("TxOut")
-                        .HasColumnType("bigint")
-                        .HasColumnName("tx_out");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BalanceDate");
-
-                    b.HasIndex("BalanceDateKey");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("StatCode");
-
-                    b.ToTable("ItemBalances");
-                });
-
             modelBuilder.Entity("Its.Onix.Api.Models.MItemImage", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -542,62 +483,6 @@ namespace onix.api.Migrations
                     b.HasIndex("OrgId");
 
                     b.ToTable("ItemImages");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MItemTx", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("tx_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<long?>("CurrentBalance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("current_balance");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("ItemId")
-                        .HasColumnType("text")
-                        .HasColumnName("item_id");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<long?>("PreviousBalance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("previous_balance");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<long?>("TxAmount")
-                        .HasColumnType("bigint")
-                        .HasColumnName("tx_amount");
-
-                    b.Property<int?>("TxType")
-                        .HasColumnType("integer")
-                        .HasColumnName("tx_type");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("ItemTxs");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MJob", b =>

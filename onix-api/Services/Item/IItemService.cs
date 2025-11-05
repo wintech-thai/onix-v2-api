@@ -13,5 +13,10 @@ namespace Its.Onix.Api.Services
         public IEnumerable<NameValue> GetAllowItemPropertyNames(string orgId);
         public int GetItemCount(string orgId, VMItem param);
         public MVItem? UpdateItemById(string orgId, string itemId, MItem item);
+
+        public MVItem? ApproveItemById(string orgId, string itemId);
+        public MVItem? DisableItemById(string orgId, string itemId);
+        public MVItem? DeletePrivilegeById(string orgId, string itemId);
+        public MVItem? UpdatePrivilegeById(string orgId, string itemId, MItem item);
     }
 }

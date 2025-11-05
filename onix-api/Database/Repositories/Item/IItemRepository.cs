@@ -13,5 +13,9 @@ namespace Its.Onix.Api.Database.Repositories
         public MItem? DeleteItemById(string itemId);
         public bool IsItemCodeExist(string itemCode);
         public MItem? UpdateItemById(string itemId, MItem item);
+
+        public MItem? ApproveItemById(string itemId);
+        public MItem? DisableItemById(string itemId);
+
     }
 }
