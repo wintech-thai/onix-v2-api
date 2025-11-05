@@ -95,7 +95,7 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
-        
+
         public MVItem? DisableItemById(string orgId, string itemId)
         {
             //TODO : ต้องเช็คเบื้องต้นด้วยว่า ก่อนหน้านั้นเป็น Approved เท่านั้น
@@ -264,7 +264,7 @@ namespace Its.Onix.Api.Services
                 //}
 
                 item.Properties = "";
-                
+
                 //เพื่อไม่ให้ข้อมูลที่ response กลับไปใหญ่จนเกินไป
                 item.Narrative = "";
                 item.Content = "";
@@ -298,6 +298,158 @@ namespace Its.Onix.Api.Services
             };
 
             return props;
+        }
+
+        private MItemBalance GetCurrentBalance(string itemId)
+        {
+            var param = new VMItemBalance()
+            {
+                ItemId = itemId,
+                BalanceType = "ItemBalanceCurrent",
+            };
+
+            var bal = repository!.GetItemBalanceByItemId(param);
+
+            if (bal == null)
+            {
+                bal = new MItemBalance()
+                {
+                    StatCode = param.BalanceType,
+                    ItemId = itemId,
+                    BalanceDate = DateTime.UtcNow,
+                    BalanceDateKey = "000000",
+                    TxIn = 0,
+                    TxOut = 0,
+                    BalanceBegin = 0,
+                    BalanceEnd = 0,
+                    IsNew = true,
+                };
+            }
+            else
+            {
+                bal.IsNew = false;
+            }
+
+            return bal;
+        }
+
+        public MVItemTx AddItemQuantity(string orgId, MItemTx tx)
+        {
+            //ใช้วิธี : Optimistic Concurrency ในการแก้ race condition
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVItemTx()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var txAmt = tx.TxAmount;
+            var currBal = GetCurrentBalance(tx.ItemId!);
+
+            //เอา balance ปัจจุบันมาก่อน
+
+            var previousBal = currBal.BalanceEnd;
+            tx.PreviousBalance = previousBal;
+
+            currBal.TxIn = currBal.TxIn + txAmt;
+            currBal.BalanceEnd = currBal.BalanceEnd + txAmt;
+            currBal.BalanceDate = DateTime.UtcNow;
+
+            tx.TxType = 1;
+
+            //ตรงนี้จะได้ balance ที่ลดหรือเพิ่มแล้ว
+            tx.CurrentBalance = currBal.BalanceEnd;
+            var result = repository!.AddItemTxWithBalance(tx, currBal);
+
+            r.Status = "OK";
+            r.Description = "Success";
+            r.ItemTx = result;
+
+            return r;
+        }
+
+        public MVItemTx DeductItemQuantity(string orgId, MItemTx tx)
+        {
+            //ใช้วิธี : Optimistic Concurrency ในการแก้ race condition
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVItemTx()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var txAmt = tx.TxAmount;
+            var currBal = GetCurrentBalance(tx.ItemId!);
+
+            //เอา balance ปัจจุบันมาก่อน
+
+            var previousBal = currBal.BalanceEnd;
+            tx.PreviousBalance = previousBal;
+
+            currBal.TxOut = currBal.TxOut + txAmt;
+            currBal.BalanceEnd = currBal.BalanceEnd - txAmt;
+            currBal.BalanceDate = DateTime.UtcNow;
+
+            if (currBal.BalanceEnd < 0)
+            {
+                r.Status = "INVALID_BALANCE_LESS_THAN_ZERO";
+                r.Description = "Balance cannot be less than 0!!!";
+                return r;
+            }
+
+            tx.TxType = -1;
+
+            //ตรงนี้จะได้ balance ที่ลดหรือเพิ่มแล้ว
+            tx.CurrentBalance = currBal.BalanceEnd;
+            var result = repository!.AddItemTxWithBalance(tx, currBal);
+
+            r.Status = "OK";
+            r.Description = "Success";
+            r.ItemTx = result;
+
+            return r;
+        }
+
+        public MVItemBalance? GetItemBalanceByItemId(string orgId, VMItemBalance param)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVItemBalance()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var balanceType = param.BalanceType;
+
+            if (string.IsNullOrEmpty(balanceType))
+            {
+                r.Status = "BALANCE_TYPE_MISSING";
+                r.Description = "BalanceType need to be ItemBalanceCurrent";
+
+                return r;
+            }
+
+            var result = repository.GetItemBalanceByItemId(param);
+            r.ItemBalance = result;
+
+            return r;
+        }
+
+        public List<MItemTx> GetItemTxsByItemId(string orgId, VMItemTx param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository.GetItemTxsByItemId(param);
+            return result;
+        }
+        
+        public int GetItemTxsCountByItemId(string orgId, VMItemTx param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository.GetItemTxsCountByItemId(param);
+            return result;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Its.Onix.Api.Models
         public long? TxAmount { get; set; } /* Point tx amount */
 
         [Column("tx_type")]
-        public int? TxType { get; set; } /* 1=IN, 2=OUT */
+        public int? TxType { get; set; } /* 1=IN, -1=OUT */
 
 
         [Column("current_balance")]

@@ -16,6 +16,9 @@ namespace Its.Onix.Api.Database.Repositories
 
         public MItem? ApproveItemById(string itemId);
         public MItem? DisableItemById(string itemId);
-
+        public MItemTx AddItemTxWithBalance(MItemTx tx, MItemBalance currBal);
+        public MItemBalance? GetItemBalanceByItemId(VMItemBalance param);
+        public List<MItemTx> GetItemTxsByItemId(VMItemTx param);
+        public int GetItemTxsCountByItemId(VMItemTx param);
     }
 }

@@ -157,7 +157,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result!;
         }
-        
+
         public MItem? DisableItemById(string itemId)
         {
             Guid id = Guid.Parse(itemId);
@@ -169,7 +169,109 @@ namespace Its.Onix.Api.Database.Repositories
                 context!.SaveChanges();
             }
 
-            return result!; 
+            return result!;
+        }
+
+        private ExpressionStarter<MItemBalance> ItemBalancePredicate(VMItemBalance param)
+        {
+            var pd = PredicateBuilder.New<MItemBalance>();
+
+            pd = pd.And(p => p.OrgId!.Equals(orgId) && p.ItemId!.Equals(param.ItemId) && p.StatCode!.Equals(param.BalanceType));
+/*
+            if ((param.DateKey != null) && (param.DateKey != ""))
+            {
+                var dateKeyPd = PredicateBuilder.New<MItemBalance>();
+                dateKeyPd = dateKeyPd.Or(p => p.BalanceDateKey!.Equals(param.DateKey));
+
+                pd = pd.And(dateKeyPd);
+            }
+*/
+            return pd;
+        }
+
+        public MItemBalance? GetItemBalanceByItemId(VMItemBalance param)
+        {
+            var predicate = ItemBalancePredicate(param!);
+            var result = context!.ItemBalances!.Where(predicate).FirstOrDefault();
+            return result;
+        }
+
+        private MItemBalance UpsertItemBalance(MItemBalance bal)
+        {
+            //จะไม่มีการเรียก SaveChange() ในนี้
+            if (bal.IsNew)
+            {
+                context!.ItemBalances!.Add(bal);
+            }
+            else
+            {
+                var result = context!.ItemBalances!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(bal.Id)).FirstOrDefault();
+                if (result == null)
+                {
+                    return null!;
+                }
+
+                result.BalanceDate = bal.BalanceDate;
+                result.TxIn = bal.TxIn;
+                result.TxOut = bal.TxOut;
+                result.BalanceBegin = bal.BalanceBegin;
+                result.BalanceEnd = bal.BalanceEnd;
+            }
+
+            return bal;
+        }
+
+        public MItemTx AddItemTxWithBalance(MItemTx tx, MItemBalance currBal)
+        {
+            tx.OrgId = orgId;
+            currBal.OrgId = orgId;
+
+            //Transaction control จะถูกจัดการเองในนี้เลย
+
+            context!.ItemTxs!.Add(tx);
+            UpsertItemBalance(currBal);
+
+            context.SaveChanges();
+            return tx;
+        }
+
+        private ExpressionStarter<MItemTx> PointTxsPredicate(VMItemTx param)
+        {
+            var pd = PredicateBuilder.New<MItemTx>();
+
+            pd = pd.And(p => p.OrgId!.Equals(orgId) && p.ItemId!.Equals(param.ItemId));
+
+            if (param.FromDate != null)
+            {
+                var fromDatePd = PredicateBuilder.New<MItemTx>();
+                fromDatePd = fromDatePd.Or(p => p.CreatedDate! >= param.FromDate);
+                pd = pd.And(fromDatePd);
+            }
+
+            if (param.ToDate != null)
+            {
+                var toDatePd = PredicateBuilder.New<MItemTx>();
+                toDatePd = toDatePd.Or(p => p.CreatedDate! <= param.ToDate);
+                pd = pd.And(toDatePd);
+            }
+
+            return pd;
+        }
+
+        public List<MItemTx> GetItemTxsByItemId(VMItemTx param)
+        {
+            var predicate = PointTxsPredicate(param!);
+            var r = context!.ItemTxs!.Where(predicate).ToList();
+
+            return r;
+        }
+
+        public int GetItemTxsCountByItemId(VMItemTx param)
+        {
+            var predicate = PointTxsPredicate(param!);
+            var r = context!.ItemTxs!.Where(predicate).Count();
+
+            return r;
         }
     }
 }

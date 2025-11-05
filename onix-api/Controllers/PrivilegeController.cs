@@ -55,7 +55,7 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [HttpDelete]
+        [HttpPost]
         [Route("org/{id}/action/ApprovedPrivilegeById/{itemId}")]
         public IActionResult ApprovedPrivilegeById(string id, string itemId)
         {
@@ -65,7 +65,7 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [HttpDelete]
+        [HttpPost]
         [Route("org/{id}/action/DisablePrivilegeById/{itemId}")]
         public IActionResult DisablePrivilegeById(string id, string itemId)
         {
@@ -192,6 +192,61 @@ namespace Its.Onix.Api.Controllers
         {
             param.ItemType = 2;
             var result = svc.GetItemCount(id, param);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddPrivilegeQuantity/{itemId}")]
+        public IActionResult AddPrivilegeQuantity(string id, string itemId, [FromBody] MItemTx request)
+        {
+            request.ItemId = itemId;
+            var result = svc.AddItemQuantity(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/DeductPrivilegeQuantity/{itemId}")]
+        public IActionResult DeductPrivilegeQuantity(string id, string itemId, [FromBody] MItemTx request)
+        {
+            request.ItemId = itemId;
+            var result = svc.DeductItemQuantity(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetPrivilegeBalanceById/{itemId}")]
+        public IActionResult GetPrivilegeBalanceById(string id, string itemId, [FromBody] VMItemBalance request)
+        {
+            request.ItemId = itemId;
+            var result = svc.GetItemBalanceByItemId(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetPrivilegeTxsById/{itemId}")]
+        public IActionResult GetPrivilegeTxsById(string id, string itemId, [FromBody] VMItemTx request)
+        {
+            request.ItemId = itemId;
+            var result = svc.GetItemTxsByItemId(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetPrivilegeTxsCountById/{itemId}")]
+        public IActionResult GetPrivilegeTxsCountById(string id, string itemId, [FromBody] VMItemTx request)
+        {
+            request.ItemId = itemId;
+            var result = svc.GetItemTxsCountByItemId(id, request);
 
             return Ok(result);
         }
