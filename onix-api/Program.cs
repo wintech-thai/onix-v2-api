@@ -93,6 +93,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAuditLogService, AuditLogService>();
             builder.Services.AddScoped<IStatService, StatService>();
             builder.Services.AddScoped<IPointService, PointService>();
+            builder.Services.AddScoped<ILimitService, LimitService>();
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
@@ -114,6 +115,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             builder.Services.AddScoped<IStatRepository, StatRepository>();
             builder.Services.AddScoped<IPointRepository, PointRepository>();
+            builder.Services.AddScoped<ILimitRepository, LimitRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();
