@@ -26,7 +26,8 @@ namespace Its.Onix.Api.Database.Repositories
                         UserName = au.UserName,
                         RolesList = au.RolesList,
                         CreatedDate = au.CreatedDate,
-                        UserEmail = u.UserEmail
+                        UserEmail = u.UserEmail,
+                        Tags = au.Tags,
                     })
                 .Where(x => x.AdminUserId!.Equals(id)).FirstOrDefaultAsync();
 
@@ -54,6 +55,7 @@ namespace Its.Onix.Api.Database.Repositories
                     PreviousUserStatus = au.PreviousUserStatus,
                     InvitedDate = au.InvitedDate,
                     TmpUserEmail = au.TmpUserEmail,
+                    Tags = au.Tags,
                 }
             ).FirstOrDefaultAsync();
 
@@ -135,6 +137,7 @@ namespace Its.Onix.Api.Database.Repositories
                                  UserStatus = au.UserStatus,
                                  PreviousUserStatus = au.PreviousUserStatus,
                                  InvitedDate = au.InvitedDate,
+                                 Tags = au.Tags,
                              })
                 .Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
@@ -165,6 +168,7 @@ namespace Its.Onix.Api.Database.Repositories
                     UserStatus = au.UserStatus,
                     PreviousUserStatus = au.PreviousUserStatus,
                     InvitedDate = au.InvitedDate,
+                    Tags = au.Tags,
                 }
             )
             .Where(predicate)

@@ -28,7 +28,8 @@ namespace Its.Onix.Api.Database.Repositories
                         UserName = ou.UserName,
                         RolesList = ou.RolesList,
                         CreatedDate = ou.CreatedDate,
-                        UserEmail = u.UserEmail
+                        UserEmail = u.UserEmail,
+                        Tags = ou.Tags,
                     })
                 .Where(x => x.OrgCustomId!.Equals(orgId) && x.OrgUserId!.Equals(id)).FirstOrDefaultAsync();
 
@@ -59,6 +60,7 @@ namespace Its.Onix.Api.Database.Repositories
                     InvitedDate = ou.InvitedDate,
                     IsOrgInitialUser = ou.IsOrgInitialUser,
                     TmpUserEmail = ou.TmpUserEmail,
+                    Tags = ou.Tags,
                 }
             ).FirstOrDefaultAsync();
 
@@ -122,7 +124,8 @@ namespace Its.Onix.Api.Database.Repositories
                         UserName = ou.UserName,
                         RolesList = ou.RolesList,
                         CreatedDate = ou.CreatedDate,
-                        UserEmail = u.UserEmail
+                        UserEmail = u.UserEmail,
+                        Tags = ou.Tags,
                     })
                 .AsQueryable()
                 .AsExpandable()
@@ -172,6 +175,7 @@ namespace Its.Onix.Api.Database.Repositories
                            PreviousUserStatus = ou.PreviousUserStatus,
                            InvitedDate = ou.InvitedDate,
                            IsOrgInitialUser = ou.IsOrgInitialUser,
+                           Tags = ou.Tags,
                        })
                 .Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
