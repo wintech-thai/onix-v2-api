@@ -24,6 +24,11 @@ namespace Its.Onix.Api.Utils
             return whiteListedApi.Contains(whiteListedKey);
         }
 
+        public static bool IsAdminWhiteListedAPI(string controller, string api)
+        {
+            return false;
+        }
+
         public static string MaskScanItemPin(string pin)
         {
             if (string.IsNullOrEmpty(pin))

@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Authentications
     {
         private readonly IBasicAuthenticationRepo? basicAuthenRepo = null;
         private readonly IBearerAuthenticationRepo? bearerAuthRepo = null;
+        private readonly IBearerAuthenticationAdminRepo bearerAuthAdminRepo;
         private readonly IAuthService _authService;
         private JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 
@@ -21,12 +22,14 @@ namespace Its.Onix.Api.Authentications
             UrlEncoder encoder,
             IBasicAuthenticationRepo bsAuthRepo,
             IBearerAuthenticationRepo brAuthRepo,
+            IBearerAuthenticationAdminRepo brAuthAdminRepo,
             IAuthService authService,
             ISystemClock clock) : base(options, logger, encoder, clock)
         {
             basicAuthenRepo = bsAuthRepo;
             bearerAuthRepo = brAuthRepo;
             _authService = authService;
+            bearerAuthAdminRepo = brAuthAdminRepo;
         }
 
         protected override AuthenResult AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request)
@@ -35,6 +38,7 @@ namespace Its.Onix.Api.Authentications
             var username = credentials[0];
             var password = credentials[1];
 
+            //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User
             var user = basicAuthenRepo!.Authenticate(orgId, username, password, request);
             var authResult = new AuthenResult()
             {
@@ -55,6 +59,7 @@ namespace Its.Onix.Api.Authentications
             var jwt = tokenHandler.ReadJwtToken(accessToken);
             string userName = jwt.Claims.First(c => c.Type == "preferred_username").Value;
 
+            //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User (basicAuthenRepo vs bearerAuthAdminRepo)
             var user = bearerAuthRepo!.Authenticate(orgId, userName, "", request);
             var authResult = new AuthenResult()
             {

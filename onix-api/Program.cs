@@ -119,6 +119,7 @@ namespace Its.Onix.Api
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();
+            builder.Services.AddScoped<IBearerAuthenticationAdminRepo, BearerAuthenticationAdminRepo>();
             builder.Services.AddScoped<IBearerAuthenticationRepo, BearerAuthenticationRepo>();
 
             builder.Services.AddAuthentication("BasicOrBearer")

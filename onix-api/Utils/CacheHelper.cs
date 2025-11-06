@@ -19,6 +19,14 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateAdminLoginSessionKey(string userName)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+
+            var key = $"AdminLoginSession:{environment}:{userName}";
+            return key;
+        }
+
         public static string CreateAuditLogStreamKey()
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
