@@ -53,6 +53,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/UpdateLimit/{statCode}/{limit}")]
         public async Task<IActionResult> UpdateLimit(string id, string statCode, long limit)
         {
+            //TODO : ควรย้าย API นี้ออกไปให้เฉพาะ admin เท่านั้น ไม่อย่างนั้น user ที่มีสิทธ์เป็น OWNER ก็จะเพิ่ม limit ได้เอง
             var lim = new MLimit()
             {
                 Limit = limit,
