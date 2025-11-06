@@ -5,7 +5,6 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
-using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Controllers
 {
