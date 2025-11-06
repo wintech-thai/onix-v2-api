@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
-using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
 namespace Prom.LPR.Api.Controllers
@@ -40,13 +39,13 @@ namespace Prom.LPR.Api.Controllers
 
             return Ok(result);
         }
-/*
+
         [ExcludeFromCodeCoverage]
         [HttpDelete]
-        [Route("org/{id}/action/DeleteUserById/{userId}")]
-        public IActionResult DeleteUserById(string id, string userId)
+        [Route("org/global/action/DeleteUserById/{userId}")]
+        public async Task<IActionResult> DeleteUserById(string userId)
         {
-            var result = svc.DeleteUserById(id, userId);
+            var result = await svc.DeleteUserById(userId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -54,42 +53,42 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/{id}/action/GetUserById/{userId}")]
-        public IActionResult GetUserById(string id, string userId)
+        [Route("org/global/action/GetUserById/{userId}")]
+        public async Task<IActionResult> GetUserById(string userId)
         {
-            var result = svc.GetUserByIdLeftJoin(id, userId);
+            var result = await svc.GetUserById(userId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
 
         [HttpPost]
-        [Route("org/{id}/action/GetUsers")]
-        public IActionResult GetUsers(string id, [FromBody] VMOrganizationUser param)
+        [Route("org/global/action/GetUsers")]
+        public async Task<IActionResult> GetUsers([FromBody] VMAdminUser param)
         {
             if (param.Limit <= 0)
             {
                 param.Limit = 100;
             }
 
-            var result = svc.GetUsersLeftJoin(id, param);
+            var result = await svc.GetUsers(param);
             return Ok(result);
         }
 
         [HttpPost]
-        [Route("org/{id}/action/GetUserCount")]
-        public IActionResult GetUserCount(string id, [FromBody] VMOrganizationUser param)
+        [Route("org/global/action/GetUserCount")]
+        public async Task<IActionResult> GetUserCount([FromBody] VMAdminUser param)
         {
-            var result = svc.GetUserCountLeftJoin(id, param);
+            var result = await svc.GetUserCount(param);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/UpdateUserById/{userId}")]
-        public IActionResult UpdateUserById(string id, string userId, [FromBody] MOrganizationUser request)
+        [Route("org/global/action/UpdateUserById/{userId}")]
+        public async Task<IActionResult> UpdateUserById(string userId, [FromBody] MAdminUser request)
         {
-            var result = svc.UpdateUserById(id, userId, request);
+            var result = await svc.UpdateUserById(userId, request);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -97,10 +96,10 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/EnableUserById/{userId}")]
-        public IActionResult EnableUserById(string id, string userId)
+        [Route("org/global/action/EnableUserById/{userId}")]
+        public async Task<IActionResult> EnableUserById(string userId)
         {
-            var result = svc.UpdateUserStatusById(id, userId, "Active");
+            var result = await svc.UpdateUserStatusById(userId, "Active");
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -108,14 +107,13 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/DisableUserById/{userId}")]
-        public IActionResult DisableUserById(string id, string userId)
+        [Route("org/global/action/DisableUserById/{userId}")]
+        public async Task<IActionResult> DisableUserById(string userId)
         {
-            var result = svc.UpdateUserStatusById(id, userId, "Disabled");
+            var result = await svc.UpdateUserStatusById(userId, "Disabled");
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
-*/
     }
 }
