@@ -38,6 +38,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MWallet>? Wallets { get; set; }
     public DbSet<MItemTx>? ItemTxs { get; set; }
     public DbSet<MItemBalance>? ItemBalances { get; set; }
+    public DbSet<MLimit>? Limits { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -106,5 +107,9 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MItemTx>();
         modelBuilder.Entity<MItemBalance>();
+
+        modelBuilder.Entity<MLimit>();
+        modelBuilder.Entity<MLimit>()
+            .HasIndex(t => new { t.OrgId, t.StatCode }).IsUnique();
     }
 }
