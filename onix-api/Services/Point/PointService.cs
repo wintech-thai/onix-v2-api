@@ -3,16 +3,21 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using System.Threading.Tasks;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Services
 {
     public class PointService : BaseService, IPointService
     {
         private readonly IPointRepository repository = null!;
+        private readonly IEntityRepository _entityRepo;
 
-        public PointService(IPointRepository repo) : base()
+        public PointService(
+            IPointRepository repo,
+            IEntityRepository entityRepo) : base()
         {
             repository = repo;
+            _entityRepo = entityRepo;
         }
 
         private async Task<MPointBalance> GetCurrentBalance(string walletId)
@@ -224,6 +229,186 @@ namespace Its.Onix.Api.Services
 
             var result = await repository.GetPointBalanceByWalletId(param);
             r.PointBalance = result;
+
+            return r;
+        }
+
+        public async Task<MVWallet> AddWallet(string orgId, MWallet wallet)
+        {
+            var r = new MVWallet();
+            r.Status = "OK";
+            r.Description = "Success";
+
+            repository!.SetCustomOrgId(orgId);
+
+            if (string.IsNullOrEmpty(wallet.Name))
+            {
+                r.Status = "INVALID_WALLET_NAME";
+                r.Description = "Wallet name must not be blank!!!";
+
+                return r;
+            }
+
+            var result = await repository!.AddWallet(wallet);
+            r.Wallet = result;
+
+            return r;
+        }
+
+        public async Task<List<MWallet>> GetWallets(string orgId, VMWallet param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetWallets(param);
+
+            return result;
+        }
+
+        public async Task<int> GetWalletsCount(string orgId, VMWallet param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetWalletsCount(param);
+
+            return result;
+        }
+
+        public async Task<MVWallet?> GetWalletById(string orgId, string walletId)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(walletId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Wallet ID [{walletId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetWalletById(walletId);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Wallet ID [{walletId}] not found for the organization [{orgId}]";
+            }
+
+            r.Wallet = result;
+
+            return r;
+        }
+
+        public async Task<MVWallet?> UpdateWalletById(string orgId, string walletId, MWallet wallet)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVWallet()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(walletId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Wallet ID [{walletId}] format is invalid";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(wallet.Name))
+            {
+                r.Status = "INVALID_WALLET_NAME";
+                r.Description = "Wallet name must not be blank!!!";
+
+                return r;
+            }
+
+            var result = await repository!.UpdateWalletById(walletId, wallet);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Wallet ID [{walletId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Wallet = result;
+            return r;
+        }
+
+        public async Task<MVWallet?> AttachCustomerToWalletById(string orgId, string walletId, string custId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _entityRepo.SetCustomOrgId(orgId);
+
+            var r = new MVWallet()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(walletId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Wallet ID [{walletId}] format is invalid";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(custId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Customer ID [{custId}] format is invalid";
+
+                return r;
+            }
+
+            var customer = _entityRepo.GetEntityById(custId!);
+            if (customer == null)
+            {
+                r.Status = "CUSTOMER_NOTFOUND";
+                r.Description = $"Customer ID [{custId}] not found!!!";
+
+                return r;
+            }
+
+            var result = await repository!.AttachCustomerToWalletById(walletId, custId, customer);
+            r.Wallet = result;
+
+            return r;
+        }
+
+        public async Task<MVWallet?> DeleteWalletById(string orgId, string walletId)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(walletId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Wallet ID [{walletId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.DeleteWalletById(walletId);
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Wallet ID [{walletId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Wallet = m;
 
             return r;
         }

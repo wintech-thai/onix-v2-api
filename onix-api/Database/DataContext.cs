@@ -36,6 +36,8 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MPointTx>? PointTxs { get; set; }
     public DbSet<MPointBalance>? PointBalances { get; set; }
     public DbSet<MWallet>? Wallets { get; set; }
+    public DbSet<MItemTx>? ItemTxs { get; set; }
+    public DbSet<MItemBalance>? ItemBalances { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -101,5 +103,8 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MPointTx>();
         modelBuilder.Entity<MPointBalance>();
         modelBuilder.Entity<MWallet>();
+
+        modelBuilder.Entity<MItemTx>();
+        modelBuilder.Entity<MItemBalance>();
     }
 }

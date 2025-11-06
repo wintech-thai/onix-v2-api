@@ -29,5 +29,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MPointTx>? PointTxs { get; set; }
         public DbSet<MPointBalance>? PointBalances { get; set; }
         public DbSet<MWallet>? Wallets { get; set; }
+        public DbSet<MItemTx>? ItemTxs { get; set; }
+        public DbSet<MItemBalance>? ItemBalances { get; set; }
     }
 }

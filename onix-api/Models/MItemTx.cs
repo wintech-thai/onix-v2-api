@@ -6,21 +6,21 @@ using System.Diagnostics.CodeAnalysis;
 namespace Its.Onix.Api.Models
 {
     [ExcludeFromCodeCoverage]
-    [Table("Wallets")]
+    [Table("ItemTxs")]
 
     [Index(nameof(OrgId))]
-    [Index(nameof(CustomerId))]
-    public class MWallet
+    [Index(nameof(ItemId))]
+    public class MItemTx
     {
         [Key]
-        [Column("wallet_id")]
+        [Column("tx_id")]
         public Guid? Id { get; set; }
 
         [Column("org_id")]
         public string? OrgId { get; set; }
 
-        [Column("name")]
-        public string? Name { get; set; }
+        [Column("item_id")]
+        public string? ItemId { get; set; } /* Wallet ID (primary key of Items)*/
 
         [Column("tags")]
         public string? Tags { get; set; }
@@ -28,11 +28,19 @@ namespace Its.Onix.Api.Models
         [Column("description")]
         public string? Description { get; set; }
 
-        [Column("customer_id")]
-        public string? CustomerId { get; set; }
+        [Column("tx_amount")]
+        public long? TxAmount { get; set; } /* Point tx amount */
 
-        [Column("point_balance")]
-        public long? PointBalance { get; set; }
+        [Column("tx_type")]
+        public int? TxType { get; set; } /* 1=IN, -1=OUT */
+
+
+        [Column("current_balance")]
+        public long? CurrentBalance { get; set; }
+
+        [Column("previous_balance")]
+        public long? PreviousBalance { get; set; }
+
 
         //System fields
         [Column("created_date")]
@@ -41,7 +49,7 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
-        public MWallet()
+        public MItemTx()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;

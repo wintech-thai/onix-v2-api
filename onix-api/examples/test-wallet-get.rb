@@ -11,14 +11,15 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-walletId = "4200d449-bc88-4937-9a45-61b7bef72c1b"
 
-apiUrl = "api/Point/org/#{orgId}/action/AddPoint/#{walletId}"
+apiUrl = "api/Point/org/#{orgId}/action/GetWallets"
 param =  {
-  TxAmount: 150,
-  Description: "This is product description # 2",
-  Tags: "source=cutomer-register"
+  FullTextSearch: "xxx",
 }
 
+result = make_request(:post, apiUrl, param)
+puts(result)
+
+apiUrl = "api/Point/org/#{orgId}/action/GetWalletsCount"
 result = make_request(:post, apiUrl, param)
 puts(result)

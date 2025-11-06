@@ -11,14 +11,15 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-walletId = "4200d449-bc88-4937-9a45-61b7bef72c1b"
 
-apiUrl = "api/Point/org/#{orgId}/action/AddPoint/#{walletId}"
-param =  {
-  TxAmount: 150,
+### AddItem
+apiUrl = "api/Privilege/org/#{orgId}/action/AddPrivilege"
+item =  {
+  Code: "LUX-SPA-NOVOTEL-002",
   Description: "This is product description # 2",
-  Tags: "source=cutomer-register"
+  Tags: "ทดสอบ,dddd,bbb,food,feed",
+  Content: "This is very long content",
 }
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:post, apiUrl, item)
 puts(result)

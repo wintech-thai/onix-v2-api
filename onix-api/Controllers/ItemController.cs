@@ -26,6 +26,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/AddItem")]
         public MVItem? AddItem(string id, [FromBody] MItem request)
         {
+            request.ItemType = 1;
             var result = svc.AddItem(id, request);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
@@ -166,6 +167,8 @@ namespace Its.Onix.Api.Controllers
                 param.Limit = 100;
             }
 
+            param.ItemType = 1;
+
             var result = svc.GetItems(id, param);
             return Ok(result);
         }
@@ -175,6 +178,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/GetItemCount")]
         public IActionResult GetItemCount(string id, [FromBody] VMItem param)
         {
+            param.ItemType = 1;
             var result = svc.GetItemCount(id, param);
             return Ok(result);
         }

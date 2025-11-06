@@ -133,7 +133,7 @@ namespace Its.Onix.Api.Utils
         {
             return (bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3];
         }
-    
+
         public static PathComponent GetPathComponent(HttpRequest request)
         {
             var pattern = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
@@ -148,6 +148,25 @@ namespace Its.Onix.Api.Utils
             };
 
             return result;
+        }
+        
+        public static string? GetValueFromTags(string key, string tags)
+        {
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(tags))
+                return null;
+
+            var parts = tags.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var part in parts)
+            {
+                var kv = part.Split('=', 2); // split ครั้งเดียว เผื่อค่ามี '=' ข้างใน
+                if (kv.Length == 2 && kv[0].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
+                {
+                    return kv[1].Trim();
+                }
+            }
+
+            return null;
         }
     }
 }

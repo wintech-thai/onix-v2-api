@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251104235720_Item_Balance_002")]
+    partial class Item_Balance_002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -355,10 +358,6 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
-
-                    b.Property<long?>("CurrentBalance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("current_balance");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")

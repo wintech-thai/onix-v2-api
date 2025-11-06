@@ -11,9 +11,11 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-id = 'c916e634-19a9-48e9-97c1-3d1a1455eb6e'
+id = '4d9fdd49-307b-428c-8c2e-927d27ef258d'
 
-### GetApiKeyById
-apiUrl = "api/ApiKey/org/#{orgId}/action/GetApiKeyById/#{id}"
-result = make_request(:get, apiUrl, nil)
+param =  nil
+
+apiUrl = "api/Point/org/#{orgId}/action/DeleteWalletById/#{id}"
+result = make_request(:delete, apiUrl, param)
+
 puts(result)

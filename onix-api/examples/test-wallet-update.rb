@@ -11,13 +11,13 @@ $stdout.sync = true
 load_env(".env")
 
 orgId = ENV['API_ORG']
-walletId = "4200d449-bc88-4937-9a45-61b7bef72c1b"
+walletId = "4d9fdd49-307b-428c-8c2e-927d27ef258d"
 
-apiUrl = "api/Point/org/#{orgId}/action/AddPoint/#{walletId}"
+apiUrl = "api/Point/org/#{orgId}/action/UpdateWalletById/#{walletId}"
 param =  {
-  TxAmount: 150,
-  Description: "This is product description # 2",
-  Tags: "source=cutomer-register"
+  Name: "WALLET-001-xxx",
+  Description: "Test wallet manually edited",
+  Tags: "email=yyyy@gmail.com"
 }
 
 result = make_request(:post, apiUrl, param)

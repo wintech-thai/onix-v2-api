@@ -207,7 +207,7 @@ namespace Its.Onix.Api.Services
             if (string.IsNullOrEmpty(customerId))
             {
                 r.Status = "CUSTOMER_NOT_ATTACH";
-                r.Description = $"No product attached to this scan item!!!";
+                r.Description = $"No customer attached to this scan item!!!";
 
                 return r;
             }
@@ -216,10 +216,17 @@ namespace Its.Onix.Api.Services
 
             if (customer == null)
             {
-                r.Status = "CUSTOMER_NOTFOUND";
-                r.Description = $"Customer ID [{customerId}] not found!!!";
+                //ถึงตรงนี้ให้เป็น SUCCESS เพราะว่า ถือว่ายังมี customer อยู่แต่ customer จริงๆโดนลบไปแล้วแต่ ID ยังค้างอยู่
+                customer = new MEntity()
+                {
+                    Id = result.CustomerId,
+                    PrimaryEmail = ServiceUtils.GetValueFromTags("email", result.Tags!),
+                };
 
-                return r;
+                if (string.IsNullOrEmpty(customer.PrimaryEmail))
+                {
+                    customer.PrimaryEmail = "customer-deleted@please-scan.com";
+                }
             }
 
             r.Entity = customer;

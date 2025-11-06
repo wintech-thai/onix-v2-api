@@ -13,5 +13,13 @@ namespace Its.Onix.Api.Services
         public Task<int> GetPointTxsCountByWalletId(string orgId, VMPointTx param);
 
         public Task<MVPointBalance?> GetPointBalanceByWalletId(string orgId, VMPointBalance param);
+
+        public Task<MVWallet> AddWallet(string orgId, MWallet wallet);
+        public Task<List<MWallet>> GetWallets(string orgId, VMWallet param);
+        public Task<int> GetWalletsCount(string orgId, VMWallet param);
+        public Task<MVWallet?> GetWalletById(string orgId, string walletId);
+        public Task<MVWallet?> UpdateWalletById(string orgId, string walletId, MWallet wallet);
+        public Task<MVWallet?> AttachCustomerToWalletById(string orgId, string walletId, string custId);
+        public Task<MVWallet?> DeleteWalletById(string orgId, string walletId);
     }
 }
