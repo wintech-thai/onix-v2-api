@@ -40,8 +40,15 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MItemBalance>? ItemBalances { get; set; }
     public DbSet<MLimit>? Limits { get; set; }
 
+    //=== Admin tables here =====
+    public DbSet<MAdminUser>? AdminUsers { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        //Admin users tables here
+        modelBuilder.Entity<MAdminUser>();
+
+        //Org users tables here
         modelBuilder.Entity<MOrganization>();
         modelBuilder.Entity<MApiKey>();
         modelBuilder.Entity<MRole>();

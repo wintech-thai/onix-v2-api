@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -11,6 +12,7 @@ namespace Its.Onix.Api.Authentications
     {
         private readonly IBasicAuthenticationRepo? basicAuthenRepo = null;
         private readonly IBearerAuthenticationRepo? bearerAuthRepo = null;
+        private readonly IBearerAuthenticationAdminRepo bearerAuthAdminRepo;
         private readonly IAuthService _authService;
         private JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 
@@ -21,21 +23,24 @@ namespace Its.Onix.Api.Authentications
             UrlEncoder encoder,
             IBasicAuthenticationRepo bsAuthRepo,
             IBearerAuthenticationRepo brAuthRepo,
+            IBearerAuthenticationAdminRepo brAuthAdminRepo,
             IAuthService authService,
             ISystemClock clock) : base(options, logger, encoder, clock)
         {
             basicAuthenRepo = bsAuthRepo;
             bearerAuthRepo = brAuthRepo;
             _authService = authService;
+            bearerAuthAdminRepo = brAuthAdminRepo;
         }
 
-        protected override AuthenResult AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request)
+        protected override AuthenResult AuthenticateBasic(PathComponent pc, byte[]? jwtBytes, HttpRequest request)
         {
             var credentials = Encoding.UTF8.GetString(jwtBytes!).Split(new[] { ':' }, 2);
             var username = credentials[0];
             var password = credentials[1];
 
-            var user = basicAuthenRepo!.Authenticate(orgId, username, password, request);
+            //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User
+            var user = basicAuthenRepo!.Authenticate(pc.OrgId, username, password, request);
             var authResult = new AuthenResult()
             {
                 UserAuthen = user,
@@ -45,7 +50,7 @@ namespace Its.Onix.Api.Authentications
             return authResult;
         }
 
-        protected override AuthenResult AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request)
+        protected override AuthenResult AuthenticateBearer(PathComponent pc, byte[]? jwtBytes, HttpRequest request)
         {
             var accessToken = Encoding.UTF8.GetString(jwtBytes!);
 
@@ -55,7 +60,19 @@ namespace Its.Onix.Api.Authentications
             var jwt = tokenHandler.ReadJwtToken(accessToken);
             string userName = jwt.Claims.First(c => c.Type == "preferred_username").Value;
 
-            var user = bearerAuthRepo!.Authenticate(orgId, userName, "", request);
+            //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User (basicAuthenRepo vs bearerAuthAdminRepo)
+
+            var user = new User();
+            if (pc.ApiGroup == "user")
+            {
+                user = bearerAuthRepo!.Authenticate(pc.OrgId, userName, "", request);
+            }
+            else
+            {
+                //Admin mode
+                user = bearerAuthAdminRepo!.Authenticate(pc.OrgId, userName, "", request);
+            }
+
             var authResult = new AuthenResult()
             {
                 UserAuthen = user,

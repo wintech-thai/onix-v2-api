@@ -22,6 +22,61 @@ namespace onix.api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MAdminUser", b =>
+                {
+                    b.Property<Guid?>("AdminUserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("admin_user_id");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("InvitedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("invited_by");
+
+                    b.Property<DateTime?>("InvitedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invited_date");
+
+                    b.Property<string>("PreviousUserStatus")
+                        .HasColumnType("text")
+                        .HasColumnName("previous_user_status");
+
+                    b.Property<string>("RolesList")
+                        .HasColumnType("text")
+                        .HasColumnName("roles_list");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text")
+                        .HasColumnName("tags");
+
+                    b.Property<string>("TmpUserEmail")
+                        .HasColumnType("text")
+                        .HasColumnName("tmp_user_email");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text")
+                        .HasColumnName("user_name");
+
+                    b.Property<string>("UserStatus")
+                        .HasColumnType("text")
+                        .HasColumnName("user_status");
+
+                    b.HasKey("AdminUserId");
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("AdminUsers");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MApiKey", b =>
                 {
                     b.Property<Guid?>("KeyId")
