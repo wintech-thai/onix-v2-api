@@ -9,48 +9,47 @@ namespace Its.Onix.Api.Authentications
 {
     public class BearerAuthenticationAdminRepo : IBearerAuthenticationAdminRepo
     {
-        private readonly IOrganizationService? service = null;
+        private readonly IAdminUserService? service = null;
         private readonly IRedisHelper _redis;
 
-        public BearerAuthenticationAdminRepo(IOrganizationService svc, IRedisHelper redis)
+        public BearerAuthenticationAdminRepo(IAdminUserService svc, IRedisHelper redis)
         {
             service = svc;
             _redis = redis;
         }
 
-        private MVOrganizationUser? VerifyUser(string orgId, string user, HttpRequest request)
+        private MVAdminUser? VerifyUser(string orgId, string user, HttpRequest request)
         {
             var pc = ServiceUtils.GetPathComponent(request);
             var isWhiteListed = ServiceUtils.IsAdminWhiteListedAPI(pc.ControllerName, pc.ApiName);
 
             if (isWhiteListed)
             {
-                var ou = new MVOrganizationUser()
+                var ou = new MVAdminUser()
                 {
                     Status = "OK",
                     Description = $"Whitelisted API [{pc.ControllerName}] [{pc.ApiName}]",
 
                     User = new MUser() { UserName = user },
-                    OrgUser = new MOrganizationUser() { OrgCustomId = orgId },
+                    AdminUser = new MAdminUser() { UserName = user },
                 };
                 //Console.WriteLine($"WHITELISTED ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
                 return ou;
             }
 
             var key = $"#{orgId}:VerifyAdminUser:#{user}";
-            var t = _redis.GetObjectAsync<MVOrganizationUser>(key);
-            var orgUser = t.Result;
+            var t = _redis.GetObjectAsync<MVAdminUser>(key);
+            var adminUser = t.Result;
 
-            if (orgUser == null)
+            if (adminUser == null)
             {
-                //TODO : เปลี่ยนตรงนี้เป็นว่ามี userName อยู่ใน table Administrators หรือไม่
-                var m = service!.VerifyUserInOrganization(orgId, user);
+                var m = service!.VerifyUserIsAdmin(user);
                 _ = _redis.SetObjectAsync(key, m, TimeSpan.FromMinutes(5));
 
-                orgUser = m;
+                adminUser = m;
             }
 
-            if (orgUser != null)
+            if (adminUser != null)
             {
                 // Check ตรงนี้หลังจากที่มี verify แล้วมี user อยู่ใน Organization
                 // Check ต่อว่ามี Session อยู่ใน Redis ที่ setup ไว้ตอนที่ login หรือไม่
@@ -60,20 +59,20 @@ namespace Its.Onix.Api.Authentications
                 var session = _redis.GetObjectAsync<UserToken>(sessionKey);
                 if (session.Result == null)
                 {
-                    var ou = new MVOrganizationUser()
+                    var ou = new MVAdminUser()
                     {
                         Status = "ADMIN_SESSION_NOT_FOUND",
                         Description = $"Session not found please re-login for username [{user}]",
 
                         User = new MUser() { UserName = user },
-                        OrgUser = new MOrganizationUser() { OrgCustomId = orgId },
+                        AdminUser = new MAdminUser() { UserName = user },
                     };
 
                     return ou;
                 }
             }
 
-            return orgUser;
+            return adminUser;
         }
 
         public User? Authenticate(string orgId, string user, string password, HttpRequest request)
@@ -95,9 +94,9 @@ namespace Its.Onix.Api.Authentications
                 UserName = user,
                 Password = "",
                 UserId = m.User!.UserId,
-                Role = m.OrgUser!.RolesList,
+                Role = m.AdminUser!.RolesList,
                 AuthenType = "JWT",
-                OrgId = m.OrgUser.OrgCustomId,
+                OrgId = "global",
                 Email = m.User.UserEmail,
 
                 Status = m.Status,

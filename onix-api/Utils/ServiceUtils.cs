@@ -141,16 +141,29 @@ namespace Its.Onix.Api.Utils
 
         public static PathComponent GetPathComponent(HttpRequest request)
         {
-            var pattern = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
             var path = request.Path;
-            MatchCollection matches = Regex.Matches(path, pattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
-            var result = new PathComponent()
+            var pattern1 = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
+            MatchCollection matchesUserApi = Regex.Matches(path, pattern1, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+
+            var pattern2 = @"^\/admin-api\/(.+)\/org\/(.+)\/action\/(.+)$";
+            MatchCollection matchesAdminApi = Regex.Matches(path, pattern2, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+
+            var result = new PathComponent();
+            if (matchesUserApi.Count > 0)
             {
-                OrgId = matches[0].Groups[2].Value,
-                ControllerName = matches[0].Groups[1].Value,
-                ApiName = matches[0].Groups[3].Value,
-            };
+                result.OrgId = matchesUserApi[0].Groups[2].Value;
+                result.ControllerName = matchesUserApi[0].Groups[1].Value;
+                result.ApiName = matchesUserApi[0].Groups[3].Value;
+                result.ApiGroup = "user";
+            }
+            else if (matchesAdminApi.Count > 0)
+            {
+                result.OrgId = matchesAdminApi[0].Groups[2].Value;
+                result.ControllerName = matchesAdminApi[0].Groups[1].Value;
+                result.ApiName = matchesAdminApi[0].Groups[3].Value;
+                result.ApiGroup = "admin";
+            }
 
             return result;
         }

@@ -10,8 +10,8 @@ namespace Its.Onix.Api.Authentications
 {
     public abstract class AuthenticationHandlerProxyBase : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        protected abstract AuthenResult? AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request);
-        protected abstract AuthenResult? AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request);
+        protected abstract AuthenResult? AuthenticateBasic(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
+        protected abstract AuthenResult? AuthenticateBearer(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
 
         [Obsolete]
         protected AuthenticationHandlerProxyBase(
@@ -58,15 +58,14 @@ namespace Its.Onix.Api.Authentications
             {
                 var pc = ServiceUtils.GetPathComponent(Request);
                 var credentialBytes = Convert.FromBase64String(authHeader.Parameter!);
-
                 if (authHeader.Scheme.Equals("Basic"))
                 {
-                    authResult = await Task.Run(() => AuthenticateBasic(pc.OrgId, credentialBytes, Request));
+                    authResult = await Task.Run(() => AuthenticateBasic(pc, credentialBytes, Request));
                 }
                 else
                 {
                     //Bearer
-                    authResult = await Task.Run(() => AuthenticateBearer(pc.OrgId, credentialBytes, Request));
+                    authResult = await Task.Run(() => AuthenticateBearer(pc, credentialBytes, Request));
                 }
             }
             catch (Exception e)

@@ -23,6 +23,7 @@ namespace Its.Onix.Api.Database.Repositories
                     (au, u) => new MAdminUser
                     {
                         UserId = au.UserId,
+                        UserStatus = au.UserStatus,
                         UserName = au.UserName,
                         RolesList = au.RolesList,
                         CreatedDate = au.CreatedDate,
@@ -30,6 +31,27 @@ namespace Its.Onix.Api.Database.Repositories
                         Tags = au.Tags,
                     })
                 .Where(x => x.AdminUserId!.Equals(id)).FirstOrDefaultAsync();
+
+            return result!;
+        }
+
+        public async Task<MAdminUser> GetUserByName(string userName)
+        {
+            var result = await context!.AdminUsers!
+                .Join(context!.Users!,
+                    au => au.UserName,
+                    u => u.UserName,
+                    (au, u) => new MAdminUser
+                    {
+                        UserId = au.UserId,
+                        UserName = au.UserName,
+                        RolesList = au.RolesList,
+                        CreatedDate = au.CreatedDate,
+                        UserEmail = u.UserEmail,
+                        Tags = au.Tags,
+                        UserStatus = au.UserStatus,
+                    })
+                .Where(x => x.UserName!.Equals(userName)).FirstOrDefaultAsync();
 
             return result!;
         }
@@ -89,13 +111,14 @@ namespace Its.Onix.Api.Database.Repositories
 
         private ExpressionStarter<MAdminUser> UserPredicate(VMAdminUser param)
         {
-            var pd = PredicateBuilder.New<MAdminUser>();
+            var pd = PredicateBuilder.New<MAdminUser>(true);
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MAdminUser>();
                 fullTextPd = fullTextPd.Or(p => p.UserEmail!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.UserName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

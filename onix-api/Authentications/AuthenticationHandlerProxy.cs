@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -32,14 +33,14 @@ namespace Its.Onix.Api.Authentications
             bearerAuthAdminRepo = brAuthAdminRepo;
         }
 
-        protected override AuthenResult AuthenticateBasic(string orgId, byte[]? jwtBytes, HttpRequest request)
+        protected override AuthenResult AuthenticateBasic(PathComponent pc, byte[]? jwtBytes, HttpRequest request)
         {
             var credentials = Encoding.UTF8.GetString(jwtBytes!).Split(new[] { ':' }, 2);
             var username = credentials[0];
             var password = credentials[1];
 
             //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User
-            var user = basicAuthenRepo!.Authenticate(orgId, username, password, request);
+            var user = basicAuthenRepo!.Authenticate(pc.OrgId, username, password, request);
             var authResult = new AuthenResult()
             {
                 UserAuthen = user,
@@ -49,7 +50,7 @@ namespace Its.Onix.Api.Authentications
             return authResult;
         }
 
-        protected override AuthenResult AuthenticateBearer(string orgId, byte[]? jwtBytes, HttpRequest request)
+        protected override AuthenResult AuthenticateBearer(PathComponent pc, byte[]? jwtBytes, HttpRequest request)
         {
             var accessToken = Encoding.UTF8.GetString(jwtBytes!);
 
@@ -60,7 +61,18 @@ namespace Its.Onix.Api.Authentications
             string userName = jwt.Claims.First(c => c.Type == "preferred_username").Value;
 
             //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User (basicAuthenRepo vs bearerAuthAdminRepo)
-            var user = bearerAuthRepo!.Authenticate(orgId, userName, "", request);
+
+            var user = new User();
+            if (pc.ApiGroup == "user")
+            {
+                user = bearerAuthRepo!.Authenticate(pc.OrgId, userName, "", request);
+            }
+            else
+            {
+                //Admin mode
+                user = bearerAuthAdminRepo!.Authenticate(pc.OrgId, userName, "", request);
+            }
+
             var authResult = new AuthenResult()
             {
                 UserAuthen = user,

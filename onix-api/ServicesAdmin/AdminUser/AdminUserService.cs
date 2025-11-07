@@ -317,7 +317,7 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
-        
+
         public async Task<MVAdminUser?> InviteUser(MAdminUser user)
         {
             var r = new MVAdminUser()
@@ -395,6 +395,56 @@ namespace Its.Onix.Api.Services
             r.AdminUser.RolesList = "";
 
             return r;
+        }
+        
+        public MVAdminUser VerifyUserIsAdmin(string userName)
+        {
+            var u = userRepository!.GetUserByName(userName);
+            if (u == null)
+            {
+                var o = new MVAdminUser()
+                {
+                    Status = "NOTFOUND",
+                    Description = $"User [{userName}] not found !!!"
+                };
+
+                return o;
+            }
+
+            var t = repository!.GetUserByName(userName);
+            var m = t.Result;
+
+            if (m == null)
+            {
+                var o = new MVAdminUser()
+                {
+                    Status = "NOT_ADMIN_USER",
+                    Description = $"User [{userName}] is not admin!!!",
+                };
+
+                return o;
+            }
+
+            if (m.UserStatus != "Active")
+            {
+                var o = new MVAdminUser()
+                {
+                    Status = "NOT_ACTIVE_STATUS_USER",
+                    Description = $"User [{userName}] has status [{m.UserStatus}]!!!",
+                };
+
+                return o;
+            }
+
+            var mv = new MVAdminUser()
+            {
+                User = u,
+                AdminUser = m,
+                Status = "OK",
+                Description = "Success",
+            };
+
+            return mv;
         }
     }
 }

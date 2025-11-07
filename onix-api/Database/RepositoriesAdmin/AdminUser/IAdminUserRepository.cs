@@ -6,6 +6,7 @@ namespace Its.Onix.Api.Database.Repositories
     public interface IAdminUserRepository
     {
         public Task<MAdminUser> GetUserById(string userId);
+        public Task<MAdminUser> GetUserByName(string userName);
         public Task<MAdminUser> GetUserByIdLeftJoin(string userId);
         public Task<MAdminUser> AddUser(MAdminUser user);
         public Task<MAdminUser?> DeleteUserById(string userId);

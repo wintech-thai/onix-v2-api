@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Its.Onix.Api.Services;
 using Serilog;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.Models;
 
 namespace Its.Onix.Api.Authorizations;
 
@@ -11,7 +12,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 {
     private readonly IRoleService service;
     private string apiCalled = "";
-    private readonly string adminOnlyApiPattern = @"^(OnlyAdmin):(.+)$";
+    //private readonly string adminOnlyApiPattern = @"^(OnlyAdmin):(.+)$";
 
     public GenericRbacHandler(IRoleService svc)
     {
@@ -24,7 +25,26 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         return claim;
     }
 
-    private string? IsRoleValid(IEnumerable<Models.MRole>? roles, string uri)
+    private string GetApiGroup(string uri)
+    {
+        var userApiPattern = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
+        var userApimatches = Regex.Matches(uri, userApiPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+        if (userApimatches.Count > 0)
+        {
+            return "user";
+        }
+
+        var adminApiPattern = @"^\/admin-api\/(.+)\/org\/(.+)\/action\/(.+)$";
+        var adminApimatches = Regex.Matches(uri, adminApiPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+        if (adminApimatches.Count > 0)
+        {
+            return "admin";
+        }
+
+        return "";
+    }
+
+    private string? IsRoleUserValid(IEnumerable<MRole>? roles, string uri)
     {
         var uriPattern = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
         var matches = Regex.Matches(uri, uriPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
@@ -36,6 +56,39 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         apiCalled = keyword;
 
         if (ServiceUtils.IsWhiteListedAPI(group, api))
+        {
+            //No need to check for permission just only for this API
+            return "TEMP";
+        }
+
+        foreach (var role in roles!)
+        {
+            var patterns = role.RoleDefinition!.Split(',').ToList();
+            foreach (var pattern in patterns!)
+            {
+                Match m = Regex.Match(keyword, pattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+                if (m.Success)
+                {
+                    return role.RoleName;
+                }
+            }
+        }
+
+        return "";
+    }
+
+    private string? IsRoleAdminValid(IEnumerable<MRole>? roles, string uri)
+    {
+        var uriPattern = @"^\/admin-api\/(.+)\/org\/(.+)\/action\/(.+)$";
+        var matches = Regex.Matches(uri, uriPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+
+        var group = matches[0].Groups[1].Value;
+        var api = matches[0].Groups[3].Value;
+
+        var keyword = $"{group}:{api}";
+        apiCalled = keyword;
+
+        if (ServiceUtils.IsAdminWhiteListedAPI(group, api))
         {
             //No need to check for permission just only for this API
             return "TEMP";
@@ -108,16 +161,31 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var authorizeOrgId = orgIdClaim.Value;
         var userName = userNameClaim.Value;
 
-        var roles = service.GetRolesList("", role);
-        var roleMatch = IsRoleValid(roles, uri);
+        var apiGroup = GetApiGroup(uri);
 
-        Match m = Regex.Match(apiCalled, adminOnlyApiPattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
-        if (m.Success && !authorizeOrgId.Equals("global"))
+        //TODO : อนาคตต้องแยก GetRoleList แยกระหว่าง user กับ admin
+        var roles = service.GetRolesList("", role);
+
+        var roleMatch = "";
+Console.WriteLine($"DEBUG1 ====== [{roleMatch}] [{apiGroup}] ======");
+        if (apiGroup == "user")
         {
-            //Reject if API is match Admin(.+) but ID is not in "global" organization
-            Log.Warning($"Invoked API [{apiCalled}] for UID [{uid}] [{method}] with org [{authorizeOrgId}] is not allowed!!!");
-            return Task.CompletedTask;
+Console.WriteLine($"DEBUG2 ====== [{roleMatch}] [{apiGroup}] ======");
+            roleMatch = IsRoleUserValid(roles, uri);
         }
+        else if (apiGroup == "admin")
+        {
+Console.WriteLine($"DEBUG3 ====== [{roleMatch}] [{apiGroup}] ======");
+            roleMatch = IsRoleAdminValid(roles, uri);
+        }
+Console.WriteLine($"DEBUG4 ====== [{roleMatch}] [{apiGroup}] ======");
+//        Match m = Regex.Match(apiCalled, adminOnlyApiPattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+//        if (m.Success && !authorizeOrgId.Equals("global"))
+//        {
+//            //Reject if API is match Admin(.+) but ID is not in "global" organization
+//            Log.Warning($"Invoked API [{apiCalled}] for UID [{uid}] [{method}] with org [{authorizeOrgId}] is not allowed!!!");
+//            return Task.CompletedTask;
+//        }
 
         if (!roleMatch!.Equals(""))
         {
