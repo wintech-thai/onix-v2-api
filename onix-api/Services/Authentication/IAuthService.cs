@@ -13,5 +13,6 @@ namespace Its.Onix.Api.Services
         public Task<IdpResult> ChangeUserPasswordIdp(MUpdatePassword password);
         public Task<IdpResult> ChangeForgotUserPasswordIdp(MUpdatePassword password);
         public Task<IdpResult> UserLogoutIdp(string userName);
+        public Task<IdpResult> UpdateUserIdp(MUser user);
     }
 }

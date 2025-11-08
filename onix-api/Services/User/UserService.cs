@@ -261,7 +261,12 @@ namespace Its.Onix.Api.Services
                 return result;
             }
 
-            //TODO : อัพเดตข้อมูลกลับไปที่ IDP ด้วย
+            var r = _authService.UpdateUserIdp(user).Result;
+            if (!r.Success)
+            {
+                result.Description = r.Message;
+                result.Status = "IDP_USER_UPDATE_ERROR";
+            }
 
             result.User = u;
             return result;
