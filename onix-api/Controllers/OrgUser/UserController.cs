@@ -16,7 +16,8 @@ namespace Its.Onix.Api.Controllers
         {
             svc = service;
         }
-
+/*
+        //เลิกใช้
         [HttpPost]
         [Route("org/{id}/action/AddUser")]
         public IActionResult AddUser(string id, [FromBody] MUser request)
@@ -29,5 +30,6 @@ namespace Its.Onix.Api.Controllers
 
             return Ok(result);
         }
+*/
     }
 }

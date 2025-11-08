@@ -202,5 +202,69 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        //ไม่ใช้ orgId
+        public MVUser GetUserByUserName(string userName)
+        {
+            var result = new MVUser()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            var u = repository!.GetUserByUserName(userName);
+            if (u == null)
+            {
+                result.Status = "USERNAME_NOT_FOUND_DB";
+                result.Description = $"Unable to find user name [{userName}] in DB!!!";
+
+                return result;
+            }
+
+            result.User = u;
+
+            return result;
+        }
+
+        public MVUser UpdateUserByUserName(string userName, MUser user)
+        {
+            var result = new MVUser()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            var validateEmailResult = ValidationUtils.ValidateEmail(user.SecondaryEmail!);
+            if (validateEmailResult.Status != "OK")
+            {
+                result.Status = validateEmailResult.Status;
+                result.Description = validateEmailResult.Description;
+
+                return result;
+            }
+
+            var validatePhoneResult = ValidationUtils.ValidateEmail(user.PhoneNumber!);
+            if (validatePhoneResult.Status != "OK")
+            {
+                result.Status = validatePhoneResult.Status;
+                result.Description = validatePhoneResult.Description;
+
+                return result;
+            }
+
+            var u = repository!.UpdateUserByUserName(userName, user);
+            if (u == null)
+            {
+                result.Status = "USERNAME_NOT_FOUND_DB";
+                result.Description = $"Unable to find user name [{userName}] in DB!!!";
+
+                return result;
+            }
+
+            //TODO : อัพเดตข้อมูลกลับไปที่ IDP ด้วย
+
+            result.User = u;
+            return result;
+        }
     }
 }

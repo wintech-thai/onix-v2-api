@@ -56,6 +56,29 @@ namespace Its.Onix.Api.Database.Repositories
             return u!;
         }
 
+        public MUser GetUserByUserName(string userName)
+        {
+            //เปลี่ยนใช้ชื่อให้สือความหมายมากขึ้น
+            var u = context!.Users!.Where(p => p!.UserName!.Equals(userName)).FirstOrDefault();
+            return u!;
+        }
+
+        public MUser UpdateUserByUserName(string userName, MUser user)
+        {
+            var u = context!.Users!.Where(p => p!.UserName!.Equals(userName)).FirstOrDefault();
+            if (u != null)
+            {
+                u.Name = user.Name;
+                u.LastName = user.LastName;
+                u.SecondaryEmail = user.SecondaryEmail;
+                u.PhoneNumber = user.PhoneNumber;
+
+                context!.SaveChanges();
+            }
+
+            return u!;
+        }
+
         public MUser GetUserByEmail(string email)
         {
             var u = context!.Users!.Where(p => p!.UserEmail!.Equals(email)).FirstOrDefault();

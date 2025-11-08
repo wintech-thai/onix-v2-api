@@ -52,7 +52,21 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MOrganization>();
         modelBuilder.Entity<MApiKey>();
         modelBuilder.Entity<MRole>();
-        modelBuilder.Entity<MUser>();
+
+        modelBuilder.Entity<MUser>(entity =>
+        {
+            entity.Property(p => p.PhoneNumber).HasMaxLength(16);
+
+            // PostgreSQL CHECK Constraint สำหรับ E.164
+            entity.ToTable(t =>
+            {
+                t.HasCheckConstraint(
+                    "CK_User_PhoneNumber_E164",
+                    "phone_number ~ '^\\+[1-9][0-9]{7,14}$'"
+                );
+            });
+        });
+    
         modelBuilder.Entity<MOrganizationUser>();
         modelBuilder.Entity<MSystemVariable>();
         modelBuilder.Entity<MItem>();

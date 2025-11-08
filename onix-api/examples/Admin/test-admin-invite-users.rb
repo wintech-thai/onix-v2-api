@@ -17,10 +17,10 @@ keyFile = ".token"
 apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUser"
 param =  {
   UserName: "seubpong.soodlor",
-  RolesList: "OWNER",
   TmpUserEmail: "hello.seub@please-scan.com",
   Tags: "test,local",
-  InvitedBy: "seubpong.mon"
+  InvitedBy: "seubpong.mon",
+  Roles: [ 'OWNER' ],
 }
 
 token = File.read(keyFile)

@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251108121201_User_Fields_001")]
+    partial class User_Fields_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1505,17 +1508,9 @@ namespace onix.api.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("phone_number");
 
-                    b.Property<string>("PhoneNumberVerified")
-                        .HasColumnType("text")
-                        .HasColumnName("phone_number_verified");
-
                     b.Property<string>("SecondaryEmail")
                         .HasColumnType("text")
                         .HasColumnName("secondary_email");
-
-                    b.Property<string>("SecondaryEmailVerified")
-                        .HasColumnType("text")
-                        .HasColumnName("secondary_email_verified");
 
                     b.Property<DateTime?>("UserCreatedDate")
                         .HasColumnType("timestamp with time zone")
