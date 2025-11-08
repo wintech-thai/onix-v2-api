@@ -246,7 +246,7 @@ namespace Its.Onix.Api.Services
                 }
             }
 
-            var validatePhoneResult = ValidationUtils.ValidateEmail(user.PhoneNumber!);
+            var validatePhoneResult = ValidationUtils.ValidatePhone(user.PhoneNumber!);
             if (validatePhoneResult.Status != "OK")
             {
                 result.Status = validatePhoneResult.Status;
