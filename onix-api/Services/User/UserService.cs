@@ -234,13 +234,16 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            var validateEmailResult = ValidationUtils.ValidateEmail(user.SecondaryEmail!);
-            if (validateEmailResult.Status != "OK")
+            if (!string.IsNullOrEmpty(user.SecondaryEmail))
             {
-                result.Status = validateEmailResult.Status;
-                result.Description = validateEmailResult.Description;
+                var validateEmailResult = ValidationUtils.ValidateEmail(user.SecondaryEmail!);
+                if (validateEmailResult.Status != "OK")
+                {
+                    result.Status = validateEmailResult.Status;
+                    result.Description = validateEmailResult.Description;
 
-                return result;
+                    return result;
+                }
             }
 
             var validatePhoneResult = ValidationUtils.ValidateEmail(user.PhoneNumber!);
