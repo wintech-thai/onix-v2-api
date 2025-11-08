@@ -10,7 +10,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "temp"
+orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ### 
