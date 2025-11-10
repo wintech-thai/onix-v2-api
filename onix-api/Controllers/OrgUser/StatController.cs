@@ -17,6 +17,20 @@ namespace Its.Onix.Api.Controllers
             svc = service;
         }
 
+        [HttpGet]
+        [Route("org/{id}/action/GetCurrentBalanceStats")]
+        public IActionResult GetStats(string id)
+        {
+            var param = new VMStat()
+            {
+                Limit = 100,
+                StatCode = "BalanceCurrent",
+            };
+
+            var result = svc.GetStats(id, param);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/GetStats")]
         public IActionResult GetStats(string id, [FromBody] VMStat param)
