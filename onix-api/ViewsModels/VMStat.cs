@@ -6,7 +6,5 @@ namespace Its.Onix.Api.ViewsModels
     public class VMStat : VMQueryBase
     {
         public string? StatCode { get; set; }
-        public DateTime? fromDate { get; set; }
-        public DateTime? toDate { get; set; }
     }
 }
