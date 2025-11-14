@@ -4,6 +4,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using System.Threading.Tasks;
 using Its.Onix.Api.Utils;
+using RulesEngine.Models;
 
 namespace Its.Onix.Api.Services
 {
@@ -243,14 +244,41 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private MPointRule GetPointRule(string orgId, string pointRuleId)
+        private async Task<MPointRule?> GetPointRule(string orgId, string pointRuleId)
         {
             repository!.SetCustomOrgId(orgId);
-            return new MPointRule();
+
+            var pr = await repository.GetPointRuleById(pointRuleId);
+            return pr;
         }
 
         public async Task<PointRuleExecutionResult> EvaluatePointRuleById(string orgId, string pointRuleId, PointRuleInput ruleInput)
         {
+            var result = new PointRuleExecutionResult()
+            {
+                IsMatch = false
+            };
+
+            var pr = await GetPointRule(orgId, pointRuleId);
+            if (pr == null)
+            {
+                return result;
+            }
+
+            if (string.IsNullOrEmpty(pr.RuleDefinition))
+            {
+                return result;
+            }
+
+            var engine = RuleEngineFactory.CreateEngineFromYaml(pr.RuleDefinition!);
+            var ruleParams = new RuleParameter[]
+            {
+                new RuleParameter("input", ruleInput)
+            };
+
+
+            var results = await engine.ExecuteActionWorkflowAsync("GradeRules", "", ruleParams);
+ 
             return new PointRuleExecutionResult();
         }
 
