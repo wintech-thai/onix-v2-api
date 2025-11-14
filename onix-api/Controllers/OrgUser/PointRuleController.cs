@@ -26,7 +26,6 @@ namespace Prom.LPR.Api.Controllers
         public async Task<IActionResult> AddPointRule(string id, [FromBody] MPointRule request)
         {
             var result = await svc.AddPointRule(id, request);
-
             return Ok(result);
         }
 
@@ -42,10 +41,20 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/UpdatePointRuleStatusById/{pointRuleId}/{status}")]
-        public async Task<IActionResult> UpdatePointRuleStatusById(string id, string pointRuleId, string status)
+        [Route("org/{id}/action/UpdatePointRuleStatusByIdActive/{pointRuleId}")]
+        public async Task<IActionResult> UpdatePointRuleStatusByIdActive(string id, string pointRuleId)
         {
-            var result = await svc.UpdatePointRuleStatusById(id, pointRuleId, status);
+            var result = await svc.UpdatePointRuleStatusById(id, pointRuleId, "Active");
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/UpdatePointRuleStatusByIdDisable/{pointRuleId}")]
+        public async Task<IActionResult> UpdatePointRuleStatusByIdDisable(string id, string pointRuleId)
+        {
+            var result = await svc.UpdatePointRuleStatusById(id, pointRuleId, "Disable");
 
             return Ok(result);
         }
@@ -83,6 +92,24 @@ namespace Prom.LPR.Api.Controllers
         public async Task<IActionResult> DeletePointRuleById(string id, string pointRuleId)
         {
             var result = await svc.DeletePointRuleById(id, pointRuleId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpDelete]
+        [Route("org/{id}/action/EvaluatePointRuleById")]
+        public async Task<IActionResult> EvaluatePointRuleById(string id, string pointRuleId, [FromBody] PointRuleInput param)
+        {
+            var result = svc.EvaluatePointRuleById(id, pointRuleId, param);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpDelete]
+        [Route("org/{id}/action/EvaluatePointRules")]
+        public async Task<IActionResult> EvaluatePointRules(string id, [FromBody] PointRuleInput param)
+        {
+            var result = svc.EvaluatePointRules(id, param);
             return Ok(result);
         }
     }

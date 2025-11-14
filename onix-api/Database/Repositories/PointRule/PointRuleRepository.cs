@@ -60,7 +60,8 @@ namespace Its.Onix.Api.Database.Repositories
 
             var predicate = PointRulePredicate(param!);
             var result = await context!.PointRules!.Where(predicate)
-                .OrderByDescending(e => e.CreatedDate)
+                .OrderBy(e => e.Priority)
+                .ThenBy(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
                 .ToListAsync();
@@ -149,6 +150,12 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return false;
+        }
+
+        public async Task<MPointRule?> GetPointRuleByName(string ruleName)
+        {
+            var result = await context!.PointRules!.Where(x => x.OrgId!.Equals(orgId) && x.RuleName!.Equals(ruleName)).FirstOrDefaultAsync();
+            return result;
         }
     }
 }

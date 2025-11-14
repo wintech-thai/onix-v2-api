@@ -7,12 +7,12 @@ using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Services
 {
-    public class PointRule : BaseService, IPointRuleService
+    public class PointRuleService : BaseService, IPointRuleService
     {
         private readonly IPointRuleRepository repository = null!;
         private readonly IRedisHelper _redis;
 
-        public PointRule(
+        public PointRuleService(
             IPointRuleRepository repo,
             IRedisHelper redis) : base()
         {
@@ -45,6 +45,14 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            if (pr.Priority == null)
+            {
+                pr.Priority = 0;
+            }
+
+            //เริ่มต้นเป็น Disable ไปเลย
+            pr.Status = "Disable";
 
             var isRuleNameExist = await repository.IsRuleNameExist(pr.RuleName!);
             if (isRuleNameExist)
@@ -97,7 +105,21 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var existingPointRule = await repository.GetPointRuleByName(pr.RuleName!);
+            if ((existingPointRule != null) && (existingPointRule.Id.ToString() != pointRuleId))
+            {
+                r.Status = "NAME_DUPLICATE";
+                r.Description = $"Rule name [{pr.RuleName}] is duplicate!!!";
+
+                return r;
+            }
+
             //TODO : Validate rule definitioin
+
+            if (pr.Priority == null)
+            {
+                pr.Priority = 0;
+            }
 
             var result = await repository!.UpdatePointRuleById(pointRuleId, pr);
             if (result == null)
@@ -219,6 +241,22 @@ namespace Its.Onix.Api.Services
 
             r.PointRule = result;
             return r;
+        }
+
+        private MPointRule GetPointRule(string orgId, string pointRuleId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return new MPointRule();
+        }
+
+        public async Task<PointRuleExecutionResult> EvaluatePointRuleById(string orgId, string pointRuleId, PointRuleInput ruleInput)
+        {
+            return new PointRuleExecutionResult();
+        }
+
+        public async Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, PointRuleInput ruleInput)
+        {
+            return new PointRuleExecutionResult();
         }
     }
 }

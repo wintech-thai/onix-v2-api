@@ -15,5 +15,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPointRule?> DeletePointRuleById(string pointRuleId);
         public Task<MPointRule?> UpdatePointRuleStatusById(string pointRuleId, string status);
         public Task<bool> IsRuleNameExist(string ruleName);
+        public Task<MPointRule?> GetPointRuleByName(string ruleName);
     }
 }
