@@ -12,14 +12,12 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 
-apiUrl = "api/Stat/org/#{orgId}/action/GetStats"
-param =  {
-  StatCode: "BalanceCurrent",
-}
+apiUrl = "api/Stat/org/#{orgId}/action/GetCurrentBalanceStats"
+param =  nil
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)
 
-apiUrl = "api/Stat/org/#{orgId}/action/GetStatCount"
-result = make_request(:post, apiUrl, param)
-puts(result)
+#apiUrl = "api/Stat/org/#{orgId}/action/GetStatCount"
+#result = make_request(:post, apiUrl, param)
+#puts(result)

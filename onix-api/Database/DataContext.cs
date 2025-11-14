@@ -39,6 +39,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MItemTx>? ItemTxs { get; set; }
     public DbSet<MItemBalance>? ItemBalances { get; set; }
     public DbSet<MLimit>? Limits { get; set; }
+    public DbSet<MPointRule>? PointRules { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -132,5 +133,8 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MLimit>();
         modelBuilder.Entity<MLimit>()
             .HasIndex(t => new { t.OrgId, t.StatCode }).IsUnique();
+
+        modelBuilder.Entity<MPointRule>()
+            .HasIndex(t => new { t.OrgId, t.RuleName }).IsUnique();
     }
 }

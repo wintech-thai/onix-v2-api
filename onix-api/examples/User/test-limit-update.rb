@@ -11,9 +11,9 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-statCode = "CustomerBalanceDaily"
+statCode = "ScanItemBalanceCurrent"
 
-apiUrl = "api/Limit/org/#{orgId}/action/UpdateLimit/#{statCode}/1500"
+apiUrl = "api/Limit/org/#{orgId}/action/UpdateLimit/#{statCode}/1500000"
 param =  nil
 
 result = make_request(:post, apiUrl, param)

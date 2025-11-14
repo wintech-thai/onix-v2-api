@@ -1,0 +1,154 @@
+using Its.Onix.Api.Models;
+using Its.Onix.Api.ViewsModels;
+using LinqKit;
+using Microsoft.EntityFrameworkCore;
+
+namespace Its.Onix.Api.Database.Repositories
+{
+    public class PointRuleRepository : BaseRepository, IPointRuleRepository
+    {
+        public PointRuleRepository(IDataContext ctx)
+        {
+            context = ctx;
+        }
+
+        private ExpressionStarter<MPointRule> PointRulePredicate(VMPointRule param)
+        {
+            var pd = PredicateBuilder.New<MPointRule>();
+
+            pd = pd.And(p => p.OrgId!.Equals(orgId));
+
+            if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
+            {
+                var fullTextPd = PredicateBuilder.New<MPointRule>();
+                fullTextPd = fullTextPd.Or(p => p.RuleName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
+
+                pd = pd.And(fullTextPd);
+            }
+
+            return pd;
+        }
+
+        public async Task<MPointRule> AddPointRule(MPointRule pr)
+        {
+            pr.OrgId = orgId;
+
+            await context!.PointRules!.AddAsync(pr);
+            await context.SaveChangesAsync();
+
+            return pr;
+        }
+
+        public async Task<List<MPointRule>> GetPointRules(VMPointRule param)
+        {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset-1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = PointRulePredicate(param!);
+            var result = await context!.PointRules!.Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            //มันใหญ่มากเลยไม่อยากให้ return RuleDefinition ออกไป
+            foreach (var r in result)
+            {
+                r.RuleDefinition = "";
+            }
+
+            return result;
+        }
+
+        public async Task<int> GetPointRuleCount(VMPointRule param)
+        {
+            var predicate = PointRulePredicate(param!);
+            var result = await context!.PointRules!.Where(predicate).CountAsync();
+
+            return result;
+        }
+
+        public async Task<MPointRule?> UpdatePointRuleById(string pointRuleId, MPointRule pr)
+        {
+            Guid id = Guid.Parse(pointRuleId);
+            var result = await context!.PointRules!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.Tags = pr.Tags;
+                result.Description = pr.Description;
+                result.RuleName = pr.RuleName;
+                result.RuleDefinition = pr.RuleDefinition;
+                result.TriggeredEvent = pr.TriggeredEvent;
+                result.UpdatedDate = DateTime.UtcNow;
+
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
+        public async Task<MPointRule?> GetPointRuleById(string pointRuleId)
+        {
+            Guid id = Guid.Parse(pointRuleId);
+            var u = await context!.PointRules!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+        public async Task<MPointRule?> DeletePointRuleById(string pointRuleId)
+        {
+            Guid id = Guid.Parse(pointRuleId);
+
+            var r = await context!.PointRules!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
+            if (r != null)
+            {
+                context!.PointRules!.Remove(r);
+                await context.SaveChangesAsync();
+            }
+
+            return r;
+        }
+
+        public async Task<MPointRule?> UpdatePointRuleStatusById(string pointRuleId, string status)
+        {
+            Guid id = Guid.Parse(pointRuleId);
+            var result = await context!.PointRules!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.Status = status;
+                result.UpdatedDate = DateTime.UtcNow;
+
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
+        public async Task<bool> IsRuleNameExist(string ruleName)
+        {
+            var result = await context!.PointRules!.Where(x => x.OrgId!.Equals(orgId) && x.RuleName!.Equals(ruleName)).FirstOrDefaultAsync();
+            if (result != null)
+            {
+                //Exist
+                return true;
+            }
+
+            return false;
+        }
+    }
+}
