@@ -14,6 +14,7 @@ namespace Its.Onix.Api.Services
         public Task<int> GetPointRulesCount(string orgId, VMPointRule param);
         public Task<MVPointRule?> UpdatePointRuleStatusById(string orgId, string pointRuleId, string status);
         public Task<PointRuleExecutionResult> EvaluatePointRuleById(string orgId, string pointRuleId, PointRuleInput ruleInput);
-        public Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, PointRuleInput ruleInput);
+        public Task<PointRuleExecutionResult> TestPointRule(string orgId, PointRuleInput ruleInput);
+//        public Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, PointRuleInput ruleInput);
     }
 }

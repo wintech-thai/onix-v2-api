@@ -7,6 +7,8 @@ namespace Its.Onix.Api.Models
         public int? ProductQuantity { get; set; }
         public double? PaidAmount { get; set; }
 
+        public string? RuleDefinition { get; set; }
+
         public PointRuleInput()
         {
             ProductQuantity = 1;

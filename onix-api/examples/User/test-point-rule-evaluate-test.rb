@@ -13,7 +13,6 @@ load_env("../.env")
 orgId = ENV['API_ORG']
 id = '99207826-3b58-4f52-aecb-4254d6dc5b56'
 
- 
 ruleDef = <<EOF
 [
   {
@@ -27,7 +26,7 @@ ruleDef = <<EOF
           "OnSuccess": {
             "Name": "OutputExpression",
             "Context": {
-              "Expression": "200"
+              "Expression": "300"
             }
           }
         }
@@ -37,12 +36,9 @@ ruleDef = <<EOF
 ] 
 EOF
 
-apiUrl = "api/PointRule/org/#{orgId}/action/UpdatePointRuleById/#{id}"
-param =  {
-  RuleName: "CalculateRegisteredPoint3",
-  Description: "Calculate point for scan item register",
-  Tags: "Register,ALDMX",
-  TriggeredEvent: "CustomerRegistered",
+apiUrl = "api/PointRule/org/#{orgId}/action/TestPointRule"
+param = {
+  ProductQuantity: 1,
   RuleDefinition: ruleDef,
 }
 

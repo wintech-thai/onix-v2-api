@@ -64,7 +64,21 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Validate rule definitioin
+            var workflows = RuleEngineFactory.CreateWorkflowFromJSON(pr.RuleDefinition!);
+            if (workflows == null)
+            {
+                r.Status = "INVALID_RULE_SYNTAX_JSON";
+                r.Description = $"Rule should be represent in JSON format!!!";
+                return r;
+            }
+
+            var (isRuleValid, _) = ServiceUtils.ValidateWorkflows(workflows);
+            if (!isRuleValid)
+            {
+                r.Status = "INVALID_RULE_SYNTAX_WORKFLOW";
+                r.Description = $"Syntax error for workflow!!!";
+                return r;
+            }
 
             var result = await repository!.AddPointRule(pr);
             r.PointRule = result;
@@ -115,7 +129,21 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Validate rule definitioin
+            var workflows = RuleEngineFactory.CreateWorkflowFromJSON(pr.RuleDefinition!);
+            if (workflows == null)
+            {
+                r.Status = "INVALID_RULE_SYNTAX_JSON";
+                r.Description = $"Rule should be represent in JSON format!!!";
+                return r;
+            }
+
+            var (isRuleValid, _) = ServiceUtils.ValidateWorkflows(workflows);
+            if (!isRuleValid)
+            {
+                r.Status = "INVALID_RULE_SYNTAX_WORKFLOW";
+                r.Description = $"Syntax error for workflow!!!";
+                return r;
+            }
 
             if (pr.Priority == null)
             {
@@ -256,35 +284,153 @@ namespace Its.Onix.Api.Services
         {
             var result = new PointRuleExecutionResult()
             {
-                IsMatch = false
+                IsMatch = false,
+                Status = "OK",
+                Description = "Success",
             };
+
+            if (!ServiceUtils.IsGuidValid(pointRuleId))
+            {
+                result.Status = "UUID_INVALID";
+                result.Description = $"Point rule ID [{pointRuleId}] format is invalid";
+
+                return result;
+            }
 
             var pr = await GetPointRule(orgId, pointRuleId);
             if (pr == null)
             {
+                result.Status = "RULE_MISSING";
+                result.Description = $"Point rule ID [{pointRuleId}] is missing!!!";
+
                 return result;
             }
 
             if (string.IsNullOrEmpty(pr.RuleDefinition))
             {
+                result.Status = "RULE_EMPTY";
+                result.Description = $"Point rule definition ID [{pointRuleId}] is empty!!!";
                 return result;
             }
 
-            var engine = RuleEngineFactory.CreateEngineFromYaml(pr.RuleDefinition!);
+            var workflows = RuleEngineFactory.CreateWorkflowFromJSON(pr.RuleDefinition!);
+            if (workflows == null)
+            {
+                result.Status = "INVALID_RULE_SYNTAX_JSON";
+                result.Description = $"Rule should be represent in JSON format!!!";
+                return result;
+            }
+
+            var (isRuleValid, msg) = ServiceUtils.ValidateWorkflows(workflows);
+            if (!isRuleValid)
+            {
+                result.Status = "INVALID_RULE_SYNTAX_WORKFLOW";
+                result.Description = $"Syntax error for workflow!!!";
+                return result;
+            }
+
+            var engine = new RulesEngine.RulesEngine(workflows.ToArray(), null);
+
+            var workflowNames = engine.GetAllRegisteredWorkflowNames();
+            if (workflowNames.Count() == 0)
+            {
+                result.Status = "NO_WORKFLOW_TO_RUN";
+                result.Description = $"No workflow to run!!!";
+                return result;
+            }
+
+            var workFlowName = workflowNames[0];
             var ruleParams = new RuleParameter[]
             {
-                new RuleParameter("input", ruleInput)
+                new("input", ruleInput)
             };
 
+            var results = await engine.ExecuteAllRulesAsync(workFlowName, ruleParams);
+            var firstMatch = results.FirstOrDefault(r => r.IsSuccess);
 
-            var results = await engine.ExecuteActionWorkflowAsync("GradeRules", "", ruleParams);
- 
-            return new PointRuleExecutionResult();
+            //foreach (var r in results)
+            //{
+            //    Console.WriteLine($"IsSuccess: {r.IsSuccess}");
+            //    Console.WriteLine($"RuleName: {r.Rule.RuleName}");
+            //   Console.WriteLine($"Output: {r.ActionResult.Output}");
+            //}
+
+            result.IsMatch = false;
+            if (firstMatch != null)
+            {
+                result.IsMatch = firstMatch.IsSuccess;
+                result.ExecutionResult = $"{firstMatch.ActionResult.Output}";
+            }
+
+            //result.RuleMatch = pr;
+            return result;
         }
 
+        public async Task<PointRuleExecutionResult> TestPointRule(string orgId, PointRuleInput ruleInput)
+        {
+            var result = new PointRuleExecutionResult()
+            {
+                IsMatch = false,
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (string.IsNullOrEmpty(ruleInput.RuleDefinition))
+            {
+                result.Status = "RULE_EMPTY";
+                result.Description = $"Point rule definition is empty!!!";
+                return result;
+            }
+
+            var workflows = RuleEngineFactory.CreateWorkflowFromJSON(ruleInput.RuleDefinition!);
+            if (workflows == null)
+            {
+                result.Status = "INVALID_RULE_SYNTAX_JSON";
+                result.Description = $"Rule should be represent in JSON format!!!";
+                return result;
+            }
+
+            var (isRuleValid, msg) = ServiceUtils.ValidateWorkflows(workflows);
+            if (!isRuleValid)
+            {
+                result.Status = "INVALID_RULE_SYNTAX_WORKFLOW";
+                result.Description = $"Syntax error for workflow!!!";
+                return result;
+            }
+
+            var engine = new RulesEngine.RulesEngine(workflows.ToArray(), null);
+
+            var workflowNames = engine.GetAllRegisteredWorkflowNames();
+            if (workflowNames.Count() == 0)
+            {
+                result.Status = "NO_WORKFLOW_TO_RUN";
+                result.Description = $"No workflow to run!!!";
+                return result;
+            }
+
+            var workFlowName = workflowNames[0];
+            var ruleParams = new RuleParameter[]
+            {
+                new("input", ruleInput)
+            };
+
+            var results = await engine.ExecuteAllRulesAsync(workFlowName, ruleParams);
+            var firstMatch = results.FirstOrDefault(r => r.IsSuccess);
+
+            result.IsMatch = false;
+            if (firstMatch != null)
+            {
+                result.IsMatch = firstMatch.IsSuccess;
+                result.ExecutionResult = $"{firstMatch.ActionResult.Output}";
+            }
+
+            return result;
+        }
+/*
         public async Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, PointRuleInput ruleInput)
         {
             return new PointRuleExecutionResult();
         }
+*/
     }
 }

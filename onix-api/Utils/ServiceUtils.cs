@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Its.Onix.Api.ModelsViews;
+using Microsoft.AspNetCore.Identity;
+using RulesEngine.Models;
 
 namespace Its.Onix.Api.Utils
 {
@@ -187,6 +189,23 @@ namespace Its.Onix.Api.Utils
             }
 
             return null;
+        }
+
+        public static (bool isValid, string error) ValidateWorkflows(List<Workflow> workflows)
+        {
+            try
+            {
+                // ลองสร้าง RulesEngine ขึ้นมาจาก workflow
+                var engine = new RulesEngine.RulesEngine(workflows.ToArray(), null);
+
+                // ถ้าไม่ throw แปลว่า syntax OK
+                return (true, "");
+            }
+            catch (Exception ex)
+            {
+                // ถ้าผิด expression, outputExpression, action … จะ throw
+                return (false, ex.Message);
+            }
         }
     }
 }
