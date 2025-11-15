@@ -32,6 +32,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MItemTx>? ItemTxs { get; set; }
         public DbSet<MItemBalance>? ItemBalances { get; set; }
         public DbSet<MLimit>? Limits { get; set; }
+        public DbSet<MPointRule>? PointRules { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

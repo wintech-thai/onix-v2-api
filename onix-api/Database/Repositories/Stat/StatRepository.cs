@@ -20,7 +20,7 @@ namespace Its.Onix.Api.Database.Repositories
             if ((param.StatCode != "") && (param.StatCode != null))
             {
                 var fullTextPd = PredicateBuilder.New<MStat>();
-                fullTextPd = fullTextPd.Or(p => p.StatCode!.Equals(param.StatCode));
+                fullTextPd = fullTextPd.Or(p => p.StatCode!.Contains(param.StatCode));
 
                 pd = pd.And(fullTextPd);
             }

@@ -122,6 +122,62 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/{id}/action/UpdateUserByUserName/{userName}")]
+        public IActionResult UpdateUserByUserName(string id, string userName, [FromBody] MUser request)
+        {
+            request.UserName = userName;
+
+            var validateResult = ValidateUserIdentity();
+            if (string.IsNullOrEmpty(validateResult.UserName))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var uname = validateResult.UserName;
+
+            //ใช้ userName ที่มาจาก JWT เท่านั้นเพื่อรับประกันว่าเปลี่ยนข้อมูลเฉพาะของตัวเองเท่านั้น
+            var result = svc.UpdateUserByUserName(uname, request);
+            Response.Headers.Append("CUST_STATUS", result.Status);
+
+            var message = $"{result.Description}";
+            if (!string.IsNullOrEmpty(request.UserName) && (uname != request.UserName))
+            {
+                //เอาไว้ดูว่ามีใครลองส่ง username เข้ามาเพื่อ hack ระบบหรือไม่
+                message = $"{message}, JWT user [{uname}] but injected user is [{request.UserName}]";
+            }
+
+            Response.Headers.Append("CUST_DESC", message);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{id}/action/GetUserByUserName/{userName}")]
+        public IActionResult GetUserByUserName(string id, string userName)
+        {
+            var validateResult = ValidateUserIdentity();
+            if (string.IsNullOrEmpty(validateResult.UserName))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var uname = validateResult.UserName;
+
+            //ใช้ userName ที่มาจาก JWT เท่านั้นเพื่อรับประกันว่าเปลี่ยนข้อมูลเฉพาะของตัวเองเท่านั้น
+            var result = svc.GetUserByUserName(uname);
+            Response.Headers.Append("CUST_STATUS", result.Status);
+
+            var message = $"{result.Description}";
+            if (!string.IsNullOrEmpty(uname) && (userName != uname))
+            {
+                //เอาไว้ดูว่ามีใครลองส่ง username เข้ามาเพื่อ hack ระบบหรือไม่
+                message = $"{message}, JWT user [{uname}] but injected user is [{userName}]";
+            }
+            
+            Response.Headers.Append("CUST_DESC", message);
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/{id}/action/Logout")]
         public IActionResult Logout(string id)
         {

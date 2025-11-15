@@ -11,10 +11,15 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-statCode = "ScanItemBalanceCurrent"
 
-apiUrl = "api/Limit/org/#{orgId}/action/UpdateLimit/#{statCode}/1500000"
-param =  nil
+apiUrl = "api/PointRule/org/#{orgId}/action/GetPointRules"
+param =  {
+  FullTextSearch: "",
+}
 
+result = make_request(:post, apiUrl, param)
+puts(result)
+
+apiUrl = "api/PointRule/org/#{orgId}/action/GetPointRulesCount"
 result = make_request(:post, apiUrl, param)
 puts(result)

@@ -11,10 +11,12 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-statCode = "ScanItemBalanceCurrent"
+id = '99207826-3b58-4f52-aecb-4254d6dc5b56'
 
-apiUrl = "api/Limit/org/#{orgId}/action/UpdateLimit/#{statCode}/1500000"
-param =  nil
+apiUrl = "api/PointRule/org/#{orgId}/action/EvaluatePointRuleById/#{id}"
+param = {
+  ProductQuantity: 1,
+}
 
 result = make_request(:post, apiUrl, param)
 puts(result)

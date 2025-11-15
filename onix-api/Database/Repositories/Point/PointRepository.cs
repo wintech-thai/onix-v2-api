@@ -37,8 +37,27 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MPointTx>> GetPointTxsByWalletId(VMPointTx param)
         {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset-1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
             var predicate = PointTxsPredicate(param!);
-            var r = await context!.PointTxs!.Where(predicate).ToListAsync();
+            var r = await context!.PointTxs!.Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
 
             return r;
         }
@@ -225,8 +244,27 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MWallet>> GetWallets(VMWallet param)
         {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset-1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
             var predicate = WalletPredicate(param!);
-            var result = await context!.Wallets!.Where(predicate).ToListAsync();
+            var result = await context!.Wallets!.Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
 
             return result;
         }

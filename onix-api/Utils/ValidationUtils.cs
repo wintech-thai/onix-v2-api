@@ -77,5 +77,22 @@ namespace Its.Onix.Api.Utils
 
             return result;
         }
+
+        public static ValidationResult ValidatePhone(string phone)
+        {
+            var result = new ValidationResult() { Status = "OK", Description = "" };
+
+            // E.164 format: +<country><number>  (สูงสุด 15 digits)
+            var regex = new Regex(@"^\+[1-9][0-9]{7,14}$");
+            var ok = regex.IsMatch(phone ?? "");
+
+            if (!ok)
+            {
+                result.Status = "ERROR_VALIDATION_PHONE";
+                result.Description = "Incorrect phone format (must be E.164, e.g. +66812345678)";
+            }
+
+            return result;
+        }
     }
 }

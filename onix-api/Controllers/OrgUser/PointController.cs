@@ -47,6 +47,11 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/GetPointTxsByWalletId/{walletId}")]
         public async Task<IActionResult> GetPointTxsByWalletId(string id, string walletId, [FromBody] VMPointTx request)
         {
+            if (request.Limit <= 0)
+            {
+                request.Limit = 100;
+            }
+
             request.WalletId = walletId;
             var result = await svc.GetPointTxsByWalletId(id, request);
 

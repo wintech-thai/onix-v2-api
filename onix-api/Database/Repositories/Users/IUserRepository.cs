@@ -14,5 +14,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public MUser GetUserByName(string userName);
         public MUser GetUserByEmail(string email);
+        public MUser GetUserByUserName(string userName);
+        public MUser UpdateUserByUserName(string userName, MUser user);
     }
 }

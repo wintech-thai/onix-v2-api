@@ -11,10 +11,13 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-statCode = "ScanItemBalanceCurrent"
 
-apiUrl = "api/Limit/org/#{orgId}/action/UpdateLimit/#{statCode}/1500000"
+apiUrl = "api/Stat/org/#{orgId}/action/GetCurrentBalanceStats"
 param =  nil
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)
+
+#apiUrl = "api/Stat/org/#{orgId}/action/GetStatCount"
+#result = make_request(:post, apiUrl, param)
+#puts(result)

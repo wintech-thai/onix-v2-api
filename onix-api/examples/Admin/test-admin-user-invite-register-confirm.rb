@@ -12,7 +12,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-url = "https://register-dev.please-scan.com/napbiotec/user-signup-confirm/26e069a7-850d-47a8-86e2-92f678292d08?data=eyJFbWFpbCI6ImF1dHR6bWFyZ2FyZXR6QGdtYWlsLmNvbSIsIlVzZXJOYW1lIjoiYXV0dHptYXJnYXJldHoiLCJQYXNzd29yZCI6bnVsbCwiTmFtZSI6bnVsbCwiTGFzdG5hbWUiOm51bGwsIkludml0ZWRCeSI6InNldWJwb25nLm1vbiIsIk9yZ1VzZXJJZCI6ImQ1Y2IyY2NmLTE3ZTEtNGJlZi1hYjBjLTNjNzgzNGM0NDRkOSJ9"
+url = "https://register-dev.please-scan.com/global/admin-invite-confirm/38b9bfe6-7a48-4967-9145-b69443f76bb8?data=eyJFbWFpbCI6ImhlbGxvLnNldWJAcGxlYXNlLXNjYW4uY29tIiwiVXNlck5hbWUiOiJzZXVicG9uZy5zb29kbG9yIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJzZXVicG9uZy5tb24iLCJPcmdVc2VySWQiOiJmZDBlMjE3OC1hMTA2LTQyMDktOTY3OC04NmNiMWYwNGMyMGUifQ%3d%3d"
 uri = URI.parse(url)
 
 # แปลง query string เป็น hash
@@ -30,7 +30,7 @@ regType = parts[1]
 token = parts[2]
 
 api = "ConfirmNewUserInvitation"
-if (regType != 'user-signup-confirm')
+if (regType != 'admin-signup-confirm')
   api = "ConfirmExistingUserInvitation"
 end
 
@@ -41,8 +41,8 @@ param =  {
   Email: dataObj['Email'],
   UserName: "#{userName}",
   Password: "Abc12345$343#1",
-  Name: "Supreecha",
-  LastName: "Monsar",
+  Name: "PJames",
+  LastName: "Soodlor",
   OrgUserId: dataObj['OrgUserId'],
 }
 
@@ -50,8 +50,9 @@ param =  {
 #puts(parts)
 
 ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
+ENV['ACCESS_TOKEN'] = nil
 
-apiUrl = "api/Registration/org/#{orgId}/action/#{api}/#{token}/#{userName}"
+apiUrl = "admin-api/RegistrationAdmin/org/#{orgId}/action/#{api}/#{token}/#{userName}"
 #puts(apiUrl)
 
 result = make_request(:post, apiUrl, param)

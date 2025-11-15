@@ -167,18 +167,16 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var roles = service.GetRolesList("", role);
 
         var roleMatch = "";
-Console.WriteLine($"DEBUG1 ====== [{roleMatch}] [{apiGroup}] ======");
+
         if (apiGroup == "user")
         {
-Console.WriteLine($"DEBUG2 ====== [{roleMatch}] [{apiGroup}] ======");
             roleMatch = IsRoleUserValid(roles, uri);
         }
         else if (apiGroup == "admin")
         {
-Console.WriteLine($"DEBUG3 ====== [{roleMatch}] [{apiGroup}] ======");
             roleMatch = IsRoleAdminValid(roles, uri);
         }
-Console.WriteLine($"DEBUG4 ====== [{roleMatch}] [{apiGroup}] ======");
+
 //        Match m = Regex.Match(apiCalled, adminOnlyApiPattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
 //        if (m.Success && !authorizeOrgId.Equals("global"))
 //        {

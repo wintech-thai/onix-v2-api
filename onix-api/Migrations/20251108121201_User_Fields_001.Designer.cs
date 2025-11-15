@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251108121201_User_Fields_001")]
+    partial class User_Fields_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1001,67 +1004,6 @@ namespace onix.api.Migrations
                     b.ToTable("PointBalances");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MPointRule", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("rule_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<long?>("PointsReturn")
-                        .HasColumnType("bigint")
-                        .HasColumnName("points_return");
-
-                    b.Property<int?>("Priority")
-                        .HasColumnType("integer")
-                        .HasColumnName("priority");
-
-                    b.Property<string>("RuleDefinition")
-                        .HasColumnType("text")
-                        .HasColumnName("rule_definition");
-
-                    b.Property<string>("RuleName")
-                        .HasColumnType("text")
-                        .HasColumnName("rule_name");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<string>("TriggeredEvent")
-                        .HasColumnType("text")
-                        .HasColumnName("triggered_event");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("OrgId", "RuleName")
-                        .IsUnique();
-
-                    b.ToTable("PointsRules");
-                });
-
             modelBuilder.Entity("Its.Onix.Api.Models.MPointTx", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -1566,17 +1508,9 @@ namespace onix.api.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("phone_number");
 
-                    b.Property<string>("PhoneNumberVerified")
-                        .HasColumnType("text")
-                        .HasColumnName("phone_number_verified");
-
                     b.Property<string>("SecondaryEmail")
                         .HasColumnType("text")
                         .HasColumnName("secondary_email");
-
-                    b.Property<string>("SecondaryEmailVerified")
-                        .HasColumnType("text")
-                        .HasColumnName("secondary_email_verified");
 
                     b.Property<DateTime?>("UserCreatedDate")
                         .HasColumnType("timestamp with time zone")

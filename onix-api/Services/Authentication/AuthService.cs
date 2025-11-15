@@ -21,6 +21,7 @@ namespace Its.Onix.Api.Services
         private readonly string tokenEndpoint = "";
         private readonly string userEndpoint = "";
         private readonly string chagePasswordEndpoint = "";
+        private readonly string updateUserEndpoint = "";
         private readonly string getUserIdEndpoint = "";
         private readonly string logoutEndpoint = "";
         private readonly string issuer = "";
@@ -46,6 +47,7 @@ namespace Its.Onix.Api.Services
 
             userEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users";
             chagePasswordEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users/<<user-id>>/reset-password";
+            updateUserEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users/<<user-id>>";
             logoutEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users/<<user-id>>/logout";
             getUserIdEndpoint = $"{urlPrefix}/auth/admin/realms/{realm}/users?username=<<user-name>>";
         }
@@ -187,6 +189,38 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        private async Task<IdpResult> UpdateUserAsync(MUser user, string token, string userId)
+        {
+            var ep = updateUserEndpoint.Replace("<<user-id>>", userId);
+
+            using var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var body = new
+            {
+                firstName = user.Name,
+                lastName = user.LastName,
+            };
+
+            var jsonContent = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json");
+            var response = await client.PutAsync(ep, jsonContent);
+
+            var result = new IdpResult()
+            {
+                Success = true,
+                Message = $"Successfully update data for [{user.UserName}].",
+            };
+
+            if (!response.IsSuccessStatusCode)
+            {
+                result.Success = false;
+                var errMsg = await response.Content.ReadAsStringAsync();
+                result.Message = $"Uanble to call update user API, {errMsg}";
+            }
+
+            return result;
+        }
+
         private async Task<IdpResult> LogoutUserAsync(string token, string userId)
         {
             var ep = logoutEndpoint.Replace("<<user-id>>", userId);
@@ -312,6 +346,47 @@ namespace Its.Onix.Api.Services
         {
             var token = GetServiceAccountToken();
             return await CreateUserAsync(token.Token.AccessToken, orgUser);
+        }
+
+        public async Task<IdpResult> UpdateUserIdp(MUser user)
+        {
+            var r = new IdpResult()
+            {
+                Success = true,
+                Message = "",
+            };
+
+            //เอา admin access token
+            var form = new[]
+            {
+                new KeyValuePair<string,string>("grant_type", "client_credentials"),
+                new KeyValuePair<string,string>("client_id", clientId!),
+                new KeyValuePair<string,string>("client_secret", clientSecret!),
+            };
+            var userToken = GetToken(form);
+            if (userToken.Status != "Success")
+            {
+                r.Success = false;
+                r.Message = $"Unable to get access token for password reset [{userToken.Message}]";
+                return r;
+            }
+
+            // อ่านค่า UserId จาก UserName
+            var userIdResult = GetUserIdByUsernameAsync(user.UserName!, userToken.Token.AccessToken).Result;
+            if (!userIdResult.Success)
+            {
+                return userIdResult;
+            }
+
+            // เปลี่ยน user data โดยใช้ UserId เป็น input
+            var userId = userIdResult.UserId;
+            var updateResult = await UpdateUserAsync(user, userToken.Token.AccessToken, userId!);
+            if (!updateResult.Success)
+            {
+                return updateResult;
+            }
+
+            return updateResult;
         }
 
         public async Task<IdpResult> ChangeUserPasswordIdp(MUpdatePassword password)
