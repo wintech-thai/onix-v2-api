@@ -426,6 +426,10 @@ namespace Its.Onix.Api.Services
                 result.Roles = [.. result.RolesList.Split(',')];
             }
 
+            //เคลียร์ cache เพื่อให้ มีผลทันที
+            var key = $"#{orgId}:VerifyUser:#{result.UserName}";
+            var t = _redis.DeleteAsync(key);
+
             r.OrgUser = result;
             return r;
         }
@@ -469,6 +473,10 @@ namespace Its.Onix.Api.Services
             {
                 result.Roles = [.. result.RolesList.Split(',')];
             }
+
+            //เคลียร์ cache เพื่อให้ มีผลทันที
+            var key = $"#{orgId}:VerifyUser:#{result.UserName}";
+            var t = _redis.DeleteAsync(key);
 
             r.OrgUser = result;
 
