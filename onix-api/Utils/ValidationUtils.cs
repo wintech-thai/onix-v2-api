@@ -94,5 +94,21 @@ namespace Its.Onix.Api.Utils
 
             return result;
         }
+
+        public static ValidationResult ValidationEffectiveDateInterval(DateTime? startDate, DateTime? endDate)
+        {
+            var result = new ValidationResult() { Status = "OK", Description = "" };
+
+            if ((startDate != null) && (endDate != null))
+            {
+                if (startDate > endDate)
+                {
+                    result.Status = "ERROR_DATE_RANGE_INVALID";
+                    result.Description = "End date must be greater than or equal start date!!!";
+                }
+            }
+
+            return result;
+        }
     }
 }

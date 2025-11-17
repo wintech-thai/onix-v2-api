@@ -11,10 +11,12 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = '99207826-3b58-4f52-aecb-4254d6dc5b56'
+#id = '99207826-3b58-4f52-aecb-4254d6dc5b56'
 
-apiUrl = "api/PointRule/org/#{orgId}/action/UpdatePointRuleStatusByIdActive/#{id}"
-param = nil
+apiUrl = "api/PointRule/org/#{orgId}/action/EvaluatePointRules/CustomerRegistered"
+param = {
+  ProductQuantity: 1,
+}
 
 result = make_request(:post, apiUrl, param)
 puts(result)

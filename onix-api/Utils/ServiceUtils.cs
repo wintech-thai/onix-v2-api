@@ -207,5 +207,21 @@ namespace Its.Onix.Api.Utils
                 return (false, ex.Message);
             }
         }
+
+        public static bool IsDateEffective(DateTime? startDate, DateTime? endDate, DateTime? currentDate)
+        {
+            //ตรงส่วนของเวลา จะต้องส่งเข้ามาใน argument ให้ถูกต้องเอง
+            if ((startDate != null) && currentDate < startDate)
+            {
+                return false;
+            }
+
+            if ((endDate != null) && currentDate > endDate)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

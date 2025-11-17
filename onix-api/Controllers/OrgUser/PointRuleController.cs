@@ -113,15 +113,13 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
-/*
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/EvaluatePointRules")]
-        public async Task<IActionResult> EvaluatePointRules(string id, [FromBody] PointRuleInput param)
+        [Route("org/{id}/action/EvaluatePointRules/{triggerEvent}")]
+        public async Task<IActionResult> EvaluatePointRules(string id, string triggerEvent, [FromBody] PointRuleInput param)
         {
-            var result = await svc.EvaluatePointRules(id, param);
+            var result = await svc.EvaluatePointRules(id, triggerEvent, param);
             return Ok(result);
         }
-*/
     }
 }

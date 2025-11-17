@@ -41,6 +41,16 @@ namespace Its.Onix.Api.Database.Repositories
             return pr;
         }
 
+        public async Task<List<MPointRule>> GetPointRulesByTriggerEvent(string triggerEvent)
+        {
+            var result = await context!.PointRules!.Where(x => x.OrgId!.Equals(orgId) && x.TriggeredEvent!.Equals(triggerEvent))
+                .OrderBy(e => e.Priority)
+                .ThenBy(e => e.CreatedDate)
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task<List<MPointRule>> GetPointRules(VMPointRule param)
         {
             var limit = 0;
