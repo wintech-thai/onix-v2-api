@@ -249,6 +249,25 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public List<PointRuleInputField> GetRuleInputFields(string orgId, string triggerEvent, bool withCurrentDate)
+        {
+            var fields = new List<PointRuleInputField>();
+            if (triggerEvent == "CustomerRegistered")
+            {
+                //ชื่อ FieldName จะต้องตรงกับใน class PointRuleInput.cs
+                fields.Add(new PointRuleInputField() { FieldName = "ProductCode", DefaultValue = "", FieldType = "string" });
+                fields.Add(new PointRuleInputField() { FieldName = "ProductTags", DefaultValue = "", FieldType = "string" });
+                fields.Add(new PointRuleInputField() { FieldName = "ProductQuantity", DefaultValue = "1", FieldType = "int" });
+                fields.Add(new PointRuleInputField() { FieldName = "PaidAmount", DefaultValue = "0.00", FieldType = "double" });
+                if (withCurrentDate)
+                {
+                    fields.Add(new PointRuleInputField() { FieldName = "CurrentDate", DefaultValue = "", FieldType = "date" });
+                }
+            }
+
+            return fields;
+        }
+
         public async Task<int> GetPointRulesCount(string orgId, VMPointRule param)
         {
             repository!.SetCustomOrgId(orgId);

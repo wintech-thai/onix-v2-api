@@ -16,7 +16,7 @@ keyFile = ".token"
 ### 
 apiUrl = "api/OnlyUser/org/#{orgId}/action/UpdateUserByUserName/seubpong.mon"
 param = {
-  name: "Seubpong",
+  name: "Seubpong (1)",
   lastName: "Monsar",
   phoneNumber: "+660942494880",
   secondaryEmail: "",
