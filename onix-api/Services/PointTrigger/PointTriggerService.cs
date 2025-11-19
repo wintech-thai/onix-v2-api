@@ -59,11 +59,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var wallet = await _pointService.GetWalletById(orgId, pt.WalletId);
-            if (wallet == null)
+            var t = await _pointService.GetWalletById(orgId, pt.WalletId);
+            if (t!.Status != "OK")
             {
-                r.Status = "WALLET_NOT_FOUND";
-                r.Description = $"Wallet ID [{pt.WalletId}] not found!!!";
+                r.Status = t.Status;
+                r.Description = t.Description;
 
                 return r;
             }
