@@ -41,6 +41,9 @@ namespace Its.Onix.Api.Models
         [Column("points")]
         public int? Points { get; set; }
 
+        [Column("is_rule_match")]
+        public string? IsRuleMatch { get; set; } /* True or False */
+
         [Column("trigger_params")]
         public string? TriggerParams { get; set; } /* เป็น JSON string เก็บ input ส่งให้กับ PointRule */
 
