@@ -33,6 +33,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MItemBalance>? ItemBalances { get; set; }
         public DbSet<MLimit>? Limits { get; set; }
         public DbSet<MPointRule>? PointRules { get; set; }
+        public DbSet<MPointTrigger>? PointTriggers { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

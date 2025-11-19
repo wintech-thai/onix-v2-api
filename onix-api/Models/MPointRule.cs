@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("PointsRules")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(RuleName))]
 
     public class MPointRule
     {
