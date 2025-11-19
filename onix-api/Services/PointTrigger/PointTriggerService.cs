@@ -68,7 +68,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var (isMatch, point) = GetPoint(pi);
+            var (isMatch, point) = await GetPoint(orgId, pt.EventTriggered, pi);
             var triggerId = Guid.NewGuid().ToString();
 
             var pointTrigger = new MPointTrigger
@@ -104,9 +104,17 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private (bool isMatch, int pont) GetPoint(PointRuleInput pri)
+        private async Task<(bool isMatch, int piont)> GetPoint(string orgId, string triggerEvent, PointRuleInput pri)
         {
-            return (true, 10);
+            var result = await _pointRuleService.EvaluatePointRules(orgId, triggerEvent, pri);
+            
+            var point = 0;
+            if (result.IsMatch)
+            {
+                point = Convert.ToInt32(result.ExecutionResult);
+            }
+
+            return (result.IsMatch, point);
         }
 
         public async Task<MVPointTrigger?> GetPointTriggerById(string orgId, string pointTriggerId)
