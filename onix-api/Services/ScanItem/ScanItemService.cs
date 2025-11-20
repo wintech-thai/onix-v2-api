@@ -19,7 +19,6 @@ namespace Its.Onix.Api.Services
         private readonly IStorageUtils _storageUtil;
         private readonly IRedisHelper _redis;
         private readonly IJobService _jobService;
-        private readonly IPointTriggerService _ptService;
         private readonly IScanItemTemplateService _sciTemplateSvc;
 
         public ScanItemService(IScanItemRepository repo,
@@ -30,7 +29,6 @@ namespace Its.Onix.Api.Services
             IStorageUtils storageUtil,
             IJobService jobService,
             IScanItemTemplateService sciTemplateService,
-            IPointTriggerService ptService,
             IRedisHelper redis) : base()
         {
             repository = repo;
@@ -42,7 +40,6 @@ namespace Its.Onix.Api.Services
             _jobService = jobService;
             _sciTemplateSvc = sciTemplateService;
             _pointRepo = pointRepo;
-            _ptService = ptService;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
@@ -508,22 +505,22 @@ namespace Its.Onix.Api.Services
             customerId = customer.Id.ToString();
 
             AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
-            //ApplyLoyaltyPointLogic(orgId, scanItem, customer);
-
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
+
+            CreatePointTriggerJob(orgId, scanItem, customer);
 
             r.Entity = customer;
             return r;
         }
 
-        private async void ApplyLoyaltyPointLogic(string orgId, MScanItem sci, MEntity cust)
+        private void CreatePointTriggerJob(string orgId, MScanItem sci, MEntity cust)
         {
             _itemRepo.SetCustomOrgId(orgId);
             _pointRepo.SetCustomOrgId(orgId);
 
             var customerId = cust.Id.ToString()!;
-            var wallet = await _pointRepo.GetWalletByCustomerId(customerId); //เอา wallet อันแรกที่เจอมาใช้
-            //var wallet = t.Result;
+            var t = _pointRepo.GetWalletByCustomerId(customerId); //เอา wallet อันแรกที่เจอมาใช้
+            var wallet = t.Result;
 
             if (wallet == null)
             {
@@ -545,25 +542,39 @@ namespace Its.Onix.Api.Services
             {
                 //ไม่มี product attach กับ scan item นั้นจริง ๆ
                 Log.Warning($"Product not found for product ID [{productId}], scan item [{sci.Serial}]");
-                product = new MItem();
+                product = new MItem()
+                {
+                    Code = "",
+                    Tags = "",
+                };
             }
 
-            var pri = new PointRuleInput()
+            var token = Guid.NewGuid().ToString();
+            var job = new MJob()
             {
-                ProductCode = product.Code,
-                ProductTags = product.Tags,
-                ProductQuantity = 1,
+                Name = $"{Guid.NewGuid()}",
+                Description = "ScanItemService.CreatePointTriggerJob()",
+                Type = "PointTrigger",
+                Status = "Pending",
+                Tags = "CustomerRegistered",
+
+                Parameters =
+                [
+                    new NameValue { Name = "TOKEN", Value = token },
+                    new NameValue { Name = "SERIAL", Value = sci.Serial },
+                    new NameValue { Name = "PIN", Value = sci.Pin },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "PRODUCT_CODE", Value = product.Code },
+                    new NameValue { Name = "PRODUCT_TAGS", Value = product.Tags },
+                    new NameValue { Name = "PRODUCT_QUANTITY", Value = "1" },
+                    new NameValue { Name = "WALLET_ID", Value = wallet.Id.ToString() },
+                    new NameValue { Name = "EVENT_TRIGGER", Value = "CustomerRegistered" },
+                ]
             };
 
-            var pti = new PointTriggerInput()
-            {
-                WalletId = wallet.Id.ToString(),
-                PointRuleInput = pri,
-                EventTriggered = "CustomerRegistered"
-            };
+            //TODO : เพิ่ม token ใส่ไว้ใน cache
 
-            await _ptService.AddPointTrigger(orgId, pti);
-
+            var result = _jobService.AddJob(orgId, job);
             return;
         }
 
