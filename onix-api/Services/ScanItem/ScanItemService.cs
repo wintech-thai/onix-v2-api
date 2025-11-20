@@ -572,7 +572,7 @@ namespace Its.Onix.Api.Services
                 ]
             };
 
-            //TODO : เพิ่ม token ใส่ไว้ใน cache
+            //TODO : เพิ่ม token ใส่ไว้ใน cache, 10 minute expire
 
             var result = _jobService.AddJob(orgId, job);
             return;

@@ -11,8 +11,9 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
+token = 'xxxxxx'
 
-apiUrl = "api/PointTrigger/org/#{orgId}/action/AddPointTrigger"
+apiUrl = "api/PointTrigger/org/#{orgId}/action/AddPointTrigger/#{token}"
 param =  {
   WalletId: "0b2e0a83-9e47-4bd4-ac4b-c9b7b977aaa7",
   EventTriggered: "CustomerRegistered",
@@ -21,5 +22,6 @@ param =  {
   },
 }
 
+ENV['API_KEY'] = nil
 result = make_request(:post, apiUrl, param)
 puts(result)

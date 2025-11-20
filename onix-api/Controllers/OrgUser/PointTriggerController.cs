@@ -30,6 +30,17 @@ namespace Prom.LPR.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [AllowAnonymous] //อันนี้จะใช้ token ในการ authen แทนนะ เพื่อให้ job เป็นคนเรียกเข้ามาเป็น internal
+        [HttpPost]
+        [Route("org/{id}/action/AddPointTrigger/{token}")]
+        public async Task<IActionResult> AddPointTrigger(string id, string token, [FromBody] PointTriggerInput request)
+        {
+            //TODO : Add token validation here
+            var result = await svc.AddPointTrigger(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetPointTriggersCount")]
         public async Task<IActionResult> GetPointTriggersCount(string id, [FromBody] VMPointTrigger param)
