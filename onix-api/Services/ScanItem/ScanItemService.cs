@@ -516,14 +516,14 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private void ApplyLoyaltyPointLogic(string orgId, MScanItem sci, MEntity cust)
+        private async void ApplyLoyaltyPointLogic(string orgId, MScanItem sci, MEntity cust)
         {
             _itemRepo.SetCustomOrgId(orgId);
             _pointRepo.SetCustomOrgId(orgId);
 
             var customerId = cust.Id.ToString()!;
-            var t = _pointRepo.GetWalletByCustomerId(customerId); //เอา wallet อันแรกที่เจอมาใช้
-            var wallet = t.Result;
+            var wallet = await _pointRepo.GetWalletByCustomerId(customerId); //เอา wallet อันแรกที่เจอมาใช้
+            //var wallet = t.Result;
 
             if (wallet == null)
             {
@@ -562,7 +562,7 @@ namespace Its.Onix.Api.Services
                 EventTriggered = "CustomerRegistered"
             };
 
-            _ptService.AddPointTrigger(orgId, pti);
+            await _ptService.AddPointTrigger(orgId, pti);
 
             return;
         }
