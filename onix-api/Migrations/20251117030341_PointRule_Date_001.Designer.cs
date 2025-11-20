@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251117030341_PointRule_Date_001")]
+    partial class PointRule_Date_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1064,79 +1067,10 @@ namespace onix.api.Migrations
 
                     b.HasIndex("OrgId");
 
-                    b.HasIndex("RuleName");
-
                     b.HasIndex("OrgId", "RuleName")
                         .IsUnique();
 
                     b.ToTable("PointsRules");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MPointTrigger", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("trigger_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("IsRuleMatch")
-                        .HasColumnType("text")
-                        .HasColumnName("is_rule_match");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<int?>("Points")
-                        .HasColumnType("integer")
-                        .HasColumnName("points");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<DateTime?>("TriggerDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("trigger_date");
-
-                    b.Property<string>("TriggerName")
-                        .HasColumnType("text")
-                        .HasColumnName("trigger_name");
-
-                    b.Property<string>("TriggerParams")
-                        .HasColumnType("text")
-                        .HasColumnName("trigger_params");
-
-                    b.Property<string>("TriggeredEvent")
-                        .HasColumnType("text")
-                        .HasColumnName("triggered_event");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date");
-
-                    b.Property<string>("WalletId")
-                        .HasColumnType("text")
-                        .HasColumnName("wallet_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("TriggerName");
-
-                    b.HasIndex("OrgId", "TriggerName")
-                        .IsUnique();
-
-                    b.ToTable("PointsTriggers");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MPointTx", b =>

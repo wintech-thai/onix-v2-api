@@ -193,6 +193,12 @@ namespace Its.Onix.Api.Database.Repositories
             return u;
         }
 
+        public async Task<MWallet?> GetWalletByCustomerId(string customerId)
+        {
+            var u = await context!.Wallets!.Where(p => p!.CustomerId!.Equals(customerId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
         public async Task<MWallet?> DeleteWalletById(string walletId)
         {
             Guid id = Guid.Parse(walletId);

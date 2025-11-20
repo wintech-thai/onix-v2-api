@@ -5,6 +5,7 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Models;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
+using Serilog;
 
 namespace Its.Onix.Api.Services
 {
@@ -12,6 +13,7 @@ namespace Its.Onix.Api.Services
     {
         private readonly IScanItemRepository? repository = null;
         private readonly IItemRepository _itemRepo;
+        private readonly IPointRepository _pointRepo;
         private readonly IItemImageRepository _imageItemRepo;
         private readonly IEntityRepository _entityRepo;
         private readonly IStorageUtils _storageUtil;
@@ -23,6 +25,7 @@ namespace Its.Onix.Api.Services
             IItemRepository itemRepo,
             IItemImageRepository imageItemRepo,
             IEntityRepository entityRepo,
+            IPointRepository pointRepo,
             IStorageUtils storageUtil,
             IJobService jobService,
             IScanItemTemplateService sciTemplateService,
@@ -36,6 +39,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
             _jobService = jobService;
             _sciTemplateSvc = sciTemplateService;
+            _pointRepo = pointRepo;
         }
 
         public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
@@ -501,11 +505,79 @@ namespace Its.Onix.Api.Services
             customerId = customer.Id.ToString();
 
             AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
-
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
+
+            CreatePointTriggerJob(orgId, scanItem, customer);
 
             r.Entity = customer;
             return r;
+        }
+
+        private void CreatePointTriggerJob(string orgId, MScanItem sci, MEntity cust)
+        {
+            _itemRepo.SetCustomOrgId(orgId);
+            _pointRepo.SetCustomOrgId(orgId);
+
+            var customerId = cust.Id.ToString()!;
+            var t = _pointRepo.GetWalletByCustomerId(customerId); //เอา wallet อันแรกที่เจอมาใช้
+            var wallet = t.Result;
+
+            if (wallet == null)
+            {
+                Log.Warning($"Wallet not found for customer ID [{customerId}], scan item [{sci.Serial}]");
+                return;
+            }
+
+            MItem? product = null;
+            var productId = sci.ItemId.ToString();
+            
+            if (!string.IsNullOrEmpty(productId))
+            {
+                //มีการ attach product ไว้แล้ว
+                Log.Debug($"Fetching product ID [{productId}], scan item [{sci.Serial}]");
+                product = _itemRepo.GetItemById(productId);
+            }
+
+            if (product == null)
+            {
+                //ไม่มี product attach กับ scan item นั้นจริง ๆ
+                Log.Warning($"Product not found for product ID [{productId}], scan item [{sci.Serial}]");
+                product = new MItem()
+                {
+                    Code = "",
+                    Tags = "",
+                };
+            }
+
+            var token = Guid.NewGuid().ToString();
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "ScanItemService.CreatePointTriggerJob()",
+                Type = "PointTrigger",
+                Status = "Pending",
+                Tags = "CustomerRegistered",
+
+                Parameters =
+                [
+                    new NameValue { Name = "TOKEN", Value = token },
+                    new NameValue { Name = "SERIAL", Value = sci.Serial },
+                    new NameValue { Name = "PIN", Value = sci.Pin },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "PRODUCT_CODE", Value = product.Code },
+                    new NameValue { Name = "PRODUCT_TAGS", Value = product.Tags },
+                    new NameValue { Name = "PRODUCT_QUANTITY", Value = "1" },
+                    new NameValue { Name = "WALLET_ID", Value = wallet.Id.ToString() },
+                    new NameValue { Name = "EVENT_TRIGGER", Value = "CustomerRegistered" },
+                ]
+            };
+
+            var cacheKey = CacheHelper.CreatePointTriggerCustRegisterKey(orgId);
+            _redis.SetObjectAsync($"{cacheKey}:{token}", job, TimeSpan.FromMinutes(10));
+
+            _jobService.AddJob(orgId, job);
+            
+            return;
         }
 
         private string MaskUrl(string pin, string maskPin, string url)

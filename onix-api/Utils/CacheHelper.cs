@@ -42,6 +42,13 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreatePointTriggerCustRegisterKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"PointTrigger:{environment}:CustRegisterPointTrigger:{orgId}";
+            return key;
+        }
+
         public static string CreateScanItemActionKey(string orgId)
         {
             //TODO : Use environment as key component

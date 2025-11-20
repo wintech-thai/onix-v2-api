@@ -134,7 +134,6 @@ namespace Its.Onix.Api.AuditLogs
             Log.Information(logJson);
 
             PublishMessage(logObject);
-            //await SendAuditLog(logJson);
         }
 
         private void PublishMessage(AuditLog auditLog)
@@ -143,30 +142,6 @@ namespace Its.Onix.Api.AuditLogs
             var message = JsonSerializer.Serialize(auditLog);
 
             _ = _redis.PublishMessageAsync(stream!, message);
-        }
-
-        private async Task SendAuditLog(string logJson)
-        {
-            var endPoint = Environment.GetEnvironmentVariable("LOG_ENDPOINT");
-            if (endPoint == null)
-            {
-                return;
-            }
-
-            try
-            {
-                var content = new StringContent(logJson, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync(endPoint, content);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    Log.Warning($"Failed to send audit log, status code = [{response.StatusCode}]");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex.Message);
-            }
         }
     }
 }

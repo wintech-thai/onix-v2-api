@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("PointsRules")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(RuleName))]
 
     public class MPointRule
     {
@@ -43,6 +44,11 @@ namespace Its.Onix.Api.Models
         [Column("priority")]
         public int? Priority { get; set; } /* เอาไว้ sorint ว่าจะ execute function ไหนก่อน */
 
+        [Column("start_date")]
+        public DateTime? StartDate { get; set; } /* ต้องส่ง time ให้เป็น 00:00:00 เอาเองนะ */
+
+        [Column("end_date")]
+        public DateTime? EndDate { get; set; } /* ต้องส่ง time ให้เป็น 23:59:59 เอาเองนะ */
 
         //System fields
         [Column("created_date")]

@@ -6,6 +6,7 @@ namespace Its.Onix.Api.Models
         public string? ProductTags { get; set; }
         public int? ProductQuantity { get; set; }
         public double? PaidAmount { get; set; }
+        public DateTime? CurrentDate { get; set; }
 
         public string? RuleDefinition { get; set; }
 

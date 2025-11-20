@@ -9,10 +9,13 @@ namespace Its.Onix.Api.Models
         public MPointRule? RuleMatch { get; set; }
         public string? ExecutionResult { get; set; }
 
+        public List<string> Messages { get; set; }
+
         public PointRuleExecutionResult()
         {
             Status = "";
             Description = "";
+            Messages = [];
         }
     }
 }

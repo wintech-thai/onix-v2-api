@@ -113,15 +113,31 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
-/*
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/EvaluatePointRules")]
-        public async Task<IActionResult> EvaluatePointRules(string id, [FromBody] PointRuleInput param)
+        [Route("org/{id}/action/EvaluatePointRules/{triggerEvent}")]
+        public async Task<IActionResult> EvaluatePointRules(string id, string triggerEvent, [FromBody] PointRuleInput param)
         {
-            var result = await svc.EvaluatePointRules(id, param);
+            var result = await svc.EvaluatePointRules(id, triggerEvent, param);
             return Ok(result);
         }
-*/
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetRuleInputFields/{triggerEvent}")]
+        public IActionResult GetRuleInputFields(string id, string triggerEvent)
+        {
+            var result = svc.GetRuleInputFields(id, triggerEvent, false);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetRuleEvaluateInputFields/{triggerEvent}")]
+        public IActionResult GetRuleEvaluateInputFields(string id, string triggerEvent)
+        {
+            var result = svc.GetRuleInputFields(id, triggerEvent, true);
+            return Ok(result);
+        }
     }
 }

@@ -47,6 +47,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var dateValidationResult = ValidationUtils.ValidationEffectiveDateInterval(pr.StartDate, pr.EndDate);
+            if (dateValidationResult.Status != "OK")
+            {
+                r.Status = dateValidationResult.Status;
+                r.Description = dateValidationResult.Description;
+                return r;
+            }
+
             if (pr.Priority == null)
             {
                 pr.Priority = 0;
@@ -117,6 +125,14 @@ namespace Its.Onix.Api.Services
                 r.Status = "TRUGGER_EVENT_MISSING";
                 r.Description = $"Trigger event is missing!!!";
 
+                return r;
+            }
+
+            var dateValidationResult = ValidationUtils.ValidationEffectiveDateInterval(pr.StartDate, pr.EndDate);
+            if (dateValidationResult.Status != "OK")
+            {
+                r.Status = dateValidationResult.Status;
+                r.Description = dateValidationResult.Description;
                 return r;
             }
 
@@ -233,6 +249,25 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public List<PointRuleInputField> GetRuleInputFields(string orgId, string triggerEvent, bool withCurrentDate)
+        {
+            var fields = new List<PointRuleInputField>();
+            if (triggerEvent == "CustomerRegistered")
+            {
+                //ชื่อ FieldName จะต้องตรงกับใน class PointRuleInput.cs
+                fields.Add(new PointRuleInputField() { FieldName = "ProductCode", DefaultValue = "", FieldType = "string" });
+                fields.Add(new PointRuleInputField() { FieldName = "ProductTags", DefaultValue = "", FieldType = "string" });
+                fields.Add(new PointRuleInputField() { FieldName = "ProductQuantity", DefaultValue = "1", FieldType = "int" });
+                fields.Add(new PointRuleInputField() { FieldName = "PaidAmount", DefaultValue = "0.00", FieldType = "double" });
+                if (withCurrentDate)
+                {
+                    fields.Add(new PointRuleInputField() { FieldName = "CurrentDate", DefaultValue = "", FieldType = "date" });
+                }
+            }
+
+            return fields;
+        }
+
         public async Task<int> GetPointRulesCount(string orgId, VMPointRule param)
         {
             repository!.SetCustomOrgId(orgId);
@@ -282,6 +317,8 @@ namespace Its.Onix.Api.Services
 
         public async Task<PointRuleExecutionResult> EvaluatePointRuleById(string orgId, string pointRuleId, PointRuleInput ruleInput)
         {
+            repository.SetCustomOrgId(orgId);
+
             var result = new PointRuleExecutionResult()
             {
                 IsMatch = false,
@@ -368,6 +405,8 @@ namespace Its.Onix.Api.Services
 
         public async Task<PointRuleExecutionResult> TestPointRule(string orgId, PointRuleInput ruleInput)
         {
+            repository.SetCustomOrgId(orgId);
+
             var result = new PointRuleExecutionResult()
             {
                 IsMatch = false,
@@ -426,11 +465,81 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
-/*
-        public async Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, PointRuleInput ruleInput)
+
+        public async Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, string triggerEvent, PointRuleInput ruleInput)
         {
-            return new PointRuleExecutionResult();
+            var lines = new List<string>();
+
+            repository.SetCustomOrgId(orgId);
+
+            var result = new PointRuleExecutionResult()
+            {
+                IsMatch = false,
+                Status = "OK",
+                Description = "Success",
+            };
+
+            int cnt = 0;
+            string msg;
+
+            var currentDate = ruleInput.CurrentDate;
+            if (currentDate == null)
+            {
+                //ใช้ ruleInput.CurrentDate เหมือนกับการ simulate วันที่ปัจจุบัน
+                currentDate = DateTime.UtcNow;
+            }
+
+            var rules = await repository.GetPointRulesByTriggerEvent(triggerEvent);
+            foreach (var rule in rules)
+            {
+                msg = $"Checking : [{rule.RuleName}]...";
+                lines.Add(msg);
+
+                if (!ServiceUtils.IsDateEffective(rule.StartDate, rule.EndDate, currentDate))
+                {
+                    msg = $"Skipped : [{rule.RuleName}], rule not yet effective (see rule start/end date)";
+                    lines.Add(msg);
+                    continue;
+                }
+
+                if (rule.Status != "Active")
+                {
+                    msg = $"Skipped : [{rule.RuleName}], is disabled";
+                    lines.Add(msg);
+                    continue;
+                }
+
+                ruleInput.RuleDefinition = rule.RuleDefinition;
+
+                var ruleResult = await TestPointRule(orgId, ruleInput);
+                if (ruleResult.IsMatch)
+                {
+                    msg = $"Matched : [{rule.RuleName}] is used for points calcuation";
+                    lines.Add(msg);
+
+                    //ถ้าเจอ rule ที่ match แล้วก็ไม่ต้องทำที่เหลือแล้ว
+                    result = ruleResult;
+                    cnt++;
+
+                    break;
+                }
+                else
+                {
+                    msg = $"Skipped : [{rule.RuleName}] execution result does not match";
+                    lines.Add(msg);
+                }
+            }
+
+            msg = "Fail : no any rule match";
+            if (cnt > 0)
+            {
+                //Found matched rule
+                msg = $"Success : found [{cnt}] rule match";
+            }
+            lines.Add(msg);
+
+            result.Messages = lines;
+            return result;
         }
-*/
     }
 }

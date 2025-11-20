@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Database.Repositories
         
         public Task<MPointRule> AddPointRule(MPointRule pr);
         public Task<List<MPointRule>> GetPointRules(VMPointRule param);
+        public Task<List<MPointRule>> GetPointRulesByTriggerEvent(string triggerEvent);
         public Task<int> GetPointRuleCount(VMPointRule param);
         public Task<MPointRule?> UpdatePointRuleById(string pointRuleId, MPointRule pr);
         public Task<MPointRule?> GetPointRuleById(string pointRuleId);

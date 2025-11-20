@@ -11,10 +11,12 @@ namespace Its.Onix.Api.Services
         public Task<MVPointRule?> GetPointRuleById(string orgId, string pointRuleId);
         public Task<MVPointRule?> DeletePointRuleById(string orgId, string pointRuleId);
         public Task<List<MPointRule>> GetPointRules(string orgId, VMPointRule param);
+        public List<PointRuleInputField> GetRuleInputFields(string orgId, string triggerEvent, bool withCurrentDate);
+
         public Task<int> GetPointRulesCount(string orgId, VMPointRule param);
         public Task<MVPointRule?> UpdatePointRuleStatusById(string orgId, string pointRuleId, string status);
         public Task<PointRuleExecutionResult> EvaluatePointRuleById(string orgId, string pointRuleId, PointRuleInput ruleInput);
         public Task<PointRuleExecutionResult> TestPointRule(string orgId, PointRuleInput ruleInput);
-//        public Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, PointRuleInput ruleInput);
+        public Task<PointRuleExecutionResult> EvaluatePointRules(string orgId, string triggerEvent, PointRuleInput ruleInput);
     }
 }
