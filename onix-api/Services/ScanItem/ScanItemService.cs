@@ -534,9 +534,10 @@ namespace Its.Onix.Api.Services
             MItem? product = null;
             var productId = sci.ItemId.ToString();
             
-            if (productId != null)
+            if (!string.IsNullOrEmpty(productId))
             {
                 //มีการ attach product ไว้แล้ว
+                Log.Debug($"Fetching product ID [{productId}], scan item [{sci.Serial}]");
                 product = _itemRepo.GetItemById(productId);
             }
 
