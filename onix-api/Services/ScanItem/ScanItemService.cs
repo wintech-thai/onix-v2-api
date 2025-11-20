@@ -508,7 +508,7 @@ namespace Its.Onix.Api.Services
             customerId = customer.Id.ToString();
 
             AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
-            ApplyLoyaltyPointLogic(orgId, scanItem, customer);
+            //ApplyLoyaltyPointLogic(orgId, scanItem, customer);
 
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
 
