@@ -13,15 +13,40 @@ namespace Its.Onix.Api.Services
         private readonly IPointTriggerRepository repository = null!;
         private readonly IPointService _pointService;
         private readonly IPointRuleService _pointRuleService;
+        private readonly IRedisHelper _redis;
 
         public PointTriggerService(
             IPointTriggerRepository repo,
             IPointService pointService,
-            IPointRuleService pointRuleService) : base()
+            IPointRuleService pointRuleService,
+            IRedisHelper redis) : base()
         {
             repository = repo;
             _pointService = pointService;
             _pointRuleService = pointRuleService;
+            _redis = redis;
+        }
+
+        public async Task<MVPointTrigger> AddPointTrigger(string orgId, string token, PointTriggerInput pt)
+        {
+            var r = new MVPointTrigger()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var cacheKey = CacheHelper.CreatePointTriggerCustRegisterKey(orgId);
+            var otpObj = _redis.GetObjectAsync<MJob>($"{cacheKey}:{token}").Result;
+            if (otpObj == null)
+            {
+                r.Status = "TOKEN_NOTFOUND_OR_EXPIRE";
+                r.Description = $"Token [{token}] not found or expire!!!";
+
+                return r;
+            }
+
+            var t = await AddPointTrigger(orgId, pt);
+            return t;
         }
 
         public async Task<MVPointTrigger> AddPointTrigger(string orgId, PointTriggerInput pt)

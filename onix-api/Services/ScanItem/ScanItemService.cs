@@ -572,9 +572,11 @@ namespace Its.Onix.Api.Services
                 ]
             };
 
-            //TODO : เพิ่ม token ใส่ไว้ใน cache, 10 minute expire
+            var cacheKey = CacheHelper.CreatePointTriggerCustRegisterKey(orgId);
+            _redis.SetObjectAsync($"{cacheKey}:{token}", job, TimeSpan.FromMinutes(10));
 
-            var result = _jobService.AddJob(orgId, job);
+            _jobService.AddJob(orgId, job);
+            
             return;
         }
 

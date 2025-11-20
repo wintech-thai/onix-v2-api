@@ -35,8 +35,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/AddPointTrigger/{token}")]
         public async Task<IActionResult> AddPointTrigger(string id, string token, [FromBody] PointTriggerInput request)
         {
-            //TODO : Add token validation here
-            var result = await svc.AddPointTrigger(id, request);
+            var result = await svc.AddPointTrigger(id, token, request);
             return Ok(result);
         }
 
