@@ -93,12 +93,21 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var (isMatch, point) = await GetPoint(orgId, pt.EventTriggered, pi);
+            var (isMatch, exeResult) = await GetPoint(orgId, pt.EventTriggered, pi);
+            pi.RuleDefinition = ""; //เคลียร์ไปไม่ต้องเก็บใน TriggerParams
+
             var triggerId = Guid.NewGuid().ToString();
+            var point = Convert.ToInt32(exeResult.ExecutionResult);
+
+            var ptp = new PointTriggerParam()
+            {
+                TriggerInput = pt,
+                TriggerResult = exeResult,
+            };
 
             var pointTrigger = new MPointTrigger
             {
-                TriggerParams = JsonSerializer.Serialize(pt),
+                TriggerParams = JsonSerializer.Serialize(ptp),
                 TriggeredEvent = pt.EventTriggered,
                 WalletId = pt.WalletId,
                 TriggerName = $"{pt.EventTriggered}:{triggerId}",
@@ -129,17 +138,10 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<(bool isMatch, int piont)> GetPoint(string orgId, string triggerEvent, PointRuleInput pri)
+        private async Task<(bool isMatch, PointRuleExecutionResult exeResult)> GetPoint(string orgId, string triggerEvent, PointRuleInput pri)
         {
             var result = await _pointRuleService.EvaluatePointRules(orgId, triggerEvent, pri);
-            
-            var point = 0;
-            if (result.IsMatch)
-            {
-                point = Convert.ToInt32(result.ExecutionResult);
-            }
-
-            return (result.IsMatch, point);
+            return (result.IsMatch, result);
         }
 
         public async Task<MVPointTrigger?> GetPointTriggerById(string orgId, string pointTriggerId)
