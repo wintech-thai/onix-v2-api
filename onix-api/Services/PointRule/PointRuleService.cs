@@ -519,8 +519,9 @@ namespace Its.Onix.Api.Services
 
                     //ถ้าเจอ rule ที่ match แล้วก็ไม่ต้องทำที่เหลือแล้ว
                     result = ruleResult;
-                    cnt++;
+                    result.RuleMatch = rule.RuleName!;
 
+                    cnt++;
                     break;
                 }
                 else

@@ -6,7 +6,7 @@ namespace Its.Onix.Api.Models
         public string Description { get; set; }
 
         public bool IsMatch { get; set; }
-        public MPointRule? RuleMatch { get; set; }
+        public string RuleMatch { get; set; }
         public string? ExecutionResult { get; set; }
 
         public List<string> Messages { get; set; }
@@ -15,6 +15,7 @@ namespace Its.Onix.Api.Models
         {
             Status = "";
             Description = "";
+            RuleMatch = "";
             Messages = [];
         }
     }
