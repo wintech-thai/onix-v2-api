@@ -271,6 +271,35 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<MVWallet?> GetWalletByCustomerId(string orgId, string customerId)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(customerId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Customer ID [{customerId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetWalletByCustomerId(customerId);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Wallet not found for customer ID [{customerId}], organization [{orgId}]";
+            }
+
+            r.Wallet = result;
+            return r;
+        }
+
         public async Task<MVWallet?> GetWalletById(string orgId, string walletId)
         {
             var r = new MVWallet()
