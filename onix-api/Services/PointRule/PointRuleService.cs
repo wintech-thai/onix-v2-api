@@ -489,6 +489,13 @@ namespace Its.Onix.Api.Services
                 currentDate = DateTime.UtcNow;
             }
 
+            msg = $"Info : ProductCode=[{ruleInput.ProductCode}]";
+            lines.Add(msg);
+            msg = $"Info : ProductQuantity=[{ruleInput.ProductQuantity}]";
+            lines.Add(msg);
+            msg = $"Info : ProductTags=[{ruleInput.ProductTags}]";
+            lines.Add(msg);
+
             var rules = await repository.GetPointRulesByTriggerEvent(triggerEvent);
             foreach (var rule in rules)
             {
