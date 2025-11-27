@@ -495,6 +495,8 @@ namespace Its.Onix.Api.Services
             lines.Add(msg);
             msg = $"Info : ProductTags=[{ruleInput.ProductTags}]";
             lines.Add(msg);
+            msg = $"Info : CurrentDate=[{ruleInput.CurrentDate}]";
+            lines.Add(msg);
 
             var rules = await repository.GetPointRulesByTriggerEvent(triggerEvent);
             foreach (var rule in rules)
