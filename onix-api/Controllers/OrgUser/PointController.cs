@@ -117,6 +117,15 @@ namespace Prom.LPR.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetWalletByCustomerId/{customerId}")]
+        public async Task<IActionResult> GetWalletByCustomerId(string id, string customerId)
+        {
+            var result = await svc.GetWalletByCustomerId(id, customerId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateWalletById/{walletId}")]
         public async Task<IActionResult> UpdateWalletById(string id, string walletId, [FromBody] MWallet request)

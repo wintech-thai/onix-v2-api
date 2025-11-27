@@ -489,22 +489,31 @@ namespace Its.Onix.Api.Services
                 currentDate = DateTime.UtcNow;
             }
 
+            msg = $"Info : ProductCode=[{ruleInput.ProductCode}]";
+            lines.Add(msg);
+            msg = $"Info : ProductQuantity=[{ruleInput.ProductQuantity}]";
+            lines.Add(msg);
+            msg = $"Info : ProductTags=[{ruleInput.ProductTags}]";
+            lines.Add(msg);
+            msg = $"Info : CurrentDate=[{ruleInput.CurrentDate}]";
+            lines.Add(msg);
+
             var rules = await repository.GetPointRulesByTriggerEvent(triggerEvent);
             foreach (var rule in rules)
             {
                 msg = $"Checking : [{rule.RuleName}]...";
                 lines.Add(msg);
 
-                if (!ServiceUtils.IsDateEffective(rule.StartDate, rule.EndDate, currentDate))
+                if (rule.Status != "Active")
                 {
-                    msg = $"Skipped : [{rule.RuleName}], rule not yet effective (see rule start/end date)";
+                    msg = $"Skipped : [{rule.RuleName}], is disabled";
                     lines.Add(msg);
                     continue;
                 }
 
-                if (rule.Status != "Active")
+                if (!ServiceUtils.IsDateEffective(rule.StartDate, rule.EndDate, currentDate))
                 {
-                    msg = $"Skipped : [{rule.RuleName}], is disabled";
+                    msg = $"Skipped : [{rule.RuleName}], rule not yet effective (see rule start/end date)";
                     lines.Add(msg);
                     continue;
                 }

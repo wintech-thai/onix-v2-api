@@ -129,7 +129,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (result != null)
             {
-                //ไม่ต้องมี ItemType, Status
+                //ไม่ต้องมี ItemType
                 result.Properties = item.Properties;
                 result.Description = item.Description;
                 result.Narrative = item.Narrative;
@@ -138,6 +138,8 @@ namespace Its.Onix.Api.Database.Repositories
                 result.UpdatedDate = DateTime.UtcNow;
                 result.EffectiveDate = item.EffectiveDate;
                 result.ExpireDate = item.ExpireDate;
+                result.Status = item.Status;
+                
                 context!.SaveChanges();
             }
 
