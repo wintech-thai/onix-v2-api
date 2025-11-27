@@ -504,16 +504,16 @@ namespace Its.Onix.Api.Services
                 msg = $"Checking : [{rule.RuleName}]...";
                 lines.Add(msg);
 
-                if (!ServiceUtils.IsDateEffective(rule.StartDate, rule.EndDate, currentDate))
+                if (rule.Status != "Active")
                 {
-                    msg = $"Skipped : [{rule.RuleName}], rule not yet effective (see rule start/end date)";
+                    msg = $"Skipped : [{rule.RuleName}], is disabled";
                     lines.Add(msg);
                     continue;
                 }
 
-                if (rule.Status != "Active")
+                if (!ServiceUtils.IsDateEffective(rule.StartDate, rule.EndDate, currentDate))
                 {
-                    msg = $"Skipped : [{rule.RuleName}], is disabled";
+                    msg = $"Skipped : [{rule.RuleName}], rule not yet effective (see rule start/end date)";
                     lines.Add(msg);
                     continue;
                 }
