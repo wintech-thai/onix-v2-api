@@ -103,8 +103,11 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Tags = pr.Tags;
                 result.Description = pr.Description;
                 result.RuleName = pr.RuleName;
+                result.Priority = pr.Priority;
+                result.StartDate = pr.StartDate;
+                result.EndDate = pr.EndDate;
                 result.RuleDefinition = pr.RuleDefinition;
-                result.TriggeredEvent = pr.TriggeredEvent;
+                //result.TriggeredEvent = pr.TriggeredEvent;
                 result.UpdatedDate = DateTime.UtcNow;
 
                 context!.SaveChanges();
