@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Database.Repositories
         public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product);
         public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
         public MScanItem DetachScanItemFromCustomer(string itemId);
+        public MScanItem DetachScanItemFromProduct(string itemId);
         public MScanItem? GetScanItemBySerialPin(string serial, string pin);
 
         public MScanItem AddScanItem(MScanItem scanItem);

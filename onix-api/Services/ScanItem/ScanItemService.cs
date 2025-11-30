@@ -726,6 +726,37 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVScanItem DetachScanItemFromProduct(string orgId, string scanItemId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var r = new MVScanItem()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            var result = repository!.DetachScanItemFromProduct(scanItemId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+                
+                return r;
+            }
+
+            r.ScanItem = result;
+
+            return r;
+        }
+
         public MVScanItem DetachScanItemFromCustomer(string orgId, string scanItemId)
         {
             repository!.SetCustomOrgId(orgId);

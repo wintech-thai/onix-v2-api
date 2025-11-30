@@ -22,4 +22,7 @@ param =  {
 }
 
 result = make_request(:post, apiUrl, param)
-puts(result)
+
+json_string = result.to_json
+
+puts(json_string)

@@ -16,6 +16,7 @@ orgId = ENV['API_ORG']
 apiUrl = "api/PointRule/org/#{orgId}/action/EvaluatePointRules/CustomerRegistered"
 param = {
   ProductQuantity: 1,
+  ProductCode: "PROD-002",
 }
 
 result = make_request(:post, apiUrl, param)
