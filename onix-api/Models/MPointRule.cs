@@ -10,6 +10,7 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(RuleName))]
+    [Index(nameof(RuleType))]
 
     public class MPointRule
     {
