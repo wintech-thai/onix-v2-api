@@ -38,6 +38,9 @@ namespace Its.Onix.Api.Models
         [Column("status")]
         public string? Status { get; set; } /* Disable, Active */
 
+        [Column("rule_type")]
+        public string? RuleType { get; set; } /* PointRule, PriceRule */
+
         [Column("points_return")]
         public long? PointsReturn { get; set; }
 

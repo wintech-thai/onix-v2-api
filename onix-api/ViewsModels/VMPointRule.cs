@@ -6,5 +6,6 @@ namespace Its.Onix.Api.ViewsModels
     public class VMPointRule : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
+        public string? RuleType { get; set; }
     }
 }

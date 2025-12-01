@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = "napbiotec"
-scanItemId = "28414671-f33e-46b5-bc95-392a229dd77a"
+scanItemId = "a1ca3fb0-700b-4558-a79b-446763a2756c"
 
 ### DeleteItemImagesByItemId
 apiUrl = "api/ScanItem/org/#{orgId}/action/DetachScanItemFromProduct/#{scanItemId}"
