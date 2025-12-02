@@ -41,6 +41,8 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MLimit>? Limits { get; set; }
     public DbSet<MPointRule>? PointRules { get; set; }
     public DbSet<MPointTrigger>? PointTriggers { get; set; }
+    public DbSet<MAccountDoc>? AccountDocs { get; set; }
+    public DbSet<MAccountDocItem>? AccountDocItems { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -139,5 +141,8 @@ public class DataContext : DbContext, IDataContext
             .HasIndex(t => new { t.OrgId, t.RuleName }).IsUnique();
         modelBuilder.Entity<MPointTrigger>()
             .HasIndex(t => new { t.OrgId, t.TriggerName }).IsUnique();
+
+        modelBuilder.Entity<MAccountDoc>()
+            .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
     }
 }

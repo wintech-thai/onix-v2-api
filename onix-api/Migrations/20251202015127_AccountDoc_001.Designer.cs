@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251202015127_AccountDoc_001")]
+    partial class AccountDoc_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,10 +47,6 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("DocumentDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("document_date");
-
-                    b.Property<string>("DocumentParams")
-                        .HasColumnType("text")
-                        .HasColumnName("document_params");
 
                     b.Property<string>("DocumentType")
                         .HasColumnType("text")
@@ -99,7 +98,7 @@ namespace onix.api.Migrations
                     b.ToTable("AccountDocs");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MAccountDocItem", b =>
+            modelBuilder.Entity("Its.Onix.Api.Models.MAccountDocItems", b =>
                 {
                     b.Property<Guid?>("Id")
                         .ValueGeneratedOnAdd()
@@ -117,14 +116,6 @@ namespace onix.api.Migrations
                     b.Property<string>("DocumentParams")
                         .HasColumnType("text")
                         .HasColumnName("document_params");
-
-                    b.Property<double?>("IncentiveRate")
-                        .HasColumnType("double precision")
-                        .HasColumnName("incentive_rate");
-
-                    b.Property<double?>("IncentiveTotalPrice")
-                        .HasColumnType("double precision")
-                        .HasColumnName("incentive_price");
 
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
