@@ -3,7 +3,6 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
-using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {

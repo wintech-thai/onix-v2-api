@@ -2,6 +2,7 @@ using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -44,6 +45,28 @@ namespace Its.Onix.Api.Database.Repositories
             return approved;
         }
 
+        private async Task<MAccountDoc> UpdateAccountDocTotal(string accountDocId)
+        {
+            var items = await context!.AccountDocItems!
+                .Where(x => x.AccountDocId == accountDocId)
+                .ToListAsync();
+
+            // 2. คำนวณราคารวมใหม่
+            var newTotal = items.Sum(x => x.TotalPrice);
+
+            // 3. อัปเดตลง parent document
+            var parentDoc = await context.AccountDocs!
+                .FirstOrDefaultAsync(x => x.Id.ToString() == accountDocId);
+
+            if (parentDoc != null)
+            {
+                parentDoc.TotalPrice = newTotal; 
+                context.AccountDocs!.Update(parentDoc);
+            }
+
+            return parentDoc!;
+        }
+
         public async Task<MAccountDocItem?> UpdateAccountDocItemById(string accountDocItemId, MAccountDocItem adi)
         {
             Guid id = Guid.Parse(accountDocItemId);
@@ -54,11 +77,11 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.UnitPrice = adi.UnitPrice;
                 existing.TotalPrice = adi.TotalPrice;
                 existing.Tags = adi.Tags;
+
+                await UpdateAccountDocTotal(existing.AccountDocId!);
             }
 
             await context.SaveChangesAsync();
-
-            //TODO : Added update total price to parent document
 
             return existing;
         }
@@ -70,9 +93,8 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 context.AccountDocItems!.Remove(existing);
+                await UpdateAccountDocTotal(existing.AccountDocId!);
                 await context.SaveChangesAsync();
-
-                //TODO : Added update total price to parent document
             }
 
             return existing;
@@ -84,9 +106,8 @@ namespace Its.Onix.Api.Database.Repositories
             adi.AccountDocId = accountDocId;
 
             await context!.AccountDocItems!.AddAsync(adi);
+            await UpdateAccountDocTotal(accountDocId);
             await context.SaveChangesAsync();
-
-            //TODO : Added update total price to parent document
 
             return adi;
         }
@@ -197,6 +218,14 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
+            }
+
+            if ((param.DocumentType != "") && (param.DocumentType != null))
+            {
+                var docTypePd = PredicateBuilder.New<MAccountDoc>();
+                docTypePd = docTypePd.Or(p => p.DocumentType!.Equals(param.DocumentType));
+
+                pd = pd.And(docTypePd);
             }
 
             return pd;
