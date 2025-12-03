@@ -10,16 +10,18 @@ namespace Its.Onix.Api.Services
     {
         private readonly IVoucherRepository repository = null!;
         private readonly IItemService _itemService;
+        private readonly IPointService _pointService;
         private readonly IRedisHelper _redis;
 
         public VoucherService(
             IVoucherRepository repo,
             IItemService itemService,
-            IPointRuleService pointRuleService,
+            IPointService pointService,
             IRedisHelper redis) : base()
         {
             repository = repo;
             _itemService = itemService;
+            _pointService = pointService;
             _redis = redis;
         }
 
@@ -43,17 +45,71 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var isDocNoExist = await repository.IsVoucherNoExist(vc.VoucherNo!);
-            if (isDocNoExist)
+            var wallet = await _pointService.GetWalletByCustomerId(orgId, vc.CustomerId!);
+            if (wallet == null)
             {
-                r.Status = "DOC_NO_DUPLICATE";
-                r.Description = $"Voucher number [{vc.VoucherNo}] is duplicate!!!";
+                r.Status = "WALLET_NOTFOUND";
+                r.Description = $"Wallet ID [{vc.WalletId}] not found for the organization [{orgId}]";
 
                 return r;
             }
 
-            //TODO : Add point & privilege deduction logic here
-            //TODO : สร้าง voucher no และ PIN ด้วย
+            //TODO : เปลี่ยนให้เป็น await จะดีขึ้น
+            var product = _itemService.GetItemById(orgId, vc.PrivilegeId!);
+            if (product == null)
+            {
+                r.Status = "PRIVILEGE_NOTFOUND";
+                r.Description = $"Privilege ID [{vc.PrivilegeId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //เอาราค่ามาจาก privilege เองเลย
+            var prefix = ServiceUtils.GenerateSecureRandomString(2).ToUpper();
+            var vcNo = ServiceUtils.CreateOTP(5);
+
+            vc.RedeemPrice = product.PointRedeem;
+            vc.WalletId = wallet.Wallet!.Id.ToString();
+            vc.VoucherNo = $"{prefix}-{vcNo}";
+            vc.Pin = ServiceUtils.CreateOTP(6);
+
+            var privilegeTx = new MItemTx()
+            {
+                OrgId = orgId,
+                ItemId = vc.PrivilegeId,
+                TxType = -1, //Deduct
+                TxAmount = 1,
+                Description = $"Deduct privilege quantity for voucher [{vc.VoucherNo}]",
+                Tags = $"voucher={vc.VoucherNo}",
+            };
+
+            //TODO : เปลี่ยนให้เป็น await จะดีขึ้น
+            var privilegeDeductStatus = _itemService.DeductItemQuantity(orgId, privilegeTx);
+            if (privilegeDeductStatus.Status != "OK")
+            {
+                r.Status = privilegeDeductStatus.Status;
+                r.Description = privilegeDeductStatus.Description;
+
+                return r;
+            }
+
+            var pointTx = new MPointTx()
+            {
+                OrgId = orgId,
+                TxType = 2, //Out
+                TxAmount = product.PointRedeem,
+                Description = $"Deduct point(s) for voucher [{vc.VoucherNo}]",
+                Tags = $"voucher={vc.VoucherNo}",
+            };
+
+            var pointDeductStatus = await _pointService.DeductPoint(orgId, pointTx);
+            if (pointDeductStatus.Status != "OK")
+            {
+                r.Status = pointDeductStatus.Status;
+                r.Description = pointDeductStatus.Description;
+
+                return r;
+            }
 
             var result = await repository!.AddVoucher(vc);
             r.Voucher = result;
