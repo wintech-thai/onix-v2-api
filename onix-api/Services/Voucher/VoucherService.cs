@@ -54,7 +54,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-
             //เปลี่ยนให้เป็น await จะดีขึ้น
             var product = _itemService.GetItemById(orgId, vc.PrivilegeId!);
             if (product == null)
@@ -80,6 +79,33 @@ namespace Its.Onix.Api.Services
                 r.Status = "WALLET_BALANCE_NOT_ENOUGH";
                 r.Description = $"Wallet ID [{vc.WalletId}] balance is not enough for the organization [{orgId}]";
 
+                return r;
+            }
+
+            var walletId = walletResult.Wallet.Id.ToString();
+            var privilegeId = vc.PrivilegeId!;
+
+            //Acquire wallet lock here to prevent race condition
+            using var redWalletLock = await _redis.AcquireRedLockAsync(
+                $"lock:wallet:{walletId}",  // resource
+                TimeSpan.FromSeconds(2)   // lock expiry
+            );
+            if (!redWalletLock.IsAcquired)
+            {
+                r.Status = "WALLET_LOCK_NOT_ACQUIRED";
+                r.Description = $"Could not acquire lock for wallet ID [{walletId}] to process voucher redemption. Please try again.";
+                return r;
+            }
+
+            //Acquire privilege lock here to prevent race condition
+            using var redPrivilegeLock = await _redis.AcquireRedLockAsync(
+                $"lock:privilege:{privilegeId}",  // resource
+                TimeSpan.FromSeconds(2)   // lock expiry
+            );
+            if (!redPrivilegeLock.IsAcquired)
+            {
+                r.Status = "PRIVILEGE_LOCK_NOT_ACQUIRED";
+                r.Description = $"Could not acquire lock for privilege ID [{privilegeId}] to process voucher redemption. Please try again.";
                 return r;
             }
 

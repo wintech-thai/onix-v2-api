@@ -1,4 +1,6 @@
 
+using RedLockNet;
+
 namespace Its.Onix.Api.Utils
 {
     public interface IRedisHelper
@@ -8,5 +10,10 @@ namespace Its.Onix.Api.Utils
         public Task<T?> GetObjectAsync<T>(string key);
         public Task<string> PublishMessageAsync(string stream, string message);
         public Task<bool> DeleteAsync(string key);
+        public Task<IRedLock> AcquireRedLockAsync(
+            string resource,
+            TimeSpan expiry,
+            TimeSpan? wait = null,
+            TimeSpan? retry = null);
     }
 }
