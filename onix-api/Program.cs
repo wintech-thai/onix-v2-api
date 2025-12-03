@@ -97,6 +97,9 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAdminUserService, AdminUserService>();
             builder.Services.AddScoped<IPointRuleService, PointRuleService>();
             builder.Services.AddScoped<IPointTriggerService, PointTriggerService>();
+            builder.Services.AddScoped<IAccountDocService, AccountDocService>();
+            builder.Services.AddScoped<IVoucherService, VoucherService>();
+
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
@@ -122,6 +125,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAdminUserRepository, AdminUserRepository>();
             builder.Services.AddScoped<IPointRuleRepository, PointRuleRepository>();
             builder.Services.AddScoped<IPointTriggerRepository, PointTriggerRepository>();
+            builder.Services.AddScoped<IAccountDocRepository, AccountDocRepository>();
+            builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();

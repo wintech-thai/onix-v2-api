@@ -10,6 +10,7 @@ namespace Its.Onix.Api.Services
         public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId);
         public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId);
         public MVScanItem DetachScanItemFromCustomer(string orgId, string scanItemId);
+        public MVScanItem DetachScanItemFromProduct(string orgId, string scanItemId);
         public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp);
         public MVEntity GetScanItemCustomer(string orgId, string serial, string pin, string otp);
         public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email);

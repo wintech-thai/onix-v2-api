@@ -25,6 +25,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/AddPointRule")]
         public async Task<IActionResult> AddPointRule(string id, [FromBody] MPointRule request)
         {
+            request.RuleType = "PointRule";
             var result = await svc.AddPointRule(id, request);
             return Ok(result);
         }
@@ -34,6 +35,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/UpdatePointRuleById/{pointRuleId}")]
         public async Task<IActionResult> UpdatePointRuleById(string id, string pointRuleId, [FromBody] MPointRule request)
         {
+            request.RuleType = "PointRule";
             var result = await svc.UpdatePointRuleById(id, pointRuleId, request);
 
             return Ok(result);
@@ -64,6 +66,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/GetPointRulesCount")]
         public async Task<IActionResult> GetPointRulesCount(string id, [FromBody] VMPointRule param)
         {
+            param.RuleType = "PointRule";
             var result = await svc.GetPointRulesCount(id, param);
             return Ok(result);
         }
@@ -73,6 +76,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/GetPointRules")]
         public async Task<IActionResult> GetPointRules(string id, [FromBody] VMPointRule param)
         {
+            param.RuleType = "PointRule";
             var result = await svc.GetPointRules(id, param);
             return Ok(result);
         }

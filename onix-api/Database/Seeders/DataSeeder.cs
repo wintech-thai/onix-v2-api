@@ -134,6 +134,17 @@ public class DataSeeder
         context!.Roles!.Add(r);
     }
 
+    private void UpdateRuleTypeIfNull()
+    {
+        var items = context.PointRules!.Where(x => x.RuleType == null || x.RuleType == "").ToList();
+        foreach (var item in items)
+        {
+            item.RuleType = "PointRule";
+        }
+
+        context.SaveChanges();
+    }
+
     private void SeedDefaultRoles()
     {
         AddRole("CREATOR", "Admin:CreateOrganization,ApiKey:AddApiKey", "ADMIN", "Organization creator");
@@ -167,5 +178,7 @@ public class DataSeeder
         SeedDefaultRoles();
         UpdateApiKeyRole();
         SeedDefaultRoles2();
+
+        UpdateRuleTypeIfNull();
     }
 }

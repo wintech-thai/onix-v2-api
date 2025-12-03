@@ -1,3 +1,6 @@
+using RedLockNet;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
 using System.Text.Json;
 using StackExchange.Redis;
 
@@ -6,10 +9,15 @@ namespace Its.Onix.Api.Utils
     public class RedisHelper : IRedisHelper
     {
         private readonly IDatabase _db;
+        private readonly RedLockFactory _redlockFactory;
 
         public RedisHelper(IConnectionMultiplexer connection)
         {
             _db = connection.GetDatabase();
+            _redlockFactory = RedLockFactory.Create(new List<RedLockMultiplexer>
+            {
+                new RedLockMultiplexer(connection)
+            });
         }
 
         public Task<bool> SetAsync(string key, string value, TimeSpan? expiry = null)
@@ -42,7 +50,27 @@ namespace Its.Onix.Api.Utils
                 
             return msgId.ToString();
         }
-    
+
+        // --- เพิ่ม RedLock wrapper ---
+        public async Task<IRedLock> AcquireRedLockAsync(
+            string resource,
+            TimeSpan expiry,
+            TimeSpan? wait = null,
+            TimeSpan? retry = null)
+        {
+            wait ??= TimeSpan.FromSeconds(5);
+            retry ??= TimeSpan.FromMilliseconds(200);
+
+            var redLock = await _redlockFactory.CreateLockAsync(
+                resource,
+                expiry,
+                wait.Value,
+                retry.Value
+            );
+
+            return redLock;
+        }
+
         public Task<bool> DeleteAsync(string key)
             => _db.KeyDeleteAsync(key);
     }

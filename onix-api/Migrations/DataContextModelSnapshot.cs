@@ -22,6 +22,149 @@ namespace onix.api.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MAccountDoc", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("doc_id");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("DocumentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("document_date");
+
+                    b.Property<string>("DocumentParams")
+                        .HasColumnType("text")
+                        .HasColumnName("document_params");
+
+                    b.Property<string>("DocumentType")
+                        .HasColumnType("text")
+                        .HasColumnName("document_type");
+
+                    b.Property<string>("EntityId")
+                        .HasColumnType("text")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("ProductType")
+                        .HasColumnType("text")
+                        .HasColumnName("product_type");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text")
+                        .HasColumnName("tags");
+
+                    b.Property<double?>("TotalPrice")
+                        .HasColumnType("double precision")
+                        .HasColumnName("total_price");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code");
+
+                    b.HasIndex("DocumentType");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex("ProductType");
+
+                    b.HasIndex("OrgId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("AccountDocs");
+                });
+
+            modelBuilder.Entity("Its.Onix.Api.Models.MAccountDocItem", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("doc_item_id");
+
+                    b.Property<string>("AccountDocId")
+                        .HasColumnType("text")
+                        .HasColumnName("account_doc_id");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("DocumentParams")
+                        .HasColumnType("text")
+                        .HasColumnName("document_params");
+
+                    b.Property<double?>("IncentiveRate")
+                        .HasColumnType("double precision")
+                        .HasColumnName("incentive_rate");
+
+                    b.Property<double?>("IncentiveTotalPrice")
+                        .HasColumnType("double precision")
+                        .HasColumnName("incentive_price");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("ProductId")
+                        .HasColumnType("text")
+                        .HasColumnName("product_id");
+
+                    b.Property<double?>("Quantity")
+                        .HasColumnType("double precision")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text")
+                        .HasColumnName("tags");
+
+                    b.Property<double?>("TotalPrice")
+                        .HasColumnType("double precision")
+                        .HasColumnName("total_price");
+
+                    b.Property<double?>("UnitPrice")
+                        .HasColumnType("double precision")
+                        .HasColumnName("unit_price");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountDocId");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("AccountDocItems");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MAdminUser", b =>
                 {
                     b.Property<Guid?>("AdminUserId")
@@ -438,6 +581,10 @@ namespace onix.api.Migrations
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
+
+                    b.Property<int?>("PointRedeem")
+                        .HasColumnType("integer")
+                        .HasColumnName("point_redeem");
 
                     b.Property<string>("Properties")
                         .HasColumnType("text")
@@ -1040,6 +1187,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("rule_name");
 
+                    b.Property<string>("RuleType")
+                        .HasColumnType("text")
+                        .HasColumnName("rule_type");
+
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("start_date");
@@ -1065,6 +1216,8 @@ namespace onix.api.Migrations
                     b.HasIndex("OrgId");
 
                     b.HasIndex("RuleName");
+
+                    b.HasIndex("RuleType");
 
                     b.HasIndex("OrgId", "RuleName")
                         .IsUnique();
@@ -1679,6 +1832,89 @@ namespace onix.api.Migrations
                         {
                             t.HasCheckConstraint("CK_User_PhoneNumber_E164", "phone_number ~ '^\\+[1-9][0-9]{7,14}$'");
                         });
+                });
+
+            modelBuilder.Entity("Its.Onix.Api.Models.MVoucher", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("voucher_id");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("CustomerId")
+                        .HasColumnType("text")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("IsUsed")
+                        .HasColumnType("text")
+                        .HasColumnName("is_used");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("Pin")
+                        .HasColumnType("text")
+                        .HasColumnName("piin");
+
+                    b.Property<string>("PrivilegeId")
+                        .HasColumnType("text")
+                        .HasColumnName("privilege_id");
+
+                    b.Property<double?>("RedeemPrice")
+                        .HasColumnType("double precision")
+                        .HasColumnName("redeem_price");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text")
+                        .HasColumnName("tags");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("VoucherNo")
+                        .HasColumnType("text")
+                        .HasColumnName("voucher_no");
+
+                    b.Property<string>("VoucherParams")
+                        .HasColumnType("text")
+                        .HasColumnName("voucher_params");
+
+                    b.Property<string>("WalletId")
+                        .HasColumnType("text")
+                        .HasColumnName("wallet_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex("VoucherNo");
+
+                    b.HasIndex("OrgId", "VoucherNo")
+                        .IsUnique();
+
+                    b.ToTable("Vouchers");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MWallet", b =>

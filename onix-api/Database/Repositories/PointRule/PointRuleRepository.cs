@@ -28,6 +28,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(fullTextPd);
             }
 
+            if ((param.RuleType != "") && (param.RuleType != null))
+            {
+                var ruleTypePd = PredicateBuilder.New<MPointRule>();
+                ruleTypePd = ruleTypePd.Or(p => p.RuleType!.Equals(param.RuleType));
+
+                pd = pd.And(ruleTypePd);
+            }
+
             return pd;
         }
 
@@ -66,6 +74,11 @@ namespace Its.Onix.Api.Database.Repositories
             if (param.Limit > 0)
             {
                 limit = param.Limit;
+            }
+
+            if (string.IsNullOrEmpty(param.RuleType))
+            {
+                param.RuleType = "PointRule";
             }
 
             var predicate = PointRulePredicate(param!);
@@ -107,7 +120,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.StartDate = pr.StartDate;
                 result.EndDate = pr.EndDate;
                 result.RuleDefinition = pr.RuleDefinition;
-                //result.TriggeredEvent = pr.TriggeredEvent;
+                result.RuleType = pr.RuleType; //ตรงนี้ controller จะ set ค่าเข้ามาให้ว่าเป็น PointRule หรือ PriceRule
                 result.UpdatedDate = DateTime.UtcNow;
 
                 context!.SaveChanges();

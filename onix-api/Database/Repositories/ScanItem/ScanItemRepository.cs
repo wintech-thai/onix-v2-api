@@ -263,6 +263,31 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
+        public MScanItem DetachScanItemFromProduct(string itemId)
+        {
+            Guid id = Guid.Parse(itemId);
+            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.UsedFlag = "FALSE";
+                result.ItemId = null;
+                result.ProductCode = null;
+
+                // Remove product tag from Tags
+                if (!string.IsNullOrEmpty(result.Tags))
+                {
+                    var parts = result.Tags.Split(',').ToList();
+                    parts = parts.Where(part => !part.StartsWith("product=")).ToList();
+                    result.Tags = string.Join(",", parts);
+                }
+
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
         public MScanItem DetachScanItemFromCustomer(string itemId)
         {
             Guid id = Guid.Parse(itemId);

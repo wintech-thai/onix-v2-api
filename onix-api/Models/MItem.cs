@@ -59,6 +59,9 @@ namespace Its.Onix.Api.Models
         [Column("current_balance")]
         public long? CurrentBalance { get; set; }
 
+        [Column("point_redeem")] /* จำนวน point ที่ต้องใช้ในการแลก privilege */
+        public int? PointRedeem { get; set; }
+
         //Navigation Properties
         public ICollection<MItemImage> Images { get; set; } = new List<MItemImage>();
 
