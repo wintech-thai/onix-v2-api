@@ -45,16 +45,17 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var wallet = await _pointService.GetWalletByCustomerId(orgId, vc.CustomerId!);
-            if (wallet == null)
+            var walletResult = await _pointService.GetWalletByCustomerId(orgId, vc.CustomerId!);
+            if (walletResult!.Status != "OK")
             {
-                r.Status = "WALLET_NOTFOUND";
-                r.Description = $"Wallet ID [{vc.WalletId}] not found for the organization [{orgId}]";
+                r.Status = walletResult.Status;
+                r.Description = walletResult.Description;
 
                 return r;
             }
 
-            //TODO : เปลี่ยนให้เป็น await จะดีขึ้น
+
+            //เปลี่ยนให้เป็น await จะดีขึ้น
             var product = _itemService.GetItemById(orgId, vc.PrivilegeId!);
             if (product == null)
             {
@@ -64,12 +65,30 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //เอาราค่ามาจาก privilege เองเลย
+            //ให้ตระหนักไว้ว่าจะเกิด race condition ได้นะ ถ้ามีการ redeem พร้อมๆ กันหลายๆ request
+            var privilegeQty = 1;
+            if (product.CurrentBalance < privilegeQty)
+            {
+                r.Status = "PRIVILEGE_QTY_NOT_ENOUGH";
+                r.Description = $"Privilege ID [{vc.PrivilegeId}] quantity is not enough for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (walletResult.Wallet!.PointBalance < product.PointRedeem)
+            {
+                r.Status = "WALLET_BALANCE_NOT_ENOUGH";
+                r.Description = $"Wallet ID [{vc.WalletId}] balance is not enough for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //เอาราคามาจาก privilege เองเลย
             var prefix = ServiceUtils.GenerateSecureRandomString(2).ToUpper();
             var vcNo = ServiceUtils.CreateOTP(5);
-
+            
             vc.RedeemPrice = product.PointRedeem;
-            vc.WalletId = wallet.Wallet!.Id.ToString();
+            vc.WalletId = walletResult.Wallet!.Id.ToString();
             vc.VoucherNo = $"{prefix}-{vcNo}";
             vc.Pin = ServiceUtils.CreateOTP(6);
 
@@ -78,12 +97,12 @@ namespace Its.Onix.Api.Services
                 OrgId = orgId,
                 ItemId = vc.PrivilegeId,
                 TxType = -1, //Deduct
-                TxAmount = 1,
+                TxAmount = privilegeQty,
                 Description = $"Deduct privilege quantity for voucher [{vc.VoucherNo}]",
                 Tags = $"voucher={vc.VoucherNo}",
             };
 
-            //TODO : เปลี่ยนให้เป็น await จะดีขึ้น
+            //เปลี่ยนให้เป็น await จะดีขึ้น
             var privilegeDeductStatus = _itemService.DeductItemQuantity(orgId, privilegeTx);
             if (privilegeDeductStatus.Status != "OK")
             {
