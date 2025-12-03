@@ -75,7 +75,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (walletResult.Wallet!.PointBalance < product.PointRedeem)
+            var productPoint = product.PointRedeem;
+            if (productPoint == null)
+            {
+                //ถ้าเป็น null ให้ตั้งเป็น 0, ไม่จะบวกลบ point ไม่ได้
+                productPoint = 0;
+            }
+
+            if (walletResult.Wallet!.PointBalance < productPoint)
             {
                 r.Status = "WALLET_BALANCE_NOT_ENOUGH";
                 r.Description = $"Wallet ID [{vc.WalletId}] balance is not enough for the organization [{orgId}]";
@@ -86,20 +93,12 @@ namespace Its.Onix.Api.Services
             var walletId = walletResult.Wallet.Id.ToString();
             var privilegeId = vc.PrivilegeId!;
 
-            var productPoint = product.PointRedeem;
-            if (productPoint == null)
-            {
-                //ถ้าเป็น null ให้ตั้งเป็น 0, ไม่จะบวกลบ point ไม่ได้
-                productPoint = 0;
-            }
-
             var vp = new VoucherParam()
             {
                 CustomerId = vc.CustomerId!,
                 PrivilegeId = privilegeId,
                 WalletId = walletId!,
             };
-
 
             //Acquire wallet lock here to prevent race condition
             using var redWalletLock = await _redis.AcquireRedLockAsync(
@@ -129,10 +128,12 @@ namespace Its.Onix.Api.Services
             var prefix = ServiceUtils.GenerateSecureRandomString(2).ToUpper();
             var vcNo = ServiceUtils.CreateOTP(5);
             
-            vc.RedeemPrice = product.PointRedeem;
+            vc.RedeemPrice = productPoint;
             vc.WalletId = walletResult.Wallet!.Id.ToString();
             vc.VoucherNo = $"{prefix}-{vcNo}";
             vc.Pin = ServiceUtils.CreateOTP(6);
+            vc.StartDate = product.EffectiveDate;
+            vc.EndDate = product.ExpireDate;
 
             var privilegeTx = new MItemTx()
             {
