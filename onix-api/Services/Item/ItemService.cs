@@ -207,10 +207,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (it.Status != "Pending")
+            if (it.Status == "Approved")
             {
                 r.Status = "INVALID_STATE";
-                r.Description = $"Item ID [{itemId}] need to be in 'Pending' state for editable!!!";
+                r.Description = $"Item ID [{itemId}] is approved so this is not editable!!!";
 
                 return r;
             }
