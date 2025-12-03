@@ -120,7 +120,6 @@ namespace Its.Onix.Api.Services
 
             var privilegeTx = new MItemTx()
             {
-                OrgId = orgId,
                 ItemId = vc.PrivilegeId,
                 TxType = -1, //Deduct
                 TxAmount = privilegeQty,
@@ -140,7 +139,7 @@ namespace Its.Onix.Api.Services
 
             var pointTx = new MPointTx()
             {
-                OrgId = orgId,
+                WalletId = walletId,
                 TxType = 2, //Out
                 TxAmount = product.PointRedeem,
                 Description = $"Deduct point(s) for voucher [{vc.VoucherNo}]",
