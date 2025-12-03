@@ -48,6 +48,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(itemPd);
             }
 
+            if ((param.Status != null) && (param.Status != ""))
+            {
+                var statusPd = PredicateBuilder.New<MItem>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
+            }
+
             return pd;
         }
 

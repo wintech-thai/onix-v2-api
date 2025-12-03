@@ -185,6 +185,24 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetRedeemablePrivileges")]
+        public IActionResult GetRedeemablePrivileges(string id, [FromBody] VMItem param)
+        {
+            if (param.Limit <= 0)
+            {
+                param.Limit = 100;
+            }
+
+            param.ItemType = 2;
+            param.Status = "Approved";
+            var result = svc.GetItems(id, param);
+
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetPrivilegeCount")]
