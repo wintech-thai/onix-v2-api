@@ -105,6 +105,14 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            if (tx.TxAmount == null || tx.TxAmount < 0)
+            {
+                r.Status = "INVALID_TX_AMOUNT";
+                r.Description = "TxAmount must be greater than 0 for point addition!!!";
+
+                return r;
+            }
+
             var txAmt = tx.TxAmount;
             var currBal = await GetCurrentBalance(tx.WalletId!);
 
@@ -145,6 +153,14 @@ namespace Its.Onix.Api.Services
                 Status = "OK",
                 Description = "Success",
             };
+
+            if (tx.TxAmount == null || tx.TxAmount < 0)
+            {
+                r.Status = "INVALID_TX_AMOUNT";
+                r.Description = "TxAmount must be greater than 0 for point deduction!!!";
+
+                return r;
+            }
 
             var txAmt = tx.TxAmount;
             var currBal = await GetCurrentBalance(tx.WalletId!);

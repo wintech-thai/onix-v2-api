@@ -85,6 +85,13 @@ namespace Its.Onix.Api.Services
             var walletId = walletResult.Wallet.Id.ToString();
             var privilegeId = vc.PrivilegeId!;
 
+            var productPoint = product.PointRedeem;
+            if (productPoint == null)
+            {
+                //ถ้าเป็น null ให้ตั้งเป็น 0, ไม่จะบวกลบ point ไม่ได้
+                productPoint = 0;
+            }
+
             //Acquire wallet lock here to prevent race condition
             using var redWalletLock = await _redis.AcquireRedLockAsync(
                 $"lock:wallet:{walletId}",  // resource
@@ -121,7 +128,6 @@ namespace Its.Onix.Api.Services
             var privilegeTx = new MItemTx()
             {
                 ItemId = vc.PrivilegeId,
-                TxType = -1, //Deduct
                 TxAmount = privilegeQty,
                 Description = $"Deduct privilege quantity for voucher [{vc.VoucherNo}]",
                 Tags = $"voucher={vc.VoucherNo}",
@@ -140,8 +146,7 @@ namespace Its.Onix.Api.Services
             var pointTx = new MPointTx()
             {
                 WalletId = walletId,
-                TxType = 2, //Out
-                TxAmount = product.PointRedeem,
+                TxAmount = productPoint,
                 Description = $"Deduct point(s) for voucher [{vc.VoucherNo}]",
                 Tags = $"voucher={vc.VoucherNo}",
             };
