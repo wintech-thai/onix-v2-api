@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MPointTrigger>? PointTriggers { get; set; }
         public DbSet<MAccountDoc>? AccountDocs { get; set; }
         public DbSet<MAccountDocItem>? AccountDocItems { get; set; }
+        public DbSet<MVoucher>? Vouchers { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251203010613_Voucher_001")]
+    partial class Voucher_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1832,85 +1835,6 @@ namespace onix.api.Migrations
                         {
                             t.HasCheckConstraint("CK_User_PhoneNumber_E164", "phone_number ~ '^\\+[1-9][0-9]{7,14}$'");
                         });
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MVoucher", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("voucher_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("CustomerId")
-                        .HasColumnType("text")
-                        .HasColumnName("entity_id");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("end_date");
-
-                    b.Property<string>("IsUsed")
-                        .HasColumnType("text")
-                        .HasColumnName("is_used");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("PrivilegeId")
-                        .HasColumnType("text")
-                        .HasColumnName("privilege_id");
-
-                    b.Property<double?>("RedeemPrice")
-                        .HasColumnType("double precision")
-                        .HasColumnName("redeem_price");
-
-                    b.Property<DateTime?>("StartDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start_date");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_date");
-
-                    b.Property<string>("VoucherNo")
-                        .HasColumnType("text")
-                        .HasColumnName("voucher_no");
-
-                    b.Property<string>("VoucherParams")
-                        .HasColumnType("text")
-                        .HasColumnName("voucher_params");
-
-                    b.Property<string>("WalletId")
-                        .HasColumnType("text")
-                        .HasColumnName("wallet_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("VoucherNo");
-
-                    b.HasIndex("OrgId", "VoucherNo")
-                        .IsUnique();
-
-                    b.ToTable("Vouchers");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MWallet", b =>
