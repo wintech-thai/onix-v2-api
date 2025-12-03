@@ -3,6 +3,7 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
@@ -92,6 +93,14 @@ namespace Its.Onix.Api.Services
                 productPoint = 0;
             }
 
+            var vp = new VoucherParam()
+            {
+                CustomerId = vc.CustomerId!,
+                PrivilegeId = privilegeId,
+                WalletId = walletId!,
+            };
+
+
             //Acquire wallet lock here to prevent race condition
             using var redWalletLock = await _redis.AcquireRedLockAsync(
                 $"lock:wallet:{walletId}",  // resource
@@ -160,6 +169,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            vp.ItemTransaction = privilegeDeductStatus.ItemTx;
+            vp.PointTransaction = pointDeductStatus.PointTx;
+            var vpJson = JsonSerializer.Serialize(vp);
+
+            vc.VoucherParams = vpJson;
             var result = await repository!.AddVoucher(vc);
             r.Voucher = result;
 
