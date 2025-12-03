@@ -53,6 +53,7 @@ namespace Its.Onix.Api.Services
             }
 
             //TODO : Add point & privilege deduction logic here
+            //TODO : สร้าง voucher no และ PIN ด้วย
 
             var result = await repository!.AddVoucher(vc);
             r.Voucher = result;

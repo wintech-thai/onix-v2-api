@@ -56,6 +56,9 @@ namespace Its.Onix.Api.Models
         [Column("voucher_params")]
         public string? VoucherParams { get; set; } /* เป็น JSON string บอกว่า price calculate อย่างไร */
 
+        [Column("piin")]
+        public string? Pin { get; set; } /* password 6 หลัก */
+
 
         //System fields
         [Column("created_date")]

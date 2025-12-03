@@ -88,44 +88,46 @@ namespace Its.Onix.Api.Database.Repositories
 
         public IQueryable<MVoucher> GetSelection()
         {
-            var result = (
+            var query =
                 from vc in context!.Vouchers
 
-                // LEFT JOIN Items
                 join prd in context.Items!
-                    on vc.PrivilegeId equals prd.Id.ToString() into items
-                from item in items.DefaultIfEmpty()
+                    on vc.PrivilegeId equals prd.Id.ToString() into prdGroup
+                from item in prdGroup.DefaultIfEmpty()
 
-                // LEFT JOIN Entities (Customers)
                 join cst in context.Entities!
-                    on vc.CustomerId equals cst.Id.ToString() into customers
-                from customer in customers.DefaultIfEmpty()
+                    on vc.CustomerId! equals cst.Id.ToString() into cstGroup
+                from customer in cstGroup.DefaultIfEmpty()
 
-                select new MVoucher
-                {
-                    Id = vc.Id,
-                    OrgId = vc.OrgId,
-                    VoucherNo = vc.VoucherNo,
-                    VoucherParams = vc.VoucherParams,
-                    Description = vc.Description,
-                    CustomerId = vc.CustomerId,
-                    WalletId = vc.WalletId,
-                    PrivilegeId = vc.PrivilegeId,
-                    Tags = vc.Tags,
-                    StartDate = vc.StartDate,
-                    EndDate = vc.EndDate,
-                    RedeemPrice = vc.RedeemPrice,
-                    Status = vc.Status,
-                    IsUsed = vc.IsUsed,
-                    CustomerEmail = customer != null ? customer.PrimaryEmail : "",
-                    CustomerName = customer != null ? customer.Name : "",
-                    CustomerCode = customer != null ? customer.Code : "",
-                    PrivilegeCode = item != null ? item.Code : "",
-                    PrivilegeName = item != null ? item.Description : "",
-                }
-            );
+                select new { vc, item, customer };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
 
-            return result;
+            // จากนั้นค่อย map เป็น MVoucher (ยังเป็น IQueryable)
+            return query.Select(x => new MVoucher
+            {
+                Id = x.vc.Id,
+                OrgId = x.vc.OrgId,
+                VoucherNo = x.vc.VoucherNo,
+                VoucherParams = x.vc.VoucherParams,
+                Description = x.vc.Description,
+                CustomerId = x.vc.CustomerId,
+                WalletId = x.vc.WalletId,
+                PrivilegeId = x.vc.PrivilegeId,
+                Tags = x.vc.Tags,
+                StartDate = x.vc.StartDate,
+                EndDate = x.vc.EndDate,
+                RedeemPrice = x.vc.RedeemPrice,
+                Status = x.vc.Status,
+                IsUsed = x.vc.IsUsed,
+
+                CustomerEmail = x.customer != null ? x.customer.PrimaryEmail : "",
+                CustomerName = x.customer != null ? x.customer.Name : "",
+                CustomerCode = x.customer != null ? x.customer.Code : "",
+
+                PrivilegeCode = x.item != null ? x.item.Code : "",
+                PrivilegeName = x.item != null ? x.item.Description : "",
+
+                CreatedDate = x.vc.CreatedDate,
+            });
         }
 
         public async Task<List<MVoucher>> GetVouchers(VMVoucher param)
@@ -157,6 +159,7 @@ namespace Its.Onix.Api.Database.Repositories
             foreach (var r in result)
             {
                 r.VoucherParams = "";
+                r.Pin = "******";
             }
 
             return result;
