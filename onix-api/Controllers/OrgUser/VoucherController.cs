@@ -127,9 +127,18 @@ namespace Prom.LPR.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetVoucherVerifyUrl")]
-        public IActionResult GetVoucherVerifyUrl(string id)
+        public async Task<IActionResult> GetVoucherVerifyUrl(string id)
         {
-            var result = svc.GetVoucherVerifyUrl(id);
+            var result = await svc.GetVoucherVerifyUrl(id, "", false);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetVoucherVerifyQrUrl/{voucherId}")]
+        public async Task<IActionResult> GetVoucherVerifyQrUrl(string id, string voucherId)
+        {
+            var result = await svc.GetVoucherVerifyUrl(id, voucherId, true);
             return Ok(result);
         }
     }

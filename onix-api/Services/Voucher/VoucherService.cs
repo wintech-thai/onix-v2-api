@@ -4,6 +4,8 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
+using System.Text;
+using System.Web;
 
 namespace Its.Onix.Api.Services
 {
@@ -396,8 +398,44 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVVoucher GetVoucherVerifyUrl(string id)
+        public async Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool isQrCode)
         {
+            repository.SetCustomOrgId(id);
+
+            var r = new MVVoucher()
+            {
+                Status = "OK",
+                Description = "Success",
+                Voucher = new MVoucher() {}
+            };
+
+            var dataUrlSafe = "";
+            if (isQrCode)
+            {
+                if (!ServiceUtils.IsGuidValid(voucherId))
+                {
+                    r.Status = "UUID_INVALID";
+                    r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                    return r;
+                }
+
+                var voucher = await repository!.GetVoucherById(voucherId);
+                if (voucher == null)
+                {
+                    r.Status = "NOTFOUND";
+                    r.Description = $"Voucher ID [{voucherId}] not found for the organization [{id}]";
+
+                    return r;
+                }
+
+                var jsonString = JsonSerializer.Serialize(voucher);
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+                string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+                dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+            }
+
             var verifyDomain = "verify";
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             if (environment != "Production")
@@ -405,17 +443,8 @@ namespace Its.Onix.Api.Services
                 verifyDomain = "verify-dev";
             }
 
-            var verifyUrl = $"https://{verifyDomain}.please-scan.com/voucher?org={id}&theme=default";
-
-            var r = new MVVoucher()
-            {
-                Status = "OK",
-                Description = "Success",
-                Voucher = new MVoucher()
-                {
-                    GetVoucherVerifyUrl = verifyUrl
-                }
-            };
+            var verifyUrl = $"https://{verifyDomain}.please-scan.com/voucher?org={id}&theme=default&data={dataUrlSafe}";
+            r.Voucher.VoucherVerifyUrl = verifyUrl;
 
             return r;
         }

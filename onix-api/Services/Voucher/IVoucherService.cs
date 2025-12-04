@@ -16,6 +16,6 @@ namespace Its.Onix.Api.Services
         public Task<MVVoucher> VerifyVoucherByPin(string orgId, string voucherNo, string pin);
         public Task<MVVoucher> UpdateVoucherUsedFlagById(string orgId, string voucherId, string isUsed);
         public Task<MVVoucher> UpdateVoucherUsedFlagById(string orgId, string voucherId, string pin, string isUsed);
-        public MVVoucher GetVoucherVerifyUrl(string id);
+        public Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool isQrCode);
     }
 }
