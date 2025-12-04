@@ -148,5 +148,7 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MVoucher>()
             .HasIndex(t => new { t.OrgId, t.VoucherNo }).IsUnique();
+        modelBuilder.Entity<MVoucher>()
+            .HasIndex(t => new { t.OrgId, t.Barcode }).IsUnique();
     }
 }
