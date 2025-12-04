@@ -354,6 +354,23 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var vc = await repository!.GetVoucherById(voucherId);
+            if (vc == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (vc.Status == "Disable")
+            {
+                r.Status = "VOUCHER_DISABLED";
+                r.Description = $"Voucher ID [{voucherId}] is disable!!!";
+
+                return r;
+            }
+
             var result = await repository!.UpdateVoucherUsedFlagById(voucherId, isUsed);
             if (result == null)
             {
@@ -381,6 +398,23 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "UUID_INVALID";
                 r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                return r;
+            }
+
+            var vc = await repository!.GetVoucherById(voucherId);
+            if (vc == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] with pin [{pin}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (vc.Status == "Disable")
+            {
+                r.Status = "VOUCHER_DISABLED";
+                r.Description = $"Voucher ID [{voucherId}] is disable!!!";
 
                 return r;
             }
