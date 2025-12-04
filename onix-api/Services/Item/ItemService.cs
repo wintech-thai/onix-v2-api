@@ -190,7 +190,6 @@ namespace Its.Onix.Api.Services
 
         public MVItem? UpdatePrivilegeById(string orgId, string itemId, MItem item)
         {
-            //เช็คว่าต้อง Pending เท่า่นั้นถึงจะแก้ไขได้
             var r = new MVItem()
             {
                 Status = "OK",
@@ -206,15 +205,15 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            if (it.Status != "Pending")
+/*
+            if (it.Status == "Approved")
             {
                 r.Status = "INVALID_STATE";
-                r.Description = $"Item ID [{itemId}] need to be in 'Pending' state for editable!!!";
+                r.Description = $"Item ID [{itemId}] is approved so this is not editable!!!";
 
                 return r;
             }
-
+*/
             var result = repository!.UpdateItemById(itemId, item);
             if (result == null)
             {

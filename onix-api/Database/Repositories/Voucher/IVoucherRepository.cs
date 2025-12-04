@@ -15,5 +15,9 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<List<MVoucher>> GetVouchers(VMVoucher param);
         public Task<int> GetVoucherCount(VMVoucher param);
         public Task<MVoucher?> GetVoucherById(string voucherId);
+        public Task<MVoucher?> VerifyVoucherByBarcode(string barcode);
+        public Task<MVoucher?> VerifyVoucherByPin(string voucherNo, string pin);
+        public Task<MVoucher?> UpdateVoucherUsedFlagById(string voucherId, string isUsed);
+        public Task<MVoucher?> UpdateVoucherUsedFlagById(string voucherId, string pin, string isUsed);
     }
 }

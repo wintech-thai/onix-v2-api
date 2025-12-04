@@ -84,13 +84,27 @@ namespace Its.Onix.Api.Database.Repositories
         {
             //จะไม่มีการเรียก SaveChange() ในนี้
 
-            //ยังไง item ต้องไม่เป็น null
             var walletId = Guid.Parse(bal.WalletId!);
-            var item = context!.Wallets!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(walletId)).FirstOrDefault();
-            if (item != null)
+            var customerId = "";
+
+            //ยังไง wallet ต้องไม่เป็น null
+            var wallet = context!.Wallets!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(walletId)).FirstOrDefault();
+            if (wallet != null)
             {
                 //update ไปที่ Items ด้วย
-                item!.PointBalance = bal.BalanceEnd;
+                wallet!.PointBalance = bal.BalanceEnd;
+
+                customerId = wallet.CustomerId;
+            }
+
+            if (!string.IsNullOrEmpty(customerId))
+            {
+                //อัพเดต balance ไปที่ customer ด้วย
+                var customer = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(customerId)).FirstOrDefault();
+                if (customer != null)
+                {
+                    customer.TotalPoint = bal.BalanceEnd;
+                }
             }
 
             if (bal.IsNew)

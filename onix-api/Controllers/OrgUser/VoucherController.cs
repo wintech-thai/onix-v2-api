@@ -20,6 +20,38 @@ namespace Prom.LPR.Api.Controllers
             svc = service;
         }
 
+        //==== Start Anonymous Access ====//
+        [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("org/{id}/action/VerifyVoucherByBarcode/{barcode}")]
+        public async Task<IActionResult> VerifyVoucherByBarcode(string id, string barcode)
+        {
+            var result = await svc.VerifyVoucherByBarcode(id, barcode);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("org/{id}/action/VerifyVoucherByPin/{voucherNo}/{pin}")]
+        public async Task<IActionResult> VerifyVoucherByPin(string id, string voucherNo, string pin)
+        {
+            var result = await svc.VerifyVoucherByPin(id, voucherNo, pin);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("org/{id}/action/ApproveVoucherUsedById/{voucherId}/{pin}")]
+        public async Task<IActionResult> ApproveVoucherUsedById(string id, string voucherId, string pin)
+        {
+            var result = await svc.UpdateVoucherUsedFlagById(id, voucherId, pin, "YES");
+            return Ok(result);
+        }
+        //==== End Anonymous Access ====//
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/GetVouchers")]
@@ -80,6 +112,33 @@ namespace Prom.LPR.Api.Controllers
         public async Task<IActionResult> DisableVoucherById(string id, string voucherId)
         {
             var result = await svc.UpdateVoucherStatusById(id, voucherId, "Disable");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/SetVoucherUnusedById/{voucherId}")]
+        public async Task<IActionResult> SetVoucherUnusedById(string id, string voucherId)
+        {
+            var result = await svc.UpdateVoucherUsedFlagById(id, voucherId, "NO");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetVoucherVerifyUrl")]
+        public async Task<IActionResult> GetVoucherVerifyUrl(string id)
+        {
+            var result = await svc.GetVoucherVerifyUrl(id, "", false);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetVoucherVerifyQrUrl/{voucherId}")]
+        public async Task<IActionResult> GetVoucherVerifyQrUrl(string id, string voucherId)
+        {
+            var result = await svc.GetVoucherVerifyUrl(id, voucherId, true);
             return Ok(result);
         }
     }

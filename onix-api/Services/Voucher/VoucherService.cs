@@ -4,6 +4,8 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
+using System.Text;
+using System.Web;
 
 namespace Its.Onix.Api.Services
 {
@@ -134,6 +136,7 @@ namespace Its.Onix.Api.Services
             vc.Pin = ServiceUtils.CreateOTP(6);
             vc.StartDate = product.EffectiveDate;
             vc.EndDate = product.ExpireDate;
+            vc.Barcode = $"{vc.VoucherNo}-{vc.Pin}";
 
             var privilegeTx = new MItemTx()
             {
@@ -285,6 +288,197 @@ namespace Its.Onix.Api.Services
             }
 
             r.Voucher = result;
+
+            return r;
+        }
+
+        public async Task<MVVoucher> VerifyVoucherByBarcode(string orgId, string barcode)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVVoucher()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var result = await repository!.VerifyVoucherByBarcode(barcode);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher with barcode [{barcode}] not found for the organization [{orgId}]";
+            }
+
+            r.Voucher = result;
+
+            return r;
+        }
+
+        public async Task<MVVoucher> VerifyVoucherByPin(string orgId, string voucherNo, string pin)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVVoucher()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var result = await repository!.VerifyVoucherByPin(voucherNo, pin);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher with voucher number [{voucherNo}] and pin [{pin}] not found for the organization [{orgId}]";
+            }
+
+            r.Voucher = result;
+
+            return r;
+        }
+
+        public async Task<MVVoucher> UpdateVoucherUsedFlagById(string orgId, string voucherId, string isUsed)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVVoucher()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(voucherId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                return r;
+            }
+
+            var vc = await repository!.GetVoucherById(voucherId);
+            if (vc == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (vc.Status == "Disable")
+            {
+                r.Status = "VOUCHER_DISABLED";
+                r.Description = $"Voucher ID [{voucherId}] is disable!!!";
+
+                return r;
+            }
+
+            var result = await repository!.UpdateVoucherUsedFlagById(voucherId, isUsed);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Voucher = result;
+            return r;
+        }
+
+        public async Task<MVVoucher> UpdateVoucherUsedFlagById(string orgId, string voucherId, string pin, string isUsed)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVVoucher()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(voucherId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                return r;
+            }
+
+            var vc = await repository!.GetVoucherById(voucherId);
+            if (vc == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] with pin [{pin}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (vc.Status == "Disable")
+            {
+                r.Status = "VOUCHER_DISABLED";
+                r.Description = $"Voucher ID [{voucherId}] is disable!!!";
+
+                return r;
+            }
+
+            var result = await repository!.UpdateVoucherUsedFlagById(voucherId, pin, isUsed);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] with pin [{pin}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Voucher = result;
+            return r;
+        }
+
+        public async Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool isQrCode)
+        {
+            repository.SetCustomOrgId(id);
+
+            var r = new MVVoucher()
+            {
+                Status = "OK",
+                Description = "Success",
+                Voucher = new MVoucher() {}
+            };
+
+            var dataUrlSafe = "";
+            if (isQrCode)
+            {
+                if (!ServiceUtils.IsGuidValid(voucherId))
+                {
+                    r.Status = "UUID_INVALID";
+                    r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                    return r;
+                }
+
+                var voucher = await repository!.GetVoucherById(voucherId);
+                if (voucher == null)
+                {
+                    r.Status = "NOTFOUND";
+                    r.Description = $"Voucher ID [{voucherId}] not found for the organization [{id}]";
+
+                    return r;
+                }
+
+                var jsonString = JsonSerializer.Serialize(voucher);
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+                string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+                dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+            }
+
+            var verifyDomain = "verify";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                verifyDomain = "verify-dev";
+            }
+
+            var verifyUrl = $"https://{verifyDomain}.please-scan.com/voucher?org={id}&theme=default&data={dataUrlSafe}";
+            r.Voucher.VoucherVerifyUrl = verifyUrl;
 
             return r;
         }

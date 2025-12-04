@@ -118,6 +118,8 @@ namespace Its.Onix.Api.Database.Repositories
                 RedeemPrice = x.vc.RedeemPrice,
                 Status = x.vc.Status,
                 IsUsed = x.vc.IsUsed,
+                Barcode = x.vc.Barcode,
+                Pin = x.vc.Pin,
 
                 CustomerEmail = x.customer != null ? x.customer.PrimaryEmail : "",
                 CustomerName = x.customer != null ? x.customer.Name : "",
@@ -163,6 +165,46 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return result;
+        }
+
+        public async Task<MVoucher?> VerifyVoucherByBarcode(string barcode)
+        {
+            var u = await GetSelection().Where(p => p!.Barcode!.Equals(barcode) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+        public Task<MVoucher?> VerifyVoucherByPin(string voucherNo, string pin)
+        {
+            var u = GetSelection().Where(p => p!.VoucherNo!.Equals(voucherNo) && p!.Pin!.Equals(pin) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+        public async Task<MVoucher?> UpdateVoucherUsedFlagById(string voucherId, string isUsed)
+        {
+            Guid id = Guid.Parse(voucherId);
+            var existing = await context!.Vouchers!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.IsUsed = isUsed;
+                existing.UsedDate = DateTime.UtcNow;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MVoucher?> UpdateVoucherUsedFlagById(string voucherId, string pin, string isUsed)
+        {
+            Guid id = Guid.Parse(voucherId);
+            var existing = await context!.Vouchers!.Where(p => p!.Id!.Equals(id) && p!.Pin!.Equals(pin) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.IsUsed = isUsed;
+                existing.UsedDate = DateTime.UtcNow;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
         }
 
         public async Task<int> GetVoucherCount(VMVoucher param)

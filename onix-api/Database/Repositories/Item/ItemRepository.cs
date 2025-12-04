@@ -48,6 +48,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(itemPd);
             }
 
+            if ((param.Status != null) && (param.Status != ""))
+            {
+                var statusPd = PredicateBuilder.New<MItem>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
+            }
+
             return pd;
         }
 
@@ -272,10 +280,29 @@ namespace Its.Onix.Api.Database.Repositories
 
         public List<MItemTx> GetItemTxsByItemId(VMItemTx param)
         {
-            var predicate = PointTxsPredicate(param!);
-            var r = context!.ItemTxs!.Where(predicate).ToList();
+            var limit = 0;
+            var offset = 0;
 
-            return r;
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset-1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = PointTxsPredicate(param!);
+            var arr = context!.ItemTxs!.Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToList();
+
+            return arr;
         }
 
         public int GetItemTxsCountByItemId(VMItemTx param)

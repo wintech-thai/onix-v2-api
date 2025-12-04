@@ -10,6 +10,8 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(VoucherNo))]
+    [Index(nameof(Pin))]
+    [Index(nameof(Barcode))]
 
     public class MVoucher
     {
@@ -59,6 +61,11 @@ namespace Its.Onix.Api.Models
         [Column("piin")]
         public string? Pin { get; set; } /* password 6 หลัก */
 
+        [Column("barcode")]
+        public string? Barcode { get; set; } /* Code128 */
+        
+        [Column("used_date")]
+        public DateTime? UsedDate { get; set; }
 
         //System fields
         [Column("created_date")]
@@ -77,6 +84,8 @@ namespace Its.Onix.Api.Models
         public string? PrivilegeCode { get; set; }
         [NotMapped]
         public string? PrivilegeName { get; set; }
+        [NotMapped]
+        public string? VoucherVerifyUrl { get; set; }
 
         public MVoucher()
         {
