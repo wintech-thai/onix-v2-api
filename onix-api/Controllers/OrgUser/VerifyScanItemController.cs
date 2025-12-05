@@ -99,7 +99,18 @@ namespace Its.Onix.Api.Controllers
             if (scanItemAction == null)
             {
                 Log.Information($"Loading scan-item action from cache with key [{cacheKey}]");
-                var m = _scanItemActionService!.GetScanItemAction_V2(id);
+
+                Task<MScanItemAction?> m;
+                if (string.IsNullOrEmpty(scanItemActionId))
+                {
+                    //อ่านตัว default ขึ้นมาใช้งาน
+                    m = _scanItemActionService!.GetScanItemAction_V2(id);
+                }
+                else
+                {
+                    //เอา action ตัวนั้น ๆ มาใช้งาน
+                    m = _scanItemActionService!.GetScanItemActionById_V2(id, scanItemActionId);
+                }
                 var act = m.Result;
 
                 if (act == null)

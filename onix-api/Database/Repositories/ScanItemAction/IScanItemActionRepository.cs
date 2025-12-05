@@ -7,15 +7,6 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
 
-
-        public MScanItemAction AddScanItemAction(MScanItemAction action);
-        public MScanItemAction GetScanItemActionById(string actionId);
-        public MScanItemAction GetScanItemAction();
-        public int GetScanItemActionCount(VMScanItemAction param);
-        public MScanItemAction? DeleteScanItemActionById(string actionId);
-        public MScanItemAction? UpdateScanItemActionById(string action, MScanItemAction scanItemAction);
-
-
         public Task<bool> IsScanItemActionExist(string actionName);
         public Task<List<MScanItemAction>> GetScanItemActions_V2(VMScanItemAction param);
         public Task<MScanItemAction?> GetDefaultScanItemAction_V2();

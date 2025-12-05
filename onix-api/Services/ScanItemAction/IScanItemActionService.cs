@@ -6,15 +6,6 @@ namespace Its.Onix.Api.Services
 {
     public interface IScanItemActionService
     {
-        public MScanItemAction GetScanItemActionById(string orgId, string actionId);
-        public MScanItemAction GetScanItemAction(string orgId);
-        public MScanItemAction GetScanItemActionDefault(string orgId);
-        public MVScanItemAction? AddScanItemAction(string orgId, MScanItemAction action);
-        public MVScanItemAction? DeleteScanItemActionById(string orgId, string actionId);
-        public int GetScanItemActionCount(string orgId, VMScanItemAction param);
-        public MVScanItemAction? UpdateScanItemActionById(string orgId, string actionId, MScanItemAction action);
-
-
         public Task<MScanItemAction?> GetScanItemActionById_V2(string orgId, string actionId);
         public Task<MScanItemAction?> GetScanItemAction_V2(string orgId);
         public MScanItemAction GetScanItemActionDefault_V2(string orgId);
