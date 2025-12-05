@@ -242,6 +242,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (result.IsDefault == "YES")
+            {
+                //ให้ลบ cache ของตัว default ด้วย เพื่อให้มีการ load ใหม่ทันทีที่ Controller
+                var cacheLoaderKey0 = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+                await _redis.DeleteAsync(cacheLoaderKey0);
+            }
+
             //Controller เป็นคนใช้อันนี้ตอน verify scan item
             var cacheLoaderKey1 = CacheHelper.CreateScanItemActionKey_V2(orgId, actionId);
             await _redis.DeleteAsync(cacheLoaderKey1);
