@@ -73,7 +73,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = ScanItemActionPredicate(param!);
-            var result = await GetSelection()
+            var result = await GetSelection().AsExpandable()
             .Where(predicate)
             .OrderByDescending(e => e.CreatedDate)
             .Skip(offset)
@@ -91,14 +91,14 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<MScanItemAction?> GetDefaultScanItemAction_V2()
         {
-            var u = await GetSelection().Where(p => p!.IsDefault!.Equals("YES") && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var u = await GetSelection().AsExpandable().Where(p => p!.IsDefault!.Equals("YES") && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             return u;
         }
 
         public async Task<int> GetScanItemActionsCount_V2(VMScanItemAction param)
         {
             var predicate = ScanItemActionPredicate(param!);
-            var result = await context!.ScanItemActions!.Where(predicate).CountAsync();
+            var result = await context!.ScanItemActions!.Where(predicate).AsExpandable().CountAsync();
 
             return result;
         }
