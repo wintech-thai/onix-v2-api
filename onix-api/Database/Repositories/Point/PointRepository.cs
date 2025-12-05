@@ -99,8 +99,9 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (!string.IsNullOrEmpty(customerId))
             {
+                var custId = Guid.Parse(customerId);
                 //อัพเดต balance ไปที่ customer ด้วย
-                var customer = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(customerId)).FirstOrDefault();
+                var customer = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(custId)).FirstOrDefault();
                 if (customer != null)
                 {
                     customer.TotalPoint = bal.BalanceEnd;

@@ -69,25 +69,6 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/Verify/{serial}/{pin}")]
         public IActionResult? Verify(string id, string serial, string pin)
         {
-            var cacheKey = CacheHelper.CreateScanItemActionKey(id);
-            var t = _redis.GetObjectAsync<MScanItemAction>(cacheKey);
-            var scanItemAction = t.Result;
-
-            if (scanItemAction == null)
-            {
-                Log.Information($"Loading scan-item action from cache with key [{cacheKey}]");
-                var m = _scanItemActionService!.GetScanItemAction(id);
-
-                if (m == null)
-                {
-                    Response.Headers.Append("CUST_STATUS", "NO_SCAN_ITEM_ACTION");
-                    return BadRequest(new { error = "No default scan-item action is set!!!" });
-                }
-
-                _ = _redis.SetObjectAsync(cacheKey, m, TimeSpan.FromMinutes(10));
-                scanItemAction = m;
-            }
-
             var isDryRun = IsDryRun();
             if (isDryRun)
             {
@@ -99,13 +80,54 @@ namespace Its.Onix.Api.Controllers
                 }
             }
 
+            var result = svc.VerifyScanItem(id, serial, pin, isDryRun);
+            string? scanItemActionId = null;
+            if (result.ScanItem != null)
+            {   
+                scanItemActionId = result.ScanItem.ScanItemActionId;
+            }
+
+            var cacheKey = CacheHelper.CreateScanItemActionKey(id);
+            if (!string.IsNullOrEmpty(scanItemActionId))
+            {
+                cacheKey = CacheHelper.CreateScanItemActionKey_V2(id, scanItemActionId);
+            }
+
+            var t = _redis.GetObjectAsync<MScanItemAction>(cacheKey);
+            var scanItemAction = t.Result;
+
+            if (scanItemAction == null)
+            {
+                Log.Information($"Loading scan-item action from cache with key [{cacheKey}]");
+
+                Task<MScanItemAction?> m;
+                if (string.IsNullOrEmpty(scanItemActionId))
+                {
+                    //อ่านตัว default ขึ้นมาใช้งาน
+                    m = _scanItemActionService!.GetScanItemAction_V2(id);
+                }
+                else
+                {
+                    //เอา action ตัวนั้น ๆ มาใช้งาน
+                    m = _scanItemActionService!.GetScanItemActionById_V2(id, scanItemActionId);
+                }
+                var act = m.Result;
+
+                if (act == null)
+                {
+                    Response.Headers.Append("CUST_STATUS", "NO_SCAN_ITEM_ACTION");
+                    return BadRequest(new { error = "No default scan-item action is set!!!" });
+                }
+
+                _ = _redis.SetObjectAsync(cacheKey, act, TimeSpan.FromMinutes(10));
+                scanItemAction = act;
+            }
+
             var baseUrl = scanItemAction!.RedirectUrl;
             var key = scanItemAction!.EncryptionKey;
             var iv = scanItemAction!.EncryptionIV;
 
-            var result = svc.VerifyScanItem(id, serial, pin, isDryRun);
             result.ThemeVerify = string.IsNullOrWhiteSpace(scanItemAction.ThemeVerify) ? "default" : scanItemAction.ThemeVerify;
-
             if (scanItemAction.RegisteredAwareFlag == "FALSE")
             {
                 //เป็นตัวบอกว่าจะไม่ให้ความสำคัญกับ ALREADY_REGISTERED
@@ -133,7 +155,7 @@ namespace Its.Onix.Api.Controllers
             //var decryptText = EncryptionUtils.Decrypt(encryptedB64, key, iv);
 
             var urlSafe = HttpUtility.UrlEncode(encryptedB64);
-            var url = $"{baseUrl}?org={id}&theme={result.ThemeVerify}&data={urlSafe}";
+            var url = $"{baseUrl}?org={id}&theme={result.ThemeVerify}&action={scanItemActionId}&data={urlSafe}";
 
             //Console.WriteLine($"DEBUG - Encrypted Text (B64) : {encryptedB64}");
             //Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");

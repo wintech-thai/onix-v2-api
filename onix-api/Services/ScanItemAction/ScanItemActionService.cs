@@ -23,23 +23,23 @@ namespace Its.Onix.Api.Services
             _redis = redis;
         }
 
-        public MScanItemAction GetScanItemActionById(string orgId, string actionId)
+        public async Task<MScanItemAction?> GetScanItemActionById_V2(string orgId, string actionId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemActionById(actionId);
+            var result = await repository!.GetScanItemActionById_V2(actionId);
 
             return result;
         }
 
-        public MScanItemAction GetScanItemAction(string orgId)
+        public async Task<MScanItemAction?> GetScanItemAction_V2(string orgId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemAction();
+            var result = await repository!.GetDefaultScanItemAction_V2();
 
             return result;
         }
 
-        public MScanItemAction GetScanItemActionDefault(string orgId)
+        public MScanItemAction GetScanItemActionDefault_V2(string orgId)
         {
             var verifyDomain = "verify";
 
@@ -55,17 +55,38 @@ namespace Its.Onix.Api.Services
                 EncryptionKey = ServiceUtils.GenerateSecureRandomString(16),
                 EncryptionIV = ServiceUtils.GenerateSecureRandomString(16),
                 ThemeVerify = "default",
-                RegisteredAwareFlag = "TRUE"
+                RegisteredAwareFlag = "TRUE",
+                IsDefault = "FALSE",
             };
 
             return action;
         }
 
-        public MVScanItemAction? AddScanItemAction(string orgId, MScanItemAction action)
+        public async Task<MVScanItemAction> AddScanItemAction_V2(string orgId, MScanItemAction action)
         {
+            repository!.SetCustomOrgId(orgId);
+            action.IsDefault = "NO";
+
             var r = new MVScanItemAction();
             r.Status = "OK";
             r.Description = "Success";
+
+            if (string.IsNullOrEmpty(action.ActionName))
+            {
+                r.Status = "NAME_MISSING";
+                r.Description = $"Action name is missing!!!";
+
+                return r;
+            }
+
+            var isExist = await repository!.IsScanItemActionExist(action.ActionName);
+            if (isExist)
+            {
+                r.Status = "NAME_DUPLICATE";
+                r.Description = $"Action name [{action.ActionName}] already exist!!!";
+
+                return r;
+            }
 
             var keyValidationResult = ValidationUtils.ValidateKeyAndIV(action.EncryptionKey);
             if (keyValidationResult.Status != "OK")
@@ -85,36 +106,73 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //Allow only 1 in organization
-            var param = new VMScanItemAction()
-            {
-                FullTextSearch = ""
-            };
-
-            repository!.SetCustomOrgId(orgId);
-
-            var actionCount = GetScanItemActionCount(orgId, param);
-            if (actionCount > 0)
-            {
-                r.Status = "NOT_ALLOW_MORE_THAN_ONE";
-                r.Description = $"Found more than 1 scan-item ({actionCount}) action in organization [{orgId}]";
-
-                return r;
-            }
-
-            var result = repository!.AddScanItemAction(action);
+            var result = await repository!.AddScanItemAction_V2(action);
             r.ScanItemAction = result;
 
+            var actionId = result.Id.ToString();
+Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]");
+
             //ตัว verify เป็นคนใช้ cache ตรงนี้
-            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId!);
             var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
-            _redis.SetObjectAsync(cacheLoaderKey, ec);
+            await _redis.SetObjectAsync(cacheLoaderKey, ec);
 
             return r;
         }
 
-        public MVScanItemAction? UpdateScanItemActionById(string orgId, string actionId, MScanItemAction action)
+        public async Task<MVScanItemAction> DeleteScanItemActionById_V2(string orgId, string actionId)
         {
+            var r = new MVScanItemAction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(actionId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemAction ID [{actionId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.DeleteScanItemActionById_V2(actionId);
+
+            r.ScanItemAction = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"ScanItemAction ID [{actionId}] not found for the organization [{orgId}]";
+            }
+
+            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId!);
+            await _redis.DeleteAsync(cacheLoaderKey);
+
+            return r;
+        }
+
+        public async Task<int> GetScanItemActionCount_V2(string orgId, VMScanItemAction param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemActionsCount_V2(param);
+
+            return result;
+        }
+
+        public async Task<List<MScanItemAction>> GetScanItemActions_V2(string orgId, VMScanItemAction param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemActions_V2(param);
+
+            return result;
+        }
+
+        public async Task<MVScanItemAction> UpdateScanItemActionById_V2(string orgId, string actionId, MScanItemAction action)
+        {
+            //TODO : Check if action name is duplicate
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVScanItemAction()
             {
                 Status = "OK",
@@ -146,10 +204,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.UpdateScanItemActionById(actionId, action);
-
+            
+            var result = await repository!.UpdateScanItemActionById_V2(actionId, action);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -159,53 +215,36 @@ namespace Its.Onix.Api.Services
             }
 
             //Controller เป็นคนใช้อันนี้ตอน verify scan item
-            _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
+            var cacheLoaderKey1 = CacheHelper.CreateScanItemActionKey_V2(orgId, actionId);
+            await _redis.DeleteAsync(cacheLoaderKey1);
 
             //ตัว verify เป็นคนใช้ cache ตรงนี้
-            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+            var cacheLoaderKey2 = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId);
             var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
-            _redis.SetObjectAsync(cacheLoaderKey, ec);
+            await _redis.SetObjectAsync(cacheLoaderKey2, ec);
 
             r.ScanItemAction = result;
             return r;
         }
 
-        public MVScanItemAction? DeleteScanItemActionById(string orgId, string actionId)
+        public async Task<MVScanItemAction> SetDefaultScanItemActionById_V2(string orgId, string actionId)
         {
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVScanItemAction()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
-            if (!ServiceUtils.IsGuidValid(actionId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"ScanItemAction ID [{actionId}] format is invalid";
+            var result = await repository!.SetScanItemActionDefault_V2(actionId);
+            r.ScanItemAction = result;
 
-                return r;
-            }
+            //Controller เป็นคนใช้อันนี้ตอน verify scan item
+            //ตัว default
+            await _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
 
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteScanItemActionById(actionId);
-
-            r.ScanItemAction = m;
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"ScanItemAction ID [{actionId}] not found for the organization [{orgId}]";
-            }
-
-            _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
             return r;
-        }
-
-        public int GetScanItemActionCount(string orgId, VMScanItemAction param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemActionCount(param);
-
-            return result;
         }
     }
 }

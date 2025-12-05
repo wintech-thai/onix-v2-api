@@ -78,7 +78,8 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MItemImage>();
         modelBuilder.Entity<MScanItem>();
         modelBuilder.Entity<MScanItemTemplate>();
-        modelBuilder.Entity<MScanItemAction>();
+        modelBuilder.Entity<MScanItemAction>()
+            .HasIndex(t => new { t.OrgId, t.ActionName }).IsUnique();
         modelBuilder.Entity<MJob>();
 
         modelBuilder.Entity<MScanItem>()

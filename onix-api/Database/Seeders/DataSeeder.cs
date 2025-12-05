@@ -134,12 +134,12 @@ public class DataSeeder
         context!.Roles!.Add(r);
     }
 
-    private void UpdateRuleTypeIfNull()
+    private void UpdateScanItemActionDefaultIfNull()
     {
-        var items = context.PointRules!.Where(x => x.RuleType == null || x.RuleType == "").ToList();
+        var items = context.ScanItemActions!.Where(x => x.IsDefault == null || x.IsDefault == "").ToList();
         foreach (var item in items)
         {
-            item.RuleType = "PointRule";
+            item.IsDefault = "YES";
         }
 
         context.SaveChanges();
@@ -179,6 +179,6 @@ public class DataSeeder
         UpdateApiKeyRole();
         SeedDefaultRoles2();
 
-        UpdateRuleTypeIfNull();
+        UpdateScanItemActionDefaultIfNull();
     }
 }

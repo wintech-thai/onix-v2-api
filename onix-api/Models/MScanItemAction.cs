@@ -9,6 +9,8 @@ namespace Its.Onix.Api.Models
     [Table("ScanItemActions")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(ActionName))]
+
     public class MScanItemAction
     {
         [Key]
@@ -17,6 +19,12 @@ namespace Its.Onix.Api.Models
 
         [Column("org_id")]
         public string? OrgId { get; set; }
+
+        [Column("action_name")]
+        public string? ActionName { get; set; }
+
+        [Column("description")]
+        public string? Description { get; set; }
 
         [Column("redirect_url")]
         public string? RedirectUrl { get; set; }
@@ -32,6 +40,13 @@ namespace Its.Onix.Api.Models
 
         [Column("registered_aware_flag")] 
         public string? RegisteredAwareFlag { get; set; } /* YES or NO, ถ้า YES จะ response ALREADY_REGISTER ถ้ามีการ register แล้ว */
+
+        [Column("tags")]
+        public string? Tags { get; set; }
+
+        [Column("is_default")] 
+        public string? IsDefault { get; set; } /* YES or NO, ถ้า YES เป็นตัว default จะมี YES ได้แค่ 1 อัน เท่านั้น */
+
 
         //System fields
         [Column("created_date")]

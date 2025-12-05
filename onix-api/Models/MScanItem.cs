@@ -69,6 +69,10 @@ namespace Its.Onix.Api.Models
         [Column("registered_date")]
         public DateTime? RegisteredDate { get; set; }
 
+
+        [NotMapped]
+        public string? ScanItemActionId { get; set; } /* ใช้บอกว่าไป match กับ ScanItemAction ตัวไหน */
+
         public MScanItem()
         {
             Id = Guid.NewGuid();
