@@ -252,6 +252,14 @@ Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]");
             var result = await repository!.SetScanItemActionDefault_V2(actionId);
             r.ScanItemAction = result;
 
+            if (result != null)
+            {
+                //ให้ update cache ของตัว default ด้วย, ตัว Verify เป็นคนใช้ตรงนี้
+                var cacheLoaderKey1 = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+                var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = result.EncryptionKey, Encryption_Iv = result.EncryptionIV };
+                await _redis.SetObjectAsync(cacheLoaderKey1, ec);
+            }
+
             //Controller เป็นคนใช้อันนี้ตอน verify scan item
             //ตัว default
             await _redis.DeleteAsync(CacheHelper.CreateScanItemActionKey(orgId));
