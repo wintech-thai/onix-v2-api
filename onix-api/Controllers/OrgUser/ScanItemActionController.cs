@@ -54,6 +54,16 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/{id}/action/GetScanItemActionById/{actionId}")]
+        public async Task<IActionResult> GetScanItemActionById(string id, string actionId)
+        {
+            var result = await svc.GetScanItemActionById_V2(id, actionId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/GetScanItemActions")]
         public async Task<IActionResult> GetScanItemActions(string id, [FromBody] VMScanItemAction request)

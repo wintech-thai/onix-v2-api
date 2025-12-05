@@ -101,17 +101,19 @@ namespace Its.Onix.Api.Controllers
                 Log.Information($"Loading scan-item action from cache with key [{cacheKey}]");
 
                 Task<MScanItemAction?> m;
+                MScanItemAction? act;
                 if (string.IsNullOrEmpty(scanItemActionId))
                 {
                     //อ่านตัว default ขึ้นมาใช้งาน
                     m = _scanItemActionService!.GetScanItemAction_V2(id);
+                    act = m.Result;
                 }
                 else
                 {
                     //เอา action ตัวนั้น ๆ มาใช้งาน
-                    m = _scanItemActionService!.GetScanItemActionById_V2(id, scanItemActionId);
+                    var r = _scanItemActionService!.GetScanItemActionById_V2(id, scanItemActionId);
+                    act = r.Result.ScanItemAction;
                 }
-                var act = m.Result;
 
                 if (act == null)
                 {

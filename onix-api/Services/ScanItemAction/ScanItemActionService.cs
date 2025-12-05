@@ -23,12 +23,28 @@ namespace Its.Onix.Api.Services
             _redis = redis;
         }
 
-        public async Task<MScanItemAction?> GetScanItemActionById_V2(string orgId, string actionId)
+        public async Task<MVScanItemAction> GetScanItemActionById_V2(string orgId, string actionId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetScanItemActionById_V2(actionId);
 
-            return result;
+            var r = new MVScanItemAction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(actionId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemAction ID [{actionId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.GetScanItemActionById_V2(actionId);
+            r.ScanItemAction = result;
+
+            return r;
         }
 
         public async Task<MScanItemAction?> GetScanItemAction_V2(string orgId)
@@ -110,18 +126,22 @@ namespace Its.Onix.Api.Services
             r.ScanItemAction = result;
 
             var actionId = result.Id.ToString();
-Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]");
+            /* Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]"); */
 
             //ตัว verify เป็นคนใช้ cache ตรงนี้
             var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId!);
             var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
             await _redis.SetObjectAsync(cacheLoaderKey, ec);
 
+            //ไม่ต้อง add cache ให้กับ Controller ใช้เพราะว่า เดี่ยวจะไปโหลดใหม่เองตอนที่ VerifyScanItem()
+
             return r;
         }
 
         public async Task<MVScanItemAction> DeleteScanItemActionById_V2(string orgId, string actionId)
         {
+            repository!.SetCustomOrgId(orgId);
+
             var r = new MVScanItemAction()
             {
                 Status = "OK",
@@ -136,18 +156,26 @@ Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]");
                 return r;
             }
 
-            repository!.SetCustomOrgId(orgId);
             var m = await repository!.DeleteScanItemActionById_V2(actionId);
-
-            r.ScanItemAction = m;
             if (m == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"ScanItemAction ID [{actionId}] not found for the organization [{orgId}]";
+
+                return r;
             }
 
-            var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId!);
-            await _redis.DeleteAsync(cacheLoaderKey);
+            r.ScanItemAction = m;
+
+            var cacheLoaderKey1 = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId!);
+            await _redis.DeleteAsync(cacheLoaderKey1);
+
+            if (m.IsDefault == "YES")
+            {
+                //ให้ลบ cache ของตัว default ด้วย
+                var cacheLoaderKey2 = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+                await _redis.DeleteAsync(cacheLoaderKey2);
+            }
 
             return r;
         }
@@ -239,6 +267,14 @@ Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]");
 
             var result = await repository!.SetScanItemActionDefault_V2(actionId);
             r.ScanItemAction = result;
+
+            if (result != null)
+            {
+                //ให้ update cache ของตัว default ด้วย, ตัว Verify เป็นคนใช้ตรงนี้
+                var cacheLoaderKey1 = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+                var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = result.EncryptionKey, Encryption_Iv = result.EncryptionIV };
+                await _redis.SetObjectAsync(cacheLoaderKey1, ec);
+            }
 
             //Controller เป็นคนใช้อันนี้ตอน verify scan item
             //ตัว default

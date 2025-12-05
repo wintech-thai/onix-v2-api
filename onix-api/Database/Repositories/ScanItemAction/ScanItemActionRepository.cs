@@ -106,7 +106,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MScanItemAction?> GetScanItemActionById_V2(string actionId)
         {
             Guid id = Guid.Parse(actionId);
-            var u = await GetSelection().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var u = await GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             return u;
         }
 
@@ -123,7 +123,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MScanItemAction?> DeleteScanItemActionById_V2(string actionId)
         {
             Guid id = Guid.Parse(actionId);
-            var existing = await context!.ScanItemActions!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var existing = await context!.ScanItemActions!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing != null)
             {
                 context.ScanItemActions!.Remove(existing);
@@ -136,7 +136,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MScanItemAction?> UpdateScanItemActionById_V2(string actionId, MScanItemAction scanItemAction)
         {
             Guid id = Guid.Parse(actionId);
-            var existing = await context!.ScanItemActions!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var existing = await context!.ScanItemActions!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.ActionName = scanItemAction.ActionName;
@@ -158,13 +158,13 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(actionId);
 
-            var previousDefaults = await context!.ScanItemActions!.Where(p => p!.IsDefault!.Equals("YES") && p!.OrgId!.Equals(orgId)).ToListAsync();
+            var previousDefaults = await context!.ScanItemActions!.AsExpandable().Where(p => p!.IsDefault!.Equals("YES") && p!.OrgId!.Equals(orgId)).ToListAsync();
             foreach (var item in previousDefaults)
             {
                 item.IsDefault = "NO";
             }
 
-            var existing = await context!.ScanItemActions!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var existing = await context!.ScanItemActions!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.IsDefault = "YES";
