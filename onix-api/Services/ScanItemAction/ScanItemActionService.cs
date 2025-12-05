@@ -253,10 +253,20 @@ namespace Its.Onix.Api.Services
             var cacheLoaderKey1 = CacheHelper.CreateScanItemActionKey_V2(orgId, actionId);
             await _redis.DeleteAsync(cacheLoaderKey1);
 
+
+
             //ตัว verify เป็นคนใช้ cache ตรงนี้
             var cacheLoaderKey2 = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId);
             var ec = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
             await _redis.SetObjectAsync(cacheLoaderKey2, ec);
+
+            if (result.IsDefault == "YES")
+            {
+                //ตัว verify เป็นคนใช้ cache ตรงนี้, ตัว default
+                var cacheLoaderKey3 = CacheHelper.CreateScanItemActionCacheLoaderKey(orgId);
+                var kl = new CacheLoaderEncryptionConfig() { Encryption_Key = action.EncryptionKey, Encryption_Iv = action.EncryptionIV };
+                await _redis.SetObjectAsync(cacheLoaderKey3, kl);
+            }
 
             r.ScanItemAction = result;
             return r;
