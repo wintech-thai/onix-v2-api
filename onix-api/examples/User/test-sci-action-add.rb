@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 
 apiUrl = "api/ScanItemAction/org/#{orgId}/action/AddScanItemAction"
 param =  {
-  ActionName: "test1-action",
+  ActionName: "test2-action",
   Description: "description action",
   EncryptionKey: "sdsdsd1234567890",
   EncryptionIV: "acdses2345678901",
