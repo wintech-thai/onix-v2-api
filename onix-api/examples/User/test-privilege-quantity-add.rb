@@ -11,11 +11,11 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-itemId = "589df813-2b4e-46c5-b8a5-ad4259330a76"
+itemId = "a4688dd4-936d-4931-aef9-898dcd90f9e9"
 
 apiUrl = "api/Privilege/org/#{orgId}/action/AddPrivilegeQuantity/#{itemId}"
 param =  {
-  TxAmount: 11,
+  TxAmount: 1000,
   Description: "This is product description # 2",
   Tags: "source=test"
 }

@@ -17,6 +17,6 @@ id = '46272c36-8772-476e-bb67-b2d52e55c620';
 apiUrl = "api/ScanItemAction/org/#{orgId}/action/GetScanItemActionById/#{id}"
 param = nil
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)
 
