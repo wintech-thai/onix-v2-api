@@ -23,12 +23,28 @@ namespace Its.Onix.Api.Services
             _redis = redis;
         }
 
-        public async Task<MScanItemAction?> GetScanItemActionById_V2(string orgId, string actionId)
+        public async Task<MVScanItemAction> GetScanItemActionById_V2(string orgId, string actionId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetScanItemActionById_V2(actionId);
 
-            return result;
+            var r = new MVScanItemAction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(actionId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemAction ID [{actionId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.GetScanItemActionById_V2(actionId);
+            r.ScanItemAction = result;
+
+            return r;
         }
 
         public async Task<MScanItemAction?> GetScanItemAction_V2(string orgId)
@@ -110,7 +126,7 @@ namespace Its.Onix.Api.Services
             r.ScanItemAction = result;
 
             var actionId = result.Id.ToString();
-Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]");
+            /* Console.WriteLine($"@@@@@ DEBUGxxx Action ID = [{actionId}]"); */
 
             //ตัว verify เป็นคนใช้ cache ตรงนี้
             var cacheLoaderKey = CacheHelper.CreateScanItemActionCacheLoaderKey_V2(orgId, actionId!);
