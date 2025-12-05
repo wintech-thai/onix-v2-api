@@ -176,7 +176,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<bool> IsScanItemActionExist(string actionName)
         {
-            var exists = await context!.ScanItemActions!.AnyAsync(p => p!.ActionName!.Equals(actionName) && p!.OrgId!.Equals(orgId));
+            var exists = await context!.ScanItemActions!.AsExpandable().AnyAsync(p => p!.ActionName!.Equals(actionName) && p!.OrgId!.Equals(orgId));
             return exists;
         }
     }
