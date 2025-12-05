@@ -42,6 +42,13 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateScanItemActionCacheLoaderKey_V2(string orgId, string actionId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"CacheLoader:{environment}:ScanItemActions:{orgId}:{actionId}";
+            return key;
+        }
+
         public static string CreatePointTriggerCustRegisterKey(string orgId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
@@ -53,6 +60,12 @@ namespace Its.Onix.Api.Utils
         {
             //TODO : Use environment as key component
             return $"{orgId}:ScanItemAction";
+        }
+
+        public static string CreateScanItemActionKey_V2(string orgId, string actionId)
+        {
+            //TODO : Use environment as key component
+            return $"{orgId}:ScanItemAction:{actionId}";
         }
 
         public static string CreateScanItemTemplateKey(string orgId)
