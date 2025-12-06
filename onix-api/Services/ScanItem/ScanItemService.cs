@@ -639,8 +639,8 @@ namespace Its.Onix.Api.Services
             }
 
             //สร้าง URL ให้อัตโนมัติเลย
-            var m = _sciTemplateSvc!.GetScanItemTemplate(orgId);
-            if (m == null)
+            var m = _sciTemplateSvc!.GetScanItemTemplate_V2(orgId);
+            if (m.Result == null)
             {
                 r.Status = "NO_SCAN_ITEM_TEMPLATE_FOUND";
                 r.Description = $"No scan item template found!!!";
@@ -648,7 +648,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (string.IsNullOrEmpty(m.UrlTemplate))
+            if (string.IsNullOrEmpty(m.Result.UrlTemplate))
             {
                 r.Status = "URL_TEMPLATE_EMPTY";
                 r.Description = $"Scan item template URL is empty!!!";
@@ -656,7 +656,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var url = m.UrlTemplate!;
+            var url = m.Result.UrlTemplate!;
             url = url.Replace("{VAR_ORG}", orgId);
             url = url.Replace("{VAR_SERIAL}", scanItem.Serial);
             url = url.Replace("{VAR_PIN}", scanItem.Pin);

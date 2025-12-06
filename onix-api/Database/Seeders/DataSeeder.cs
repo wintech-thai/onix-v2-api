@@ -134,9 +134,9 @@ public class DataSeeder
         context!.Roles!.Add(r);
     }
 
-    private void UpdateScanItemActionDefaultIfNull()
+    private void UpdateScanItemTemplateDefaultIfNull()
     {
-        var items = context.ScanItemActions!.Where(x => x.IsDefault == null || x.IsDefault == "").ToList();
+        var items = context.ScanItemTemplates!.Where(x => x.IsDefault == null || x.IsDefault == "").ToList();
         foreach (var item in items)
         {
             item.IsDefault = "YES";
@@ -179,6 +179,6 @@ public class DataSeeder
         UpdateApiKeyRole();
         SeedDefaultRoles2();
 
-        UpdateScanItemActionDefaultIfNull();
+        UpdateScanItemTemplateDefaultIfNull();
     }
 }

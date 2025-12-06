@@ -85,14 +85,14 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/CreateJobScanItemGenerator")]
         public MVJob? CreateJobScanItemGenerator(string id, [FromBody] MJob request)
         {
-            var m = _scanItemTemplateService!.GetScanItemTemplate(id);
-            if (m == null)
+            var m = _scanItemTemplateService!.GetScanItemTemplate_V2(id);
+            if (m.Result == null)
             {
                 Response.Headers.Append("CUST_STATUS", "NO_SCAN_ITEM_TEMPLATE");
                 return new MVJob() { Status = "NO_SCAN_ITEM_TEMPLATE_FOUND", Description = "" };
             }
 
-            var customParams = ConfigDefaultParams(id, m!, request);
+            var customParams = ConfigDefaultParams(id, m.Result, request);
             request.Parameters = customParams;
 
             request.Type = "ScanItemGenerator";

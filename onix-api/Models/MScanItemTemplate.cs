@@ -9,6 +9,8 @@ namespace Its.Onix.Api.Models
     [Table("ScanItemTemplates")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(TemplateName))]
+    
     public class MScanItemTemplate
     {
         [Key]
@@ -17,6 +19,12 @@ namespace Its.Onix.Api.Models
 
         [Column("org_id")]
         public string? OrgId { get; set; }
+
+        [Column("template_name")]
+        public string? TemplateName { get; set; }
+
+        [Column("description")]
+        public string? Description { get; set; }
 
         [Column("serial_prefix_digit")] /* 2 */
         public int? SerialPrefixDigit { get; set; }
@@ -35,6 +43,13 @@ namespace Its.Onix.Api.Models
 
         [Column("noti_email")]
         public string? NotificationEmail { get; set; }
+
+        [Column("tags")]
+        public string? Tags { get; set; }
+
+        [Column("is_default")] 
+        public string? IsDefault { get; set; } /* YES or NO, ถ้า YES เป็นตัว default จะมี YES ได้แค่ 1 อัน เท่านั้น */
+
 
         //System fields
         [Column("created_date")]
