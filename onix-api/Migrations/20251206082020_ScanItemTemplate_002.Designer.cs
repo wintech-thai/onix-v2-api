@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251206082020_ScanItemTemplate_002")]
+    partial class ScanItemTemplate_002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1676,10 +1679,6 @@ namespace onix.api.Migrations
                     b.Property<int?>("GeneratorCount")
                         .HasColumnType("integer")
                         .HasColumnName("generator_count");
-
-                    b.Property<string>("IsDefault")
-                        .HasColumnType("text")
-                        .HasColumnName("is_default");
 
                     b.Property<string>("NotificationEmail")
                         .HasColumnType("text")

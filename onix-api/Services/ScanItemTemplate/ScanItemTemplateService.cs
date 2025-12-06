@@ -3,6 +3,7 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
+using System.Data.SqlClient;
 
 namespace Its.Onix.Api.Services
 {
@@ -19,20 +20,231 @@ namespace Its.Onix.Api.Services
             _userRepo = userRepo;
         }
 
-        public MScanItemTemplate GetScanItemTemplateById(string orgId, string templateId)
+        public async Task<MVScanItemTemplate> GetScanItemTemplateById_V2(string orgId, string templateId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemTemplateById(templateId);
+
+            var r = new MVScanItemTemplate()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(templateId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.GetScanItemTemplateById_V2(templateId);
+            r.ScanItemTemplate = result;
+
+            return r;
+        }
+
+        public async Task<MScanItemTemplate?> GetScanItemTemplate_V2(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemTemplate_V2();
 
             return result;
         }
 
-        public MScanItemTemplate GetScanItemTemplate(string orgId)
+        private MVScanItemTemplate ValidateTemplate(MScanItemTemplate template)
+        {
+            var r = new MVScanItemTemplate()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (template.GeneratorCount > 10000)
+            {
+                r.Status = "ITEM_COUNT_TOO_BIG";
+                r.Description = "Item count is above limit, limit is 10,000";
+                return r;
+            }
+
+            if ((template.PinDigit > 7) || (template.PinDigit < 5))
+            {
+                r.Status = "PIN_DIGIT_INVALID";
+                r.Description = "PIN must be 5-7 digits";
+                return r;
+            }
+
+            if ((template.SerialPrefixDigit > 3) || (template.PinDigit < 2))
+            {
+                r.Status = "SERIAL_PREFIX_INVALID";
+                r.Description = "Serial number prefix must be 2-3 digits";
+                return r;
+            }
+
+            if ((template.SerialDigit > 7) || (template.SerialDigit < 6))
+            {
+                r.Status = "SERIAL_DIGIT_INVALID";
+                r.Description = "Serial number must be 6-7 digits";
+                return r;
+            }
+
+            var email = template.NotificationEmail;
+            if (email == null)
+            {
+                //เพื่อให้ validate error
+                email = "";
+            }
+
+            var emailValidateResult = ValidationUtils.ValidateEmail(email);
+            if (emailValidateResult.Status != "OK")
+            {
+                r.Status = emailValidateResult.Status;
+                r.Description = emailValidateResult.Description;
+
+                return r;
+            }
+
+            return r;
+        }
+
+        public async Task<MVScanItemTemplate> AddScanItemTemplate_V2(string orgId, MScanItemTemplate template)
+        {
+            //TODO : ให้ validate ค่าพวก length digit
+            repository!.SetCustomOrgId(orgId);
+            template.IsDefault = "NO";
+
+            var r = new MVScanItemTemplate();
+            r.Status = "OK";
+            r.Description = "Success";
+
+            if (string.IsNullOrEmpty(template.TemplateName))
+            {
+                r.Status = "NAME_MISSING";
+                r.Description = $"Action name is missing!!!";
+
+                return r;
+            }
+
+            var isExist = await repository!.IsScanItemTemplateExist(template.TemplateName);
+            if (isExist)
+            {
+                r.Status = "NAME_DUPLICATE";
+                r.Description = $"Action name [{template.TemplateName}] already exist!!!";
+
+                return r;
+            }
+
+            var validateResult = ValidateTemplate(template);
+            if (validateResult.Status != "OK")
+            {
+                return validateResult;
+            }
+
+            var result = await repository!.AddScanItemTemplate_V2(template);
+            r.ScanItemTemplate = result;
+
+            return r;
+        }
+
+        public async Task<MVScanItemTemplate> DeleteScanItemTemplateById_V2(string orgId, string templateId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemTemplate();
+
+            var r = new MVScanItemTemplate()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(templateId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
+
+                return r;
+            }
+
+            var m = await repository!.DeleteScanItemTemplateById_V2(templateId);
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"ScanItemTemplate ID [{templateId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.ScanItemTemplate = m;
+            return r;
+        }
+
+        public async Task<int> GetScanItemTemplateCount_V2(string orgId, VMScanItemTemplate param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemTemplateCount_V2(param);
 
             return result;
+        }
+
+        public async Task<List<MScanItemTemplate>> GetScanItemTemplates_V2(string orgId, VMScanItemTemplate param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemTemplates_V2(param);
+
+            return result;
+        }
+
+        public async Task<MVScanItemTemplate> UpdateScanItemTemplateById_V2(string orgId, string templateId, MScanItemTemplate template)
+        {
+            //TODO : Check if template name is duplicate
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItemTemplate()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(templateId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
+
+                return r;
+            }
+
+            var validateResult = ValidateTemplate(template);
+            if (validateResult.Status != "OK")
+            {
+                return validateResult;
+            }
+
+            var result = await repository!.UpdateScanItemTemplateById_V2(templateId, template);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"ScanItemTemplate ID [{templateId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.ScanItemTemplate = result;
+            return r;
+        }
+
+        public async Task<MVScanItemTemplate> SetDefaultScanItemTemplateById_V2(string orgId, string templateId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItemTemplate()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var result = await repository!.SetScanItemTemplateDefault_V2(templateId);
+            r.ScanItemTemplate = result;
+
+            return r;
         }
 
         public MScanItemTemplate GetScanItemTemplateDefault(string orgId, string userName)
@@ -73,138 +285,6 @@ namespace Its.Onix.Api.Services
             };
 
             return t;
-        }
-
-        public MVScanItemTemplate? AddScanItemTemplate(string orgId, MScanItemTemplate template)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var r = new MVScanItemTemplate();
-            r.Status = "OK";
-            r.Description = "Success";
-
-            var email = template.NotificationEmail;
-            if (email == null)
-            {
-                //เพื่อให้ validate error
-                email = "";
-            }
-            
-            var emailValidateResult = ValidationUtils.ValidateEmail(email);
-            if (emailValidateResult.Status != "OK")
-            {
-                r.Status = emailValidateResult.Status;
-                r.Description = emailValidateResult.Description;
-
-                return r;
-            }
-
-            //Allow only 1 in organization
-            var param = new VMScanItemTemplate()
-            {
-                FullTextSearch = ""
-            };
-
-            var templateCount = GetScanItemTemplateCount(orgId, param);
-            if (templateCount > 0)
-            {
-                r.Status = "NOT_ALLOW_MORE_THAN_ONE";
-                r.Description = $"Found more than 1 scan-item ({templateCount}) template in organization [{orgId}]";
-
-                return r;
-            }
-
-            var result = repository!.AddScanItemTemplate(template);
-            r.ScanItemTemplate = result;
-
-            return r;
-        }
-
-        public MVScanItemTemplate? UpdateScanItemTemplateById(string orgId, string templateId, MScanItemTemplate template)
-        {
-            var r = new MVScanItemTemplate()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(templateId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
-
-                return r;
-            }
-
-            var email = template.NotificationEmail;
-            if (email == null)
-            {
-                //เพื่อให้ validate error
-                email = "";
-            }
-            
-            var emailValidateResult = ValidationUtils.ValidateEmail(email);
-            if (emailValidateResult.Status != "OK")
-            {
-                r.Status = emailValidateResult.Status;
-                r.Description = emailValidateResult.Description;
-
-                return r;
-            }
-
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.UpdateScanItemTemplateById(templateId, template);
-
-            if (result == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"ScanItemTemplate ID [{templateId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-
-            _redis.DeleteAsync(CacheHelper.CreateScanItemTemplateKey(orgId));
-
-            r.ScanItemTemplate = result;
-            return r;
-        }
-
-        public MVScanItemTemplate? DeleteScanItemTemplateById(string orgId, string templateId)
-        {
-            var r = new MVScanItemTemplate()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(templateId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"ScanItemTemplate ID [{templateId}] format is invalid";
-
-                return r;
-            }
-
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteScanItemTemplateById(templateId);
-
-            r.ScanItemTemplate = m;
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"ScanItemTemplate ID [{templateId}] not found for the organization [{orgId}]";
-            }
-
-            _redis.DeleteAsync(CacheHelper.CreateScanItemTemplateKey(orgId));
-            return r;
-        }
-
-        public int GetScanItemTemplateCount(string orgId, VMScanItemTemplate param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemTemplateCount(param);
-
-            return result;
         }
     }
 }
