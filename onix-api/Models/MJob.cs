@@ -66,6 +66,9 @@ namespace Its.Onix.Api.Models
         [Column("end_date")]
         public DateTime? EndDate { get; set; }
 
+        [Column("scanitem_template_id")]
+        public string? ScanItemTemplateId { get; set; } /* เป็น job ของ scan item template ตัวไหน */
+
         [NotMapped]
         public List<NameValue> Parameters { get; set; }
 

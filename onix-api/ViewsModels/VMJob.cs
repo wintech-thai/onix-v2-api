@@ -7,5 +7,6 @@ namespace Its.Onix.Api.ViewsModels
     {
         public string? FullTextSearch { get; set; }
         public string? JobType { get; set; }
+        public string? ScanItemTemplateId { get; set; }
     }
 }
