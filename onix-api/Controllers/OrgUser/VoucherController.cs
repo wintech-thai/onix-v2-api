@@ -50,6 +50,22 @@ namespace Prom.LPR.Api.Controllers
             var result = await svc.UpdateVoucherUsedFlagById(id, voucherId, pin, "YES");
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{id}/action/ScanVoucherByPin/{voucherId}")]
+        public async Task<IActionResult> ScanVoucherByPin(string id, string voucherId)
+        {
+            var result = await svc.GetVoucherVerifyUrl(id, voucherId, true);
+            if (result.Status != "OK")
+            {
+                return Ok(result);
+            }
+
+            var url = result.Voucher!.VoucherVerifyUrl!;
+            return Redirect(url);
+        }
         //==== End Anonymous Access ====//
 
         [ExcludeFromCodeCoverage]
@@ -138,7 +154,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/GetVoucherVerifyQrUrl/{voucherId}")]
         public async Task<IActionResult> GetVoucherVerifyQrUrl(string id, string voucherId)
         {
-            var result = await svc.GetVoucherVerifyUrl(id, voucherId, true);
+            var result = await svc.GetVoucherVerifyQrUrl(id, voucherId);
             return Ok(result);
         }
     }

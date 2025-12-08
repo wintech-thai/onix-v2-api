@@ -432,7 +432,48 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool isQrCode)
+        public async Task<MVVoucher> GetVoucherVerifyQrUrl(string id, string voucherId)
+        {
+            repository.SetCustomOrgId(id);
+
+            var r = new MVVoucher()
+            {
+                Status = "OK",
+                Description = "Success",
+                Voucher = new MVoucher() {}
+            };
+
+            if (!ServiceUtils.IsGuidValid(voucherId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                return r;
+            }
+
+            var voucher = await repository!.GetVoucherById(voucherId);
+            if (voucher == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{id}]";
+
+                return r;
+            }
+
+            var apiDomain = "api";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                apiDomain = "api-dev";
+            }
+
+            var verifyUrl = $"https://{apiDomain}.please-scan.com/api/Voucher/org/{id}/action/ScanVoucherByPin/{voucherId}";
+            r.Voucher.VoucherVerifyUrl = verifyUrl;
+
+            return r;
+        }
+
+        public async Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool withData)
         {
             repository.SetCustomOrgId(id);
 
@@ -444,7 +485,7 @@ namespace Its.Onix.Api.Services
             };
 
             var dataUrlSafe = "";
-            if (isQrCode)
+            if (withData)
             {
                 if (!ServiceUtils.IsGuidValid(voucherId))
                 {
