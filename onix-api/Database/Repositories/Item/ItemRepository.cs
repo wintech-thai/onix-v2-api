@@ -147,6 +147,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.EffectiveDate = item.EffectiveDate;
                 result.ExpireDate = item.ExpireDate;
                 result.Status = item.Status;
+                result.PointRedeem = item.PointRedeem;
                 
                 context!.SaveChanges();
             }
