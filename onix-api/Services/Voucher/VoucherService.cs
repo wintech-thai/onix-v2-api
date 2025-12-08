@@ -40,14 +40,6 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            if (string.IsNullOrEmpty(vc.VoucherNo))
-            {
-                r.Status = "VOUCHER_NO_MISSING";
-                r.Description = $"Voucher number is missing!!!";
-
-                return r;
-            }
-
             var walletResult = await _pointService.GetWalletByCustomerId(orgId, vc.CustomerId!);
             if (walletResult!.Status != "OK")
             {
