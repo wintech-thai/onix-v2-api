@@ -56,6 +56,24 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(statusPd);
             }
 
+            if ((param.PrivilegeId != null) && (param.PrivilegeId != ""))
+            {
+                Guid? ppid;
+                try
+                {
+                    ppid = Guid.Parse(param.PrivilegeId);
+                }
+                catch
+                {
+                    ppid = Guid.NewGuid();
+                }
+
+                var idPd = PredicateBuilder.New<MItem>();
+                idPd = idPd.Or(p => p.Id!.Equals(ppid));
+
+                pd = pd.And(idPd);
+            }
+
             return pd;
         }
 
