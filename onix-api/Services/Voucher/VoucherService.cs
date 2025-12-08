@@ -59,7 +59,20 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //ให้ตระหนักไว้ว่าจะเกิด race condition ได้นะ ถ้ามีการ redeem พร้อมๆ กันหลายๆ request
+            var privilegeId = vc.PrivilegeId!;
+
+            //Acquire privilege lock here to prevent race condition
+            using var redPrivilegeLock = await _redis.AcquireRedLockAsync(
+                $"lock:privilege:{privilegeId}",  // resource
+                TimeSpan.FromSeconds(2)   // lock expiry
+            );
+            if (!redPrivilegeLock.IsAcquired)
+            {
+                r.Status = "PRIVILEGE_LOCK_NOT_ACQUIRED";
+                r.Description = $"Could not acquire lock for privilege ID [{privilegeId}] to process voucher redemption. Please try again.";
+                return r;
+            }
+
             var privilegeQty = 1;
             if (product.CurrentBalance < privilegeQty)
             {
@@ -76,7 +89,12 @@ namespace Its.Onix.Api.Services
                 productPoint = 0;
             }
 
-            if (walletResult.Wallet!.PointBalance < productPoint)
+            var walletBalance = walletResult.Wallet!.PointBalance;
+            if (walletBalance == null)
+            {
+                walletBalance = 0;
+            }
+            if (walletBalance < productPoint)
             {
                 r.Status = "WALLET_BALANCE_NOT_ENOUGH";
                 r.Description = $"Wallet ID [{vc.WalletId}] balance is not enough for the organization [{orgId}]";
@@ -85,7 +103,6 @@ namespace Its.Onix.Api.Services
             }
 
             var walletId = walletResult.Wallet.Id.ToString();
-            var privilegeId = vc.PrivilegeId!;
 
             var vp = new VoucherParam()
             {
@@ -103,18 +120,6 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "WALLET_LOCK_NOT_ACQUIRED";
                 r.Description = $"Could not acquire lock for wallet ID [{walletId}] to process voucher redemption. Please try again.";
-                return r;
-            }
-
-            //Acquire privilege lock here to prevent race condition
-            using var redPrivilegeLock = await _redis.AcquireRedLockAsync(
-                $"lock:privilege:{privilegeId}",  // resource
-                TimeSpan.FromSeconds(2)   // lock expiry
-            );
-            if (!redPrivilegeLock.IsAcquired)
-            {
-                r.Status = "PRIVILEGE_LOCK_NOT_ACQUIRED";
-                r.Description = $"Could not acquire lock for privilege ID [{privilegeId}] to process voucher redemption. Please try again.";
                 return r;
             }
 
