@@ -196,7 +196,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             param.ItemType = 2;
-            param.Status = "Approved";
+            param.Status = "Approve";
             var result = svc.GetItems(id, param);
 
             return Ok(result);
