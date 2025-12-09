@@ -48,6 +48,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(itemPd);
             }
 
+            if ((param.ScanItemTemplateId != null) && (param.ScanItemTemplateId != ""))
+            {
+                var templatePd = PredicateBuilder.New<MJob>();
+                templatePd = templatePd.Or(p => p.ScanItemTemplateId!.Equals(param.ScanItemTemplateId));
+
+                pd = pd.And(templatePd);
+            }
+
             return pd;
         }
 

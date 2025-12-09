@@ -40,14 +40,6 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            if (string.IsNullOrEmpty(vc.VoucherNo))
-            {
-                r.Status = "VOUCHER_NO_MISSING";
-                r.Description = $"Voucher number is missing!!!";
-
-                return r;
-            }
-
             var walletResult = await _pointService.GetWalletByCustomerId(orgId, vc.CustomerId!);
             if (walletResult!.Status != "OK")
             {
@@ -67,7 +59,20 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //ให้ตระหนักไว้ว่าจะเกิด race condition ได้นะ ถ้ามีการ redeem พร้อมๆ กันหลายๆ request
+            var privilegeId = vc.PrivilegeId!;
+
+            //Acquire privilege lock here to prevent race condition
+            using var redPrivilegeLock = await _redis.AcquireRedLockAsync(
+                $"lock:privilege:{privilegeId}",  // resource
+                TimeSpan.FromSeconds(2)   // lock expiry
+            );
+            if (!redPrivilegeLock.IsAcquired)
+            {
+                r.Status = "PRIVILEGE_LOCK_NOT_ACQUIRED";
+                r.Description = $"Could not acquire lock for privilege ID [{privilegeId}] to process voucher redemption. Please try again.";
+                return r;
+            }
+
             var privilegeQty = 1;
             if (product.CurrentBalance < privilegeQty)
             {
@@ -84,16 +89,20 @@ namespace Its.Onix.Api.Services
                 productPoint = 0;
             }
 
-            if (walletResult.Wallet!.PointBalance < productPoint)
+            var walletBalance = walletResult.Wallet!.PointBalance;
+            var walletId = walletResult.Wallet.Id.ToString();
+
+            if (walletBalance == null)
+            {
+                walletBalance = 0;
+            }
+            if (walletBalance < productPoint)
             {
                 r.Status = "WALLET_BALANCE_NOT_ENOUGH";
-                r.Description = $"Wallet ID [{vc.WalletId}] balance is not enough for the organization [{orgId}]";
+                r.Description = $"Wallet ID [{walletId}] balance is not enough for the organization [{orgId}]";
 
                 return r;
             }
-
-            var walletId = walletResult.Wallet.Id.ToString();
-            var privilegeId = vc.PrivilegeId!;
 
             var vp = new VoucherParam()
             {
@@ -111,18 +120,6 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "WALLET_LOCK_NOT_ACQUIRED";
                 r.Description = $"Could not acquire lock for wallet ID [{walletId}] to process voucher redemption. Please try again.";
-                return r;
-            }
-
-            //Acquire privilege lock here to prevent race condition
-            using var redPrivilegeLock = await _redis.AcquireRedLockAsync(
-                $"lock:privilege:{privilegeId}",  // resource
-                TimeSpan.FromSeconds(2)   // lock expiry
-            );
-            if (!redPrivilegeLock.IsAcquired)
-            {
-                r.Status = "PRIVILEGE_LOCK_NOT_ACQUIRED";
-                r.Description = $"Could not acquire lock for privilege ID [{privilegeId}] to process voucher redemption. Please try again.";
                 return r;
             }
 
@@ -432,7 +429,48 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool isQrCode)
+        public async Task<MVVoucher> GetVoucherVerifyQrUrl(string id, string voucherId)
+        {
+            repository.SetCustomOrgId(id);
+
+            var r = new MVVoucher()
+            {
+                Status = "OK",
+                Description = "Success",
+                Voucher = new MVoucher() {}
+            };
+
+            if (!ServiceUtils.IsGuidValid(voucherId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                return r;
+            }
+
+            var voucher = await repository!.GetVoucherById(voucherId);
+            if (voucher == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{id}]";
+
+                return r;
+            }
+
+            var apiDomain = "api";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                apiDomain = "api-dev";
+            }
+
+            var verifyUrl = $"https://{apiDomain}.please-scan.com/api/Voucher/org/{id}/action/ScanVoucherByPin/{voucherId}";
+            r.Voucher.VoucherVerifyUrl = verifyUrl;
+
+            return r;
+        }
+
+        public async Task<MVVoucher> GetVoucherVerifyUrl(string id, string voucherId, bool withData)
         {
             repository.SetCustomOrgId(id);
 
@@ -444,7 +482,7 @@ namespace Its.Onix.Api.Services
             };
 
             var dataUrlSafe = "";
-            if (isQrCode)
+            if (withData)
             {
                 if (!ServiceUtils.IsGuidValid(voucherId))
                 {

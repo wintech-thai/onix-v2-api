@@ -179,5 +179,58 @@ namespace Its.Onix.Api.Controllers
             var result = svc.GetJobCount(id, param);
             return Ok(result);
         }
+
+
+        [HttpPost]
+        [Route("org/{id}/action/CreateJobScanItemGeneratorWithTemplate/{scanItemTemplateId}")]
+        public MVJob? CreateJobScanItemGeneratorWithTemplate(string id, string scanItemTemplateId, [FromBody] MJob request)
+        {
+            var m = _scanItemTemplateService!.GetScanItemTemplateById_V2(id, scanItemTemplateId);
+            var mv = m.Result;
+            var tpl = mv.ScanItemTemplate;
+
+            if (tpl == null)
+            {
+                Response.Headers.Append("CUST_STATUS", "NO_SCAN_ITEM_TEMPLATE");
+                return new MVJob() { Status = "NO_SCAN_ITEM_TEMPLATE_FOUND", Description = "" };
+            }
+
+            var customParams = ConfigDefaultParams(id, tpl, request);
+            request.Parameters = customParams;
+
+            request.Type = "ScanItemGenerator";
+            request.Status = "Pending";
+            request.ScanItemTemplateId = scanItemTemplateId;
+
+            var result = svc.AddJob(id, request);
+            return result;
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/GetScanItemJobsByTemplateId/{scanItemTemplateId}")]
+        public IActionResult GetScanItemJobsByTemplateId(string id, string scanItemTemplateId, [FromBody] VMJob param)
+        {
+            if (param.Limit <= 0)
+            {
+                param.Limit = 100;
+            }
+
+            param.JobType = "ScanItemGenerator";
+            param.ScanItemTemplateId = scanItemTemplateId;
+
+            var result = svc.GetJobs(id, param);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/GetScanItemJobCountByTemplateId/{scanItemTemplateId}")]
+        public IActionResult GetScanItemJobCountByTemplateId(string id, string scanItemTemplateId, [FromBody] VMJob param)
+        {
+            param.JobType = "ScanItemGenerator";
+            param.ScanItemTemplateId = scanItemTemplateId;
+
+            var result = svc.GetJobCount(id, param);
+            return Ok(result);
+        }
     }
 }

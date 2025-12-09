@@ -56,6 +56,24 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(statusPd);
             }
 
+            if ((param.PrivilegeId != null) && (param.PrivilegeId != ""))
+            {
+                Guid? ppid;
+                try
+                {
+                    ppid = Guid.Parse(param.PrivilegeId);
+                }
+                catch
+                {
+                    ppid = Guid.NewGuid();
+                }
+
+                var idPd = PredicateBuilder.New<MItem>();
+                idPd = idPd.Or(p => p.Id!.Equals(ppid));
+
+                pd = pd.And(idPd);
+            }
+
             return pd;
         }
 
@@ -147,6 +165,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.EffectiveDate = item.EffectiveDate;
                 result.ExpireDate = item.ExpireDate;
                 result.Status = item.Status;
+                result.PointRedeem = item.PointRedeem;
                 
                 context!.SaveChanges();
             }
