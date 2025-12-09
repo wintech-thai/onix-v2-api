@@ -90,6 +90,8 @@ namespace Its.Onix.Api.Services
             }
 
             var walletBalance = walletResult.Wallet!.PointBalance;
+            var walletId = walletResult.Wallet.Id.ToString();
+
             if (walletBalance == null)
             {
                 walletBalance = 0;
@@ -97,12 +99,10 @@ namespace Its.Onix.Api.Services
             if (walletBalance < productPoint)
             {
                 r.Status = "WALLET_BALANCE_NOT_ENOUGH";
-                r.Description = $"Wallet ID [{vc.WalletId}] balance is not enough for the organization [{orgId}]";
+                r.Description = $"Wallet ID [{walletId}] balance is not enough for the organization [{orgId}]";
 
                 return r;
             }
-
-            var walletId = walletResult.Wallet.Id.ToString();
 
             var vp = new VoucherParam()
             {
