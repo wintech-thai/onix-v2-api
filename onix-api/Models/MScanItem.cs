@@ -62,6 +62,9 @@ namespace Its.Onix.Api.Models
         [Column("customer_id")]
         public Guid? CustomerId { get; set; }
 
+        [Column("folder_id")]
+        public Guid? FolderId { get; set; }
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
@@ -72,6 +75,21 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public string? ScanItemActionId { get; set; } /* ใช้บอกว่าไป match กับ ScanItemAction ตัวไหน */
+
+        [NotMapped]
+        public string? ScanItemActionName { get; set; }
+        [NotMapped]
+        public string? ProductDesc { get; set; }
+        [NotMapped]
+        public string? CustomerEmail { get; set; }
+        [NotMapped]
+        public string? FolderName { get; set; }
+
+        [NotMapped]
+        public string? ProductDescLegacy { get; set; }
+        [NotMapped]
+        public string? ProductCodeLegacy { get; set; }
+
 
         public MScanItem()
         {

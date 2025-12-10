@@ -869,5 +869,64 @@ namespace Its.Onix.Api.Services
             r.ScanItem = result;
             return r;
         }
+
+        //=== V2 ===
+        public async Task<int> GetScanItemCountV2(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemCountV2(param);
+
+            return result;
+        }
+        
+        public async Task<IEnumerable<MScanItem>> GetScanItemsV2(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemsV2(param);
+
+            //Masking PIN & URL
+            result.ToList().ForEach(item =>
+            {
+                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
+                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
+                item.Pin = maskPin;
+
+                if (!string.IsNullOrEmpty(item.ProductCodeLegacy))
+                {
+                    //ใช้ของเดิมที่เกาะกับ scan item, แทนที่จะเอามาจาก folder
+                    item.ProductCode = item.ProductCodeLegacy;
+                    item.ProductDesc = item.ProductDescLegacy;
+                }
+            });
+
+            return result;
+        }
+
+        public async Task<MVScanItem> GetScanItemByIdV2(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemByIdV2(scanItemId);
+
+            var maskPin = ServiceUtils.MaskScanItemPin(result.Pin!);
+            result.Url = MaskUrl(result.Pin!, maskPin, result.Url!);
+            result.Pin = maskPin;
+
+            if (!string.IsNullOrEmpty(result.ProductCodeLegacy))
+            {
+                //ใช้ของเดิมที่เกาะกับ scan item, แทนที่จะเอามาจาก folder
+                result.ProductCode = result.ProductCodeLegacy;
+                result.ProductDesc = result.ProductDescLegacy;
+            }
+
+            r.ScanItem = result;
+            return r;
+        }
+
     }
 }

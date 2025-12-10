@@ -13,6 +13,138 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
+        //=== Start V2 ===
+        public IQueryable<MScanItem> GetSelectionV2()
+        {
+            var query =
+                from sci in context!.ScanItems
+
+                join cst in context.Entities!
+                    on sci.CustomerId equals cst.Id into customers
+                from customer in customers.DefaultIfEmpty()
+
+                join itm in context.Items!
+                    on sci.ItemId equals itm.Id into items
+                from item in items.DefaultIfEmpty()
+
+                join scf in context.ScanItemFolders!
+                    on sci.FolderId equals scf.Id into folders
+                from folder in folders.DefaultIfEmpty()
+
+                join sca in context.ScanItemActions!
+                    on folder.ScanItemActionId equals sca.Id.ToString() into actions
+                from action in actions.DefaultIfEmpty()
+
+                join prd in context.Items!
+                    on folder.ProductId equals prd.Id.ToString() into products
+                from product in products.DefaultIfEmpty()
+
+                select new { sci, customer, folder, action, product, item };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MScanItem
+            {
+                Id = x.sci.Id,
+                OrgId = x.sci.OrgId,
+                Serial = x.sci.Serial,
+                Pin = x.sci.Pin,
+                Tags = x.sci.Tags,
+                SequenceNo = x.sci.SequenceNo,
+                Url = x.sci.Url,
+                RunId = x.sci.RunId,
+                UploadedPath = x.sci.UploadedPath,
+                ItemGroup = x.sci.ItemGroup,
+                RegisteredFlag = x.sci.RegisteredFlag,
+                ScanCount = x.sci.ScanCount,
+                UsedFlag = x.sci.UsedFlag,
+                ItemId = x.sci.ItemId,
+                AppliedFlag = x.sci.AppliedFlag,
+                CustomerId = x.sci.CustomerId,
+                FolderId = x.sci.FolderId,
+                CreatedDate = x.sci.CreatedDate,
+                RegisteredDate = x.sci.RegisteredDate,
+
+                ScanItemActionId = x.action.Id.ToString(),
+                ScanItemActionName = x.action.ActionName,
+                ProductCode = x.product.Code,
+                ProductDesc = x.product.Description,
+                CustomerEmail = x.customer.PrimaryEmail,
+                FolderName = x.folder.FolderName,
+
+                ProductCodeLegacy = x.item.Code,
+                ProductDescLegacy = x.item.Description,
+            });
+        }
+
+        private ExpressionStarter<MScanItem> ScanItemPredicateV2(VMScanItem param)
+        {
+            var pd = PredicateBuilder.New<MScanItem>();
+
+            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
+            {
+                var fullTextPd = PredicateBuilder.New<MScanItem>();
+                fullTextPd = fullTextPd.Or(p => p.Serial!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Pin!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductDesc!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductCodeLegacy!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductDescLegacy!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.FolderName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ScanItemActionName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.CustomerEmail!.Contains(param.FullTextSearch));
+
+                pd = pd.And(fullTextPd);
+            }
+
+            return pd;
+        }
+
+        public async Task<IEnumerable<MScanItem>> GetScanItemsV2(VMScanItem param)
+        {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset - 1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = ScanItemPredicateV2(param!);
+            var arr = await GetSelectionV2().AsExpandable().Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            return arr;
+        }
+
+        public async Task<int> GetScanItemCountV2(VMScanItem param)
+        {
+            var predicate = ScanItemPredicateV2(param);
+            var cnt = await GetSelectionV2().AsExpandable().Where(predicate).CountAsync();
+
+            return cnt;
+        }
+
+        public async Task<MScanItem> GetScanItemByIdV2(string scanItemId)
+        {
+            Guid id = Guid.Parse(scanItemId);
+            var u = await GetSelectionV2().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+
+            return u!;
+        }
+
+        //=== End V2 ===
+
         public MScanItem? GetScanItemBySerialPin(string serial, string pin)
         {
             var u = context!.ScanItems!.Where(p =>

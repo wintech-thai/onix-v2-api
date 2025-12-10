@@ -67,9 +67,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemById/{scanItemId}")]
-        public IActionResult GetItemById(string id, string scanItemId)
+        public async Task<IActionResult> GetItemById(string id, string scanItemId)
         {
-            var result = svc.GetScanItemById(id, scanItemId);
+            var result = await svc.GetScanItemByIdV2(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -113,7 +113,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/GetScanItemCount")]
         public async Task<IActionResult> GetScanItemCount(string id, [FromBody] VMScanItem param)
         {
-            var result = await svc.GetScanItemCountAsync(id, param);
+            var result = await svc.GetScanItemCountV2(id, param);
             return Ok(result);
         }
 
@@ -127,7 +127,7 @@ namespace Its.Onix.Api.Controllers
                 param.Limit = 100;
             }
 //Console.WriteLine($"====== DEBUG ==== limit=[{param.Limit}], offset=[{param.Offset}]");
-            var result = await svc.GetScanItemsAsnyc(id, param);
+            var result = await svc.GetScanItemsV2(id, param);
             return Ok(result);
         }
 
