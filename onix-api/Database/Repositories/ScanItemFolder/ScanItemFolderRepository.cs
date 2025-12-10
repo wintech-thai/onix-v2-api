@@ -14,7 +14,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<bool> IsScanItemFolderExist(string folderName)
         {
-            var exists = await context!.ScanItemFolders!.AnyAsync(p => p!.FolderName!.Equals(folderName) && p!.OrgId!.Equals(orgId));
+            var exists = await context!.ScanItemFolders!.AsExpandable().AnyAsync(p => p!.FolderName!.Equals(folderName) && p!.OrgId!.Equals(orgId));
             return exists;
         }
 
