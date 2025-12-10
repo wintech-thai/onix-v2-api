@@ -42,7 +42,7 @@ namespace Its.Onix.Api.Services
             _pointRepo = pointRepo;
         }
 
-        public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
+        public async Task<MVScanItem> AttachScanItemToProduct(string orgId, string scanItemId, string productId)
         {
             _itemRepo.SetCustomOrgId(orgId);
             repository!.SetCustomOrgId(orgId);
@@ -78,7 +78,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
            
-            var result = repository!.AttachScanItemToProduct(scanItemId, productId, product);
+            var result = await repository!.AttachScanItemToProduct(scanItemId, productId, product);
             r.ScanItem = result;
 
             return r;
@@ -387,7 +387,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
+        public async Task<MVScanItem> AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
         {
             repository!.SetCustomOrgId(orgId);
             _entityRepo!.SetCustomOrgId(orgId);
@@ -423,7 +423,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.AttachScanItemToCustomer(scanItemId, customerId, customer);
+            var result = await repository!.AttachScanItemToCustomer(scanItemId, customerId, customer);
 
             r.ScanItem = result;
 
@@ -511,7 +511,7 @@ namespace Its.Onix.Api.Services
             var customer = _entityRepo.GetOrCreateEntityByEmail(entity);
             customerId = customer.Id.ToString();
 
-            AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
+            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
 
             CreatePointTriggerJob(orgId, scanItem, customer);
@@ -598,7 +598,7 @@ namespace Its.Onix.Api.Services
             return maskUrl;
         }
 
-        public MVScanItem DetachScanItemFromProduct(string orgId, string scanItemId)
+        public async Task<MVScanItem> DetachScanItemFromProduct(string orgId, string scanItemId)
         {
             repository!.SetCustomOrgId(orgId);
             var r = new MVScanItem()
@@ -615,7 +615,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.DetachScanItemFromProduct(scanItemId);
+            var result = await repository!.DetachScanItemFromProduct(scanItemId);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -629,7 +629,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItem DetachScanItemFromCustomer(string orgId, string scanItemId)
+        public async Task<MVScanItem> DetachScanItemFromCustomer(string orgId, string scanItemId)
         {
             repository!.SetCustomOrgId(orgId);
             var r = new MVScanItem()
@@ -646,7 +646,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.DetachScanItemFromCustomer(scanItemId);
+            var result = await repository!.DetachScanItemFromCustomer(scanItemId);
             if (result == null)
             {
                 r.Status = "NOTFOUND";

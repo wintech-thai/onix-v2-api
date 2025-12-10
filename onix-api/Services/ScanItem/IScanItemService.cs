@@ -7,16 +7,16 @@ namespace Its.Onix.Api.Services
     public interface IScanItemService
     {
         public MVScanItemResult VerifyScanItem(string orgId, string serial, string pin, bool isDryRun);
-        public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId);
-        public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId);
-        public MVScanItem DetachScanItemFromCustomer(string orgId, string scanItemId);
-        public MVScanItem DetachScanItemFromProduct(string orgId, string scanItemId);
         public MVItem GetScanItemProduct(string orgId, string serial, string pin, string otp);
         public MVEntity GetScanItemCustomer(string orgId, string serial, string pin, string otp);
         public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email);
         public MVEntity RegisterCustomer(string id, string serial, string pin, string otp, MCustomerRegister cust);
 
         //=== V2 ===
+        public Task<MVScanItem> AttachScanItemToProduct(string orgId, string scanItemId, string productId);
+        public Task<MVScanItem> AttachScanItemToCustomer(string orgId, string scanItemId, string customerId);
+        public Task<MVScanItem> DetachScanItemFromCustomer(string orgId, string scanItemId);
+        public Task<MVScanItem> DetachScanItemFromProduct(string orgId, string scanItemId);
 
         public Task<MVScanItem> GetScanItemUrlDryRunById(string orgId, string scanItemId);
         public Task<int> GetScanItemCountV2(string orgId, VMScanItem param);

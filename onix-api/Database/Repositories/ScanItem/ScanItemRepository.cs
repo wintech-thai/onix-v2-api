@@ -244,11 +244,11 @@ namespace Its.Onix.Api.Database.Repositories
 
         //=== End V2 ===
 
-        public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product)
+        public async Task<MScanItem?> AttachScanItemToProduct(string itemId, string productId, MItem product)
         {
             Guid pid = Guid.Parse(productId);
             Guid id = Guid.Parse(itemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
@@ -296,11 +296,11 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
-        public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer)
+        public async Task<MScanItem?> AttachScanItemToCustomer(string itemId, string customerId, MEntity customer)
         {
             Guid cid = Guid.Parse(customerId);
             Guid id = Guid.Parse(itemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
@@ -313,10 +313,10 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        public MScanItem DetachScanItemFromProduct(string itemId)
+        public async Task<MScanItem?> DetachScanItemFromProduct(string itemId)
         {
             Guid id = Guid.Parse(itemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
@@ -338,10 +338,10 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        public MScanItem DetachScanItemFromCustomer(string itemId)
+        public async Task<MScanItem?> DetachScanItemFromCustomer(string itemId)
         {
             Guid id = Guid.Parse(itemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {

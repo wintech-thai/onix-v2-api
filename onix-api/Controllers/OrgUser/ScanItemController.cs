@@ -23,9 +23,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AttachScanItemToProduct/{scanItemId}/{productId}")]
-        public IActionResult AttachScanItemToProduct(string id, string scanItemId, string productId)
+        public async Task<IActionResult> AttachScanItemToProduct(string id, string scanItemId, string productId)
         {
-            var result = svc.AttachScanItemToProduct(id, scanItemId, productId);
+            var result = await svc.AttachScanItemToProduct(id, scanItemId, productId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -34,9 +34,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AttachScanItemToCustomer/{scanItemId}/{customerId}")]
-        public IActionResult AttachScanItemToCustomer(string id, string scanItemId, string customerId)
+        public async Task<IActionResult> AttachScanItemToCustomer(string id, string scanItemId, string customerId)
         {
-            var result = svc.AttachScanItemToCustomer(id, scanItemId, customerId);
+            var result = await svc.AttachScanItemToCustomer(id, scanItemId, customerId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -45,9 +45,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/DetachScanItemFromCustomer/{scanItemId}")]
-        public IActionResult DetachScanItemFromCustomer(string id, string scanItemId)
+        public async Task<IActionResult> DetachScanItemFromCustomer(string id, string scanItemId)
         {
-            var result = svc.DetachScanItemFromCustomer(id, scanItemId);
+            var result = await svc.DetachScanItemFromCustomer(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -56,9 +56,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/DetachScanItemFromProduct/{scanItemId}")]
-        public IActionResult DetachScanItemFromProduct(string id, string scanItemId)
+        public async Task<IActionResult> DetachScanItemFromProduct(string id, string scanItemId)
         {
-            var result = svc.DetachScanItemFromProduct(id, scanItemId);
+            var result = await svc.DetachScanItemFromProduct(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);

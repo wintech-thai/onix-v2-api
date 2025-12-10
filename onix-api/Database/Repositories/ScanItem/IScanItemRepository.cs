@@ -7,12 +7,10 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
 
-        //TODO : อนาคตปรับตรงนี้เป็น Async ต่ออีกทีนะ
-
-        public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product);
-        public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
-        public MScanItem DetachScanItemFromCustomer(string itemId);
-        public MScanItem DetachScanItemFromProduct(string itemId);
+        public Task<MScanItem?> AttachScanItemToProduct(string itemId, string productId, MItem product);
+        public Task<MScanItem?> AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
+        public Task<MScanItem?> DetachScanItemFromCustomer(string itemId);
+        public Task<MScanItem?> DetachScanItemFromProduct(string itemId);
 
         public Task<MScanItem?> GetScanItemBySerialPinV2(string serial, string pin);
         public Task<MScanItem?> RegisterScanItemV2(string itemId);
