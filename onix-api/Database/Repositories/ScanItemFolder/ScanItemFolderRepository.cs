@@ -22,10 +22,16 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var query =
                 from scf in context!.ScanItemFolders
+
                 join sca in context.ScanItemActions!
                     on scf.ScanItemActionId equals sca.Id.ToString() into sciAction
                 from action in sciAction.DefaultIfEmpty()
-                select new { scf, action };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+
+                join prd in context.Items!
+                    on scf.ProductId equals prd.Id.ToString() into products
+                from product in products.DefaultIfEmpty()
+
+                select new { scf, action, product };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MScanItemFolder
             {
                 Id = x.scf.Id,
@@ -34,8 +40,14 @@ namespace Its.Onix.Api.Database.Repositories
                 Description = x.scf.Description,
                 Tags = x.scf.Tags,
                 ScanItemCount = x.scf.ScanItemCount,
+                ScanItemActionId = x.scf.ScanItemActionId,
+                ProductId = x.scf.ProductId,
+
                 ScanItemActionName = x.action.ActionName,
 
+                ProductCode = x.product.Code,
+                ProductDesc = x.product.Description,
+                
                 CreatedDate = x.scf.CreatedDate,
             });
         }
@@ -154,6 +166,19 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 existing.ScanItemActionId = actionId;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MScanItemFolder?> AttachScanItemFolderToProduct(string folderId, string productId)
+        {
+            Guid id = Guid.Parse(folderId);
+            var existing = await context!.ScanItemFolders!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.ScanItemActionId = productId;
             }
 
             await context.SaveChangesAsync();

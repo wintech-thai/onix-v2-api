@@ -3,7 +3,6 @@ using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
-using System.Data.SqlClient;
 
 namespace Its.Onix.Api.Services
 {
@@ -141,6 +140,45 @@ namespace Its.Onix.Api.Services
             var result = await repository!.GetScanItemFolders(param);
 
             return result;
+        }
+
+        public async Task<MVScanItemFolder> AttachScanItemFolderToProduct(string orgId, string folderId, string productId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItemFolder()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(folderId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItem Folder ID [{folderId}] format is invalid";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(productId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItem Product ID [{folderId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.AttachScanItemFolderToProduct(folderId, productId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"ScanItem Folder ID [{folderId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.ScanItemFolder = result;
+            return r;
         }
 
         public async Task<MVScanItemFolder> AttachScanItemFolderToAction(string orgId, string folderId, string actionId)

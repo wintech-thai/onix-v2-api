@@ -74,9 +74,19 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/{id}/action/AttachScanItemFolderToAction/{folderId}/{actionId}")]
-        public async Task<IActionResult> SetDefaultScanItemFolderById(string id, string folderId, string actionId)
+        public async Task<IActionResult> AttachScanItemFolderToAction(string id, string folderId, string actionId)
         {
             var result = await svc.AttachScanItemFolderToAction(id, folderId, actionId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/AttachScanItemFolderToProduct/{folderId}/{productId}")]
+        public async Task<IActionResult> AttachScanItemFolderToProduct(string id, string folderId, string productId)
+        {
+            var result = await svc.AttachScanItemFolderToProduct(id, folderId, productId);
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return Ok(result);

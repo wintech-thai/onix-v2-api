@@ -29,6 +29,10 @@ namespace Its.Onix.Api.Models
         [Column("scanitem_action_id")]
         public string? ScanItemActionId { get; set; }
 
+        [Column("product_id")]
+        public string? ProductId { get; set; }
+
+
         [Column("tags")]
         public string? Tags { get; set; }
 
@@ -41,6 +45,12 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public string? ScanItemActionName { get; set; }
+
+        [NotMapped]
+        public string? ProductCode { get; set; }
+
+        [NotMapped]
+        public string? ProductDesc { get; set; }
 
         public MScanItemFolder()
         {

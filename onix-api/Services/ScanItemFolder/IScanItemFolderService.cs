@@ -13,5 +13,6 @@ namespace Its.Onix.Api.Services
         public Task<int> GetScanItemFolderCount(string orgId, VMScanItemFolder param);
         public Task<MVScanItemFolder> UpdateScanItemFolderById(string orgId, string folderId, MScanItemFolder folder);
         public Task<MVScanItemFolder> AttachScanItemFolderToAction(string orgId, string folderId, string actionId);
+        public Task<MVScanItemFolder> AttachScanItemFolderToProduct(string orgId, string folderId, string productId);
     }
 }

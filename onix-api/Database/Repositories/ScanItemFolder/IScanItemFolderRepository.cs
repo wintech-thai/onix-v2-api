@@ -16,5 +16,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MScanItemFolder?> DeleteScanItemFolderById(string folderId);
         public Task<MScanItemFolder?> UpdateScanItemFolderById(string folderId, MScanItemFolder folder);
         public Task<MScanItemFolder?> AttachScanItemFolderToAction(string folderId, string actionId);
+        public Task<MScanItemFolder?> AttachScanItemFolderToProduct(string folderId, string productId);
     }
 }
