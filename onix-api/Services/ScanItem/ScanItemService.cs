@@ -258,7 +258,7 @@ namespace Its.Onix.Api.Services
             }
 
             r.ScanItem = result.Result;
-            var id = result.Id.ToString();
+            var id = result.Result.Id.ToString();
 
             if ((result.Result.RegisteredFlag != null) && result.Result.RegisteredFlag!.Equals("TRUE"))
             {
