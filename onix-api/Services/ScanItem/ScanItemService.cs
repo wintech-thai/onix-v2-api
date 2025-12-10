@@ -5,6 +5,7 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Models;
 using System.Text.Json;
 using Serilog;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Its.Onix.Api.Services
 {
@@ -122,7 +123,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var productId = result.Result.ItemId.ToString();
+            var productId = result.Result.ItemId.ToString(); //ลองใช้ Legacy product ID ก่อน
+            if (string.IsNullOrEmpty(productId))
+            {
+                //ลองเอามาจาก Product ที่ผูกไว้กับ folder แทน
+                productId = result.Result.ProductId;
+            }
+
             if (string.IsNullOrEmpty(productId))
             {
                 r.Status = "PRODUCT_NOT_ATTACH";

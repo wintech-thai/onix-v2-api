@@ -79,6 +79,8 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? ScanItemActionName { get; set; }
         [NotMapped]
+        public string? ProductId { get; set; }
+        [NotMapped]
         public string? ProductDesc { get; set; }
         [NotMapped]
         public string? CustomerEmail { get; set; }

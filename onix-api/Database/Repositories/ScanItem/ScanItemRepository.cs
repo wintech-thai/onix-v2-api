@@ -64,6 +64,7 @@ namespace Its.Onix.Api.Database.Repositories
 
                 ScanItemActionId = x.action.Id.ToString(),
                 ScanItemActionName = x.action.ActionName,
+                ProductId = x.product.Id.ToString(), //ได้มาจากการ join table
                 ProductCode = x.product.Code,
                 ProductDesc = x.product.Description,
                 CustomerEmail = x.customer.PrimaryEmail,
@@ -201,7 +202,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<MScanItem?> GetScanItemBySerialPinV2(string serial, string pin)
         {
-            var u = await context!.ScanItems!.AsExpandable().Where(p =>
+            var u = await GetSelectionV2().AsExpandable().Where(p =>
                 p!.Serial!.Equals(serial) &&
                 p!.Pin!.Equals(pin) &&
                 p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
