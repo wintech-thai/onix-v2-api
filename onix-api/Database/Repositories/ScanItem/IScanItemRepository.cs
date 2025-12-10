@@ -7,14 +7,16 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
 
-        public MScanItem RegisterScanItem(string itemId);
-        public MScanItem IncreaseScanCount(string itemId);
+        //TODO : อนาคตปรับตรงนี้เป็น Async ต่ออีกทีนะ
+
         public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product);
         public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
         public MScanItem DetachScanItemFromCustomer(string itemId);
         public MScanItem DetachScanItemFromProduct(string itemId);
-        public MScanItem? GetScanItemBySerialPin(string serial, string pin);
 
+        public Task<MScanItem?> GetScanItemBySerialPinV2(string serial, string pin);
+        public Task<MScanItem?> RegisterScanItemV2(string itemId);
+        public Task<MScanItem?> IncreaseScanCountV2(string itemId);
 
         public Task<IEnumerable<MScanItem>> GetScanItemsV2(VMScanItem param);
         public Task<int> GetScanItemCountV2(VMScanItem param);

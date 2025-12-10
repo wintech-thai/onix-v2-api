@@ -199,22 +199,20 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        //=== End V2 ===
-
-        public MScanItem? GetScanItemBySerialPin(string serial, string pin)
+        public async Task<MScanItem?> GetScanItemBySerialPinV2(string serial, string pin)
         {
-            var u = context!.ScanItems!.Where(p =>
+            var u = await context!.ScanItems!.AsExpandable().Where(p =>
                 p!.Serial!.Equals(serial) &&
                 p!.Pin!.Equals(pin) &&
-                p!.OrgId!.Equals(orgId)).FirstOrDefault();
+                p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
 
             return u!;
         }
 
-        public MScanItem RegisterScanItem(string itemId)
+        public async Task<MScanItem?> RegisterScanItemV2(string itemId)
         {
             Guid id = Guid.Parse(itemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
@@ -228,10 +226,10 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        public MScanItem IncreaseScanCount(string itemId)
+        public async Task<MScanItem?> IncreaseScanCountV2(string itemId)
         {
             Guid id = Guid.Parse(itemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
@@ -242,6 +240,8 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result!;
         }
+
+        //=== End V2 ===
 
         public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product)
         {

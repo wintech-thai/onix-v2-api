@@ -4,7 +4,6 @@ using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Models;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Serilog;
 
 namespace Its.Onix.Api.Services
@@ -114,8 +113,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
-            if (result == null)
+            var result = repository!.GetScanItemBySerialPinV2(serial, pin);
+            if (result.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
@@ -123,7 +122,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var productId = result.ItemId.ToString();
+            var productId = result.Result.ItemId.ToString();
             if (string.IsNullOrEmpty(productId))
             {
                 r.Status = "PRODUCT_NOT_ATTACH";
@@ -198,8 +197,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
-            if (result == null)
+            var result = repository!.GetScanItemBySerialPinV2(serial, pin);
+            if (result.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
@@ -207,7 +206,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var customerId = result.CustomerId.ToString();
+            var customerId = result.Result.CustomerId.ToString();
             if (string.IsNullOrEmpty(customerId))
             {
                 r.Status = "CUSTOMER_NOT_ATTACH";
@@ -223,8 +222,8 @@ namespace Its.Onix.Api.Services
                 //ถึงตรงนี้ให้เป็น SUCCESS เพราะว่า ถือว่ายังมี customer อยู่แต่ customer จริงๆโดนลบไปแล้วแต่ ID ยังค้างอยู่
                 customer = new MEntity()
                 {
-                    Id = result.CustomerId,
-                    PrimaryEmail = ServiceUtils.GetValueFromTags("email", result.Tags!),
+                    Id = result.Result.CustomerId,
+                    PrimaryEmail = ServiceUtils.GetValueFromTags("email", result.Result.Tags!),
                 };
 
                 if (string.IsNullOrEmpty(customer.PrimaryEmail))
@@ -247,9 +246,9 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
+            var result = repository!.GetScanItemBySerialPinV2(serial, pin);
 
-            if (result == null)
+            if (result.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.DescriptionEng = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
@@ -258,16 +257,16 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            r.ScanItem = result;
+            r.ScanItem = result.Result;
             var id = result.Id.ToString();
 
-            if ((result.RegisteredFlag != null) && result.RegisteredFlag!.Equals("TRUE"))
+            if ((result.Result.RegisteredFlag != null) && result.Result.RegisteredFlag!.Equals("TRUE"))
             {
                 r.Status = "ALREADY_REGISTERED";
                 r.DescriptionEng = $"Your product serial=[{serial}] and pin=[{pin}] is already registered!!!";
                 r.DescriptionThai = $"สินค้า ซีเรียล=[{serial}] และ พิน=[{pin}] เคยลงทะเบียนแล้ว!!!";
 
-                repository.IncreaseScanCount(id!);
+                repository.IncreaseScanCountV2(id!);
 
                 return r;
             }
@@ -275,7 +274,8 @@ namespace Its.Onix.Api.Services
             //ถ้าเป็น dryrun ไม่ต้องเรียก RegisterScanItem()
             if (!isDryRun)
             {
-                r.ScanItem = repository.RegisterScanItem(id!);
+                var t = repository.RegisterScanItemV2(id!);
+                r.ScanItem = t.Result;
             }
 
             return r;
@@ -472,7 +472,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var scanItem = repository!.GetScanItemBySerialPin(serial, pin);
+            var scanItem = repository!.GetScanItemBySerialPinV2(serial, pin).Result;
             if (scanItem == null)
             {
                 r.Status = "NOTFOUND";
