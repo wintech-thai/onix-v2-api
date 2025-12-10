@@ -16,25 +16,14 @@ namespace Its.Onix.Api.Services
         public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email);
         public MVEntity RegisterCustomer(string id, string serial, string pin, string otp, MCustomerRegister cust);
 
-        //ถ้าจะมี GetScanItems() ตอนที่ดึงค่า PIN มาแสดงให้ทำการ masking PIN เสมอ !!!!!
-
-        public MVScanItem? GetScanItemById(string orgId, string scanItemId);
-        public MVScanItem AddScanItem(string orgId, MScanItem scanItem);
-        public MVScanItem DeleteScanItemById(string orgId, string scanItemId);
-        public MVScanItem UnVerifyScanItemById(string orgId, string scanItemId);
-        public int GetScanItemCount(string orgId, VMScanItem param);
-        public IEnumerable<MScanItem> GetScanItems(string orgId, VMScanItem param);
-
-        public Task<int> GetScanItemCountAsync(string orgId, VMScanItem param);
-        public Task<IEnumerable<MScanItem>> GetScanItemsAsnyc(string orgId, VMScanItem param);
-
-        public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId);
-
         //=== V2 ===
 
+        public Task<MVScanItem> GetScanItemUrlDryRunById(string orgId, string scanItemId);
         public Task<int> GetScanItemCountV2(string orgId, VMScanItem param);
         public Task<IEnumerable<MScanItem>> GetScanItemsV2(string orgId, VMScanItem param);
         public Task<MVScanItem> GetScanItemByIdV2(string orgId, string scanItemId);
         public Task<MVScanItem> AddScanItemV2(string orgId, MScanItem scanItem);
+        public Task<MVScanItem> DeleteScanItemByIdV2(string orgId, string scanItemId);
+        public Task<MVScanItem> UnVerifyScanItemByIdV2(string orgId, string scanItemId);
     }
 }

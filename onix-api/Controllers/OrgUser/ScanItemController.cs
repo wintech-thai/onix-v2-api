@@ -89,9 +89,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/DeleteScanItemById/{scanItemId}")]
-        public IActionResult DeleteScanItemById(string id, string scanItemId)
+        public async Task<IActionResult> DeleteScanItemById(string id, string scanItemId)
         {
-            var result = svc.DeleteScanItemById(id, scanItemId);
+            var result = await svc.DeleteScanItemByIdV2(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -100,9 +100,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/UnVerifyScanItemById/{scanItemId}")]
-        public IActionResult UnVerifyScanItemById(string id, string scanItemId)
+        public async Task<IActionResult> UnVerifyScanItemById(string id, string scanItemId)
         {
-            var result = svc.UnVerifyScanItemById(id, scanItemId);
+            var result = await svc.UnVerifyScanItemByIdV2(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -134,9 +134,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemUrlDryRunById/{scanItemId}")]
-        public IActionResult GetScanItemUrlDryRunById(string id, string scanItemId)
+        public async Task<IActionResult> GetScanItemUrlDryRunById(string id, string scanItemId)
         {
-            var result = svc.GetScanItemUrlDryRunById(id, scanItemId);
+            var result = await svc.GetScanItemUrlDryRunById(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);

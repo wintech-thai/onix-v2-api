@@ -171,6 +171,34 @@ namespace Its.Onix.Api.Database.Repositories
             return cnt >= 1;
         }
 
+        public async Task<MScanItem?> DeleteScanItemByIdV2(string scanItemId)
+        {
+            Guid id = Guid.Parse(scanItemId);
+
+            var r = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
+            if (r != null)
+            {
+                context!.ScanItems!.Remove(r);
+                context.SaveChanges();
+            }
+
+            return r;
+        }
+
+        public async Task<MScanItem?> UnVerifyScanItemByIdV2(string scanItemId)
+        {
+            Guid id = Guid.Parse(scanItemId);
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.RegisteredFlag = "NO";
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
         //=== End V2 ===
 
         public MScanItem? GetScanItemBySerialPin(string serial, string pin)
@@ -284,145 +312,6 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-
-        public MScanItem AddScanItem(MScanItem scanItem)
-        {
-            scanItem.Id = Guid.NewGuid();
-            scanItem.CreatedDate = DateTime.UtcNow;
-            scanItem.OrgId = orgId;
-
-            context!.ScanItems!.Add(scanItem);
-            context.SaveChanges();
-
-            return scanItem;
-        }
-
-        private ExpressionStarter<MScanItem> ScanItemPredicate(VMScanItem param)
-        {
-            var pd = PredicateBuilder.New<MScanItem>();
-
-            pd = pd.And(p => p.OrgId!.Equals(orgId));
-
-            if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
-            {
-                var fullTextPd = PredicateBuilder.New<MScanItem>();
-                fullTextPd = fullTextPd.Or(p => p.Serial!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Pin!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.ProductCode!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
-
-                pd = pd.And(fullTextPd);
-            }
-
-            return pd;
-        }
-
-        public async Task<int> GetScanItemCountAsync(VMScanItem param)
-        {
-            var predicate = ScanItemPredicate(param);
-            var cnt = await context!.ScanItems!.AsExpandable().Where(predicate).CountAsync();
-
-            return cnt;
-        }
-        
-        public async Task<IEnumerable<MScanItem>> GetScanItemsAsyn(VMScanItem param)
-        {
-            var limit = 0;
-            var offset = 0;
-
-            //Param will never be null
-            if (param.Offset > 0)
-            {
-                //Convert to zero base
-                offset = param.Offset - 1;
-            }
-
-            if (param.Limit > 0)
-            {
-                limit = param.Limit;
-            }
-
-            var predicate = ScanItemPredicate(param!);
-            var arr = await context!.ScanItems!.AsExpandable().Where(predicate)
-                .OrderByDescending(e => e.CreatedDate)
-                .Skip(offset)
-                .Take(limit)
-                .ToListAsync();
-
-            return arr;
-        }
-
-        public int GetScanItemCount(VMScanItem param)
-        {
-            var predicate = ScanItemPredicate(param);
-            var cnt = context!.ScanItems!.Where(predicate).Count();
-
-            return cnt;
-        }
-
-        public IEnumerable<MScanItem> GetScanItems(VMScanItem param)
-        {
-            var limit = 0;
-            var offset = 0;
-
-            //Param will never be null
-            if (param.Offset > 0)
-            {
-                //Convert to zero base
-                offset = param.Offset - 1;
-            }
-
-            if (param.Limit > 0)
-            {
-                limit = param.Limit;
-            }
-
-            var predicate = ScanItemPredicate(param!);
-            var arr = context!.ScanItems!.Where(predicate)
-                .OrderByDescending(e => e.CreatedDate)
-                .Skip(offset)
-                .Take(limit)
-                .ToList();
-
-            return arr;
-        }
-
-        public MScanItem GetScanItemById(string scanItemId)
-        {
-            Guid id = Guid.Parse(scanItemId);
-            var u = context!.ScanItems!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
-
-            return u!;
-        }
-
-        public MScanItem? DeleteScanItemById(string scanItemId)
-        {
-            Guid id = Guid.Parse(scanItemId);
-
-            var r = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefault();
-            if (r != null)
-            {
-                context!.ScanItems!.Remove(r);
-                context.SaveChanges();
-            }
-
-            return r;
-        }
-
-        public MScanItem? UnVerifyScanItemById(string scanItemId)
-        {
-            Guid id = Guid.Parse(scanItemId);
-            var result = context!.ScanItems!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
-
-            if (result != null)
-            {
-                result.RegisteredFlag = "NO";
-                context!.SaveChanges();
-            }
-
-            return result!;
-        }
-
         public MScanItem DetachScanItemFromProduct(string itemId)
         {
             Guid id = Guid.Parse(itemId);
@@ -470,22 +359,6 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return result!;
-        }
-
-        public bool IsSerialExist(string serial)
-        {
-            var cnt = context!.ScanItems!.Where(p => p!.Serial!.Equals(serial)
-                && p!.OrgId!.Equals(orgId)).Count();
-
-            return cnt >= 1;
-        }
-
-        public bool IsPinExist(string pin)
-        {
-            var cnt = context!.ScanItems!.Where(p => p!.Pin!.Equals(pin)
-                && p!.OrgId!.Equals(orgId)).Count();
-
-            return cnt >= 1;
         }
     }
 }

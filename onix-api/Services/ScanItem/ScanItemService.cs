@@ -591,141 +591,6 @@ namespace Its.Onix.Api.Services
             return maskUrl;
         }
 
-        public MVScanItem? GetScanItemById(string orgId, string scanItemId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemById(scanItemId);
-
-            var maskPin = ServiceUtils.MaskScanItemPin(result.Pin!);
-            result.Url = MaskUrl(result.Pin!, maskPin, result.Url!);
-            result.Pin = maskPin;
-
-            r.ScanItem = result;
-            return r;
-        }
-
-        public MVScanItem AddScanItem(string orgId, MScanItem scanItem)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            var pinExist = repository!.IsPinExist(scanItem.Pin!);
-            if (pinExist)
-            {
-                r.Status = "PIN_ALREADY_EXIST";
-                r.Description = $"Pin [{scanItem.Pin}] already exist in our database!!!";
-
-                return r;
-            }
-
-            var serialExist = repository!.IsSerialExist(scanItem.Serial!);
-            if (serialExist)
-            {
-                r.Status = "SERIAL_ALREADY_EXIST";
-                r.Description = $"Serial [{scanItem.Serial}] already exist in our database!!!";
-
-                return r;
-            }
-
-            //สร้าง URL ให้อัตโนมัติเลย
-            var m = _sciTemplateSvc!.GetScanItemTemplate_V2(orgId);
-            if (m.Result == null)
-            {
-                r.Status = "NO_SCAN_ITEM_TEMPLATE_FOUND";
-                r.Description = $"No scan item template found!!!";
-
-                return r;
-            }
-
-            if (string.IsNullOrEmpty(m.Result.UrlTemplate))
-            {
-                r.Status = "URL_TEMPLATE_EMPTY";
-                r.Description = $"Scan item template URL is empty!!!";
-
-                return r;
-            }
-
-            var url = m.Result.UrlTemplate!;
-            url = url.Replace("{VAR_ORG}", orgId);
-            url = url.Replace("{VAR_SERIAL}", scanItem.Serial);
-            url = url.Replace("{VAR_PIN}", scanItem.Pin);
-            scanItem.Url = url;
-
-            var result = repository!.AddScanItem(scanItem);
-            r.ScanItem = result;
-
-            return r;
-        }
-
-        public MVScanItem DeleteScanItemById(string orgId, string scanItemId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(scanItemId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
-
-                return r;
-            }
-
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteScanItemById(scanItemId);
-
-            r.ScanItem = m;
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
-            }
-
-            return r;
-        }
-
-        public MVScanItem UnVerifyScanItemById(string orgId, string scanItemId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(scanItemId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
-
-                return r;
-            }
-
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.UnVerifyScanItemById(scanItemId);
-
-            r.ScanItem = m;
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
-            }
-
-            return r;
-        }
-
         public MVScanItem DetachScanItemFromProduct(string orgId, string scanItemId)
         {
             repository!.SetCustomOrgId(orgId);
@@ -788,55 +653,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public int GetScanItemCount(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemCount(param);
-
-            return result;
-        }
-
-        public IEnumerable<MScanItem> GetScanItems(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItems(param);
-
-            //Masking PIN & URL
-            result.ToList().ForEach(item =>
-            {
-                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
-                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
-                item.Pin = maskPin;
-            });
-
-            return result;
-        }
-
-        public async Task<int> GetScanItemCountAsync(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetScanItemCountAsync(param);
-
-            return result;
-        }
-        
-        public async Task<IEnumerable<MScanItem>> GetScanItemsAsnyc(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetScanItemsAsyn(param);
-
-            //Masking PIN & URL
-            result.ToList().ForEach(item =>
-            {
-                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
-                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
-                item.Pin = maskPin;
-            });
-
-            return result;
-        }
-
-        public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId)
+        public async Task<MVScanItem> GetScanItemUrlDryRunById(string orgId, string scanItemId)
         {
             var r = new MVScanItem()
             {
@@ -845,7 +662,7 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemById(scanItemId);
+            var result = await repository!.GetScanItemByIdV2(scanItemId);
 
             if (result == null)
             {
@@ -863,7 +680,7 @@ namespace Its.Onix.Api.Services
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "IsDryRunTokenValid");
             var key = $"{cacheKey}:{token}";
-            _redis.SetObjectAsync(key, otpObj, TimeSpan.FromMinutes(5));
+            await _redis.SetObjectAsync(key, otpObj, TimeSpan.FromMinutes(5));
 
             result.Url = $"{result.Url}?dryrun_token={token}";
             r.ScanItem = result;
@@ -986,5 +803,62 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVScanItem> DeleteScanItemByIdV2(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.DeleteScanItemByIdV2(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
+        public async Task<MVScanItem> UnVerifyScanItemByIdV2(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.UnVerifyScanItemByIdV2(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
     }
 }
