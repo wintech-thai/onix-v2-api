@@ -24,6 +24,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MJob>? Jobs { get; set; }
         public DbSet<MScanItemTemplate>? ScanItemTemplates { get; set; }
         public DbSet<MScanItemAction>? ScanItemActions { get; set; }
+        public DbSet<MScanItemFolder>? ScanItemFolders { get; set; }
         public DbSet<MAuditLog>? AuditLogs { get; set; }
         public DbSet<MStat>? Stats { get; set; }
         public DbSet<MPointTx>? PointTxs { get; set; }

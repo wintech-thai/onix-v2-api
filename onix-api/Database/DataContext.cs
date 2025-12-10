@@ -31,6 +31,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MJob>? Jobs { get; set; }
     public DbSet<MScanItemTemplate>? ScanItemTemplates { get; set; }
     public DbSet<MScanItemAction>? ScanItemActions { get; set; }
+    public DbSet<MScanItemFolder>? ScanItemFolders { get; set; }
     public DbSet<MAuditLog>? AuditLogs { get; set; }
     public DbSet<MStat>? Stats { get; set; }
     public DbSet<MPointTx>? PointTxs { get; set; }
@@ -83,6 +84,9 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MScanItemAction>()
             .HasIndex(t => new { t.OrgId, t.ActionName }).IsUnique();
+
+        modelBuilder.Entity<MScanItemFolder>()
+            .HasIndex(t => new { t.OrgId, t.FolderName }).IsUnique();
 
         modelBuilder.Entity<MJob>();
 
