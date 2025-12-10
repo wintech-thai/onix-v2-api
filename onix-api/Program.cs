@@ -87,6 +87,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IScanItemService, ScanItemService>();
             builder.Services.AddScoped<IScanItemActionService, ScanItemActionService>();
             builder.Services.AddScoped<IScanItemTemplateService, ScanItemTemplateService>();
+            builder.Services.AddScoped<IScanItemFolderService, ScanItemFolderService>();
             builder.Services.AddScoped<IJobService, JobService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IAdminService, AdminService>();
@@ -117,6 +118,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IScanItemRepository, ScanItemRepository>();
             builder.Services.AddScoped<IScanItemActionRepository, ScanItemActionRepository>();
             builder.Services.AddScoped<IScanItemTemplateRepository, ScanItemTemplateRepository>();
+            builder.Services.AddScoped<IScanItemFolderRepository, ScanItemFolderRepository>();
             builder.Services.AddScoped<IJobRepository, JobRepository>();
             builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             builder.Services.AddScoped<IStatRepository, StatRepository>();

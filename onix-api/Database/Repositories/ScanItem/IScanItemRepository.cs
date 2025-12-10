@@ -7,23 +7,22 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
 
-        public MScanItem RegisterScanItem(string itemId);
-        public MScanItem IncreaseScanCount(string itemId);
-        public MScanItem AttachScanItemToProduct(string itemId, string productId, MItem product);
-        public MScanItem AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
-        public MScanItem DetachScanItemFromCustomer(string itemId);
-        public MScanItem DetachScanItemFromProduct(string itemId);
-        public MScanItem? GetScanItemBySerialPin(string serial, string pin);
+        public Task<MScanItem?> AttachScanItemToProduct(string itemId, string productId, MItem product);
+        public Task<MScanItem?> AttachScanItemToCustomer(string itemId, string customerId, MEntity customer);
+        public Task<MScanItem?> DetachScanItemFromCustomer(string itemId);
+        public Task<MScanItem?> DetachScanItemFromProduct(string itemId);
 
-        public MScanItem AddScanItem(MScanItem scanItem);
-        public int GetScanItemCount(VMScanItem param);
-        public Task<int> GetScanItemCountAsync(VMScanItem param);
-        public IEnumerable<MScanItem> GetScanItems(VMScanItem param);
-        public Task<IEnumerable<MScanItem>> GetScanItemsAsyn(VMScanItem param);
-        public MScanItem GetScanItemById(string scanItemId);
-        public MScanItem? DeleteScanItemById(string scanItemId);
-        public MScanItem? UnVerifyScanItemById(string scanItemId);
-        public bool IsSerialExist(string serial);
-        public bool IsPinExist(string pin);
+        public Task<MScanItem?> GetScanItemBySerialPinV2(string serial, string pin);
+        public Task<MScanItem?> RegisterScanItemV2(string itemId);
+        public Task<MScanItem?> IncreaseScanCountV2(string itemId);
+
+        public Task<IEnumerable<MScanItem>> GetScanItemsV2(VMScanItem param);
+        public Task<int> GetScanItemCountV2(VMScanItem param);
+        public Task<MScanItem> GetScanItemByIdV2(string scanItemId);
+        public Task<MScanItem> AddScanItemV2(MScanItem scanItem);
+        public Task<bool> IsSerialExistV2(string serial);
+        public Task<bool> IsPinExistV2(string pin);
+        public Task<MScanItem?> DeleteScanItemByIdV2(string scanItemId);
+        public Task<MScanItem?> UnVerifyScanItemByIdV2(string scanItemId);
     }
 }

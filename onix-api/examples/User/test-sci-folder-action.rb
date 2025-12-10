@@ -11,16 +11,11 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
+id = '131203c0-e72e-4f02-81a0-4b85d1fb268e'
+actionId = '5f52ce98-72f2-4e93-b3aa-96d8b7c4eca2'
 
-apiUrl = "api/ScanItem/org/#{orgId}/action/GetScanItems"
-param =  {
-  FullTextSearch: ""
-}
+apiUrl = "api/ScanItemFolder/org/#{orgId}/action/AttachScanItemFolderToAction/#{id}/#{actionId}"
+param = nil
 
-result = make_request(:post, apiUrl, param)
-puts(result)
-
-
-apiUrl = "api/ScanItem/org/#{orgId}/action/GetScanItemCount"
 result = make_request(:post, apiUrl, param)
 puts(result)

@@ -23,9 +23,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AttachScanItemToProduct/{scanItemId}/{productId}")]
-        public IActionResult AttachScanItemToProduct(string id, string scanItemId, string productId)
+        public async Task<IActionResult> AttachScanItemToProduct(string id, string scanItemId, string productId)
         {
-            var result = svc.AttachScanItemToProduct(id, scanItemId, productId);
+            var result = await svc.AttachScanItemToProduct(id, scanItemId, productId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -34,9 +34,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AttachScanItemToCustomer/{scanItemId}/{customerId}")]
-        public IActionResult AttachScanItemToCustomer(string id, string scanItemId, string customerId)
+        public async Task<IActionResult> AttachScanItemToCustomer(string id, string scanItemId, string customerId)
         {
-            var result = svc.AttachScanItemToCustomer(id, scanItemId, customerId);
+            var result = await svc.AttachScanItemToCustomer(id, scanItemId, customerId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -45,9 +45,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/DetachScanItemFromCustomer/{scanItemId}")]
-        public IActionResult DetachScanItemFromCustomer(string id, string scanItemId)
+        public async Task<IActionResult> DetachScanItemFromCustomer(string id, string scanItemId)
         {
-            var result = svc.DetachScanItemFromCustomer(id, scanItemId);
+            var result = await svc.DetachScanItemFromCustomer(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -56,9 +56,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/DetachScanItemFromProduct/{scanItemId}")]
-        public IActionResult DetachScanItemFromProduct(string id, string scanItemId)
+        public async Task<IActionResult> DetachScanItemFromProduct(string id, string scanItemId)
         {
-            var result = svc.DetachScanItemFromProduct(id, scanItemId);
+            var result = await svc.DetachScanItemFromProduct(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -67,9 +67,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemById/{scanItemId}")]
-        public IActionResult GetItemById(string id, string scanItemId)
+        public async Task<IActionResult> GetItemById(string id, string scanItemId)
         {
-            var result = svc.GetScanItemById(id, scanItemId);
+            var result = await svc.GetScanItemByIdV2(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -78,9 +78,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AddScanItem")]
-        public IActionResult AddScanItem(string id, [FromBody] MScanItem request)
+        public async Task<IActionResult> AddScanItem(string id, [FromBody] MScanItem request)
         {
-            var result = svc.AddScanItem(id, request);
+            var result = await svc.AddScanItemV2(id, request);
 
             Response.Headers.Append("CUST_STATUS", result.Status);
             return Ok(result);
@@ -89,9 +89,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/DeleteScanItemById/{scanItemId}")]
-        public IActionResult DeleteScanItemById(string id, string scanItemId)
+        public async Task<IActionResult> DeleteScanItemById(string id, string scanItemId)
         {
-            var result = svc.DeleteScanItemById(id, scanItemId);
+            var result = await svc.DeleteScanItemByIdV2(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -100,9 +100,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/UnVerifyScanItemById/{scanItemId}")]
-        public IActionResult UnVerifyScanItemById(string id, string scanItemId)
+        public async Task<IActionResult> UnVerifyScanItemById(string id, string scanItemId)
         {
-            var result = svc.UnVerifyScanItemById(id, scanItemId);
+            var result = await svc.UnVerifyScanItemByIdV2(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -113,7 +113,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/GetScanItemCount")]
         public async Task<IActionResult> GetScanItemCount(string id, [FromBody] VMScanItem param)
         {
-            var result = await svc.GetScanItemCountAsync(id, param);
+            var result = await svc.GetScanItemCountV2(id, param);
             return Ok(result);
         }
 
@@ -127,16 +127,16 @@ namespace Its.Onix.Api.Controllers
                 param.Limit = 100;
             }
 //Console.WriteLine($"====== DEBUG ==== limit=[{param.Limit}], offset=[{param.Offset}]");
-            var result = await svc.GetScanItemsAsnyc(id, param);
+            var result = await svc.GetScanItemsV2(id, param);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemUrlDryRunById/{scanItemId}")]
-        public IActionResult GetScanItemUrlDryRunById(string id, string scanItemId)
+        public async Task<IActionResult> GetScanItemUrlDryRunById(string id, string scanItemId)
         {
-            var result = svc.GetScanItemUrlDryRunById(id, scanItemId);
+            var result = await svc.GetScanItemUrlDryRunById(id, scanItemId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);

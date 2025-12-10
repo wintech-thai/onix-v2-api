@@ -4,8 +4,8 @@ using Its.Onix.Api.Utils;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.Models;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.TagHelpers.Cache;
 using Serilog;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Its.Onix.Api.Services
 {
@@ -42,7 +42,7 @@ namespace Its.Onix.Api.Services
             _pointRepo = pointRepo;
         }
 
-        public MVScanItem AttachScanItemToProduct(string orgId, string scanItemId, string productId)
+        public async Task<MVScanItem> AttachScanItemToProduct(string orgId, string scanItemId, string productId)
         {
             _itemRepo.SetCustomOrgId(orgId);
             repository!.SetCustomOrgId(orgId);
@@ -78,7 +78,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
            
-            var result = repository!.AttachScanItemToProduct(scanItemId, productId, product);
+            var result = await repository!.AttachScanItemToProduct(scanItemId, productId, product);
             r.ScanItem = result;
 
             return r;
@@ -114,8 +114,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
-            if (result == null)
+            var result = repository!.GetScanItemBySerialPinV2(serial, pin);
+            if (result.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
@@ -123,7 +123,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var productId = result.ItemId.ToString();
+            var productId = result.Result.ItemId.ToString(); //ลองใช้ Legacy product ID ก่อน
+            if (string.IsNullOrEmpty(productId))
+            {
+                //ลองเอามาจาก Product ที่ผูกไว้กับ folder แทน
+                productId = result.Result.ProductId;
+            }
+
             if (string.IsNullOrEmpty(productId))
             {
                 r.Status = "PRODUCT_NOT_ATTACH";
@@ -198,8 +204,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
-            if (result == null)
+            var result = repository!.GetScanItemBySerialPinV2(serial, pin);
+            if (result.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
@@ -207,7 +213,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var customerId = result.CustomerId.ToString();
+            var customerId = result.Result.CustomerId.ToString();
             if (string.IsNullOrEmpty(customerId))
             {
                 r.Status = "CUSTOMER_NOT_ATTACH";
@@ -223,8 +229,8 @@ namespace Its.Onix.Api.Services
                 //ถึงตรงนี้ให้เป็น SUCCESS เพราะว่า ถือว่ายังมี customer อยู่แต่ customer จริงๆโดนลบไปแล้วแต่ ID ยังค้างอยู่
                 customer = new MEntity()
                 {
-                    Id = result.CustomerId,
-                    PrimaryEmail = ServiceUtils.GetValueFromTags("email", result.Tags!),
+                    Id = result.Result.CustomerId,
+                    PrimaryEmail = ServiceUtils.GetValueFromTags("email", result.Result.Tags!),
                 };
 
                 if (string.IsNullOrEmpty(customer.PrimaryEmail))
@@ -247,9 +253,9 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemBySerialPin(serial, pin);
+            var result = repository!.GetScanItemBySerialPinV2(serial, pin);
 
-            if (result == null)
+            if (result.Result == null)
             {
                 r.Status = "NOTFOUND";
                 r.DescriptionEng = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
@@ -258,16 +264,16 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            r.ScanItem = result;
-            var id = result.Id.ToString();
+            r.ScanItem = result.Result;
+            var id = result.Result.Id.ToString();
 
-            if ((result.RegisteredFlag != null) && result.RegisteredFlag!.Equals("TRUE"))
+            if ((result.Result.RegisteredFlag != null) && result.Result.RegisteredFlag!.Equals("TRUE"))
             {
                 r.Status = "ALREADY_REGISTERED";
                 r.DescriptionEng = $"Your product serial=[{serial}] and pin=[{pin}] is already registered!!!";
                 r.DescriptionThai = $"สินค้า ซีเรียล=[{serial}] และ พิน=[{pin}] เคยลงทะเบียนแล้ว!!!";
 
-                repository.IncreaseScanCount(id!);
+                repository.IncreaseScanCountV2(id!);
 
                 return r;
             }
@@ -275,7 +281,8 @@ namespace Its.Onix.Api.Services
             //ถ้าเป็น dryrun ไม่ต้องเรียก RegisterScanItem()
             if (!isDryRun)
             {
-                r.ScanItem = repository.RegisterScanItem(id!);
+                var t = repository.RegisterScanItemV2(id!);
+                r.ScanItem = t.Result;
             }
 
             return r;
@@ -380,7 +387,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItem AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
+        public async Task<MVScanItem> AttachScanItemToCustomer(string orgId, string scanItemId, string customerId)
         {
             repository!.SetCustomOrgId(orgId);
             _entityRepo!.SetCustomOrgId(orgId);
@@ -416,7 +423,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.AttachScanItemToCustomer(scanItemId, customerId, customer);
+            var result = await repository!.AttachScanItemToCustomer(scanItemId, customerId, customer);
 
             r.ScanItem = result;
 
@@ -472,7 +479,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var scanItem = repository!.GetScanItemBySerialPin(serial, pin);
+            var scanItem = repository!.GetScanItemBySerialPinV2(serial, pin).Result;
             if (scanItem == null)
             {
                 r.Status = "NOTFOUND";
@@ -504,7 +511,7 @@ namespace Its.Onix.Api.Services
             var customer = _entityRepo.GetOrCreateEntityByEmail(entity);
             customerId = customer.Id.ToString();
 
-            AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
+            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
 
             CreatePointTriggerJob(orgId, scanItem, customer);
@@ -591,142 +598,7 @@ namespace Its.Onix.Api.Services
             return maskUrl;
         }
 
-        public MVScanItem? GetScanItemById(string orgId, string scanItemId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemById(scanItemId);
-
-            var maskPin = ServiceUtils.MaskScanItemPin(result.Pin!);
-            result.Url = MaskUrl(result.Pin!, maskPin, result.Url!);
-            result.Pin = maskPin;
-
-            r.ScanItem = result;
-            return r;
-        }
-
-        public MVScanItem AddScanItem(string orgId, MScanItem scanItem)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            var pinExist = repository!.IsPinExist(scanItem.Pin!);
-            if (pinExist)
-            {
-                r.Status = "PIN_ALREADY_EXIST";
-                r.Description = $"Pin [{scanItem.Pin}] already exist in our database!!!";
-
-                return r;
-            }
-
-            var serialExist = repository!.IsSerialExist(scanItem.Serial!);
-            if (serialExist)
-            {
-                r.Status = "SERIAL_ALREADY_EXIST";
-                r.Description = $"Serial [{scanItem.Serial}] already exist in our database!!!";
-
-                return r;
-            }
-
-            //สร้าง URL ให้อัตโนมัติเลย
-            var m = _sciTemplateSvc!.GetScanItemTemplate_V2(orgId);
-            if (m.Result == null)
-            {
-                r.Status = "NO_SCAN_ITEM_TEMPLATE_FOUND";
-                r.Description = $"No scan item template found!!!";
-
-                return r;
-            }
-
-            if (string.IsNullOrEmpty(m.Result.UrlTemplate))
-            {
-                r.Status = "URL_TEMPLATE_EMPTY";
-                r.Description = $"Scan item template URL is empty!!!";
-
-                return r;
-            }
-
-            var url = m.Result.UrlTemplate!;
-            url = url.Replace("{VAR_ORG}", orgId);
-            url = url.Replace("{VAR_SERIAL}", scanItem.Serial);
-            url = url.Replace("{VAR_PIN}", scanItem.Pin);
-            scanItem.Url = url;
-
-            var result = repository!.AddScanItem(scanItem);
-            r.ScanItem = result;
-
-            return r;
-        }
-
-        public MVScanItem DeleteScanItemById(string orgId, string scanItemId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(scanItemId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
-
-                return r;
-            }
-
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.DeleteScanItemById(scanItemId);
-
-            r.ScanItem = m;
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
-            }
-
-            return r;
-        }
-
-        public MVScanItem UnVerifyScanItemById(string orgId, string scanItemId)
-        {
-            var r = new MVScanItem()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(scanItemId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
-
-                return r;
-            }
-
-            repository!.SetCustomOrgId(orgId);
-            var m = repository!.UnVerifyScanItemById(scanItemId);
-
-            r.ScanItem = m;
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
-            }
-
-            return r;
-        }
-
-        public MVScanItem DetachScanItemFromProduct(string orgId, string scanItemId)
+        public async Task<MVScanItem> DetachScanItemFromProduct(string orgId, string scanItemId)
         {
             repository!.SetCustomOrgId(orgId);
             var r = new MVScanItem()
@@ -743,7 +615,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.DetachScanItemFromProduct(scanItemId);
+            var result = await repository!.DetachScanItemFromProduct(scanItemId);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -757,7 +629,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public MVScanItem DetachScanItemFromCustomer(string orgId, string scanItemId)
+        public async Task<MVScanItem> DetachScanItemFromCustomer(string orgId, string scanItemId)
         {
             repository!.SetCustomOrgId(orgId);
             var r = new MVScanItem()
@@ -774,7 +646,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.DetachScanItemFromCustomer(scanItemId);
+            var result = await repository!.DetachScanItemFromCustomer(scanItemId);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -788,55 +660,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public int GetScanItemCount(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemCount(param);
-
-            return result;
-        }
-
-        public IEnumerable<MScanItem> GetScanItems(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItems(param);
-
-            //Masking PIN & URL
-            result.ToList().ForEach(item =>
-            {
-                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
-                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
-                item.Pin = maskPin;
-            });
-
-            return result;
-        }
-
-        public async Task<int> GetScanItemCountAsync(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetScanItemCountAsync(param);
-
-            return result;
-        }
-        
-        public async Task<IEnumerable<MScanItem>> GetScanItemsAsnyc(string orgId, VMScanItem param)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetScanItemsAsyn(param);
-
-            //Masking PIN & URL
-            result.ToList().ForEach(item =>
-            {
-                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
-                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
-                item.Pin = maskPin;
-            });
-
-            return result;
-        }
-
-        public MVScanItem? GetScanItemUrlDryRunById(string orgId, string scanItemId)
+        public async Task<MVScanItem> GetScanItemUrlDryRunById(string orgId, string scanItemId)
         {
             var r = new MVScanItem()
             {
@@ -845,7 +669,7 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetScanItemById(scanItemId);
+            var result = await repository!.GetScanItemByIdV2(scanItemId);
 
             if (result == null)
             {
@@ -863,10 +687,184 @@ namespace Its.Onix.Api.Services
 
             var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "IsDryRunTokenValid");
             var key = $"{cacheKey}:{token}";
-            _redis.SetObjectAsync(key, otpObj, TimeSpan.FromMinutes(5));
+            await _redis.SetObjectAsync(key, otpObj, TimeSpan.FromMinutes(5));
 
             result.Url = $"{result.Url}?dryrun_token={token}";
             r.ScanItem = result;
+            return r;
+        }
+
+        //=== V2 ===
+        public async Task<int> GetScanItemCountV2(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemCountV2(param);
+
+            return result;
+        }
+        
+        public async Task<IEnumerable<MScanItem>> GetScanItemsV2(string orgId, VMScanItem param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemsV2(param);
+
+            //Masking PIN & URL
+            result.ToList().ForEach(item =>
+            {
+                var maskPin = ServiceUtils.MaskScanItemPin(item.Pin!);
+                item.Url = MaskUrl(item.Pin!, maskPin, item.Url!);
+                item.Pin = maskPin;
+
+                if (!string.IsNullOrEmpty(item.ProductCodeLegacy))
+                {
+                    //ใช้ของเดิมที่เกาะกับ scan item, แทนที่จะเอามาจาก folder
+                    item.ProductCode = item.ProductCodeLegacy;
+                    item.ProductDesc = item.ProductDescLegacy;
+                }
+            });
+
+            return result;
+        }
+
+        public async Task<MVScanItem> GetScanItemByIdV2(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetScanItemByIdV2(scanItemId);
+
+            var maskPin = ServiceUtils.MaskScanItemPin(result.Pin!);
+            result.Url = MaskUrl(result.Pin!, maskPin, result.Url!);
+            result.Pin = maskPin;
+
+            if (!string.IsNullOrEmpty(result.ProductCodeLegacy))
+            {
+                //ใช้ของเดิมที่เกาะกับ scan item, แทนที่จะเอามาจาก folder
+                result.ProductCode = result.ProductCodeLegacy;
+                result.ProductDesc = result.ProductDescLegacy;
+            }
+
+            r.ScanItem = result;
+            return r;
+        }
+
+        public async Task<MVScanItem> AddScanItemV2(string orgId, MScanItem scanItem)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var pinExist = await repository!.IsPinExistV2(scanItem.Pin!);
+            if (pinExist)
+            {
+                r.Status = "PIN_ALREADY_EXIST";
+                r.Description = $"Pin [{scanItem.Pin}] already exist in our database!!!";
+
+                return r;
+            }
+
+            var serialExist = await repository!.IsSerialExistV2(scanItem.Serial!);
+            if (serialExist)
+            {
+                r.Status = "SERIAL_ALREADY_EXIST";
+                r.Description = $"Serial [{scanItem.Serial}] already exist in our database!!!";
+
+                return r;
+            }
+
+            //สร้าง URL ให้อัตโนมัติเลย
+            var m = await _sciTemplateSvc!.GetScanItemTemplate_V2(orgId);
+            if (m == null)
+            {
+                r.Status = "NO_SCAN_ITEM_TEMPLATE_FOUND";
+                r.Description = $"No scan item template found!!!";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(m.UrlTemplate))
+            {
+                r.Status = "URL_TEMPLATE_EMPTY";
+                r.Description = $"Scan item template URL is empty!!!";
+
+                return r;
+            }
+
+            var url = m.UrlTemplate!;
+            url = url.Replace("{VAR_ORG}", orgId);
+            url = url.Replace("{VAR_SERIAL}", scanItem.Serial);
+            url = url.Replace("{VAR_PIN}", scanItem.Pin);
+            scanItem.Url = url;
+
+            var result = await repository!.AddScanItemV2(scanItem);
+            r.ScanItem = result;
+
+            return r;
+        }
+
+        public async Task<MVScanItem> DeleteScanItemByIdV2(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.DeleteScanItemByIdV2(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
+        public async Task<MVScanItem> UnVerifyScanItemByIdV2(string orgId, string scanItemId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.UnVerifyScanItemByIdV2(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
             return r;
         }
     }
