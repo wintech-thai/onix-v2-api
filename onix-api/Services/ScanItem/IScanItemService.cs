@@ -35,5 +35,6 @@ namespace Its.Onix.Api.Services
         public Task<int> GetScanItemCountV2(string orgId, VMScanItem param);
         public Task<IEnumerable<MScanItem>> GetScanItemsV2(string orgId, VMScanItem param);
         public Task<MVScanItem> GetScanItemByIdV2(string orgId, string scanItemId);
+        public Task<MVScanItem> AddScanItemV2(string orgId, MScanItem scanItem);
     }
 }

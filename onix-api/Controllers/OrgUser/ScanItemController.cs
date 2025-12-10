@@ -78,9 +78,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AddScanItem")]
-        public IActionResult AddScanItem(string id, [FromBody] MScanItem request)
+        public async Task<IActionResult> AddScanItem(string id, [FromBody] MScanItem request)
         {
-            var result = svc.AddScanItem(id, request);
+            var result = await svc.AddScanItemV2(id, request);
 
             Response.Headers.Append("CUST_STATUS", result.Status);
             return Ok(result);

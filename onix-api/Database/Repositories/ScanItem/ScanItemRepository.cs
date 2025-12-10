@@ -143,6 +143,34 @@ namespace Its.Onix.Api.Database.Repositories
             return u!;
         }
 
+        public async Task<MScanItem> AddScanItemV2(MScanItem scanItem)
+        {
+            scanItem.Id = Guid.NewGuid();
+            scanItem.CreatedDate = DateTime.UtcNow;
+            scanItem.OrgId = orgId;
+
+            await context!.ScanItems!.AddAsync(scanItem);
+            context.SaveChanges();
+
+            return scanItem;
+        }
+
+        public async Task<bool> IsSerialExistV2(string serial)
+        {
+            var cnt = await context!.ScanItems!.AsExpandable().Where(p => p!.Serial!.Equals(serial)
+                && p!.OrgId!.Equals(orgId)).CountAsync();
+
+            return cnt >= 1;
+        }
+
+        public async Task<bool> IsPinExistV2(string pin)
+        {
+            var cnt = await context!.ScanItems!.AsExpandable().Where(p => p!.Pin!.Equals(pin)
+                && p!.OrgId!.Equals(orgId)).CountAsync();
+
+            return cnt >= 1;
+        }
+
         //=== End V2 ===
 
         public MScanItem? GetScanItemBySerialPin(string serial, string pin)

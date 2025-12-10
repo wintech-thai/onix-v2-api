@@ -928,5 +928,63 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVScanItem> AddScanItemV2(string orgId, MScanItem scanItem)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var pinExist = await repository!.IsPinExistV2(scanItem.Pin!);
+            if (pinExist)
+            {
+                r.Status = "PIN_ALREADY_EXIST";
+                r.Description = $"Pin [{scanItem.Pin}] already exist in our database!!!";
+
+                return r;
+            }
+
+            var serialExist = await repository!.IsSerialExistV2(scanItem.Serial!);
+            if (serialExist)
+            {
+                r.Status = "SERIAL_ALREADY_EXIST";
+                r.Description = $"Serial [{scanItem.Serial}] already exist in our database!!!";
+
+                return r;
+            }
+
+            //สร้าง URL ให้อัตโนมัติเลย
+            var m = await _sciTemplateSvc!.GetScanItemTemplate_V2(orgId);
+            if (m == null)
+            {
+                r.Status = "NO_SCAN_ITEM_TEMPLATE_FOUND";
+                r.Description = $"No scan item template found!!!";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(m.UrlTemplate))
+            {
+                r.Status = "URL_TEMPLATE_EMPTY";
+                r.Description = $"Scan item template URL is empty!!!";
+
+                return r;
+            }
+
+            var url = m.UrlTemplate!;
+            url = url.Replace("{VAR_ORG}", orgId);
+            url = url.Replace("{VAR_SERIAL}", scanItem.Serial);
+            url = url.Replace("{VAR_PIN}", scanItem.Pin);
+            scanItem.Url = url;
+
+            var result = await repository!.AddScanItemV2(scanItem);
+            r.ScanItem = result;
+
+            return r;
+        }
+
     }
 }

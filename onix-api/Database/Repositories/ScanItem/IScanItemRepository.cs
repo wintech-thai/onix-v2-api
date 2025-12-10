@@ -29,5 +29,8 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<IEnumerable<MScanItem>> GetScanItemsV2(VMScanItem param);
         public Task<int> GetScanItemCountV2(VMScanItem param);
         public Task<MScanItem> GetScanItemByIdV2(string scanItemId);
+        public Task<MScanItem> AddScanItemV2(MScanItem scanItem);
+        public Task<bool> IsSerialExistV2(string serial);
+        public Task<bool> IsPinExistV2(string pin);
     }
 }
