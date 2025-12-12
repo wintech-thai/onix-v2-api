@@ -151,7 +151,7 @@ namespace Its.Onix.Api.Database.Repositories
             scanItem.OrgId = orgId;
 
             await context!.ScanItems!.AddAsync(scanItem);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             return scanItem;
         }
@@ -180,7 +180,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (r != null)
             {
                 context!.ScanItems!.Remove(r);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
 
             return r;
@@ -194,7 +194,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (result != null)
             {
                 result.RegisteredFlag = "NO";
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
@@ -221,7 +221,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.RegisteredDate = DateTime.UtcNow;
                 result.ScanCount = (result.ScanCount ?? 0) + 1;
 
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
@@ -236,7 +236,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
 
                 result.ScanCount = (result.ScanCount ?? 0) + 1;
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
@@ -256,7 +256,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.ItemId = pid;
                 result.ProductCode = product.Code;
                 result.Tags = UpdateTags(result.Tags!, "product", product.Code!);
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
@@ -307,7 +307,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.AppliedFlag = "TRUE";
                 result.CustomerId = cid;
                 result.Tags = UpdateTags(result.Tags!, "email", customer.PrimaryEmail!);
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
@@ -332,7 +332,7 @@ namespace Its.Onix.Api.Database.Repositories
                     result.Tags = string.Join(",", parts);
                 }
 
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
@@ -356,7 +356,47 @@ namespace Its.Onix.Api.Database.Repositories
                     result.Tags = string.Join(",", parts);
                 }
 
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
+            }
+
+            return result!;
+        }
+
+        private async void UpdateFolderScanItemCount(Guid? folderId)
+        {
+            if (folderId == null)
+            {
+                return;
+            }
+
+            var newFolderScanItemCount = await context!.ScanItems!
+                .Where(x => x.OrgId!.Equals(orgId) && x.FolderId!.Equals(folderId)).CountAsync();
+        
+            var newFolder = await context!.ScanItemFolders!.AsExpandable()
+                .Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(folderId)).FirstOrDefaultAsync();
+
+            newFolder.ScanItemCount = newFolderScanItemCount;
+        }
+
+        public async Task<MScanItem?> MoveScanItemToFolder(string scanItemId, string folderId)
+        {
+            Guid newFolderId = Guid.Parse(folderId);
+
+            Guid id = Guid.Parse(scanItemId);
+            var result = await context!.ScanItems!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                var oldFolderId = result.FolderId;
+
+                result.FolderId = newFolderId;
+                await context!.SaveChangesAsync();
+
+                // Updaet folder back
+                UpdateFolderScanItemCount(newFolderId);
+                UpdateFolderScanItemCount(oldFolderId);
+
+                await context!.SaveChangesAsync();
             }
 
             return result!;
