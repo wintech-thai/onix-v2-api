@@ -21,6 +21,7 @@ namespace Its.Onix.Api.AuditLogs
         public long? LatencyMs { get; set; }
 
         public UserInfo? userInfo { get; set; }
+        public object? ContextData { get; set; }
 
         public AuditLog()
         {

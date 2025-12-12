@@ -163,6 +163,8 @@ namespace Its.Onix.Api.Controllers
             //Console.WriteLine($"DEBUG - Decrypted Text : {decryptText}");
             //Console.WriteLine($"DEBUG - URL Safe : {urlSafe}");
 
+            HttpContext.Items["ContextData"] = result.ScanItem;
+
             Response.Headers.Append("CUST_STATUS", result.Status);
             return Redirect(url);
         }
