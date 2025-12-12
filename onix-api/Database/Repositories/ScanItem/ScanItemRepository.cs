@@ -369,7 +369,7 @@ namespace Its.Onix.Api.Database.Repositories
                 return;
             }
 
-            var newFolderScanItemCount = await context!.ScanItems!
+            var newFolderScanItemCount = await context!.ScanItems!.AsExpandable()
                 .Where(x => x.OrgId!.Equals(orgId) && x.FolderId!.Equals(folderId)).CountAsync();
         
             var newFolder = await context!.ScanItemFolders!.AsExpandable()
