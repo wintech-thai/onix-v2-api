@@ -511,7 +511,7 @@ namespace Its.Onix.Api.Services
             var customer = _entityRepo.GetOrCreateEntityByEmail(entity);
             customerId = customer.Id.ToString();
 
-            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
+            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!).Result;
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
 
             CreatePointTriggerJob(orgId, scanItem, customer);
