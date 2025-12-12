@@ -24,5 +24,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> IsPinExistV2(string pin);
         public Task<MScanItem?> DeleteScanItemByIdV2(string scanItemId);
         public Task<MScanItem?> UnVerifyScanItemByIdV2(string scanItemId);
+        public Task<MScanItem?> MoveScanItemToFolder(string scanItemId, string folderId);
     }
 }

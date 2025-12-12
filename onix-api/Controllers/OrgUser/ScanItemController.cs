@@ -141,5 +141,16 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/MoveScanItemToFolder/{scanItemId}/{folderId}")]
+        public async Task<IActionResult> MoveScanItemToFolder(string id, string scanItemId, string folderId)
+        {
+            var result = await svc.MoveScanItemToFolder(id, scanItemId, folderId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
     }
 }

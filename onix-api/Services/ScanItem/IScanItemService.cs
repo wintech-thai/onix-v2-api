@@ -25,5 +25,6 @@ namespace Its.Onix.Api.Services
         public Task<MVScanItem> AddScanItemV2(string orgId, MScanItem scanItem);
         public Task<MVScanItem> DeleteScanItemByIdV2(string orgId, string scanItemId);
         public Task<MVScanItem> UnVerifyScanItemByIdV2(string orgId, string scanItemId);
+        public Task<MVScanItem> MoveScanItemToFolder(string orgId, string scanItemId, string folderId);
     }
 }

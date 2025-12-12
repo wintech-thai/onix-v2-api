@@ -511,7 +511,7 @@ namespace Its.Onix.Api.Services
             var customer = _entityRepo.GetOrCreateEntityByEmail(entity);
             customerId = customer.Id.ToString();
 
-            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!);
+            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!).Result;
             ProductRegisterGreetingJob(orgId, serial, pin, userOtp!, cust.Email!);
 
             CreatePointTriggerJob(orgId, scanItem, customer);
@@ -857,6 +857,43 @@ namespace Its.Onix.Api.Services
 
             repository!.SetCustomOrgId(orgId);
             var m = await repository!.UnVerifyScanItemByIdV2(scanItemId);
+
+            r.ScanItem = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Scan Item ID [{scanItemId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
+        public async Task<MVScanItem> MoveScanItemToFolder(string orgId, string scanItemId, string folderId)
+        {
+            var r = new MVScanItem()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(scanItemId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item ID [{scanItemId}] format is invalid";
+
+                return r;
+            }
+
+            if (!ServiceUtils.IsGuidValid(folderId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Scan Item Folder ID [{folderId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.MoveScanItemToFolder(scanItemId, folderId);
 
             r.ScanItem = m;
             if (m == null)
