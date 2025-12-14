@@ -92,6 +92,8 @@ namespace Its.Onix.Api.AuditLogs
                 }
             }
 
+            context.Items.TryGetValue("ContextData", out var contextData);
+
             stopwatch.Stop();
 
             var latencyMs = stopwatch.ElapsedMilliseconds;
@@ -121,7 +123,9 @@ namespace Its.Onix.Api.AuditLogs
                     IdentityType = GetValue(context, "Temp-Identity-Type", ""),
                     UserId = GetValue(context, "Temp-Identity-Id", ""),
                     UserName = GetValue(context, "Temp-Identity-Name", ""),
-                }
+                },
+
+                ContextData = contextData,
             };
 
             if (path == "/health")
