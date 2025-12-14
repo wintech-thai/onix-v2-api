@@ -273,7 +273,7 @@ namespace Its.Onix.Api.Services
                 r.DescriptionEng = $"Your product serial=[{serial}] and pin=[{pin}] is already registered!!!";
                 r.DescriptionThai = $"สินค้า ซีเรียล=[{serial}] และ พิน=[{pin}] เคยลงทะเบียนแล้ว!!!";
 
-                repository.IncreaseScanCountV2(id!);
+                r.ScanItem = repository.IncreaseScanCountV2(id!).Result;
 
                 return r;
             }
