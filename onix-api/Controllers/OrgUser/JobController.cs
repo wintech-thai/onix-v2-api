@@ -24,7 +24,7 @@ namespace Its.Onix.Api.Controllers
 
         private List<NameValue> ConfigDefaultParams(string orgId, MScanItemTemplate template, MJob job)
         {
-            var exceptionFields = new string[] { "SCAN_ITEM_ORG", "SERIAL_NUMBER_DIGIT" }; /* Fields not allow to pass by user */
+            var exceptionFields = new string[] { "SCAN_ITEM_ORG" }; /* Fields not allow to pass by user */
 
             var userParams = job.Parameters;
             var userFields = userParams.ToDictionary(item => item.Name!, item => item.Value);
@@ -36,6 +36,8 @@ namespace Its.Onix.Api.Controllers
                 new() { Name = "SCAN_ITEM_URL", Value = template.GetPropertyValue("UrlTemplate", "") },
                 new() { Name = "EMAIL_NOTI_ADDRESS", Value = template.GetPropertyValue("NotificationEmail", "") },
                 new() { Name = "SERIAL_NUMBER_DIGIT", Value = template.GetPropertyValue("SerialDigit", "7") },
+                new() { Name = "SERIAL_NUMBER_PREFIX_DIGIT", Value = template.GetPropertyValue("SerialPrefixDigit", "2") },
+                new() { Name = "PIN_DIGIT", Value = template.GetPropertyValue("PinDigit", "7") },
             };
 
             foreach (var param in customParams)
