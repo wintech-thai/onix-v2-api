@@ -287,7 +287,7 @@ namespace Its.Onix.Api.Services
             return t;
         }
 
-        public async Task<MVJob> GetJobDefaultByTemplateId(string orgId, string jobType, string userName, string templateId)
+        public async Task<MVJob> GetJobDefaultByTemplateId(string orgId, string jobType, string templateId)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -314,22 +314,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var email = "your-email@email-xxx.com";
-            _userRepo.SetCustomOrgId(orgId);
-
-            if (!string.IsNullOrEmpty(userName))
-            {
-                //หา email ของ user คนนั้นเพื่อใส่เป็นค่า default
-                var user = _userRepo.GetUserByName(userName);
-                if (user != null)
-                {
-                    email = user.UserEmail!;
-                }
-            }
-
             var parameters = new[]
             {
-                new { Name = "EMAIL_NOTI_ADDRESS", Value = email },
+                new { Name = "EMAIL_NOTI_ADDRESS", Value = $"{template.NotificationEmail}" },
                 new { Name = "SCAN_ITEM_COUNT", Value = $"{template.GeneratorCount}" },
                 new { Name = "SERIAL_NUMBER_DIGIT", Value = $"{template.SerialDigit}" },
                 new { Name = "SERIAL_NUMBER_PREFIX_DIGIT", Value = $"{template.SerialPrefixDigit}" },

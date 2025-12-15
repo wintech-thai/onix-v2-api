@@ -105,5 +105,15 @@ namespace Its.Onix.Api.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet]
+        [Route("org/{id}/action/GetJobDefaultByTemplateId/{templateId}")]
+        public async Task<IActionResult> GetJobDefaultByTemplateId(string id, string templateId)
+        {
+            var result = await svc.GetJobDefaultByTemplateId(id, "ScanItemGenerator", templateId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
     }
 }
