@@ -15,5 +15,6 @@ namespace Its.Onix.Api.Services
         public Task<MVScanItemTemplate> UpdateScanItemTemplateById_V2(string orgId, string templateId, MScanItemTemplate template);
         public Task<MVScanItemTemplate> SetDefaultScanItemTemplateById_V2(string orgId, string templateId);
         public MScanItemTemplate GetScanItemTemplateDefault(string orgId, string userName);
+        public Task<MVJob> GetJobDefaultByTemplateId(string orgId, string jobType, string templateId);
     }
 }

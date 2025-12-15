@@ -47,7 +47,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/ApproveVoucherUsedById/{voucherId}/{pin}")]
         public async Task<IActionResult> ApproveVoucherUsedById(string id, string voucherId, string pin)
         {
-            var result = await svc.UpdateVoucherUsedFlagById(id, voucherId, pin, "YES");
+            var result = await svc.ApproveVoucherUsedById(id, voucherId);
             return Ok(result);
         }
 

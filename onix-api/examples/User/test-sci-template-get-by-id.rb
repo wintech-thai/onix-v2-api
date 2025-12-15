@@ -11,15 +11,12 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = 'aadd8ff1-03e2-427e-a6e6-8d0ec4940389'
+id = 'd645db7d-6738-412e-8853-4bd1e1d526ad';
 
-apiUrl = "api/Voucher/org/#{orgId}/action/GetVoucherVerifyQrUrl/#{id}"
+### GetScanItemAction
+apiUrl = "api/ScanItemTemplate/org/#{orgId}/action/GetScanItemTemplateById/#{id}"
 param = nil
 
-result = make_request(:get, apiUrl, param)
-puts(result)
-
-apiUrl = "api/Voucher/org/#{orgId}/action/GetVoucherVerifyUrl"
 result = make_request(:get, apiUrl, param)
 puts(result)
 

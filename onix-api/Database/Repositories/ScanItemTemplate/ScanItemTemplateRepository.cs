@@ -14,7 +14,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<bool> IsScanItemTemplateExist(string templateName)
         {
-            var exists = await context!.ScanItemTemplates!.AnyAsync(p => p!.TemplateName!.Equals(templateName) && p!.OrgId!.Equals(orgId));
+            var exists = await context!.ScanItemTemplates!.AsExpandable().AnyAsync(p => p!.TemplateName!.Equals(templateName) && p!.OrgId!.Equals(orgId));
             return exists;
         }
 
@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Database.Repositories
                 UrlTemplate = x.sca.UrlTemplate,
                 NotificationEmail = x.sca.NotificationEmail,
                 Tags = x.sca.Tags,
+                IsDefault = x.sca.IsDefault,
 
                 CreatedDate = x.sca.CreatedDate,
             });

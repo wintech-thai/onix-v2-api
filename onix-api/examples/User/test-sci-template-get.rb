@@ -10,20 +10,15 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-ENV['API_KEY'] = nil # no authen
-
 orgId = ENV['API_ORG']
-barcode = 'OV-35937-222622'
-voucherNo = 'OV-35937'
-pin = '222622'
 
-apiUrl = "api/Voucher/org/#{orgId}/action/VerifyVoucherByBarcode/#{barcode}"
-param = nil
-
+apiUrl = "api/ScanItemTemplate/org/#{orgId}/action/GetScanItemTemplates"
+param = {
+  FullTextSerch: ""
+}
 result = make_request(:post, apiUrl, param)
 puts(result)
 
-apiUrl = "api/Voucher/org/#{orgId}/action/VerifyVoucherByPin/#{voucherNo}/#{pin}"
+apiUrl = "api/ScanItemTemplate/org/#{orgId}/action/GetScanItemTemplateCount"
 result = make_request(:post, apiUrl, param)
 puts(result)
-

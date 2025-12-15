@@ -286,5 +286,59 @@ namespace Its.Onix.Api.Services
 
             return t;
         }
+
+        public async Task<MVJob> GetJobDefaultByTemplateId(string orgId, string jobType, string templateId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVJob()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(templateId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"ScanItem Template ID [{templateId}] format is invalid";
+
+                return r;
+            }
+
+            var template = await repository!.GetScanItemTemplateById_V2(templateId);
+            if (template == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"ScanItem Template ID [{templateId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            var parameters = new[]
+            {
+                new { Name = "EMAIL_NOTI_ADDRESS", Value = $"{template.NotificationEmail}" },
+                new { Name = "SCAN_ITEM_COUNT", Value = $"{template.GeneratorCount}" },
+                new { Name = "SERIAL_NUMBER_DIGIT", Value = $"{template.SerialDigit}" },
+                new { Name = "SERIAL_NUMBER_PREFIX_DIGIT", Value = $"{template.SerialPrefixDigit}" },
+                new { Name = "PIN_DIGIT", Value = $"{template.PinDigit}" },
+            };
+
+            var jobKey = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var job = new MJob()
+            {
+                Name = $"{jobType}-{jobKey}",
+                Description = $"Job to generate Scan Items",
+            };
+
+            foreach (var p in parameters)
+            {
+                var o = new NameValue() { Name = p.Name, Value = p.Value };
+                job.Parameters.Add(o);
+            }
+
+            r.Job = job;
+
+            return r;
+        }
     }
 }
