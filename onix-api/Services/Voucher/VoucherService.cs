@@ -520,5 +520,80 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        public async Task<MVVoucher> ApproveVoucherUsedById(string orgId, string voucherId)
+        {
+            var currentDate = DateTime.UtcNow;
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVVoucher()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(voucherId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Voucher ID [{voucherId}] format is invalid";
+
+                return r;
+            }
+
+            var vc = await repository!.GetVoucherById(voucherId);
+            if (vc == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (vc.Status == "Disable")
+            {
+                r.Status = "VOUCHER_DISABLED";
+                r.Description = $"Voucher number [{vc.VoucherNo}] is disable!!!";
+
+                return r;
+            }
+
+            if (vc.IsUsed == "YES")
+            {
+                r.Status = "VOUCHER_IS_ALREADY_USED";
+                r.Description = $"Voucher number [{vc.VoucherNo}] is already used!!!";
+
+                return r;
+            }
+
+            if ((vc.StartDate != null) && (currentDate < vc.StartDate))
+            {
+                //ยังไม่ถึงเวลาใช้งาน voucher
+                r.Status = "VOUCHER_NOT_YET_START";
+                r.Description = $"Voucher number [{vc.VoucherNo}] is too early to use!!!";
+
+                return r;
+            }
+
+            if ((vc.EndDate != null) && (currentDate > vc.EndDate))
+            {
+                //Voucher หมดอายุแล้ว
+                r.Status = "VOUCHER_EXPIRED";
+                r.Description = $"Voucher number [{vc.VoucherNo}] is expire!!!";
+
+                return r;
+            }
+
+            var result = await repository!.UpdateVoucherUsedFlagById(voucherId, "TRUE");
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Voucher ID [{voucherId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Voucher = result;
+            return r;
+        }
     }
 }

@@ -26,3 +26,4 @@ puts(result)
 apiUrl = "api/Voucher/org/#{orgId}/action/VerifyVoucherByPin/#{voucherNo}/#{pin}"
 result = make_request(:post, apiUrl, param)
 puts(result)
+
