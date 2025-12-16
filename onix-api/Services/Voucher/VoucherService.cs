@@ -583,7 +583,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = await repository!.UpdateVoucherUsedFlagById(voucherId, "TRUE");
+            var result = await repository!.UpdateVoucherUsedFlagById(voucherId, "YES");
             if (result == null)
             {
                 r.Status = "NOTFOUND";
