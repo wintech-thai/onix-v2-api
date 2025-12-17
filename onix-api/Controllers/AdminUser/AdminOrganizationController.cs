@@ -7,7 +7,7 @@ namespace Prom.LPR.Api.Controllers
 {
     [ApiController]
     [Authorize(Policy = "GenericRolePolicy")]
-    [Route("/api/[controller]")]
+    [Route("/admin-api/[controller]")]
     public class AdminOrganizationController : ControllerBase
     {
         private readonly IOrganizationService _orgSvc;
