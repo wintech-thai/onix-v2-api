@@ -23,6 +23,14 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/global/action/RegisterOrganization")]
         public IActionResult RegisterOrganization([FromBody] MOrganizeRegistration request)
         {
+            var invitedBy = "unknown";
+
+            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (nameObj != null)
+            {
+                invitedBy = nameObj.ToString();
+            }
+
             var orgId = request.UserOrgId!;
             var org = new MOrganization()
             {
@@ -40,6 +48,7 @@ namespace Prom.LPR.Api.Controllers
             {
                 UserName = request.UserName,
                 TmpUserEmail = request.Email,
+                InvitedBy = invitedBy,
                 IsOrgInitialUser = "YES",
                 Roles = [ "OWNER" ],
             };
