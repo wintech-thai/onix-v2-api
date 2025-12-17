@@ -13,8 +13,8 @@ load_env("../.env")
 ENV['API_KEY'] = nil # no authen
 
 orgId = ENV['API_ORG']
-voucherId = 'aadd8ff1-03e2-427e-a6e6-8d0ec4940389'
-pin = '222622'
+voucherId = '7addeff2-aed8-42b5-a311-e7ebff1d2b9c'
+pin = '849065'
 
 apiUrl = "api/Voucher/org/#{orgId}/action/ApproveVoucherUsedById/#{voucherId}/#{pin}"
 param = nil
