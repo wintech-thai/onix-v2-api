@@ -39,7 +39,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MOrganizationUser> GetUserByIdLeftJoin(string orgUserId)
         {
             Guid id = Guid.Parse(orgUserId);
-            var result = GetSelection().AsExpandable().Where(x => x.OrgCustomId!.Equals(orgId) && x.OrgUserId.Equals(id)).FirstOrDefaultAsync();
+            var result = GetSelection().Where(x => x.OrgCustomId!.Equals(orgId) && x.OrgUserId.Equals(id)).FirstOrDefaultAsync();
 
             return result!;
         }
