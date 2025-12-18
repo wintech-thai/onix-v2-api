@@ -11,10 +11,10 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = '131203c0-e72e-4f02-81a0-4b85d1fb268e'
-actionId = '5f52ce98-72f2-4e93-b3aa-96d8b7c4eca2'
+id = 'a712af4e-bb2f-49eb-8632-1516ce180a8d'
+productId = 'a4553993-cf07-4a04-81d5-e7743bab5e55'
 
-apiUrl = "api/ScanItemFolder/org/#{orgId}/action/AttachScanItemFolderToProduct/#{id}/#{actionId}"
+apiUrl = "api/ScanItemFolder/org/#{orgId}/action/AttachScanItemFolderToProduct/#{id}/#{productId}"
 param = nil
 
 result = make_request(:post, apiUrl, param)

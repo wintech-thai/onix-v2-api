@@ -16,6 +16,7 @@ apiUrl = "api/ScanItemFolder/org/#{orgId}/action/GetScanItemFolders"
 param =  {
   FullTextSearch: ""
 }
+
 result = make_request(:post, apiUrl, param)
 puts(result)
 

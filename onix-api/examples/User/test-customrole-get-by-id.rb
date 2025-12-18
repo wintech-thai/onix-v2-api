@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = '78ed5b6f-c8ec-4679-b694-50f10abab1ab'
+id = 'eb8ad1c0-113b-4cd9-905d-8781defd8f9f'
 
 apiUrl = "api/CustomRole/org/#{orgId}/action/GetCustomRoleById/#{id}"
 param = nil
