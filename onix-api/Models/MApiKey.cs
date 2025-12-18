@@ -40,8 +40,18 @@ namespace Its.Onix.Api.Models
         [Column("roles_list")]
         public string? RolesList { get; set; }
 
+        [Column("custom_role_id")]
+        public string? CustomRoleId { get; set; } /* ไปยัง MCustomRole */
+
+
         [NotMapped]
         public List<string> Roles { get; set; }
+
+        [NotMapped]
+        public string? CustomRoleName { get; set; }
+
+        [NotMapped]
+        public string? CustomRoleDesc { get; set; }
 
         public MApiKey()
         {
