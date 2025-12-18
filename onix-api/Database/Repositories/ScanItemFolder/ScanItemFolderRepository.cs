@@ -71,6 +71,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ScanItemActionName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductDesc!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
