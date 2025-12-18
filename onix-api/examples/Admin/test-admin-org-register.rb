@@ -14,13 +14,12 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUser"
+apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/RegisterOrganization"
 param =  {
-  UserName: "seubpong.soodlor",
-  TmpUserEmail: "hello.seub@please-scan.com",
-  Tags: "test,local",
-  InvitedBy: "seubpong.mon",
-  Roles: [ 'OWNER' ],
+  UserOrgId: "chalam-farm-v1",
+  Name: "Chalam Farm",
+  UserName: "seubpong.mon",
+  Email: "pjame.fb@gmail.com",
 }
 
 token = File.read(keyFile)
@@ -33,6 +32,3 @@ ENV['ACCESS_TOKEN'] = token
 result = make_request(:post, apiUrl, param)
 puts(result)
 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/GetUserCount"
-result = make_request(:post, apiUrl, param)
-puts(result)

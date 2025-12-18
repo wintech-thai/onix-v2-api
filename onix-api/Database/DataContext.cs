@@ -45,6 +45,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MAccountDoc>? AccountDocs { get; set; }
     public DbSet<MAccountDocItem>? AccountDocItems { get; set; }
     public DbSet<MVoucher>? Vouchers { get; set; }
+    public DbSet<MCustomRole>? CustomRoles { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -159,5 +160,8 @@ public class DataContext : DbContext, IDataContext
             .HasIndex(t => new { t.OrgId, t.VoucherNo }).IsUnique();
         modelBuilder.Entity<MVoucher>()
             .HasIndex(t => new { t.OrgId, t.Barcode }).IsUnique();
+
+        modelBuilder.Entity<MCustomRole>()
+            .HasIndex(t => new { t.OrgId, t.RoleName }).IsUnique();
     }
 }
