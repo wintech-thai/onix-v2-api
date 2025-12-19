@@ -14,12 +14,14 @@ namespace Its.Onix.Api.Database.Repositories
 
         public Task<MApiKey> GetApiKey(string apiKey)
         {
+            //TODO : Use GetSelection() instead
             var result = context!.ApiKeys!.Where(x => x.OrgId!.Equals(orgId) && x.ApiKey!.Equals(apiKey)).FirstOrDefaultAsync();
             return result!;
         }
 
         public Task<MApiKey> GetApiKeyByName(string keyName)
         {
+            //TODO : Use GetSelection() instead
             var result = context!.ApiKeys!.Where(x => x.OrgId!.Equals(orgId) && x.KeyName!.Equals(keyName)).FirstOrDefaultAsync();
             return result!;
         }
@@ -69,6 +71,33 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
+        public IQueryable<MApiKey> GetSelection()
+        {
+            var query =
+                from ak in context!.ApiKeys
+
+                join cr in context.CustomRoles!
+                    on ak.CustomRoleId equals cr.RoleId.ToString() into joinedRole
+                from role in joinedRole.DefaultIfEmpty()
+
+                select new { ak, role };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MApiKey
+            {
+                KeyId = x.ak.KeyId,
+                ApiKey = x.ak.ApiKey,
+                OrgId = x.ak.OrgId,
+                KeyName = x.ak.KeyName,
+                KeyCreatedDate = x.ak.KeyCreatedDate,
+                KeyExpiredDate = x.ak.KeyExpiredDate,
+                KeyDescription = x.ak.KeyDescription,
+                KeyStatus = x.ak.KeyStatus,
+                RolesList = x.ak.RolesList,
+                CustomRoleId = x.ak.CustomRoleId,
+                CustomRoleName = x.role.RoleName,
+                CustomRoleDesc = x.role.RoleDescription,
+            });
+        }
+
         public IEnumerable<MApiKey> GetApiKeys(VMApiKey param)
         {
             var limit = 0;
@@ -87,7 +116,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = ApiKeyPredicate(param!);
-            var arr = context!.ApiKeys!.Where(predicate)
+            var arr = GetSelection().Where(predicate)
                 .OrderByDescending(e => e.KeyCreatedDate)
                 .Skip(offset)
                 .Take(limit)
@@ -99,7 +128,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MApiKey> GetApiKeyById(string keyId)
         {
             Guid id = Guid.Parse(keyId);
-            var result = context!.ApiKeys!.Where(x => x.OrgId!.Equals(orgId) && x.KeyId!.Equals(id)).FirstOrDefaultAsync();
+            var result = GetSelection().Where(x => x.OrgId!.Equals(orgId) && x.KeyId!.Equals(id)).FirstOrDefaultAsync();
 
             return result!;
         }
@@ -122,6 +151,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.KeyDescription = apiKey.KeyDescription;
                 result.RolesList = apiKey.RolesList;
                 result.KeyExpiredDate = apiKey.KeyExpiredDate;
+                result.CustomRoleId = apiKey.CustomRoleId;
 
                 context!.SaveChanges();
             }

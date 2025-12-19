@@ -39,30 +39,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MOrganizationUser> GetUserByIdLeftJoin(string orgUserId)
         {
             Guid id = Guid.Parse(orgUserId);
-
-            var result = (
-                from ou in context!.OrganizationUsers
-                join u in context.Users!
-                    on ou.UserName equals u.UserName into userGroup
-                from u in userGroup.DefaultIfEmpty()  // 👈 ตรงนี้ทำให้เป็น LEFT JOIN
-                where ou.OrgCustomId == orgId && ou.OrgUserId == id
-                select new MOrganizationUser
-                {
-                    OrgUserId = ou.OrgUserId,
-                    OrgCustomId = ou.OrgCustomId,
-                    UserId = ou.UserId,
-                    UserName = ou.UserName,
-                    RolesList = ou.RolesList,
-                    CreatedDate = ou.CreatedDate,
-                    UserEmail = u != null ? u.UserEmail : null,
-                    UserStatus = ou.UserStatus,
-                    PreviousUserStatus = ou.PreviousUserStatus,
-                    InvitedDate = ou.InvitedDate,
-                    IsOrgInitialUser = ou.IsOrgInitialUser,
-                    TmpUserEmail = ou.TmpUserEmail,
-                    Tags = ou.Tags,
-                }
-            ).FirstOrDefaultAsync();
+            var result = GetSelection().Where(x => x.OrgCustomId!.Equals(orgId) && x.OrgUserId.Equals(id)).FirstOrDefaultAsync();
 
             return result!;
         }
@@ -138,6 +115,41 @@ namespace Its.Onix.Api.Database.Repositories
             return arr;
         }
 
+        public IQueryable<MOrganizationUser> GetSelection()
+        {
+            var query =
+                from ou in context!.OrganizationUsers
+
+                join usr in context.Users!
+                    on ou.UserId equals usr.UserId.ToString() into joinedUser
+                from user in joinedUser.DefaultIfEmpty()
+
+                join cr in context.CustomRoles!
+                    on ou.CustomRoleId equals cr.RoleId.ToString() into joinedRole
+                from role in joinedRole.DefaultIfEmpty()
+
+                select new { ou, user, role };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MOrganizationUser
+            {
+                OrgUserId = x.ou.OrgUserId,
+                OrgCustomId = x.ou.OrgCustomId,
+                UserId = x.ou.UserId,
+                UserName = x.ou.UserName,
+                RolesList = x.ou.RolesList,
+                CreatedDate = x.ou.CreatedDate,
+                UserEmail = x.user.UserEmail,
+                TmpUserEmail = x.ou.TmpUserEmail,
+                UserStatus = x.ou.UserStatus,
+                PreviousUserStatus = x.ou.PreviousUserStatus,
+                InvitedDate = x.ou.InvitedDate,
+                IsOrgInitialUser = x.ou.IsOrgInitialUser,
+                Tags = x.ou.Tags,
+                CustomRoleId = x.ou.CustomRoleId,
+                CustomRoleName = x.role.RoleName,
+                CustomRoleDesc = x.role.RoleDescription,
+            });
+        }
+
         public IEnumerable<MOrganizationUser> GetUsersLeftJoin(VMOrganizationUser param)
         {
             var limit = 0;
@@ -157,26 +169,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             var predicate = UserPredicate(param!);
 
-            var arr = (from ou in context!.OrganizationUsers
-                       join u in context.Users!
-                       on ou.UserName equals u.UserName into userGroup
-                       from user in userGroup.DefaultIfEmpty()
-                       select new MOrganizationUser
-                       {
-                           OrgUserId = ou.OrgUserId,
-                           OrgCustomId = ou.OrgCustomId,
-                           UserId = ou.UserId,
-                           UserName = ou.UserName,
-                           RolesList = ou.RolesList,
-                           CreatedDate = ou.CreatedDate,
-                           UserEmail = user != null ? user.UserEmail : null,
-                           TmpUserEmail = ou.TmpUserEmail,
-                           UserStatus = ou.UserStatus,
-                           PreviousUserStatus = ou.PreviousUserStatus,
-                           InvitedDate = ou.InvitedDate,
-                           IsOrgInitialUser = ou.IsOrgInitialUser,
-                           Tags = ou.Tags,
-                       })
+            var arr = GetSelection()
                 .Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
@@ -216,27 +209,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var predicate = UserPredicate(param);
 
-            var cnt = (
-                from ou in context!.OrganizationUsers
-                join u in context.Users!
-                    on ou.UserName equals u.UserName into userGroup
-                from user in userGroup.DefaultIfEmpty()
-                select new MOrganizationUser
-                {
-                    OrgUserId = ou.OrgUserId,
-                    OrgCustomId = ou.OrgCustomId,
-                    UserId = ou.UserId,
-                    UserName = ou.UserName,
-                    RolesList = ou.RolesList,
-                    CreatedDate = ou.CreatedDate,
-                    UserEmail = user != null ? user.UserEmail : null,
-                    TmpUserEmail = ou.TmpUserEmail,
-                    UserStatus = ou.UserStatus,
-                    PreviousUserStatus = ou.PreviousUserStatus,
-                    InvitedDate = ou.InvitedDate,
-                    IsOrgInitialUser = ou.IsOrgInitialUser,
-                }
-            )
+            var cnt = GetSelection()
             .Where(predicate)
             .Count();
 
@@ -251,6 +224,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (result != null)
             {
                 result.RolesList = user.RolesList;
+                result.CustomRoleId = user.CustomRoleId;
                 result.Tags = user.Tags;
 
                 context!.SaveChanges();

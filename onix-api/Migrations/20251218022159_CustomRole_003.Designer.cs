@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20251218022159_CustomRole_003")]
+    partial class CustomRole_003
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -230,10 +233,6 @@ namespace onix.api.Migrations
                     b.Property<string>("ApiKey")
                         .HasColumnType("text")
                         .HasColumnName("api_key");
-
-                    b.Property<string>("CustomRoleId")
-                        .HasColumnType("text")
-                        .HasColumnName("custom_role_id");
 
                     b.Property<DateTime?>("KeyCreatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -1078,10 +1077,6 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
-
-                    b.Property<string>("CustomRoleId")
-                        .HasColumnType("text")
-                        .HasColumnName("custom_role_id");
 
                     b.Property<string>("InvitedBy")
                         .HasColumnType("text")

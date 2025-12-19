@@ -12,14 +12,18 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 
-apiUrl = "api/ScanItemFolder/org/#{orgId}/action/GetScanItemFolders"
-param =  {
-  FullTextSearch: ""
+apiUrl = "api/CustomRole/org/#{orgId}/action/GetCustomRoles"
+param = {
+  FullTextSearch: "",
 }
 
 result = make_request(:post, apiUrl, param)
-puts(result)
 
-apiUrl = "api/ScanItemFolder/org/#{orgId}/action/GetScanItemFolderCount"
+json = result.to_json
+puts(json)
+
+apiUrl = "api/CustomRole/org/#{orgId}/action/GetCustomRoleCount"
 result = make_request(:post, apiUrl, param)
-puts(result)
+
+json = result.to_json
+puts(json)

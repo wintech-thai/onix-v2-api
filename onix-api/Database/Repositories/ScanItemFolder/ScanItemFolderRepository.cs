@@ -71,6 +71,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ScanItemActionName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.ProductDesc!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
@@ -109,7 +111,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetScanItemFolderCount(VMScanItemFolder param)
         {
             var predicate = ScanItemFolderPredicate(param!);
-            var result = await context!.ScanItemFolders!.Where(predicate).AsExpandable().CountAsync();
+            var result = await GetSelection().Where(predicate).AsExpandable().CountAsync();
 
             return result;
         }
@@ -178,7 +180,7 @@ namespace Its.Onix.Api.Database.Repositories
             var existing = await context!.ScanItemFolders!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing != null)
             {
-                existing.ScanItemActionId = productId;
+                existing.ProductId = productId;
             }
 
             await context.SaveChangesAsync();
