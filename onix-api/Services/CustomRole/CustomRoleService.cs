@@ -104,6 +104,7 @@ namespace Its.Onix.Api.Services
                     if (isDelete)
                     {
                         _ = _redis.DeleteAsync(cacheKey);
+                        Console.WriteLine($"Del cache ==> [{cacheKey}]");
                     }
                     else 
                     {
