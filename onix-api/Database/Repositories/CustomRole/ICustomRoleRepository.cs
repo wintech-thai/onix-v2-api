@@ -14,10 +14,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MCustomRole> AddCustomRole(MCustomRole customRole);
         public Task<MCustomRole?> DeleteCustomRoleById(string customRoleId);
         public Task<MCustomRole?> UpdateCustomRoleById(string customRoleId, MCustomRole customRole);
-
-
-/*
-        public Task<MScanItemAction?> SetScanItemActionDefault_V2(string actionId);
-*/
+        public Task<MCustomRole?> GetCustomRoleByName(string roleName);
     }
 }

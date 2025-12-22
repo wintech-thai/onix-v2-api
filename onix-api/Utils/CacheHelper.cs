@@ -42,6 +42,13 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateCustomRoleCacheLoaderKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"CustomRole:{environment}:{orgId}";
+            return key;
+        }
+
         public static string CreateScanItemActionCacheLoaderKey_V2(string orgId, string actionId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";

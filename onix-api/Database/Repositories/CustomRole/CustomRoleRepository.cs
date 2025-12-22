@@ -18,6 +18,12 @@ namespace Its.Onix.Api.Database.Repositories
             return exists;
         }
 
+        public async Task<MCustomRole?> GetCustomRoleByName(string roleName)
+        {
+            var exists = await context!.CustomRoles!.AsExpandable().Where(p => p!.RoleName!.Equals(roleName) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return exists;
+        }
+
         public async Task<List<MCustomRole>> GetCustomRoles(VMCustomRole param)
         {
             var limit = 0;

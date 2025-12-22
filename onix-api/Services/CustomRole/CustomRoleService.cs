@@ -12,11 +12,15 @@ namespace Its.Onix.Api.Services
     {
         private readonly ICustomRoleRepository? repository = null;
         private readonly IApiDescriptionGroupCollectionProvider _provider;
+        private readonly IRedisHelper _redis;
 
-        public CustomRoleService(ICustomRoleRepository repo, IApiDescriptionGroupCollectionProvider provider) : base()
+        public CustomRoleService(ICustomRoleRepository repo,
+            IRedisHelper redis,
+            IApiDescriptionGroupCollectionProvider provider) : base()
         {
             repository = repo;
             _provider = provider;
+            _redis = redis;
         }
 
         public async Task<MVCustomRole> GetCustomRoleById(string orgId, string customRoleId)
@@ -85,6 +89,31 @@ namespace Its.Onix.Api.Services
             return flattenMap;
         }
 
+        private void CachRolePermissions(string orgId, MCustomRole cr, bool isDelete)
+        {
+            var cacheKeyPrefix = CacheHelper.CreateCustomRoleCacheLoaderKey(orgId);
+            var permissions = cr.Permissions;
+
+            foreach (var perm in permissions)
+            {
+                var apis = perm.ApiPermissions;
+                foreach (var api in apis)
+                {
+                    var cacheKey = $"{cacheKeyPrefix}:{cr.RoleId}:{perm.ControllerName}:{api.ApiName}";
+                    var value = api.IsAllowed;
+                    if (isDelete)
+                    {
+                        _ = _redis.DeleteAsync(cacheKey);
+                    }
+                    else 
+                    {
+                        _ = _redis.SetObjectAsync(cacheKey, value); //No expiration
+                        Console.WriteLine($"Set cache ==> [{cacheKey}] with value [{value}] ");
+                    }
+                }
+            }
+        }
+
         public async Task<MVCustomRole> AddCustomRole(string orgId, MCustomRole customRole)
         {
             repository!.SetCustomOrgId(orgId);
@@ -116,6 +145,8 @@ namespace Its.Onix.Api.Services
             var result = await repository!.AddCustomRole(customRole);
             r.CustomRole = result;
 
+            CachRolePermissions(orgId, result, false);
+
             //ไม่ให้ส่งออกไป แต่เช็คเพิ่มเติมนะว่าไม่ได้ update กลับไปที่ DB
             r.CustomRole.RoleDefinition = "";
 
@@ -140,6 +171,15 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var currentCr = await GetCustomRoleById(orgId, customRoleId);
+            if (currentCr.CustomRole == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Custom role ID [{customRoleId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
             var m = await repository!.DeleteCustomRoleById(customRoleId);
             if (m == null)
             {
@@ -148,6 +188,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            CachRolePermissions(orgId, currentCr.CustomRole, true);
 
             r.CustomRole = m;
             return r;
@@ -171,7 +213,6 @@ namespace Its.Onix.Api.Services
 
         public async Task<MVCustomRole> UpdateCustomRoleById(string orgId, string customRoleId, MCustomRole customRole)
         {
-            //TODO : Check if custom role name is duplicate
             repository!.SetCustomOrgId(orgId);
 
             var r = new MVCustomRole()
@@ -188,6 +229,16 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var roleName = customRole.RoleName;
+            var cr = await repository!.GetCustomRoleByName(roleName!);
+            if ((cr != null) && (cr.RoleId.ToString() != customRoleId))
+            {
+                r.Status = "NAME_DUPLICATE";
+                r.Description = $"Custom role name [{roleName}] already exist!!!";
+
+                return r;
+            }
+
             customRole.Permissions ??= []; //Empty array
             customRole.RoleDefinition = JsonSerializer.Serialize(customRole.Permissions)!;
 
@@ -199,6 +250,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            CachRolePermissions(orgId, result, false);
 
             r.CustomRole = result;
             //ไม่ให้ส่งออกไป แต่เช็คเพิ่มเติมนะว่าไม่ได้ update กลับไปที่ DB
