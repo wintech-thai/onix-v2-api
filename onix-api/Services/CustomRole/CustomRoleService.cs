@@ -252,7 +252,16 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            CachRolePermissions(orgId, result, false);
+            var currentCr = await GetCustomRoleById(orgId, customRoleId);
+            if (currentCr.CustomRole == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Custom role ID [{customRoleId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            CachRolePermissions(orgId, currentCr.CustomRole, false);
 
             r.CustomRole = result;
             //ไม่ให้ส่งออกไป แต่เช็คเพิ่มเติมนะว่าไม่ได้ update กลับไปที่ DB
