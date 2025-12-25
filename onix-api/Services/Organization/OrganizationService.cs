@@ -9,17 +9,20 @@ namespace Its.Onix.Api.Services
     public class OrganizationService : BaseService, IOrganizationService
     {
         private readonly IOrganizationRepository? repository = null;
+        private readonly IOrganizationUserRepository _orgUserRepo;
         private readonly IUserService userService;
         private readonly IStorageUtils _storageUtil;
 
         public OrganizationService(
             IOrganizationRepository repo,
+            IOrganizationUserRepository orgUserRepo,
             IUserService userSvc,
             IStorageUtils storageUtil) : base()
         {
             repository = repo;
             userService = userSvc;
             _storageUtil = storageUtil;
+            _orgUserRepo = orgUserRepo;
         }
 
         public bool IsOrgIdExist(string orgId)
@@ -278,6 +281,7 @@ namespace Its.Onix.Api.Services
         public MVOrganizationUser VerifyUserInOrganization(string orgId, string userName)
         {
             repository!.SetCustomOrgId(orgId);
+            _orgUserRepo.SetCustomOrgId(orgId);
 
             var u = userService.GetUserByName(orgId, userName);
             if (u == null)
@@ -291,12 +295,13 @@ namespace Its.Onix.Api.Services
                 return o;
             }
 
-            var m = repository!.GetUserInOrganization(userName);
+            //User _orgUserRepo instead
+            var m = _orgUserRepo!.GetUserInOrganization(userName);
             if (m == null)
             {
                 var o = new MVOrganizationUser()
                 {
-                    Status = "NOTFOUND_INORG",
+                    Status = "NOTFOUND_USER_IN_ORG",
                     Description = $"User [{userName}] has not been added to the organization [{orgId}] !!!",
                 };
 

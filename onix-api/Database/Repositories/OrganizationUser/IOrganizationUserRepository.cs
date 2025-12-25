@@ -20,5 +20,6 @@ namespace Its.Onix.Api.Database.Repositories
         public MOrganizationUser? UpdateUserStatusById(string orgUserId, string userId, string status);
         public MOrganizationUser? UpdateUserStatusById(string orgUserId, string status);
         public bool IsUserNameExist(string userName);
+        public MOrganizationUser GetUserInOrganization(string userName);
     }
 }

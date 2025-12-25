@@ -115,6 +115,14 @@ namespace Its.Onix.Api.Database.Repositories
             return arr;
         }
 
+        public MOrganizationUser GetUserInOrganization(string userName)
+        {
+            var m = GetSelection().Where(
+                p => p!.UserName!.Equals(userName) && p!.OrgCustomId!.Equals(orgId)).FirstOrDefault();
+
+            return m!;
+        }
+
         public IQueryable<MOrganizationUser> GetSelection()
         {
             var query =
