@@ -126,6 +126,13 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
             return Task.CompletedTask;
         }
 
+        var customRoleClaim = GetClaim(ClaimTypes.PrimaryGroupSid, context.User.Claims);
+        if (customRoleClaim == null)
+        {
+            //The authentication failed earlier
+            return Task.CompletedTask;
+        }
+
         var uriClaim = GetClaim(ClaimTypes.Uri, context.User.Claims);
         if (uriClaim == null)
         {
@@ -158,8 +165,9 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var role = roleClaim.Value;
         var uri = uriClaim.Value;
         var method = authMethodClaim.Value;
-        var authorizeOrgId = orgIdClaim.Value;
+        //var authorizeOrgId = orgIdClaim.Value;
         var userName = userNameClaim.Value;
+        var customRoleId = customRoleClaim.Value;
 
         var apiGroup = GetApiGroup(uri);
 
@@ -192,6 +200,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
         var mvcContext = context.Resource as DefaultHttpContext;
         mvcContext!.HttpContext.Items["Temp-Authorized-Role"] = roleMatch;
+        mvcContext!.HttpContext.Items["Temp-Authorized-CustomRole"] = customRoleId;
         mvcContext!.HttpContext.Items["Temp-API-Called"] = apiCalled;
         mvcContext!.HttpContext.Items["Temp-Identity-Type"] = method;
         mvcContext!.HttpContext.Items["Temp-Identity-Id"] = uid;

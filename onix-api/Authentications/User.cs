@@ -13,6 +13,8 @@ namespace Its.Onix.Api.Authentications
         public string? UserName {get; set;}
         public string? Password {get; set;}
         public string? Role {get; set;}
+        public string? CustomRoleId {get; set;}
+        public string? CustomRoleName {get; set;}
         public string? AuthenType {get; set;}
         public string? OrgId {get; set;}
         public string? Email {get; set;}
