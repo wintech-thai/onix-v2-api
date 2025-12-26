@@ -62,8 +62,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
             return "TEMP";
         }
 
-
-        //เช็ค custom role ต่อ
+        //เช็ค custom role ก่อน
         var parts = customRole.Split(':');
         var customRoleId = parts[0];
 
@@ -84,6 +83,7 @@ Console.WriteLine($"DEBUG102 - Use custom role [{customRole}], [{isSelected}]");
             }
         }
 
+        // ถ้าไม่ผ่าน custom role ค่อยไปเช็คใน role ปกติ
         foreach (var role in roles!)
         {
             var patterns = role.RoleDefinition!.Split(',').ToList();
