@@ -120,6 +120,7 @@ namespace Its.Onix.Api.AuditLogs
                 userInfo = new UserInfo()
                 {
                     Role = GetValue(context, "Temp-Authorized-Role", ""),
+                    CustomRole = GetValue(context, "Temp-Authorized-CustomRole", ""),
                     IdentityType = GetValue(context, "Temp-Identity-Type", ""),
                     UserId = GetValue(context, "Temp-Identity-Id", ""),
                     UserName = GetValue(context, "Temp-Identity-Name", ""),

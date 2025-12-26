@@ -100,6 +100,8 @@ namespace Its.Onix.Api.Authentications
                 AuthenType = "JWT",
                 OrgId = m.OrgUser.OrgCustomId,
                 Email = m.User.UserEmail,
+                CustomRoleId = m.OrgUser.CustomRoleId,
+                CustomRoleName = m.OrgUser.CustomRoleName,
 
                 Status = m.Status,
                 Description = m.Description,
@@ -109,6 +111,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.NameIdentifier, u.UserId.ToString()!),
                 new Claim(ClaimTypes.Name, user),
                 new Claim(ClaimTypes.Role, u.Role!),
+                new Claim(ClaimTypes.PrimaryGroupSid, $"{u.CustomRoleId}:{u.CustomRoleName}"),
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),

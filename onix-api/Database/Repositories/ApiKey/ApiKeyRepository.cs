@@ -14,8 +14,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public Task<MApiKey> GetApiKey(string apiKey)
         {
-            //TODO : Use GetSelection() instead
-            var result = context!.ApiKeys!.Where(x => x.OrgId!.Equals(orgId) && x.ApiKey!.Equals(apiKey)).FirstOrDefaultAsync();
+            var result = GetSelection().Where(x => x.OrgId!.Equals(orgId) && x.ApiKey!.Equals(apiKey)).FirstOrDefaultAsync();
             return result!;
         }
 

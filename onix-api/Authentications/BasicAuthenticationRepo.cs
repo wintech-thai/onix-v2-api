@@ -52,6 +52,8 @@ namespace Its.Onix.Api.Authentications
                 Role = m.ApiKey.RolesList,
                 AuthenType = "API-KEY",
                 OrgId = m.ApiKey.OrgId,
+                CustomRoleId = m.ApiKey.CustomRoleId,
+                CustomRoleName = m.ApiKey.CustomRoleName,
 
                 Status = m.Status,
                 Description = m.Description,
@@ -61,6 +63,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.NameIdentifier, u.UserId.ToString()!),
                 new Claim(ClaimTypes.Name, user),
                 new Claim(ClaimTypes.Role, u.Role!),
+                new Claim(ClaimTypes.PrimaryGroupSid, $"{u.CustomRoleId}:{u.CustomRoleName}"),
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),

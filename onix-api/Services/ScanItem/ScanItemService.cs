@@ -154,7 +154,12 @@ namespace Its.Onix.Api.Services
 
             var images = _imageItemRepo.GetImages(imageParam);
             product.Images = []; //This is important to set this otherwise we will see error 502 for some reason
-            product.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(product.Properties!);
+
+            if (string.IsNullOrEmpty(product.Properties))
+            {
+                product.Properties = "{}";
+            }
+            product.PropertiesObj = JsonSerializer.Deserialize<MItemProperties>(product.Properties);
             product.Properties = "";
 
             r.Item = product;
