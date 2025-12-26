@@ -12,11 +12,12 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 {
     private readonly IRoleService service;
     private string apiCalled = "";
-    //private readonly string adminOnlyApiPattern = @"^(OnlyAdmin):(.+)$";
+    private readonly IRedisHelper _redis;
 
-    public GenericRbacHandler(IRoleService svc)
+    public GenericRbacHandler(IRoleService svc, IRedisHelper redis)
     {
         service = svc;
+        _redis = redis;
     }
 
     private static Claim? GetClaim(string type, IEnumerable<Claim> claims)
@@ -44,7 +45,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         return "";
     }
 
-    private string? IsRoleUserValid(IEnumerable<MRole>? roles, string uri)
+    private string? IsRoleUserValid(IEnumerable<MRole>? roles, string uri, string customRole, string orgId)
     {
         var uriPattern = @"^\/api\/(.+)\/org\/(.+)\/action\/(.+)$";
         var matches = Regex.Matches(uri, uriPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
@@ -59,6 +60,28 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         {
             //No need to check for permission just only for this API
             return "TEMP";
+        }
+
+
+        //เช็ค custom role ต่อ
+        var parts = customRole.Split(':');
+        var customRoleId = parts[0];
+
+        var cacheKeyPrefix = CacheHelper.CreateCustomRoleCacheLoaderKey(orgId);
+        var cacheKey = $"{cacheKeyPrefix}:{customRoleId}:{group}:{api}";
+
+        if (!string.IsNullOrEmpty(customRoleId))
+        {
+Console.WriteLine($"DEBUG100 - Checking custom role [{cacheKey}]");
+            var t = _redis.GetObjectAsync<bool?>(cacheKey);
+            var isSelected = t.Result;
+Console.WriteLine($"DEBUG101 - Is selected [{cacheKey}], [{isSelected}]");
+
+            if (isSelected == true)
+            {
+Console.WriteLine($"DEBUG102 - Use custom role [{customRole}], [{isSelected}]");
+                return customRole;
+            }
         }
 
         foreach (var role in roles!)
@@ -165,7 +188,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var role = roleClaim.Value;
         var uri = uriClaim.Value;
         var method = authMethodClaim.Value;
-        //var authorizeOrgId = orgIdClaim.Value;
+        var authorizeOrgId = orgIdClaim.Value;
         var userName = userNameClaim.Value;
         var customRoleId = customRoleClaim.Value;
 
@@ -178,7 +201,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
         if (apiGroup == "user")
         {
-            roleMatch = IsRoleUserValid(roles, uri);
+            roleMatch = IsRoleUserValid(roles, uri, customRoleId, authorizeOrgId);
         }
         else if (apiGroup == "admin")
         {
