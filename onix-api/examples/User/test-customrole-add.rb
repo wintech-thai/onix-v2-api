@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 
 apiUrl = "api/CustomRole/org/#{orgId}/action/AddCustomRole"
 param = {
-  RoleName: "OWNER",
+  RoleName: "OWNER#2",
   RoleDescription: "Able to do anything",
   Tags: "testing",
   Permissions: [

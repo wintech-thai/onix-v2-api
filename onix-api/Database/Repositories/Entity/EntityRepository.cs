@@ -203,6 +203,36 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public MEntity? UpdateEntityUserNameById(string entityId, string userName)
+        {
+            Guid id = Guid.Parse(entityId);
+            var result = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.UserName = userName;
+                result.UpdatedDate = DateTime.UtcNow;
+                context!.SaveChanges();
+            }
+
+            return result;
+        }
+
+        public MEntity? UpdateEntityUserStatusById(string entityId, string status)
+        {
+            Guid id = Guid.Parse(entityId);
+            var result = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.UserStatus = status;
+                result.UpdatedDate = DateTime.UtcNow;
+                context!.SaveChanges();
+            }
+
+            return result;
+        }
+
         public MEntity? UpdateEntityById(string itemId, MEntity item)
         {
             Guid id = Guid.Parse(itemId);

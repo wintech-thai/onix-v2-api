@@ -66,6 +66,14 @@ namespace Its.Onix.Api.Models
         [Column("total_point")]
         public long? TotalPoint { get; set; }
 
+
+        [Column("user_name")]
+        public string? UserName { get; set; } /* customer:<org_id>:<entity_id> */
+
+        [Column("user_status")]
+        public string? UserStatus { get; set; } /* Pending, Active, Disabled */
+
+
         //Navigation Properties
         public ICollection<MPricingPlan> PricingPlans { get; set; } = new List<MPricingPlan>();
 

@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = '339ffabf-3e9a-44c1-9009-a0fc5d99e4e5'
+id = 'd8417099-8738-4004-8223-e61301a8effa'
 
 apiUrl = "api/CustomRole/org/#{orgId}/action/DeleteCustomRoleById/#{id}"
 param = nil

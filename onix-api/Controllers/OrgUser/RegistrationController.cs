@@ -358,5 +358,70 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", v.Status);
             return Ok(v);
         }
+
+
+        [HttpPost]
+        [Route("org/{id}/action/ConfirmCreateCustomerUser/{token}/{custId}")]
+        public IActionResult ConfirmCreateCustomerUser(string id, string token, string custId,[FromBody] MUserRegister request)
+        {
+            //ความตั้งใจคือต้องมี customer entity อยู่แล้ว ก่อนถึงจะยืนยัน email ได้
+            //request ส่งเข้ามาแค่ Password เพื่อสร้าง user เท่านั้น
+            var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "ConfirmCreateCustomerUser");
+            var cacheKey = $"{cacheSuffix}:{token}";
+
+            var v = ValidateCustomerEmailVerificationToken(custId, cacheKey);
+            if (v.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //TODO : ในอนาคตสามารถสร้าง entity จากตรงนี้หากยังไม่มีเพื่อให้ได้ custId แทนจากที่ส่งมา
+
+            //สร้าง user ไปที่ Users และ IDP โดย username = customer:<org_id>:<custId>
+            var userName = $"customer:{id}:{custId}";
+            var mvCustUser = _entityService.UpdateEntityUserNameById(id, custId, userName);
+            if (mvCustUser!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvCustUser.Status);
+                return Ok(mvCustUser);
+            }
+
+            //Update user_name ใน entity record ด้วย, รวมถึง user_status = Active 
+            var mvCustStatus = _entityService.UpdateEntityUserStatusById(id, custId, userName);
+            if (mvCustStatus!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvCustStatus.Status);
+                return Ok(mvCustStatus);
+            }
+
+            //Call AuthService to add user/password to IDP
+            var customer = _entityService.GetEntityById(id, custId);
+            var orgUser = new MOrganizeRegistration()
+            {
+                UserName = userName,
+                UserInitialPassword = request.Password!,
+                Name = customer.Name,
+                Lastname = customer.Name,
+                Email = customer.PrimaryEmail,
+            };
+            var addUserTask = _authService.AddUserToIDP(orgUser);
+
+            var idpResult = addUserTask.Result;
+            if (!idpResult.Success)
+            {
+                v.Status = "IDP_USER_ADD_FAILED";
+                v.Description = $"Failed to add user to IDP. Message: {idpResult.Message}";
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
+            _redis.DeleteAsync(cacheKey);
+
+            Response.Headers.Append("CUST_STATUS", mvCustStatus.Status);
+            return Ok(mvCustStatus);
+        }
     }
 }
