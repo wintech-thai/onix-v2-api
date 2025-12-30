@@ -376,9 +376,21 @@ namespace Its.Onix.Api.Controllers
                 return Ok(v);
             }
 
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var customer = _entityService.GetEntityById(id, custId);
+
             //TODO : ในอนาคตสามารถสร้าง entity จากตรงนี้หากยังไม่มีเพื่อให้ได้ custId แทนจากที่ส่งมา
 
-            //สร้าง user ไปที่ Users และ IDP โดย username = customer:<org_id>:<custId>
+            //Update user name ไปที่ Entities
             var userName = $"customer:{id}:{custId}";
             var mvCustUser = _entityService.UpdateEntityUserNameById(id, custId, userName);
             if (mvCustUser!.Status != "OK")
@@ -387,7 +399,7 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mvCustUser);
             }
 
-            //Update user_name ใน entity record ด้วย, รวมถึง user_status = Active 
+            //Update user_status = Active ไปที่ Entities
             var mvCustStatus = _entityService.UpdateEntityUserStatusById(id, custId, "Active");
             if (mvCustStatus!.Status != "OK")
             {
@@ -395,8 +407,25 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mvCustStatus);
             }
 
+            var mvUser = _userService.GetUserByUserName(userName);
+            if (mvUser.User == null)
+            {
+                //ยังไม่มี user อยู่
+                //สร้าง user ในตาราง Users
+                var mvAddUser = _userService.AddUser(id, new MUser()
+                {
+                    UserEmail = customer.PrimaryEmail,
+                    UserName = userName,
+                });
+
+                if (mvAddUser.Status != "OK")
+                {
+                    Response.Headers.Append("CUST_STATUS", mvAddUser.Status);
+                    return Ok(mvAddUser);
+                }
+            }
+
             //Call AuthService to add user/password to IDP
-            var customer = _entityService.GetEntityById(id, custId);
             var orgUser = new MOrganizeRegistration()
             {
                 UserName = userName,
