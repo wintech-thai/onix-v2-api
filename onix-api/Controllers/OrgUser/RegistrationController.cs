@@ -388,7 +388,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             //Update user_name ใน entity record ด้วย, รวมถึง user_status = Active 
-            var mvCustStatus = _entityService.UpdateEntityUserStatusById(id, custId, userName);
+            var mvCustStatus = _entityService.UpdateEntityUserStatusById(id, custId, "Active");
             if (mvCustStatus!.Status != "OK")
             {
                 Response.Headers.Append("CUST_STATUS", mvCustStatus.Status);
