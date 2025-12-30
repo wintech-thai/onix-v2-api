@@ -16,5 +16,6 @@ namespace Its.Onix.Api.Services
         public MVEntity? UpdateEntityEmailById(string orgId, string entityId, string email, bool sendVerification);
         public MVEntity? UpdateEntityUserNameById(string orgId, string entityId, string userName);
         public MVEntity? UpdateEntityUserStatusById(string orgId, string entityId, string status);
+        public MVEntity? SendCustomerUserCreationEmail(string orgId, string entityId);
     }
 }

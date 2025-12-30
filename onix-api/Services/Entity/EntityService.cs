@@ -116,6 +116,57 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+
+        private MVJob? CreateEmailCustomerUserCreateJob(string orgId, MEmailVerification reg)
+        {
+            var regType = "customer-user-create";
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "register";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                registerDomain = "register-dev";
+            }
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+
+            var templateType = "customer-user-create";
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "Entity.CreateEmailCustomerUserCreateJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+                Tags = templateType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
+                    new NameValue { Name = "ENTITY_NAME", Value = reg.Name },
+                    new NameValue { Name = "ENTITY_ID", Value = reg.Id },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "ConfirmCreateCustomerUser");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return result;
+        }
+
         public MVEntity? UpdateEntityEmailStatusById(string orgId, string entityId, string status)
         {
             var r = new MVEntity()
@@ -282,6 +333,45 @@ namespace Its.Onix.Api.Services
             }
 
             r.Entity = result;
+            return r;
+        }
+
+        public MVEntity? SendCustomerUserCreationEmail(string orgId, string entityId)
+        {
+            var r = new MVEntity()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var entity = repository!.GetEntityById(entityId);
+            if (entity == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            var reg = new MEmailVerification()
+            {
+                Id = entity.Id.ToString(),
+                Code = entity.Code,
+                Name = entity.Name,
+                Email = entity.PrimaryEmail,
+            };
+            CreateEmailCustomerUserCreateJob(orgId, reg);
+
+            r.Entity = entity;
             return r;
         }
 
