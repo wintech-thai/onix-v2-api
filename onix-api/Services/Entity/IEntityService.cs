@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     public interface IEntityService
     {
         public MEntity GetEntityById(string orgId, string cycleId);
+        public MEntity GetEntityByEmail(string orgId, string email);
         public MVEntity? AddEntity(string orgId, MEntity entity);
         public MVEntity? DeleteEntityById(string orgId, string cycleId);
         public IEnumerable<MEntity> GetEntities(string orgId, VMEntity param);

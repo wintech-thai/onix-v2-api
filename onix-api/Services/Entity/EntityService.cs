@@ -33,6 +33,14 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MEntity GetEntityByEmail(string orgId, string email)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.GetEntityByEmail(email);
+
+            return result;
+        }
+
         public MVEntity? AddEntity(string orgId, MEntity entity)
         {
             repository!.SetCustomOrgId(orgId);
