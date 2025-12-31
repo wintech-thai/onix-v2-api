@@ -424,27 +424,27 @@ namespace Its.Onix.Api.Controllers
                     Response.Headers.Append("CUST_STATUS", mvAddUser.Status);
                     return Ok(mvAddUser);
                 }
-            }
 
-            //Call AuthService to add user/password to IDP
-            var orgUser = new MOrganizeRegistration()
-            {
-                UserName = userName,
-                UserInitialPassword = request.Password!,
-                Name = customer.Name,
-                Lastname = customer.Name,
-                Email = customer.PrimaryEmail,
-            };
-            var addUserTask = _authService.AddUserToIDP(orgUser);
+                //Call AuthService to add user/password to IDP
+                var orgUser = new MOrganizeRegistration()
+                {
+                    UserName = userName,
+                    UserInitialPassword = request.Password!,
+                    Name = customer.Name,
+                    Lastname = customer.Name,
+                    Email = customer.PrimaryEmail,
+                };
+                var addUserTask = _authService.AddUserToIDP(orgUser);
 
-            var idpResult = addUserTask.Result;
-            if (!idpResult.Success)
-            {
-                v.Status = "IDP_USER_ADD_FAILED";
-                v.Description = $"Failed to add user to IDP. Message: {idpResult.Message}";
+                var idpResult = addUserTask.Result;
+                if (!idpResult.Success)
+                {
+                    v.Status = "IDP_USER_ADD_FAILED";
+                    v.Description = $"Failed to add user to IDP. Message: {idpResult.Message}";
 
-                Response.Headers.Append("CUST_STATUS", v.Status);
-                return Ok(v);
+                    Response.Headers.Append("CUST_STATUS", v.Status);
+                    return Ok(v);
+                }
             }
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
