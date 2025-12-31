@@ -10,19 +10,26 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = ENV['ORG_ID']
+orgId = ENV['API_ORG']
 keyFile = ".token"
+ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
 
 apiUrl = "customer-api/AuthCustomer/org/#{orgId}/action/Login"
 param =  {
-  UserName: "#{ENV['USER_NAME']}",
+  UserName: "#{ENV['CUST_USER_NAME']}",
   Password: "#{ENV['USER_PASSWORD']}",
 }
 
-ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
-
 result = make_request(:post, apiUrl, param)
-#puts(result)
+token = result["token"]["access_token"]
+puts(token)
+puts("======")
+
+apiUrl = "customer-api/AuthCustomer/org/#{orgId}/action/Refresh"
+param =  {
+  RefreshToken: result["token"]["refresh_token"],
+}
+result = make_request(:post, apiUrl, param)
 
 token = result["token"]["access_token"]
 puts(token)
