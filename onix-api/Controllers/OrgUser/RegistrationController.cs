@@ -412,9 +412,10 @@ namespace Its.Onix.Api.Controllers
             {
                 //ยังไม่มี user อยู่
                 //สร้าง user ในตาราง Users
+                var dummyEmail = $"{id}:{custId}:{customer.PrimaryEmail}"; //email ตรงนี้ ไม่ได้เอาไปใช้จริง แค่กันไม่ให้ซ้ำกันเท่านั้น
                 var mvAddUser = _userService.AddUser(id, new MUser()
                 {
-                    UserEmail = customer.PrimaryEmail,
+                    UserEmail = dummyEmail, //customer.PrimaryEmail,
                     UserName = userName,
                 });
 
