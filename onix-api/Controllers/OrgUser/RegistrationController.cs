@@ -407,6 +407,14 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mvCustStatus);
             }
 
+            // Update email verified status ด้วย
+            var mvEmailStatus = _entityService.UpdateEntityEmailStatusById(id, custId, "VERIFIED");
+            if (mvEmailStatus!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvEmailStatus.Status);
+                return Ok(mvEmailStatus);
+            }
+
             var mvUser = _userService.GetUserByUserName(userName);
             if (mvUser.User == null)
             {
