@@ -233,6 +233,20 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public MEntity? UpdateUserStatusById(string entityId, string status)
+        {
+            Guid id = Guid.Parse(entityId);
+            var result = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.UserStatus = status;
+                context!.SaveChanges();
+            }
+
+            return result!;
+        }
+
         public MEntity? UpdateEntityById(string itemId, MEntity item)
         {
             Guid id = Guid.Parse(itemId);

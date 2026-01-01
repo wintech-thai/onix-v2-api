@@ -133,5 +133,23 @@ namespace Its.Onix.Api.Controllers
             var result = svc.GetEntityCount(id, param);
             return Ok(result);
         }
+
+        [HttpPost]
+        [Route("org/{id}/action/DisableCustomerUserById/{entityId}")]
+        public IActionResult DisableCustomerUserById(string id, string entityId)
+        {
+            var result = svc.UpdateUserStatusById(id, entityId, "Disabled");
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/EnableCustomerUserById/{entityId}")]
+        public IActionResult EnableCustomerUserById(string id, string entityId)
+        {
+            var result = svc.UpdateUserStatusById(id, entityId, "Active");
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
     }
 }

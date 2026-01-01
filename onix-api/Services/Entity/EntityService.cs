@@ -175,6 +175,37 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MVEntity? UpdateUserStatusById(string orgId, string entityId, string status)
+        {
+            var r = new MVEntity()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = repository!.UpdateUserStatusById(entityId, status);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Entity = result;
+            return r;
+        }
+
         public MVEntity? UpdateEntityEmailStatusById(string orgId, string entityId, string status)
         {
             var r = new MVEntity()

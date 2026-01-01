@@ -20,5 +20,6 @@ namespace Its.Onix.Api.Database.Repositories
         public MEntity? UpdateEntityEmailStatusById(string entityId, string status);
         public MEntity? UpdateEntityUserNameById(string entityId, string userName);
         public MEntity? UpdateEntityUserStatusById(string entityId, string status);
+        public MEntity? UpdateUserStatusById(string entityId, string status);
     }
 }

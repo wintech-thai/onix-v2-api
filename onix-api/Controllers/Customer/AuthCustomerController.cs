@@ -141,9 +141,9 @@ namespace Its.Onix.Api.Controllers
                 return Unauthorized("Unauthorized, incorrect user or password!!!");
             }
 
-            //var sessionKey = CacheHelper.CreateCustomerLoginSessionKey(request.UserName);
-            //var obj = new UserToken() { UserName = request.UserName };
-            //await _redis.SetObjectAsync(sessionKey, obj);
+            var sessionKey = CacheHelper.CreateCustomerLoginSessionKey(request.UserName);
+            var obj = new UserToken() { UserName = request.UserName };
+            await _redis.SetObjectAsync(sessionKey, obj);
 
             return Ok(result);
         }
@@ -156,16 +156,16 @@ namespace Its.Onix.Api.Controllers
             var result = svc.RefreshToken(request.RefreshToken);
             Response.HttpContext.Items.Add("Temp-Identity-Name", result.UserName);
 
-            //var sessionKey = CacheHelper.CreateCustomerLoginSessionKey(result.UserName);
+            var sessionKey = CacheHelper.CreateCustomerLoginSessionKey(result.UserName);
 
-            //if (result.Status != "Success")
-            //{
-            //    _ = await _redis.DeleteAsync(sessionKey);
-            //    return Unauthorized("Unauthorized, incorrect refresh token!!!");
-            //}
+            if (result.Status != "Success")
+            {
+                _ = await _redis.DeleteAsync(sessionKey);
+                return Unauthorized("Unauthorized, incorrect refresh token!!!");
+            }
 
-            //var obj = new UserToken() { UserName = result.UserName };
-            //await _redis.SetObjectAsync(sessionKey, obj);
+            var obj = new UserToken() { UserName = result.UserName };
+            await _redis.SetObjectAsync(sessionKey, obj);
 
             return Ok(result);
         }
