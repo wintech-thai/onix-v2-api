@@ -359,6 +359,72 @@ namespace Its.Onix.Api.Controllers
             return Ok(v);
         }
 
+        [HttpPost]
+        [Route("org/{id}/action/ConfirmCustomerForgotPasswordReset/{token}/{customerId}")]
+        public IActionResult ConfirmCustomerForgotPasswordReset(string id, string token, string customerId, [FromBody] MUserRegister request)
+        {
+            var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "CustomerForgotPassword");
+            var cacheKey = $"{cacheSuffix}:{token}";
+
+            var customer = _entityService.GetEntityById(id, customerId);
+            if (customer == null)
+            {
+                var vNotFound = new MVRegistration()
+                {
+                    Status = "CUST_NOT_FOUND",
+                    Description = $"Customer ID [{customerId}] not found",
+                };
+
+                Response.Headers.Append("CUST_STATUS", vNotFound.Status);
+                return Ok(vNotFound);
+            }
+
+            var email = customer.PrimaryEmail!;
+
+            var v = ValidateRegistrationToken(email, request, cacheKey);
+            if (v.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //Call AuthService to update password to IDP
+            var user = new MUpdatePassword()
+            {
+                UserName = customer.UserName!,
+                NewPassword = request.Password!,
+            };
+            var passwordChangeTask = _authService.ChangeForgotUserPasswordIdp(user);
+
+            var idpResult = passwordChangeTask.Result;
+            if (!idpResult.Success)
+            {
+                v.Status = "IDP_UPDATE_PASSWORD_FAILED";
+                v.Description = $"Failed to update password to IDP. Message: {idpResult.Message}";
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //สร้าง email แจ้ง user ว่า Password เปลี่ยนเรียบร้อยแล้ว
+            _userService.CreateEmailPasswordChangeJob(id, request.Email!, email);
+
+            //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
+            _redis.DeleteAsync(cacheKey);
+
+            Response.Headers.Append("CUST_STATUS", v.Status);
+            return Ok(v);
+        }
 
         [HttpPost]
         [Route("org/{id}/action/ConfirmCreateCustomerUser/{token}/{custId}")]

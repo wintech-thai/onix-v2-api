@@ -167,7 +167,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
         
-
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/SendCustomerForgotPasswordEmail/{email}")]
