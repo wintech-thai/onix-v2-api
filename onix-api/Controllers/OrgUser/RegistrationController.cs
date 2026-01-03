@@ -358,5 +358,174 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", v.Status);
             return Ok(v);
         }
+
+        [HttpPost]
+        [Route("org/{id}/action/ConfirmCustomerForgotPasswordReset/{token}/{customerId}")]
+        public IActionResult ConfirmCustomerForgotPasswordReset(string id, string token, string customerId, [FromBody] MUserRegister request)
+        {
+            var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "CustomerForgotPassword");
+            var cacheKey = $"{cacheSuffix}:{token}";
+
+            var customer = _entityService.GetEntityById(id, customerId);
+            if (customer == null)
+            {
+                var vNotFound = new MVRegistration()
+                {
+                    Status = "CUST_NOT_FOUND",
+                    Description = $"Customer ID [{customerId}] not found",
+                };
+
+                Response.Headers.Append("CUST_STATUS", vNotFound.Status);
+                return Ok(vNotFound);
+            }
+
+            var email = customer.PrimaryEmail!;
+
+            var v = ValidateRegistrationToken(email, request, cacheKey);
+            if (v.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //Call AuthService to update password to IDP
+            var user = new MUpdatePassword()
+            {
+                UserName = customer.UserName!,
+                NewPassword = request.Password!,
+            };
+            var passwordChangeTask = _authService.ChangeForgotUserPasswordIdp(user);
+
+            var idpResult = passwordChangeTask.Result;
+            if (!idpResult.Success)
+            {
+                v.Status = "IDP_UPDATE_PASSWORD_FAILED";
+                v.Description = $"Failed to update password to IDP. Message: {idpResult.Message}";
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            //สร้าง email แจ้ง user ว่า Password เปลี่ยนเรียบร้อยแล้ว
+            _userService.CreateEmailPasswordChangeJob(id, request.Email!, email);
+
+            //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
+            _redis.DeleteAsync(cacheKey);
+
+            Response.Headers.Append("CUST_STATUS", v.Status);
+            return Ok(v);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/ConfirmCreateCustomerUser/{token}/{custId}")]
+        public IActionResult ConfirmCreateCustomerUser(string id, string token, string custId,[FromBody] MUserRegister request)
+        {
+            //ความตั้งใจคือต้องมี customer entity อยู่แล้ว ก่อนถึงจะยืนยัน email ได้
+            //request ส่งเข้ามาแค่ Password เพื่อสร้าง user เท่านั้น
+            var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "ConfirmCreateCustomerUser");
+            var cacheKey = $"{cacheSuffix}:{token}";
+
+            var v = ValidateCustomerEmailVerificationToken(custId, cacheKey);
+            if (v.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var validateResult = ValidationUtils.ValidatePassword(request.Password!);
+            if (validateResult.Status != "OK")
+            {
+                v.Status = validateResult.Status;
+                v.Description = validateResult.Description;
+
+                Response.Headers.Append("CUST_STATUS", v.Status);
+                return Ok(v);
+            }
+
+            var customer = _entityService.GetEntityById(id, custId);
+
+            //TODO : ในอนาคตสามารถสร้าง entity จากตรงนี้หากยังไม่มีเพื่อให้ได้ custId แทนจากที่ส่งมา
+
+            //Update user name ไปที่ Entities
+            var userName = $"customer:{id}:{custId}";
+            var mvCustUser = _entityService.UpdateEntityUserNameById(id, custId, userName);
+            if (mvCustUser!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvCustUser.Status);
+                return Ok(mvCustUser);
+            }
+
+            //Update user_status = Active ไปที่ Entities
+            var mvCustStatus = _entityService.UpdateEntityUserStatusById(id, custId, "Active");
+            if (mvCustStatus!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvCustStatus.Status);
+                return Ok(mvCustStatus);
+            }
+
+            // Update email verified status ด้วย
+            var mvEmailStatus = _entityService.UpdateEntityEmailStatusById(id, custId, "VERIFIED");
+            if (mvEmailStatus!.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvEmailStatus.Status);
+                return Ok(mvEmailStatus);
+            }
+
+            var mvUser = _userService.GetUserByUserName(userName);
+            if (mvUser.User == null)
+            {
+                //ยังไม่มี user อยู่
+                //สร้าง user ในตาราง Users
+                var dummyEmail = $"{id}:{custId}:{customer.PrimaryEmail}"; //email ตรงนี้ ไม่ได้เอาไปใช้จริง แค่กันไม่ให้ซ้ำกันเท่านั้น
+                var mvAddUser = _userService.AddUser(id, new MUser()
+                {
+                    UserEmail = dummyEmail, //customer.PrimaryEmail,
+                    UserName = userName,
+                });
+
+                if (mvAddUser.Status != "OK")
+                {
+                    Response.Headers.Append("CUST_STATUS", mvAddUser.Status);
+                    return Ok(mvAddUser);
+                }
+
+                //Call AuthService to add user/password to IDP
+                var orgUser = new MOrganizeRegistration()
+                {
+                    UserName = userName,
+                    UserInitialPassword = request.Password!,
+                    Name = customer.Name,
+                    Lastname = customer.Name,
+                    Email = customer.PrimaryEmail,
+                };
+                var addUserTask = _authService.AddUserToIDP(orgUser);
+
+                var idpResult = addUserTask.Result;
+                if (!idpResult.Success)
+                {
+                    v.Status = "IDP_USER_ADD_FAILED";
+                    v.Description = $"Failed to add user to IDP. Message: {idpResult.Message}";
+
+                    Response.Headers.Append("CUST_STATUS", v.Status);
+                    return Ok(v);
+                }
+            }
+
+            //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
+            _redis.DeleteAsync(cacheKey);
+
+            Response.Headers.Append("CUST_STATUS", mvCustStatus.Status);
+            return Ok(mvCustStatus);
+        }
     }
 }

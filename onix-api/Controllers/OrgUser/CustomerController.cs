@@ -91,6 +91,17 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/SendCustomerUserCreationEmail/{entityId}")]
+        public IActionResult SendCustomerUserCreationEmail(string id, string entityId)
+        {
+            var result = svc.SendCustomerUserCreationEmail(id, entityId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetCustomerById/{entityId}")]
         public MEntity GetCustomerById(string id, string entityId)
@@ -120,6 +131,24 @@ namespace Its.Onix.Api.Controllers
         {
             param.EntityType = 1;
             var result = svc.GetEntityCount(id, param);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/DisableCustomerUserById/{entityId}")]
+        public IActionResult DisableCustomerUserById(string id, string entityId)
+        {
+            var result = svc.UpdateUserStatusById(id, entityId, "Disabled");
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/EnableCustomerUserById/{entityId}")]
+        public IActionResult EnableCustomerUserById(string id, string entityId)
+        {
+            var result = svc.UpdateUserStatusById(id, entityId, "Active");
+            Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
     }

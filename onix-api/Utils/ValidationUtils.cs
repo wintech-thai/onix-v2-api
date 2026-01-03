@@ -50,13 +50,13 @@ namespace Its.Onix.Api.Utils
         {
             var result = new ValidationResult() { Status = "OK", Description = "" };
 
-            var regex = new Regex(@"^[a-zA-Z0-9._]{4,20}$");
+            var regex = new Regex(@"^[a-zA-Z0-9._:-]{4,80}$");
             var ok = regex.IsMatch(userName);
 
             if (!ok)
             {
                 result.Status = "ERROR_VALIDATION_USERNAME";
-                result.Description = "User name must be in this regex format --> [a-zA-Z0-9._]{4,20}";
+                result.Description = "User name must be in this regex format --> [a-zA-Z0-9._:-]{4,80}";
             }
 
             return result;

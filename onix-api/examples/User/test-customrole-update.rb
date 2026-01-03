@@ -11,12 +11,12 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = 'eb8ad1c0-113b-4cd9-905d-8781defd8f9f'
+id = 'd8417099-8738-4004-8223-e61301a8effa'
 
 apiUrl = "api/CustomRole/org/#{orgId}/action/UpdateCustomRoleById/#{id}"
 
 param = {
-  RoleName: "OWNER",
+  RoleName: "OWNER#2",
   RoleDescription: "Able to do anything XXX",
   Tags: "testing",
   Permissions: [
