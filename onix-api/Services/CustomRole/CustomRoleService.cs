@@ -82,8 +82,12 @@ namespace Its.Onix.Api.Services
                 foreach (var permission in ctrl.ApiPermissions)
                 {
                     var key = $"{permission.ControllerName}:{permission.ApiName}";
-Console.WriteLine($"DEBUG Permission : [{key}] -> {permission.IsAllowed}");
-                    flattenMap.Add(key, permission.IsAllowed);
+
+                    //ตรง key สามารถซ้ำได้ เพราะ API name ชื่อเดียวอาจจะมีหลาย signature
+                    if (!flattenMap.ContainsKey(key))
+                    { 
+                        flattenMap.Add(key, permission.IsAllowed);
+                    }
                 }
             }
 
