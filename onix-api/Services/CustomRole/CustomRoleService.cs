@@ -82,6 +82,7 @@ namespace Its.Onix.Api.Services
                 foreach (var permission in ctrl.ApiPermissions)
                 {
                     var key = $"{permission.ControllerName}:{permission.ApiName}";
+Console.WriteLine($"DEBUG Permission : [{key}] -> {permission.IsAllowed}");
                     flattenMap.Add(key, permission.IsAllowed);
                 }
             }
