@@ -279,6 +279,7 @@ namespace Its.Onix.Api.Services
         {
             var controllers = new List<ControllerNode>();
             var controlerMap = new Dictionary<string, ControllerNode>();
+            var checkDupDic = new Dictionary<string, bool>();
 
             foreach (var group in _provider.ApiDescriptionGroups.Items)
             {
@@ -322,7 +323,13 @@ namespace Its.Onix.Api.Services
                         IsAllowed  = isSelected,
                     };
 
-                    ctrlNode.ApiPermissions.Add(apiNode);
+                    var checkDupKey = $"{controller}:{action}";
+                    if (!checkDupDic.ContainsKey(checkDupKey))
+                    {
+                        //Key สามารถซ้ำได้ เพราะ API name ชื่อเดียวอาจจะมีหลาย signature ใน controller เดียวกัน
+                        ctrlNode.ApiPermissions.Add(apiNode);
+                        checkDupDic.Add(checkDupKey, true);
+                    }
                 }
             }
 
