@@ -53,6 +53,9 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var group = matches[0].Groups[1].Value;
         var api = matches[0].Groups[3].Value;
 
+        var tokens = api.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        api = tokens[0]; //บางครั้ง มี /xxxx/yyy ตามหลังต่อท้ายชื่อ API
+
         var keyword = $"{group}:{api}";
         apiCalled = keyword;
 
