@@ -53,6 +53,10 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var group = matches[0].Groups[1].Value;
         var api = matches[0].Groups[3].Value;
 
+        var tokens = api.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var apiName = tokens[0]; //บางครั้ง มี /xxxx/yyy ตามหลังต่อท้ายชื่อ API
+        api = char.ToUpper(apiName[0]) + apiName.Substring(1); //บางครั้งเรียกมาเป็นขึ้นต้นด้วยตัวเล็ก
+
         var keyword = $"{group}:{api}";
         apiCalled = keyword;
 
@@ -71,14 +75,14 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
         if (!string.IsNullOrEmpty(customRoleId))
         {
-Console.WriteLine($"DEBUG100 - Checking custom role [{cacheKey}]");
+//Console.WriteLine($"DEBUG100 - Checking custom role [{cacheKey}]");
             var t = _redis.GetObjectAsync<bool?>(cacheKey);
             var isSelected = t.Result;
-Console.WriteLine($"DEBUG101 - Is selected [{cacheKey}], [{isSelected}]");
+//Console.WriteLine($"DEBUG101 - Is selected [{cacheKey}], [{isSelected}]");
 
             if (isSelected == true)
             {
-Console.WriteLine($"DEBUG102 - Use custom role [{customRole}], [{isSelected}]");
+//Console.WriteLine($"DEBUG102 - Use custom role [{customRole}], [{isSelected}]");
                 return customRole;
             }
         }

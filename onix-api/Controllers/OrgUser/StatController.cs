@@ -19,7 +19,7 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/{id}/action/GetCurrentBalanceStats")]
-        public IActionResult GetStats(string id)
+        public IActionResult GetCurrentBalanceStats(string id)
         {
             var param = new VMStat()
             {
