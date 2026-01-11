@@ -289,7 +289,7 @@ namespace Its.Onix.Api.Services
                     var action = api.ActionDescriptor.RouteValues["action"];
                     var route = api.RelativePath!;
                     string apiGroup = route.Split("/", StringSplitOptions.RemoveEmptyEntries)[0];
-
+Console.WriteLine($"DEBUG_A [{apiGroup}] [{filterApiGroup}] [{controller}] [{action}]");
                     if (apiGroup != filterApiGroup)
                     {
                         continue;
