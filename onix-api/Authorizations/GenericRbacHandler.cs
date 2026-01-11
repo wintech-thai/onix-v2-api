@@ -75,14 +75,14 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
         if (!string.IsNullOrEmpty(customRoleId))
         {
-Console.WriteLine($"DEBUG100 - Checking custom role [{cacheKey}]");
+//Console.WriteLine($"DEBUG100 - Checking custom role [{cacheKey}]");
             var t = _redis.GetObjectAsync<bool?>(cacheKey);
             var isSelected = t.Result;
-Console.WriteLine($"DEBUG101 - Is selected [{cacheKey}], [{isSelected}]");
+//Console.WriteLine($"DEBUG101 - Is selected [{cacheKey}], [{isSelected}]");
 
             if (isSelected == true)
             {
-Console.WriteLine($"DEBUG102 - Use custom role [{customRole}], [{isSelected}]");
+//Console.WriteLine($"DEBUG102 - Use custom role [{customRole}], [{isSelected}]");
                 return customRole;
             }
         }
