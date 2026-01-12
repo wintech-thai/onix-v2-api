@@ -88,14 +88,14 @@ namespace Its.Onix.Api.Controllers
 
 
         [ExcludeFromCodeCoverage]
-        [HttpPost]
+        [HttpGet]
         [Route("org/{orgId}/action/GetPointTxs")]
-        public async Task<IActionResult> GetPointTxs(string orgId, [FromBody] VMPointTx request)
+        public async Task<IActionResult> GetPointTxs(string orgId)
         {
-            if (request.Limit <= 0)
+            var request = new VMPointTx()
             {
-                request.Limit = 100;
-            }
+                Limit = 100
+            };
 
             var validateResult = ValidateCustomerIdentity();
             if (string.IsNullOrEmpty(validateResult.CustomerId))
