@@ -228,7 +228,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var roles = service.GetRolesList("", role);
 
         var roleMatch = "";
-
+Console.WriteLine($"DEBUG_0 : [{uri}], [{apiGroup}]");
         if (apiGroup == "user")
         {
             roleMatch = IsRoleUserValid(roles, uri, customRoleId, authorizeOrgId);
@@ -239,7 +239,9 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         }
         else if (apiGroup == "customer")
         {
+Console.WriteLine("DEBUG_1 : Before calling IsRoleCustomerValid()");
             roleMatch = IsRoleCustomerValid(roles, uri);
+Console.WriteLine($"DEBUG_9 : After calling IsRoleCustomerValid() [{roleMatch}]");
         }
 
         if (!roleMatch!.Equals(""))
