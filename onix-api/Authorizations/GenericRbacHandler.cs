@@ -165,7 +165,6 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, GenericRbacRequirement requirement)
     {
-Console.WriteLine($"DEBUG_A");
         var idClaim = GetClaim(ClaimTypes.NameIdentifier, context.User.Claims);
         if (idClaim == null)
         {
@@ -229,7 +228,7 @@ Console.WriteLine($"DEBUG_A");
         var roles = service.GetRolesList("", role);
 
         var roleMatch = "";
-Console.WriteLine($"DEBUG_B : [{uri}], [{apiGroup}]");
+
         if (apiGroup == "user")
         {
             roleMatch = IsRoleUserValid(roles, uri, customRoleId, authorizeOrgId);
@@ -240,9 +239,7 @@ Console.WriteLine($"DEBUG_B : [{uri}], [{apiGroup}]");
         }
         else if (apiGroup == "customer")
         {
-Console.WriteLine("DEBUG_1 : Before calling IsRoleCustomerValid()");
             roleMatch = IsRoleCustomerValid(roles, uri);
-Console.WriteLine($"DEBUG_9 : After calling IsRoleCustomerValid() [{roleMatch}]");
         }
 
         if (!roleMatch!.Equals(""))
@@ -257,6 +254,21 @@ Console.WriteLine($"DEBUG_9 : After calling IsRoleCustomerValid() [{roleMatch}]"
         mvcContext!.HttpContext.Items["Temp-Identity-Type"] = method;
         mvcContext!.HttpContext.Items["Temp-Identity-Id"] = uid;
         mvcContext!.HttpContext.Items["Temp-Identity-Name"] = userName;
+
+        if (apiGroup == "customer")
+        {
+            var parts = userName.Split(':');
+
+            var orgId = "";
+            var entityId = "";
+            if (parts.Length == 3 && parts[0] == "customer")
+            {
+                orgId = parts[1];
+                entityId = parts[2];
+            }
+
+            mvcContext!.HttpContext.Items["Temp-Customer-Id"] = entityId;
+        }
 
         return Task.CompletedTask;
     }

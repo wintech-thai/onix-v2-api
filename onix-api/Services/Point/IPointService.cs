@@ -23,5 +23,6 @@ namespace Its.Onix.Api.Services
         public Task<MVWallet?> UpdateWalletById(string orgId, string walletId, MWallet wallet);
         public Task<MVWallet?> AttachCustomerToWalletById(string orgId, string walletId, string custId);
         public Task<MVWallet?> DeleteWalletById(string orgId, string walletId);
+        public MVWallet ValidateResponseData(string orgId, string customerId, MVWallet responseData);
     }
 }

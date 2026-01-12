@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Controllers
     public class IdentityValidationResult
     {
         public string? UserName { get; set; }
+        public string? CustomerId { get; set; }
         public ObjectResult? RequestResult { get; set; }
     }
 
