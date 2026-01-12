@@ -88,7 +88,7 @@ namespace Its.Onix.Api.Authentications
                 Log.Information(m.Description!);
                 return null;
             }
-Console.WriteLine($"DEBUG_100 : [{orgId}], email=[{m.User!.UserEmail}], uname=[{user}], uid=[{m.User!.UserId}]");
+Console.WriteLine($"DEBUG_100 : [{m.Status}] [{orgId}], email=[{m.User!.UserEmail}], uname=[{user}], uid=[{m.User!.UserId}]");
             var u = new User()
             {
                 UserName = user, //customer:<org-id>:<entity-id>
@@ -102,7 +102,7 @@ Console.WriteLine($"DEBUG_100 : [{orgId}], email=[{m.User!.UserEmail}], uname=[{
                 Status = m.Status,
                 Description = m.Description,
             };
-
+Console.WriteLine($"DEBUG_101 : [{m.Status}] [{orgId}], email=[{m.User!.UserEmail}], uname=[{user}], uid=[{m.User!.UserId}]");
             u.Claims = [
                 new Claim(ClaimTypes.NameIdentifier, u.UserId.ToString()!),
                 new Claim(ClaimTypes.Name, user),

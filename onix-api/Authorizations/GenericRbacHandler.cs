@@ -165,6 +165,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, GenericRbacRequirement requirement)
     {
+Console.WriteLine($"DEBUG_A");
         var idClaim = GetClaim(ClaimTypes.NameIdentifier, context.User.Claims);
         if (idClaim == null)
         {
@@ -228,7 +229,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var roles = service.GetRolesList("", role);
 
         var roleMatch = "";
-Console.WriteLine($"DEBUG_0 : [{uri}], [{apiGroup}]");
+Console.WriteLine($"DEBUG_B : [{uri}], [{apiGroup}]");
         if (apiGroup == "user")
         {
             roleMatch = IsRoleUserValid(roles, uri, customRoleId, authorizeOrgId);
