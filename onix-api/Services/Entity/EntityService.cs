@@ -12,17 +12,20 @@ namespace Its.Onix.Api.Services
     public class EntityService : BaseService, IEntityService
     {
         private readonly IEntityRepository? repository = null;
+        private readonly IUserRepository? _userRepository = null;
         private readonly IRedisHelper _redis;
         private readonly IJobService _jobService;
 
         public EntityService(
             IEntityRepository repo,
+            IUserRepository userRepo,
             IJobService jobService,
             IRedisHelper redis) : base()
         {
             repository = repo;
             _redis = redis;
             _jobService = jobService;
+            _userRepository = userRepo;
         }
 
         public MEntity GetEntityById(string orgId, string entityId)
@@ -494,6 +497,76 @@ namespace Its.Onix.Api.Services
             var result = repository!.GetEntityCount(param);
 
             return result;
+        }
+
+        public MVCustomerUser VerifyUserIsCustomer(string userName)
+        {
+            //userName = customer:<org-id>:<entity-id>
+            var parts = userName.Split(':');
+
+            var orgId = "";
+            var entityId = "";
+            if (parts.Length == 3 && parts[0] == "customer")
+            {
+                orgId = parts[1];
+                entityId = parts[2];
+            }
+            else
+            {
+                var o = new MVCustomerUser()
+                {
+                    Status = "INVALID_FORMAT_USERNAME",
+                    Description = $"User name [{userName}] format is invalid !!!"
+                };
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            _userRepository!.SetCustomOrgId(orgId);
+
+            var e = repository!.GetEntityById(entityId);
+            if (e == null)
+            {
+                var o = new MVCustomerUser()
+                {
+                    Status = "NOTFOUND",
+                    Description = $"User for customer ID [{entityId}] not found !!!"
+                };
+
+                return o;
+            }
+
+            var u = _userRepository!.GetUserByUserName(userName);
+            if (u == null)
+            {
+                var o = new MVCustomerUser()
+                {
+                    Status = "NOT_CUSTOMER_USER",
+                    Description = $"User [{userName}] is not customer!!!",
+                };
+
+                return o;
+            }
+
+            if (e.UserStatus != "Active")
+            {
+                var o = new MVCustomerUser()
+                {
+                    Status = "NOT_ACTIVE_STATUS_USER",
+                    Description = $"User [{userName}] has status [{e.UserStatus}]!!!",
+                };
+
+                return o;
+            }
+
+            var mv = new MVCustomerUser()
+            {
+                User = u,
+                CustomerUser = e,
+                Status = "OK",
+                Description = "Success",
+            };
+
+            return mv;
         }
     }
 }

@@ -2,11 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
-using Its.Onix.Api.ModelsViews;
-using Its.Onix.Api.Models;
-using System.Text;
-using System.Text.Json;
-using System.Web;
 
 namespace Its.Onix.Api.Controllers
 {

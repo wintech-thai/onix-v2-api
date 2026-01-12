@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = '6abfdfa6-0972-46aa-a78d-a6c50051c500'
+id = '342c95db-6f48-459f-9f74-f0eff6eea71c' #'1a043e75-6b49-4d73-b6d3-6ee143ed5e7b'
 api = 'SendCustomerUserCreationEmail'
 
 param =  nil
