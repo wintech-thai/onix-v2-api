@@ -110,6 +110,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
+                new Claim(ClaimTypes.PrimaryGroupSid, ""),
             ];
 
             return u;
