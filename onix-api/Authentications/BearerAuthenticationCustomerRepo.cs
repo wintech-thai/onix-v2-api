@@ -7,72 +7,72 @@ using Its.Onix.Api.Models;
 
 namespace Its.Onix.Api.Authentications
 {
-    public class BearerAuthenticationAdminRepo : IBearerAuthenticationAdminRepo
+    public class BearerAuthenticationCustomerRepo : IBearerAuthenticationCustomerRepo
     {
-        private readonly IAdminUserService? service = null;
+        private readonly IEntityService? service = null;
         private readonly IRedisHelper _redis;
 
-        public BearerAuthenticationAdminRepo(IAdminUserService svc, IRedisHelper redis)
+        public BearerAuthenticationCustomerRepo(IEntityService svc, IRedisHelper redis)
         {
             service = svc;
             _redis = redis;
         }
 
-        private MVAdminUser? VerifyUser(string orgId, string user, HttpRequest request)
+        private MVCustomerUser? VerifyUser(string orgId, string user, HttpRequest request)
         {
             var pc = ServiceUtils.GetPathComponent(request);
-            var isWhiteListed = ServiceUtils.IsAdminWhiteListedAPI(pc.ControllerName, pc.ApiName);
+            var isWhiteListed = ServiceUtils.IsCustomerWhiteListedAPI(pc.ControllerName, pc.ApiName);
 
             if (isWhiteListed)
             {
-                var ou = new MVAdminUser()
+                var ou = new MVCustomerUser()
                 {
                     Status = "OK",
                     Description = $"Whitelisted API [{pc.ControllerName}] [{pc.ApiName}]",
 
                     User = new MUser() { UserName = user },
-                    AdminUser = new MAdminUser() { UserName = user },
+                    CustomerUser = new MEntity() { UserName = user },
                 };
                 //Console.WriteLine($"WHITELISTED ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
                 return ou;
             }
 
-            var key = $"#{orgId}:VerifyAdminUser:#{user}";
-            var t = _redis.GetObjectAsync<MVAdminUser>(key);
-            var adminUser = t.Result;
+            var key = $"#{orgId}:VerifyCustomerUser:#{user}";
+            var t = _redis.GetObjectAsync<MVCustomerUser>(key);
+            var customerUser = t.Result;
 
-            if (adminUser == null)
+            if (customerUser == null)
             {
-                var m = service!.VerifyUserIsAdmin(user);
+                var m = service!.VerifyUserIsCustomer(user);
                 _ = _redis.SetObjectAsync(key, m, TimeSpan.FromMinutes(5));
 
-                adminUser = m;
+                customerUser = m;
             }
 
-            if (adminUser != null)
+            if (customerUser != null)
             {
                 // Check ตรงนี้หลังจากที่มี verify แล้วมี user อยู่ใน Organization
                 // Check ต่อว่ามี Session อยู่ใน Redis ที่ setup ไว้ตอนที่ login หรือไม่
                 // ต้องเช็คตรงนี้เพื่อทำเรื่องการ logout (เรียก API /logout) แบบทันที session ต้องหลุด
 
-                var sessionKey = CacheHelper.CreateAdminLoginSessionKey(user);
+                var sessionKey = CacheHelper.CreateCustomerLoginSessionKey(user);
                 var session = _redis.GetObjectAsync<UserToken>(sessionKey);
                 if (session.Result == null)
                 {
-                    var ou = new MVAdminUser()
+                    var ou = new MVCustomerUser()
                     {
-                        Status = "ADMIN_SESSION_NOT_FOUND",
+                        Status = "CUSTOMER_SESSION_NOT_FOUND",
                         Description = $"Session not found please re-login for username [{user}]",
 
                         User = new MUser() { UserName = user },
-                        AdminUser = new MAdminUser() { UserName = user },
+                        CustomerUser = new MEntity() { UserName = user },
                     };
 
                     return ou;
                 }
             }
 
-            return adminUser;
+            return customerUser;
         }
 
         public User? Authenticate(string orgId, string user, string password, HttpRequest request)
@@ -88,15 +88,15 @@ namespace Its.Onix.Api.Authentications
                 Log.Information(m.Description!);
                 return null;
             }
-
+//Console.WriteLine($"DEBUG_100 : [{m.Status}] [{orgId}], email=[{m.User!.UserEmail}], uname=[{user}], uid=[{m.User!.UserId}]");
             var u = new User()
             {
-                UserName = user,
+                UserName = user, //customer:<org-id>:<entity-id>
                 Password = "",
                 UserId = m.User!.UserId,
-                Role = m.AdminUser!.RolesList,
+                Role = "CUSTOMER", //มี role เดียวจัดการทุกอย่างได้เฉพาะของตัวเองเท่านั้น
                 AuthenType = "JWT",
-                OrgId = "global",
+                OrgId = orgId,
                 Email = m.User.UserEmail,
 
                 Status = m.Status,

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Its.Onix.Api.Services;
-using Serilog;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.Models;
 
@@ -40,6 +39,13 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         if (adminApimatches.Count > 0)
         {
             return "admin";
+        }
+
+        var customerApiPattern = @"^\/customer-api\/(.+)\/org\/(.+)\/action\/(.+)$";
+        var customerApimatches = Regex.Matches(uri, customerApiPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+        if (customerApimatches.Count > 0)
+        {
+            return "customer";
         }
 
         return "";
@@ -137,6 +143,26 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         return "";
     }
 
+    private string? IsRoleCustomerValid(IEnumerable<MRole>? roles, string uri)
+    {
+        var uriPattern = @"^\/customer-api\/(.+)\/org\/(.+)\/action\/(.+)$";
+        var matches = Regex.Matches(uri, uriPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+
+        var group = matches[0].Groups[1].Value;
+        var api = matches[0].Groups[3].Value;
+
+        var keyword = $"{group}:{api}";
+        apiCalled = keyword;
+
+        if (ServiceUtils.IsCustomerWhiteListedAPI(group, api))
+        {
+            //No need to check for permission just only for this API
+            return "TEMP";
+        }
+
+        return "CUSTOMER";
+    }
+
     protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, GenericRbacRequirement requirement)
     {
         var idClaim = GetClaim(ClaimTypes.NameIdentifier, context.User.Claims);
@@ -211,14 +237,10 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         {
             roleMatch = IsRoleAdminValid(roles, uri);
         }
-
-//        Match m = Regex.Match(apiCalled, adminOnlyApiPattern, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
-//        if (m.Success && !authorizeOrgId.Equals("global"))
-//        {
-//            //Reject if API is match Admin(.+) but ID is not in "global" organization
-//            Log.Warning($"Invoked API [{apiCalled}] for UID [{uid}] [{method}] with org [{authorizeOrgId}] is not allowed!!!");
-//            return Task.CompletedTask;
-//        }
+        else if (apiGroup == "customer")
+        {
+            roleMatch = IsRoleCustomerValid(roles, uri);
+        }
 
         if (!roleMatch!.Equals(""))
         {
@@ -232,6 +254,21 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         mvcContext!.HttpContext.Items["Temp-Identity-Type"] = method;
         mvcContext!.HttpContext.Items["Temp-Identity-Id"] = uid;
         mvcContext!.HttpContext.Items["Temp-Identity-Name"] = userName;
+
+        if (apiGroup == "customer")
+        {
+            var parts = userName.Split(':');
+
+            var orgId = "";
+            var entityId = "";
+            if (parts.Length == 3 && parts[0] == "customer")
+            {
+                orgId = parts[1];
+                entityId = parts[2];
+            }
+
+            mvcContext!.HttpContext.Items["Temp-Customer-Id"] = entityId;
+        }
 
         return Task.CompletedTask;
     }

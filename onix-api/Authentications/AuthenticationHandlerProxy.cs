@@ -13,6 +13,7 @@ namespace Its.Onix.Api.Authentications
         private readonly IBasicAuthenticationRepo? basicAuthenRepo = null;
         private readonly IBearerAuthenticationRepo? bearerAuthRepo = null;
         private readonly IBearerAuthenticationAdminRepo bearerAuthAdminRepo;
+        private readonly IBearerAuthenticationCustomerRepo bearerAuthCustomerRepo;
         private readonly IAuthService _authService;
         private JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 
@@ -24,6 +25,7 @@ namespace Its.Onix.Api.Authentications
             IBasicAuthenticationRepo bsAuthRepo,
             IBearerAuthenticationRepo brAuthRepo,
             IBearerAuthenticationAdminRepo brAuthAdminRepo,
+            IBearerAuthenticationCustomerRepo brAuthCustomerRepo,
             IAuthService authService,
             ISystemClock clock) : base(options, logger, encoder, clock)
         {
@@ -31,6 +33,7 @@ namespace Its.Onix.Api.Authentications
             bearerAuthRepo = brAuthRepo;
             _authService = authService;
             bearerAuthAdminRepo = brAuthAdminRepo;
+            bearerAuthCustomerRepo = brAuthCustomerRepo;
         }
 
         protected override AuthenResult AuthenticateBasic(PathComponent pc, byte[]? jwtBytes, HttpRequest request)
@@ -60,17 +63,20 @@ namespace Its.Onix.Api.Authentications
             var jwt = tokenHandler.ReadJwtToken(accessToken);
             string userName = jwt.Claims.First(c => c.Type == "preferred_username").Value;
 
-            //TODO : อนาคตต้องมี การ check ว่าเป็น API ของ Admin หรือ User (basicAuthenRepo vs bearerAuthAdminRepo)
-
             var user = new User();
             if (pc.ApiGroup == "user")
             {
                 user = bearerAuthRepo!.Authenticate(pc.OrgId, userName, "", request);
             }
-            else
+            else if (pc.ApiGroup == "admin")
             {
                 //Admin mode
                 user = bearerAuthAdminRepo!.Authenticate(pc.OrgId, userName, "", request);
+            }
+            else if (pc.ApiGroup == "customer")
+            {
+                //Customer mode
+                user = bearerAuthCustomerRepo!.Authenticate(pc.OrgId, userName, "", request);
             }
 
             var authResult = new AuthenResult()

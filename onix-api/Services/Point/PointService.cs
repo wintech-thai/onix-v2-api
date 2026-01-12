@@ -2,7 +2,6 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
-using System.Threading.Tasks;
 using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Services
@@ -195,6 +194,22 @@ namespace Its.Onix.Api.Services
             r.PointTx = result;
 
             return r;
+        }
+
+        public async Task<List<MPointTx>> GetPointTxsByCustomerId(string orgId, string custId, VMPointTx param)
+        {
+            repository.SetCustomOrgId(orgId);
+
+            var wallet = await repository!.GetWalletByCustomerId(custId);
+            if (wallet == null)
+            {
+                return [];
+            }
+
+            param.WalletId = wallet.Id.ToString();
+            var pointTxs = await repository.GetPointTxsByWalletId(param);
+
+            return pointTxs;
         }
 
         public async Task<List<MPointTx>> GetPointTxsByWalletId(string orgId, VMPointTx param)
@@ -454,6 +469,68 @@ namespace Its.Onix.Api.Services
             }
 
             r.Wallet = m;
+
+            return r;
+        }
+
+        public MVWallet ValidateResponseData(string orgId, string customerId, List<MPointTx> items)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var wallet = repository!.GetWalletByCustomerId(customerId).Result;
+
+            foreach (var pointTx in items)
+            {
+                var responseOrgId = pointTx.OrgId;
+                var responseWalletId = pointTx.WalletId;
+
+                if (responseOrgId != orgId)
+                {
+                    r.Status = "ERROR_ORG_ID_MISMATCH";
+                    r.Description = "Organization ID of data is different from requested!!!";
+                    return r;
+                }
+
+                if (responseWalletId != wallet!.Id.ToString())
+                {
+                    r.Status = "ERROR_CUST_ID_MISMATCH";
+                    r.Description = "Customer ID of data is different from requested!!!";
+                    return r;
+                }
+            }
+
+            return r;
+        }
+
+        public MVWallet ValidateResponseData(string orgId, string customerId, MVWallet responseData)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var responseWallet = responseData.Wallet!;
+            var responseOrgId = responseWallet.OrgId;
+            var responseCustomerId = responseWallet.CustomerId;
+
+            if (responseOrgId != orgId)
+            {
+                r.Status = "ERROR_ORG_ID_MISMATCH";
+                r.Description = "Organization ID of data is different from requested!!!";
+                return r;
+            }
+
+            if (responseCustomerId != customerId)
+            {
+                r.Status = "ERROR_CUST_ID_MISMATCH";
+                r.Description = "Customer ID of data is different from requested!!!";
+                return r;
+            }
 
             return r;
         }

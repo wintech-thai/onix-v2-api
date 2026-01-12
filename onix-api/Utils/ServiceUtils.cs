@@ -33,6 +33,11 @@ namespace Its.Onix.Api.Utils
             return false;
         }
 
+        public static bool IsCustomerWhiteListedAPI(string controller, string api)
+        {
+            return false;
+        }
+
         public static string MaskScanItemPin(string pin)
         {
             if (string.IsNullOrEmpty(pin))
@@ -153,6 +158,9 @@ namespace Its.Onix.Api.Utils
             var pattern2 = @"^\/admin-api\/(.+)\/org\/(.+)\/action\/(.+)$";
             MatchCollection matchesAdminApi = Regex.Matches(path, pattern2, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
+            var pattern3 = @"^\/customer-api\/(.+)\/org\/(.+)\/action\/(.+)$";
+            MatchCollection matchesCustomerApi = Regex.Matches(path, pattern3, RegexOptions.None, TimeSpan.FromMilliseconds(100));
+
             var result = new PathComponent();
             if (matchesUserApi.Count > 0)
             {
@@ -167,6 +175,13 @@ namespace Its.Onix.Api.Utils
                 result.ControllerName = matchesAdminApi[0].Groups[1].Value;
                 result.ApiName = matchesAdminApi[0].Groups[3].Value;
                 result.ApiGroup = "admin";
+            }
+            else if (matchesCustomerApi.Count > 0)
+            {
+                result.OrgId = matchesCustomerApi[0].Groups[2].Value;
+                result.ControllerName = matchesCustomerApi[0].Groups[1].Value;
+                result.ApiName = matchesCustomerApi[0].Groups[3].Value;
+                result.ApiGroup = "customer";
             }
 
             return result;
