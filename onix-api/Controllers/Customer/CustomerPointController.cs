@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -81,6 +82,39 @@ namespace Its.Onix.Api.Controllers
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             Response.Headers.Append("CUST_DESC", result!.Description);
+
+            return Ok(result);
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/GetPointTxs")]
+        public async Task<IActionResult> GetPointTxs(string orgId, [FromBody] VMPointTx request)
+        {
+            if (request.Limit <= 0)
+            {
+                request.Limit = 100;
+            }
+
+            var validateResult = ValidateCustomerIdentity();
+            if (string.IsNullOrEmpty(validateResult.CustomerId))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var customerId = validateResult.CustomerId;
+            var result = await svc.GetPointTxsByCustomerId(orgId, customerId, request);
+
+            var verifiedResult = svc.ValidateResponseData(orgId, customerId, result);
+            if (verifiedResult!.Status != "OK")
+            {
+                //เพื่อป้องกันว่า data ที่ส่งออกไปต้องเป็นของ org และ customer ID ที่ request เข้ามาจริง ๆ
+                
+                Response.Headers.Append("CUST_STATUS", verifiedResult.Status);
+                Response.Headers.Append("CUST_DESC", verifiedResult.Description);
+                return Ok(verifiedResult);
+            }
 
             return Ok(result);
         }
