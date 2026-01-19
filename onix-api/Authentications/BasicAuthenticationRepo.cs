@@ -39,7 +39,7 @@ namespace Its.Onix.Api.Authentications
         public User? Authenticate(string orgId, string user, string password, HttpRequest request)
         {
             var m = VerifyKey(orgId, password);
-            if (m == null)
+            if ((m == null) || (m.ApiKey == null))
             {
                 return null;
             }
