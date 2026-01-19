@@ -67,7 +67,7 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetScanItemById/{scanItemId}")]
-        public async Task<IActionResult> GetItemById(string id, string scanItemId)
+        public async Task<IActionResult> GetScanItemById(string id, string scanItemId)
         {
             var result = await svc.GetScanItemByIdV2(id, scanItemId);
 
