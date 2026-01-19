@@ -263,7 +263,7 @@ namespace Its.Onix.Api.Services
 
                 return result;
             }
-
+Console.WriteLine($"DEBUG_1 Calling IDP with user name [{userName}], [{u.UserName}]");
             var r = _authService.UpdateUserIdp(user).Result;
             if (!r.Success)
             {
