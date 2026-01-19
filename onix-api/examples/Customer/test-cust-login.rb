@@ -23,15 +23,15 @@ param =  {
 result = make_request(:post, apiUrl, param)
 token = result["token"]["access_token"]
 puts(token)
-puts("======")
+#puts("======")
 
-apiUrl = "customer-api/AuthCustomer/org/#{orgId}/action/Refresh"
-param =  {
-  RefreshToken: result["token"]["refresh_token"],
-}
-result = make_request(:post, apiUrl, param)
+#apiUrl = "customer-api/AuthCustomer/org/#{orgId}/action/Refresh"
+#param =  {
+#  RefreshToken: result["token"]["refresh_token"],
+#}
+#result = make_request(:post, apiUrl, param)
 
-token = result["token"]["access_token"]
-puts(token)
+#token = result["token"]["access_token"]
+#puts(token)
 
 File.write(keyFile, token)

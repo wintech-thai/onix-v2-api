@@ -14,9 +14,8 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ### 
-apiUrl = "customer-api/CustomerPoint/org/#{orgId}/action/GetWallets"
+apiUrl = "customer-api/CustomerPoint/org/#{orgId}/action/GetWallet"
 param = nil
-
 token = File.read(keyFile)
 
 ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
