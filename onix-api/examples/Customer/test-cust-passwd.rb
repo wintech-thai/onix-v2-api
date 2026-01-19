@@ -16,10 +16,8 @@ keyFile = ".token"
 ### 
 apiUrl = "customer-api/OnlyCustomerUser/org/#{orgId}/action/UpdatePassword"
 param =  {
-  Name: 'NameTest1',
-  LastName: 'LastNameTest1',
-  PhoneNumber: '+660989776650',
-  SecondaryEmail: 'xxxx1234@gmail.com'
+  CurrentPassword: "#{ENV['USER_PASSWORD']}",
+  NewPassword: "#{ENV['USER_PASSWORD_NEW']}",
 }
 token = File.read(keyFile)
 

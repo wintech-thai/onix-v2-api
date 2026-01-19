@@ -35,6 +35,8 @@ namespace Its.Onix.Api.Models
         [Column("secondary_email_verified")]
         public string? SecondaryEmailVerified { get; set; } /* YES or NO */
 
+        [Column("birth_date")]
+        public DateTime? BirthDate { get; set; }
 
         [Column("is_org_initial_user")]
         public string? IsOrgInitialUser { get; set; } /* YES or NO */
