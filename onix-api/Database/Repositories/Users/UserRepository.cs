@@ -72,6 +72,7 @@ namespace Its.Onix.Api.Database.Repositories
                 u.LastName = user.LastName;
                 u.SecondaryEmail = user.SecondaryEmail;
                 u.PhoneNumber = user.PhoneNumber;
+                u.BirthDate = user.BirthDate;
 
                 context!.SaveChanges();
             }
