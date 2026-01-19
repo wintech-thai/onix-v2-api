@@ -116,6 +116,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             var uname = validateResult.UserName;
+            request.UserName = uname;
 
             //ใช้ userName ที่มาจาก JWT เท่านั้นเพื่อรับประกันว่าเปลี่ยนข้อมูลเฉพาะของตัวเองเท่านั้น
             var result = svc.UpdateUserByUserName(uname, request);
