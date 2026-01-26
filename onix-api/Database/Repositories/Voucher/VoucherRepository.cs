@@ -83,6 +83,11 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(fullTextPd);
             }
 
+            if ((param.CustomerId != "") && (param.CustomerId != null))
+            {
+                pd = pd.And(p => p.CustomerId!.Equals(param.CustomerId));
+            }
+
             return pd;
         }
 

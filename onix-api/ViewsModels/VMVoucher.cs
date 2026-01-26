@@ -6,5 +6,6 @@ namespace Its.Onix.Api.ViewsModels
     public class VMVoucher : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
+        public string? CustomerId { get; set; }
     }
 }
