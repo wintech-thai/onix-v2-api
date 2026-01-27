@@ -525,6 +525,56 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVEntity RegisterCustomerNoOtp(string orgId, string serial, string pin, string email)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _entityRepo!.SetCustomOrgId(orgId);
+
+            var r = new MVEntity()
+            {
+                Status = "SUCCESS",
+                Description = "Success",
+            };
+
+            var scanItem = repository!.GetScanItemBySerialPinV2(serial, pin).Result;
+            if (scanItem == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"No serial=[{serial}] and pin=[{pin}] in our database!!!";
+
+                return r;
+            }
+
+            var customerId = scanItem.CustomerId.ToString();
+            if (ServiceUtils.IsGuidValid(customerId!))
+            {
+                r.Status = "SCAN_ITEM_IS_ALREADY_OCCUPIED";
+                r.Description = $"Scan Item is already owned by another customer=[{customerId}]!!!";
+
+                return r;
+            }
+
+            var entity = new MEntity()
+            {
+                PrimaryEmail = email,
+                PrimaryEmailStatus = "VERIFIED", //เนื่องจากผ่านการยืนยัน OTP มาแล้ว
+                EntityType = 1,
+                EntityCategory = 1,
+                Code = $"CUST:{Guid.NewGuid()}",
+                Name = email,
+            };
+
+            //Get or create customer here
+            var customer = _entityRepo.GetOrCreateEntityByEmail(entity);
+            customerId = customer.Id.ToString();
+
+            var _ = AttachScanItemToCustomer(orgId, scanItem.Id.ToString()!, customerId!).Result;
+            CreatePointTriggerJob(orgId, scanItem, customer);
+
+            r.Entity = customer;
+            return r;
+        }
+
         private void CreatePointTriggerJob(string orgId, MScanItem sci, MEntity cust)
         {
             _itemRepo.SetCustomOrgId(orgId);

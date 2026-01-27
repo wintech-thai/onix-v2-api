@@ -6,6 +6,7 @@ using System.Text.Json;
 using Its.Onix.Api.Utils;
 using System.Web;
 using Its.Onix.Api.Models;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -13,16 +14,20 @@ namespace Its.Onix.Api.Controllers
     public class VerifyScanItemController : ControllerBase
     {
         private readonly IScanItemService svc;
+        private readonly IAuthService authSvc;
         private readonly IRedisHelper _redis;
         private readonly IScanItemActionService _scanItemActionService;
+        private JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
 
         public VerifyScanItemController(IScanItemService service,
+            IAuthService authService,
             IScanItemActionService scanItemActionService,
             IRedisHelper redis)
         {
             svc = service;
             _redis = redis;
             _scanItemActionService = scanItemActionService;
+            authSvc = authService;
         }
 
         private string CreateUrlWithOTP(string orgId, string scanUrl, string keyword, string apiName, string serial, string pin)
@@ -165,8 +170,41 @@ namespace Its.Onix.Api.Controllers
 
             HttpContext.Items["ContextData"] = result.ScanItem;
 
+            //Check client pass PsMemberToken header for member verification
+            var psMemberToken = HttpContext.Request.Headers["PsMemberToken"].FirstOrDefault();
+            ValidateTokenAndRegister(id, psMemberToken, serial, pin);
+
             Response.Headers.Append("CUST_STATUS", result.Status);
             return Redirect(url);
+        }
+
+        private void ValidateTokenAndRegister(string orgId, string? psMemberToken, string serial, string pin)
+        {
+            if (string.IsNullOrEmpty(psMemberToken))
+            {
+                //เป็นการ scan ปกติแบบไม่ผ่านระบบ member
+                return;
+            }
+
+            try
+            {
+                //Throw exception if invalid    
+                authSvc.ValidateAccessToken(psMemberToken, tokenHandler);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"PsMemberToken is invalid : {ex.Message}");
+                return;
+            }
+
+            var jwt = tokenHandler.ReadJwtToken(psMemberToken);
+            string email = jwt.Claims.First(c => c.Type == "email").Value;
+
+            var registerResult = svc.RegisterCustomerNoOtp(orgId, serial, pin, email);
+            if (registerResult.Status != "SUCCESS")
+            {
+                Log.Warning($"{registerResult.Status}: {registerResult.Description}, email=[{email}]");
+            }
         }
 
         [HttpGet]

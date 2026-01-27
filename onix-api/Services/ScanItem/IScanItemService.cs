@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Services
         public MVEntity GetScanItemCustomer(string orgId, string serial, string pin, string otp);
         public MVOtp GetOtpViaEmail(string orgId, string serial, string pin, string otp, string email);
         public MVEntity RegisterCustomer(string id, string serial, string pin, string otp, MCustomerRegister cust);
+        public MVEntity RegisterCustomerNoOtp(string orgId, string serial, string pin, string email);
 
         //=== V2 ===
         public Task<MVScanItem> AttachScanItemToProduct(string orgId, string scanItemId, string productId);
