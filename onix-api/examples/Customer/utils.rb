@@ -24,7 +24,8 @@ def make_request(method, apiName, data)
   host = ENV['API_HTTP_ENDPOINT']
   apiKey = ENV['API_KEY']
   accessToken = ENV['ACCESS_TOKEN']
-  
+  memberToken = ENV['PsMemberToken']
+
   uri = URI.parse("#{host}/#{apiName}")  
 
   # แปลง method เช่น "post" → "Net::HTTP::Post"
@@ -45,6 +46,11 @@ def make_request(method, apiName, data)
     puts("===== Using JWT =====")
   end
 
+  if (!memberToken.nil?)
+    request['PsMemberToken'] = memberToken
+    puts("===== Using PsMemberToken =====")
+  end
+
   if (!data.nil?)
     request.body = data.to_json
   end
@@ -55,7 +61,7 @@ def make_request(method, apiName, data)
   response = http.request(request)
 
   if (response.code != '200')
-    puts("ERROR : Failed to send request with error [#{response}]")
+    puts("ERROR : Failed to send request with error [#{response}] [#{response.code}]")
     return
   end
 
