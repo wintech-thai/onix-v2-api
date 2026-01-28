@@ -18,6 +18,7 @@ namespace Its.Onix.Api.Services
 
         //ไม่ใช้ orgId
         public MVUser GetUserByUserName(string userName);
+        public List<MMenuItem> GetUserAllowedMenu(string orgId, string userName);
         public MVUser UpdateUserByUserName(string userName, MUser user);
     }
 }
