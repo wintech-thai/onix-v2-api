@@ -482,5 +482,45 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        private List<MMenuItem> GetGetDefaultMenu(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var items = new[]
+            {
+                new MMenuItem { GroupName = "DASHBOARD", MenuName = "Overview" },
+
+                new MMenuItem { GroupName = "GENERAL", MenuName = "Organization" },
+                new MMenuItem { GroupName = "GENERAL", MenuName = "Product" },
+                new MMenuItem { GroupName = "GENERAL", MenuName = "Customer" },
+                new MMenuItem { GroupName = "GENERAL", MenuName = "Job" },
+
+                new MMenuItem { GroupName = "SCAN_ITEM", MenuName = "ScanItemAction" },
+                new MMenuItem { GroupName = "SCAN_ITEM", MenuName = "ScanItemTemplate" },
+                new MMenuItem { GroupName = "SCAN_ITEM", MenuName = "ScanItemFolder" },
+                new MMenuItem { GroupName = "SCAN_ITEM", MenuName = "ScanItem" },
+                new MMenuItem { GroupName = "SCAN_ITEM", MenuName = "ScanItemHistory" },
+
+                new MMenuItem { GroupName = "LOYALTY", MenuName = "PointAndWallet" },
+                new MMenuItem { GroupName = "LOYALTY", MenuName = "PointRule" },
+                new MMenuItem { GroupName = "LOYALTY", MenuName = "PointTrigger" },
+                new MMenuItem { GroupName = "LOYALTY", MenuName = "Voucher" },
+
+                new MMenuItem { GroupName = "ADMINISTRATION", MenuName = "CustomRole" },
+                new MMenuItem { GroupName = "ADMINISTRATION", MenuName = "ApiKey" },
+                new MMenuItem { GroupName = "ADMINISTRATION", MenuName = "User" },
+                new MMenuItem { GroupName = "ADMINISTRATION", MenuName = "AuditLog" },
+            };
+
+            return items.ToList();
+        }
+
+        public List<MMenuItem> GetUserAllowedMenu(string orgId, string userName)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = GetGetDefaultMenu(orgId);
+
+            return result;
+        }
     }
 }

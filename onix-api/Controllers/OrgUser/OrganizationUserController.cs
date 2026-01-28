@@ -63,6 +63,14 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/{id}/action/GetUserAllowedMenu/{userName}")]
+        public IActionResult GetUserAllowedMenu(string id, string userName)
+        {
+            var result = svc.GetUserAllowedMenu(id, userName);
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetUserById/{userId}")]

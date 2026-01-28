@@ -18,5 +18,6 @@ namespace Its.Onix.Api.Services
         public MVOrganizationUser? UpdateUserStatusById(string orgId, string orgUserId, string status);
         public MOrganizationUser GetUserById(string orgId, string userId);
         public MVOrganizationUser GetUserByIdLeftJoin(string orgId, string userId);
+        public List<MMenuItem> GetUserAllowedMenu(string orgId, string userName);
     }
 }
