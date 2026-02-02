@@ -205,5 +205,32 @@ namespace Its.Onix.Api.Controllers
             result = await voucherSvc.GetVoucherVerifyQrUrl(id, voucherId);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/ApproveVoucherUsedById/{voucherId}")]
+        public async Task<IActionResult> ApproveVoucherUsedById(string id, string voucherId)
+        {
+            var validateResult = ValidateCustomerIdentity();
+            if (string.IsNullOrEmpty(validateResult.CustomerId))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var customerId = validateResult.CustomerId;
+            var result = await voucherSvc.GetVoucherById(id, voucherId);
+
+            if (result.Voucher != null && result.Voucher.CustomerId != customerId)
+            {
+                result.Voucher = null;
+                result.Status = "UNAUTHORIZED_ACCESS_VOUCHER";
+                result.Description = "The voucher does not belong to the authenticated customer.";
+
+                return Ok(result);
+            }
+
+            var approveResult = await voucherSvc.ApproveVoucherUsedById(id, voucherId);
+            return Ok(approveResult);
+        }
     }
 }

@@ -85,6 +85,8 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? PrivilegeName { get; set; }
         [NotMapped]
+        public string? PrivilegeTermAndCondition { get; set; }
+        [NotMapped]
         public string? VoucherVerifyUrl { get; set; }
 
         public MVoucher()

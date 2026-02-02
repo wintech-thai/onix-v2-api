@@ -132,6 +132,7 @@ namespace Its.Onix.Api.Database.Repositories
 
                 PrivilegeCode = x.item != null ? x.item.Code : "",
                 PrivilegeName = x.item != null ? x.item.Description : "",
+                PrivilegeTermAndCondition = x.item != null ? x.item.Content : "",
 
                 CreatedDate = x.vc.CreatedDate,
             });
