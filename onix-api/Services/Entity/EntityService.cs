@@ -494,6 +494,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (entity.UserStatus != "Active")
+            {
+                r.Status = "NOT_ACTIVE_STATUS_USER";
+                r.Description = $"User for Entity ID [{entityId}] has status [{entity.UserStatus}]!!!";
+
+                return r;
+            }
+
             var reg = new MEmailVerification()
             {
                 Id = entity.Id.ToString(),
