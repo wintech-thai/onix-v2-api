@@ -178,7 +178,7 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        private MVJob? CreateEmailCustomerResetPasswordJob(string orgId, MEmailVerification reg)
+        private MVJob? CreateEmailCustomerResetPasswordJob(string orgId, MUserRegister reg)
         {
             var regType = "customer-forgot-password";
 
@@ -211,11 +211,10 @@ namespace Its.Onix.Api.Services
                 [
                     new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
-                    new NameValue { Name = "ENTITY_NAME", Value = reg.Name },
-                    new NameValue { Name = "ENTITY_ID", Value = reg.Id },
+                    new NameValue { Name = "USER_NAME", Value = reg.UserName },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
-                    new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
+                    new NameValue { Name = "RESET_PASSWORD_URL", Value = registrationUrl },
                 ]
             };
 
@@ -502,12 +501,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var reg = new MEmailVerification()
+            var reg = new MUserRegister()
             {
-                Id = entity.Id.ToString(),
-                Code = entity.Code,
-                Name = entity.Name,
-                Email = entity.PrimaryEmail,
+                Email = entity.PrimaryEmail!,
+                UserName = entity.PrimaryEmail!, // assuming PrimaryEmail is the username
+                OrgUserId = entity.Id!.ToString(),
             };
             CreateEmailCustomerResetPasswordJob(orgId, reg);
 
