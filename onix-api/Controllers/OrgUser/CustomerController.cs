@@ -102,6 +102,17 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/SendCustomerResetPasswordEmail/{entityId}")]
+        public IActionResult SendCustomerResetPasswordEmail(string id, string entityId)
+        {
+            var result = svc.SendCustomerResetPasswordEmail(id, entityId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetCustomerById/{entityId}")]
         public MEntity GetCustomerById(string id, string entityId)
