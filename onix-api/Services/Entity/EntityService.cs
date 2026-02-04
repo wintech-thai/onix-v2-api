@@ -178,6 +178,55 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        private MVJob? CreateEmailCustomerResetPasswordJob(string orgId, MUserRegister reg)
+        {
+            var regType = "customer-forgot-password";
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "register";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            if (environment != "Production")
+            {
+                registerDomain = "register-dev";
+            }
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+
+            var templateType = "customer-forgot-password";
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "Entity.CreateEmailCustomerResetPasswordJob()",
+                Type = "SimpleEmailSend",
+                Status = "Pending",
+                Tags = templateType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_NOTI_ADDRESS", Value = "pjame.fb@gmail.com" },
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = reg.Email },
+                    new NameValue { Name = "USER_NAME", Value = reg.UserName },
+                    new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
+                    new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "RESET_PASSWORD_URL", Value = registrationUrl },
+                ]
+            };
+
+            var result = _jobService.AddJob(orgId, job);
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "CustomerForgotPassword");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return result;
+        }
+
         public MVEntity? UpdateUserStatusById(string orgId, string entityId, string status)
         {
             var r = new MVEntity()
@@ -414,6 +463,53 @@ namespace Its.Onix.Api.Services
             CreateEmailCustomerUserCreateJob(orgId, reg);
 
             r.Entity = entity;
+            return r;
+        }
+
+
+        public MVJob? SendCustomerResetPasswordEmail(string orgId, string entityId)
+        {
+            var r = new MVJob()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var entity = repository!.GetEntityById(entityId);
+            if (entity == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (entity.UserStatus != "Active")
+            {
+                r.Status = "NOT_ACTIVE_STATUS_USER";
+                r.Description = $"User for Entity ID [{entityId}] has status [{entity.UserStatus}]!!!";
+
+                return r;
+            }
+
+            var reg = new MUserRegister()
+            {
+                Email = entity.PrimaryEmail!,
+                UserName = entity.PrimaryEmail!, // assuming PrimaryEmail is the username
+                OrgUserId = entity.Id!.ToString(),
+            };
+            var jobResult = CreateEmailCustomerResetPasswordJob(orgId, reg);
+
+            r.Job = jobResult!.Job;
             return r;
         }
 
