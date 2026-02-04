@@ -467,9 +467,9 @@ namespace Its.Onix.Api.Services
         }
 
 
-        public MVEntity? SendCustomerResetPasswordEmail(string orgId, string entityId)
+        public MVJob? SendCustomerResetPasswordEmail(string orgId, string entityId)
         {
-            var r = new MVEntity()
+            var r = new MVJob()
             {
                 Status = "OK",
                 Description = "Success"
@@ -507,9 +507,9 @@ namespace Its.Onix.Api.Services
                 UserName = entity.PrimaryEmail!, // assuming PrimaryEmail is the username
                 OrgUserId = entity.Id!.ToString(),
             };
-            CreateEmailCustomerResetPasswordJob(orgId, reg);
+            var jobResult = CreateEmailCustomerResetPasswordJob(orgId, reg);
 
-            r.Entity = entity;
+            r.Job = jobResult!.Job;
             return r;
         }
 
