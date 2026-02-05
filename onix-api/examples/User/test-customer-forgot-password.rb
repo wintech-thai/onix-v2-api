@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = "b608a7d1-f954-44b1-baa2-fca8b7a12a57"
+id = "342c95db-6f48-459f-9f74-f0eff6eea71c"
 
 apiUrl = "api/Customer/org/#{orgId}/action/SendCustomerResetPasswordEmail/#{id}"
 
