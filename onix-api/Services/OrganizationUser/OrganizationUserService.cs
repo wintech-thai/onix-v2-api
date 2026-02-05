@@ -505,6 +505,7 @@ namespace Its.Onix.Api.Services
                 new MMenuItem { GroupName = "LOYALTY", MenuName = "PointRule" },
                 new MMenuItem { GroupName = "LOYALTY", MenuName = "PointTrigger" },
                 new MMenuItem { GroupName = "LOYALTY", MenuName = "Voucher" },
+                new MMenuItem { GroupName = "LOYALTY", MenuName = "Privilege" },
 
                 new MMenuItem { GroupName = "ADMINISTRATION", MenuName = "CustomRole" },
                 new MMenuItem { GroupName = "ADMINISTRATION", MenuName = "ApiKey" },
