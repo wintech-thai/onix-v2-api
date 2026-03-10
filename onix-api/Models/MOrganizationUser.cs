@@ -59,6 +59,7 @@ namespace Its.Onix.Api.Models
         public string? UserEmail { get; set; }
         public string? OrgName { get; set; }
         public string? OrgDesc { get; set; }
+        public string? OrgType { get; set; }
 
         [NotMapped]
         public List<string> Roles { get; set; }
