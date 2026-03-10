@@ -10,12 +10,13 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = ENV['API_ORG']
+orgId = 'temp'
 keyFile = ".token"
 orgType = "PLEASE-PROTECT"
 
 ### 
-apiUrl = "api/OnlyUser/org/#{orgId}/action/GetUserAllowedOrg"
+#apiUrl = "api/OnlyUser/org/#{orgId}/action/GetUserAllowedOrg"
+apiUrl = "api/OnlyUser/org/#{orgId}/action/GetUserAllowedOrganization/#{orgType}"
 param = nil
 
 token = File.read(keyFile)

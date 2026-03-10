@@ -16,10 +16,11 @@ keyFile = ".token"
 ### 
 apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/RegisterOrganization"
 param =  {
-  UserOrgId: "chalam-farm-v1",
-  Name: "Chalam Farm",
+  UserOrgId: "rtarf",
+  Name: "RTARF",
   UserName: "seubpong.mon",
   Email: "pjame.fb@gmail.com",
+  UserOrgType: "PLEASE-PROTECT",
 }
 
 token = File.read(keyFile)

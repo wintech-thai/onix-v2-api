@@ -1,6 +1,7 @@
 require 'json'
 require 'net/http'
 require 'uri'
+require 'base64'
 
 def json?(str)
   JSON.parse(str)
@@ -22,6 +23,7 @@ end
 def make_request(method, apiName, data)
   host = ENV['API_HTTP_ENDPOINT']
   apiKey = ENV['API_KEY']
+  accessToken = ENV['ACCESS_TOKEN']
 
   uri = URI.parse("#{host}/#{apiName}")  
 
@@ -40,6 +42,13 @@ def make_request(method, apiName, data)
   if (!data.nil?)
     request.body = data.to_json
   end
+
+  if (!accessToken.nil?)
+    tokenB64 = Base64.strict_encode64(accessToken)
+    request['Authorization'] = "Bearer #{tokenB64}"
+    puts("===== Using JWT =====")
+  end
+
 
   http = Net::HTTP.new(uri.host, uri.port)  
   http.use_ssl = (uri.scheme == "https")
