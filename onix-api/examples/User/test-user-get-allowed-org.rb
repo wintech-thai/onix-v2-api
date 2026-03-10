@@ -10,18 +10,14 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = 'temp'
 keyFile = ".token"
+orgType = "PLEASE-PROTECT"
 
 ### 
-apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/RegisterOrganization"
-param =  {
-  UserOrgId: "rtarf",
-  Name: "RTARF",
-  UserName: "seubpong.mon",
-  Email: "pjame.fb@gmail.com",
-  UserOrgType: "PLEASE-PROTECT",
-}
+#apiUrl = "api/OnlyUser/org/#{orgId}/action/GetUserAllowedOrg"
+apiUrl = "api/OnlyUser/org/#{orgId}/action/GetUserAllowedOrganization/#{orgType}"
+param = nil
 
 token = File.read(keyFile)
 
@@ -30,6 +26,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)
-

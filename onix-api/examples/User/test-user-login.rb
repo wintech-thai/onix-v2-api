@@ -10,7 +10,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = "temp"
 keyFile = ".token"
 
 apiUrl = "api/Auth/org/temp/action/Login"
