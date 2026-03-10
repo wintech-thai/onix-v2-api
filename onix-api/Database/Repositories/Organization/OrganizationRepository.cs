@@ -25,6 +25,42 @@ namespace Its.Onix.Api.Database.Repositories
             return user;
         }
 
+        public IEnumerable<MOrganizationUser> GetUserAllowedOrganizations(string userName, string orgType)
+        {
+            //var m = context!.OrganizationUsers!.Where(
+            //    p => p!.UserName!.Equals(userName))
+            //    .OrderByDescending(e => e.OrgCustomId)
+            //    .ToList();
+
+            var result =
+                from ou in context!.OrganizationUsers
+                where ou.UserName == userName
+                orderby ou.OrgCustomId descending
+
+                // JOIN กับ Organizations
+                join o in context.Organizations!
+                    on ou.OrgCustomId equals o.OrgCustomId into orgJoin
+                from o in orgJoin.DefaultIfEmpty()
+                where o.OrgType == orgType
+
+                // JOIN กับ Users
+                join u in context.Users!
+                    on ou.UserName equals u.UserName into userJoin
+                from u in userJoin.DefaultIfEmpty()
+
+                select new MOrganizationUser
+                {
+                    UserName = ou.UserName,
+                    OrgCustomId = ou.OrgCustomId,
+                    OrgDesc = o != null ? o.OrgDescription : null,
+                    OrgName = o != null ? o.OrgName : null,
+                    UserEmail = u != null ? u.UserEmail : null,
+                    OrgType = o != null ? o.OrgType : null,
+                };
+
+            return result.ToList();
+        }
+
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName)
         {
             //var m = context!.OrganizationUsers!.Where(

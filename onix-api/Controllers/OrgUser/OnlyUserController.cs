@@ -94,6 +94,24 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/{id}/action/GetUserAllowedOrganization/{orgType}")]
+        public IActionResult GetUserAllowedOrganization(string orgType)
+        {
+            var validateResult = ValidateUserIdentity();
+            if (string.IsNullOrEmpty(validateResult.UserName))
+            {
+                return validateResult.RequestResult!;
+            }
+
+            var userName = validateResult.UserName;
+
+            //ใช้ userName ที่มาจาก JWT เท่านั้น
+            var result = _orgSvc.GetUserAllowedOrganizations(userName!, orgType);
+            return Ok(result);
+        }
+
+
         [HttpPost]
         [Route("org/{id}/action/UpdatePassword")]
         public IActionResult UpdatePassword(string id, [FromBody] MUpdatePassword request)

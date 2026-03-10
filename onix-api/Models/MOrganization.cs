@@ -23,6 +23,8 @@ namespace Its.Onix.Api.Models
         [Column("org_description")]
         public string? OrgDescription { get; set; }
 
+        [Column("org_type")]
+        public string? OrgType { get; set; }
 
         [Column("tags")]
         public string? Tags { get; set; } // Comma separated string

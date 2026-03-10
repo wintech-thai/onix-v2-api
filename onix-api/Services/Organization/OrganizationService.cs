@@ -78,6 +78,12 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public IEnumerable<MOrganizationUser> GetUserAllowedOrganizations(string userName, string orgType)
+        {
+            var result = repository!.GetUserAllowedOrganizations(userName, orgType);
+            return result;
+        }
+
         public bool IsUserNameExist(string orgId, string userName)
         {
             repository!.SetCustomOrgId(orgId);
