@@ -14,6 +14,7 @@ namespace Its.Onix.Api.Utils
 
         private static readonly string[] whiteListedApi = [
                 "OnlyUser:GetUserAllowedOrg",
+                "OnlyUser:GetUserAllowedOrganization",
                 "OnlyUser:UpdatePassword",
                 "OnlyUser:GetUserByUserName",
                 "OnlyUser:UpdateUserByUserName",
