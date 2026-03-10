@@ -90,7 +90,7 @@ namespace Its.Onix.Api.Controllers
             var userName = validateResult.UserName;
 
             //ใช้ userName ที่มาจาก JWT เท่านั้น
-            var result = _orgSvc.GetUserAllowedOrganizations(userName!, "");
+            var result = _orgSvc.GetUserAllowedOrganization(userName!);
             return Ok(result);
         }
 
