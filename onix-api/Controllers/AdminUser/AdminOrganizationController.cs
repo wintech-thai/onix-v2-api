@@ -36,6 +36,7 @@ namespace Prom.LPR.Api.Controllers
             {
                 OrgCustomId = orgId,
                 OrgName = request.Name,
+                OrgType = request.UserOrgType,
             };
 
             var orgStatus = _orgSvc.AddOrganization(orgId, org);

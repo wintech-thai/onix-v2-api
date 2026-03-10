@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
         public string? UserOrgId { get; set; }
         public string? UserOrgName { get; set; }
         public string? UserOrgDesc { get; set; }
+        public string? UserOrgType { get; set; }
 
         public string? UserName { get; set; }
         public string UserInitialPassword { get; set; } /* Pass to Keycloak */
