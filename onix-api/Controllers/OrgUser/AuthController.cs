@@ -7,6 +7,7 @@ using Its.Onix.Api.Models;
 using System.Text;
 using System.Text.Json;
 using System.Web;
+using onix.api.Migrations;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -16,6 +17,7 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IAuthService svc;
         private readonly IJobService _jobSvc;
+        private readonly IOrganizationService _orgService;
         private readonly IUserService _userSvc;
         private readonly IEntityService _entitySvc;
         private readonly IRedisHelper _redis;
@@ -25,6 +27,7 @@ namespace Its.Onix.Api.Controllers
             IAuthService service,
             IRedisHelper redis,
             IJobService jobSvc,
+            IOrganizationService orgService,
             IUserService userSvc,
             IEntityService entitySvc
             )
@@ -32,6 +35,7 @@ namespace Its.Onix.Api.Controllers
             svc = service;
             _redis = redis;
             _jobSvc = jobSvc;
+            _orgService = orgService;
             _entitySvc = entitySvc;
             _userSvc = userSvc;
         }
@@ -46,15 +50,32 @@ namespace Its.Onix.Api.Controllers
 
             var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
 
-            var registerDomain = "register";
-            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
-            if (environment != "Production")
-            {
-                registerDomain = "register-dev";
-            }
-
+            var registerDomain = "unknown.dev-hubs.com";
             var token = Guid.NewGuid().ToString();
-            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+
+            var registrationUrl = registerDomain;
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+
+            if (reg.OrgType == "PLEASE-SCAN")
+            {
+                registerDomain = "register.please-scan.com";
+                if (environment != "Production")
+                {
+                    registerDomain = "register-dev.please-scan.com";
+                }
+
+                registrationUrl = $"https://{registerDomain}/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+            }
+            else if (reg.OrgType == "PLEASE-PROTECT")
+            {
+                registerDomain = "center.please-protect.com";
+                if (environment != "Production")
+                {
+                    registerDomain = "center-dev.please-protect.com";
+                }
+
+                registrationUrl = $"https://{registerDomain}/{regType}/{orgId}/{token}?data={dataUrlSafe}";
+            }
 
             var templateType = "user-forgot-password";
             var job = new MJob()
@@ -72,6 +93,7 @@ namespace Its.Onix.Api.Controllers
                     new NameValue { Name = "USER_NAME", Value = reg.UserName },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "ORG_TYPE", Value = reg.OrgType },
                     new NameValue { Name = "RESET_PASSWORD_URL", Value = registrationUrl },
                 ]
             };
@@ -87,6 +109,7 @@ namespace Its.Onix.Api.Controllers
         
         private MVJob? CreateCustomerEmailForgotPasswordJob(string orgId, MUserRegister reg)
         {
+            //ณ ตอนนี้มีแต่ please-scan.com ที่ใช้อันนี้
             var regType = "customer-forgot-password";
 
             var jsonString = JsonSerializer.Serialize(reg);
@@ -160,6 +183,43 @@ namespace Its.Onix.Api.Controllers
                 Email = email,
                 UserName = user.UserName!,
                 OrgUserId = user.UserId!.ToString(),
+                OrgType = "PLEASE-SCAN"
+            };
+            var result = CreateEmailForgotPasswordJob("temp", reg);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/temp/action/SendForgotPasswordEmailWithOrgType/{email}/{orgType}")]
+        public IActionResult SendForgotPasswordEmailWithOrgType(string email, string orgType)
+        {
+            //ใช้ API นี้ถ้าเป็น please-protect, please-farm หรือ product ใหม่ ๆ
+            var mv = new MVRegistration()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var user = _userSvc.GetUserByEmail("notused", email);
+            if (user == null)
+            {
+                mv.Status = "EMAIL_NOT_FOUND";
+                mv.Description = "Email not found in database";
+
+                Response.Headers.Append("CUST_STATUS", mv.Status);
+                return Ok(mv);
+            }
+
+            var reg = new MUserRegister()
+            {
+                Email = email,
+                UserName = user.UserName!,
+                OrgUserId = user.UserId!.ToString(),
+                OrgType = orgType,
             };
             var result = CreateEmailForgotPasswordJob("temp", reg);
 
