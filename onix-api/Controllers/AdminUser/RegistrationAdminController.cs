@@ -303,7 +303,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             //สร้าง email แจ้ง user ว่า Password เปลี่ยนเรียบร้อยแล้ว
-            _userService.CreateEmailPasswordChangeJob(id, request.Email!, userName);
+            _userService.CreateEmailPasswordChangeJob(id, request.Email!, userName, "PLEASE-SCAN");
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
             await _redis.DeleteAsync(cacheKey);

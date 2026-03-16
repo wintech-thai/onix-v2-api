@@ -91,7 +91,7 @@ namespace Its.Onix.Api.Controllers
             request.UserName = userName;
 
             //ใช้ userName ที่มาจาก JWT เท่านั้นเพื่อรับประกันว่าเปลี่ยน password เฉพาะของตัวเองเท่านั้น
-            var result = svc.UpdatePassword(userName, request);
+            var result = svc.UpdatePassword(id, userName, request);
             Response.Headers.Append("CUST_STATUS", result.Status);
 
             var message = $"{result.Description}";

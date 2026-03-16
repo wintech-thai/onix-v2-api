@@ -372,7 +372,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             //สร้าง email แจ้ง user ว่า Password เปลี่ยนเรียบร้อยแล้ว
-            _userService.CreateEmailPasswordChangeJob(id, request.Email!, userName);
+            _userService.CreateEmailPasswordChangeJob(id, request.Email!, userName, "PLEASE-SCAN"); //อนาคตให้ส่ง OrgType มาให้
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
             _redis.DeleteAsync(cacheKey);
@@ -385,6 +385,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/ConfirmCustomerForgotPasswordReset/{token}/{customerId}")]
         public IActionResult ConfirmCustomerForgotPasswordReset(string id, string token, string customerId, [FromBody] MUserRegister request)
         {
+            //ตอนนี้ใช้แต่ please-scan.com
             var cacheSuffix = CacheHelper.CreateApiOtpKey(id, "CustomerForgotPassword");
             var cacheKey = $"{cacheSuffix}:{token}";
 
@@ -439,7 +440,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             //สร้าง email แจ้ง user ว่า Password เปลี่ยนเรียบร้อยแล้ว
-            _userService.CreateEmailPasswordChangeJob(id, request.Email!, email);
+            _userService.CreateEmailPasswordChangeJob(id, request.Email!, email, "PLEASE-SCAN"); //อนาคตให้ส่ง OrgType มาให้
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
             _redis.DeleteAsync(cacheKey);
