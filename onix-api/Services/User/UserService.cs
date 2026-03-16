@@ -10,18 +10,18 @@ namespace Its.Onix.Api.Services
         private readonly IUserRepository repository;
         private readonly IAuthService _authService;
         private readonly IJobService _jobService;
-        private readonly IOrganizationService _orgService;
+        private readonly IOrganizationRepository _orgRepo;
 
         public UserService(
             IUserRepository repo,
             IJobService jobService,
-            IOrganizationService orgService,
+            IOrganizationRepository orgRepo,
             IAuthService authService) : base()
         {
             repository = repo;
             _authService = authService;
             _jobService = jobService;
-            _orgService = orgService;
+            _orgRepo = orgRepo;
         }
 
         public MVUser AddUser(string orgId, MUser user)
@@ -184,7 +184,7 @@ namespace Its.Onix.Api.Services
                 return result;
             }
 
-            var org = _orgService.GetOrganization(orgId).Result;
+            var org = _orgRepo.GetOrganization().Result;
             var oType = "PLEASE-SCAN";
             if (org != null)
             {
