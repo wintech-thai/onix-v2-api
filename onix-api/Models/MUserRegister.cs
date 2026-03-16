@@ -9,5 +9,6 @@ namespace Its.Onix.Api.Models
         public string? Lastname { get; set; }
         public string? InvitedBy { get; set; }
         public string? OrgUserId { get; set; }
+        public string? OrgType { get; set; }
     }
 }

@@ -10,15 +10,18 @@ namespace Its.Onix.Api.Services
         private readonly IUserRepository repository;
         private readonly IAuthService _authService;
         private readonly IJobService _jobService;
+        private readonly IOrganizationRepository _orgRepo;
 
         public UserService(
             IUserRepository repo,
             IJobService jobService,
+            IOrganizationRepository orgRepo,
             IAuthService authService) : base()
         {
             repository = repo;
             _authService = authService;
             _jobService = jobService;
+            _orgRepo = orgRepo;
         }
 
         public MVUser AddUser(string orgId, MUser user)
@@ -120,7 +123,7 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        public MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName)
+        public MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName, string orgType)
         {
             var templateType = "user-password-change";
             var job = new MJob()
@@ -136,6 +139,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = email },
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = userName },
+                    new NameValue { Name = "ORG_TYPE", Value = orgType },
                 ]
             };
 
@@ -143,7 +147,7 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        public MVUpdatePassword UpdatePassword(string userName, MUpdatePassword password)
+        public MVUpdatePassword UpdatePassword(string orgId, string userName, MUpdatePassword password)
         {
             var result = new MVUpdatePassword()
             {
@@ -180,7 +184,14 @@ namespace Its.Onix.Api.Services
                 return result;
             }
 
-            CreateEmailPasswordChangeJob("notuse", user.UserEmail!, userName);
+            var org = _orgRepo.GetOrganization().Result;
+            var oType = "PLEASE-SCAN";
+            if (org != null)
+            {
+                oType = org.OrgType!;
+            }
+
+            CreateEmailPasswordChangeJob("notuse", user.UserEmail!, userName, oType);
 
             return result;
         }

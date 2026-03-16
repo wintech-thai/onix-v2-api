@@ -12,9 +12,9 @@ namespace Its.Onix.Api.Services
         public bool IsUserIdExist(string orgId, string userId);
         public MUser GetUserByName(string orgId, string userName);
         public MUser GetUserByEmail(string orgId, string email);
-        public MVUpdatePassword UpdatePassword(string userName, MUpdatePassword password);
+        public MVUpdatePassword UpdatePassword(string orgId, string userName, MUpdatePassword password);
         public MVLogout UserLogout(string userName);
-        public MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName);
+        public MVJob? CreateEmailPasswordChangeJob(string orgId, string email, string userName, string orgType);
 
         //ไม่ใช้ orgId
         public MVUser GetUserByUserName(string userName);
