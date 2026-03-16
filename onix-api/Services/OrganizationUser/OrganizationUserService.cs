@@ -3,7 +3,6 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
-using onix.api.Migrations;
 using System.Text.Json;
 using System.Web;
 using System.Text;
@@ -14,17 +13,20 @@ namespace Its.Onix.Api.Services
     {
         private readonly IOrganizationUserRepository? repository = null;
         private readonly IUserRepository? userRepository = null;
+        private readonly IOrganizationRepository? _orgRepo = null;
         private readonly IJobService _jobService;
         private readonly IRedisHelper _redis;
 
         public OrganizationUserService(
             IOrganizationUserRepository repo,
             IUserRepository userRepo,
+            IOrganizationRepository orgRepo,
             IJobService jobService,
             IRedisHelper redis) : base()
         {
             repository = repo;
             userRepository = userRepo;
+            _orgRepo = orgRepo;
             _jobService = jobService;
             _redis = redis;
         }
@@ -84,15 +86,31 @@ namespace Its.Onix.Api.Services
 
             var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
 
-            var registerDomain = "register";
-            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
-            if (environment != "Production")
-            {
-                registerDomain = "register-dev";
-            }
-
+            var registerDomain = "unknown.dev-hubs.com";
             var token = Guid.NewGuid().ToString();
-            var registrationUrl = $"https://{registerDomain}.please-scan.com/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var registrationUrl = $"https://{registerDomain}/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+
+            if (reg.OrgType == "PLEASE-PROTECT")
+            {
+                registerDomain = "center.please-protect.com";
+                if (environment != "Production")
+                {
+                    registerDomain = "center-dev.please-protect.com";
+                }
+
+                registrationUrl = $"https://{registerDomain}/{regType}/{orgId}/{token}?data={dataUrlSafe}";
+            }
+            else if (reg.OrgType == "PLEASE-SCAN")
+            {
+                registerDomain = "register.please-scan.com";
+                if (environment != "Production")
+                {
+                    registerDomain = "register-dev.please-scan.com";
+                }
+
+                registrationUrl = $"https://{registerDomain}/{orgId}/{regType}/{token}?data={dataUrlSafe}";
+            }
 
             var templateType = "user-invitation-to-org";
             var job = new MJob()
@@ -110,6 +128,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "ORG_TYPE", Value = reg.OrgType },
                     new NameValue { Name = "REGISTRATION_URL", Value = registrationUrl },
                     new NameValue { Name = "INVITED_BY", Value = reg.InvitedBy },
                 ]
@@ -160,6 +179,7 @@ namespace Its.Onix.Api.Services
         public MVOrganizationUser? InviteUser(string orgId, MOrganizationUser user)
         {
             repository!.SetCustomOrgId(orgId);
+            _orgRepo!.SetCustomOrgId(orgId);
 
             var r = new MVOrganizationUser()
             {
@@ -221,6 +241,7 @@ namespace Its.Onix.Api.Services
             user.RolesList = string.Join(",", user.Roles ?? []);
 
             var result = repository!.AddUser(user);
+            var org = _orgRepo.GetOrganization().Result;
 
             var reg = new MUserRegister()
             {
@@ -228,6 +249,7 @@ namespace Its.Onix.Api.Services
                 UserName = userName,
                 OrgUserId = result.OrgUserId.ToString(),
                 InvitedBy = user.InvitedBy,
+                OrgType = org.OrgType,
             };
             CreateEmailUserInvitationJob(orgId, registrationCase, reg);
 
