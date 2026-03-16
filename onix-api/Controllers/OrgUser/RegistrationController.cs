@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Controllers
     public class RegistrationController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IOrganizationService _orgService;
         private readonly IRedisHelper _redis;
         private readonly IAuthService _authService;
         private readonly IOrganizationUserService _orgUserService;
@@ -20,11 +21,13 @@ namespace Its.Onix.Api.Controllers
         public RegistrationController(IUserService userService,
             IAuthService authService,
             IOrganizationUserService orgUserService,
+            IOrganizationService orgService,
             IJobService jobService,
             IEntityService entityService,
             IRedisHelper redis)
         {
             _userService = userService;
+            _orgService = orgService;
             _redis = redis;
             _authService = authService;
             _orgUserService = orgUserService;
@@ -34,14 +37,27 @@ namespace Its.Onix.Api.Controllers
 
         private MVJob? CreateEmailUserGreetingJob(string orgId, MUserRegister reg)
         {
-            var consoleDomain = "console";
+            var consoleDomain = "unknown.dev-hubs.com";
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
-            if (environment != "Production")
+
+            if (reg.OrgType == "PLEASE-SCAN")
             {
-                consoleDomain = "console-dev";
+                consoleDomain = "console.please-scan.com";
+                if (environment != "Production")
+                {
+                    consoleDomain = "console-dev.please-scan.com";
+                }
+            }
+            else if (reg.OrgType == "PLEASE-PROTECT")
+            {
+                consoleDomain = "center.please-protect.com";
+                if (environment != "Production")
+                {
+                    consoleDomain = "center-dev.please-protect.com";
+                }
             }
 
-            var consoleUrl = $"https://{consoleDomain}.please-scan.com";
+            var consoleUrl = $"https://{consoleDomain}";
 
             var templateType = "user-invitation-to-org-welcome";
             var job = new MJob()
@@ -59,6 +75,7 @@ namespace Its.Onix.Api.Controllers
                     new NameValue { Name = "TEMPLATE_TYPE", Value = templateType },
                     new NameValue { Name = "ORG_USER_NAMME", Value = reg.UserName },
                     new NameValue { Name = "USER_ORG_ID", Value = orgId },
+                    new NameValue { Name = "ORG_TYPE", Value = reg.OrgType },
                     new NameValue { Name = "CONSOLE_URL", Value = consoleUrl },
                 ]
             };
@@ -180,8 +197,10 @@ namespace Its.Onix.Api.Controllers
 
             var newUserId = mUser.UserId!.ToString();
             _ = _orgUserService.UpdateUserStatusById(id, request.OrgUserId!, newUserId!, "Active");
+            var org = _orgService.GetOrganization(id).Result;
 
             //สร้าง email แจ้ง user ว่าการสมัครเสร็จสมบูรณ์
+            request.OrgType = org.OrgType;
             CreateEmailUserGreetingJob(id, request);
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
@@ -270,6 +289,9 @@ namespace Its.Onix.Api.Controllers
             }
 
             //สร้าง email แจ้ง user ว่าการสมัครเสร็จสมบูรณ์
+            var org = _orgService.GetOrganization(id).Result;
+            request.OrgType = org.OrgType;
+
             CreateEmailUserGreetingJob(id, request);
 
             //ลบ cache ทิ้ง เพราะใช้แล้ว, และเพื่อกันไม่ให้กด link เดิมได้อีก
