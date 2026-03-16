@@ -53,6 +53,26 @@ namespace Prom.LPR.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/InviteUserWithLink")]
+        public MVOrganizationUser? InviteUserWithLink(string id, [FromBody] MOrganizationUser request)
+        {
+            var invitedByName = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (invitedByName == null)
+            {
+                invitedByName = "Unknown";
+            }
+
+            request.InvitedBy = invitedByName.ToString();
+
+            var result = svc.InviteUserWithLink(id, request);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            Response.Headers.Append("CUST_DESC", result!.Description);
+
+            return result;
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/{id}/action/DeleteUserById/{userId}")]
         public IActionResult DeleteUserById(string id, string userId)

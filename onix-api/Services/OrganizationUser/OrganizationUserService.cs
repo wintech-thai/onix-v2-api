@@ -238,6 +238,116 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private string GetInvitationLink(string orgId, string regCase, MUserRegister reg)
+        {
+            var regType = "user-signup-confirm";
+            if (regCase == "OK_TO_ADD_IN_ORG1")
+            {
+                //เป็น link ที่ให้กด accept เท่านั้น ไม่ต้องให้กรอก user/password
+                regType = "user-invite-confirm";
+            }
+            
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "<REGISTER_SERVICE_DOMAIN>"; //คนที่เรียกใช้งานจะต้องเปลี่ยนเป็น domain ของ register service เอง
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}/{regType}/{orgId}/{token}?data={dataUrlSafe}";
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "UserSignUp");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return registrationUrl;
+        }
+
+        public MVOrganizationUser? InviteUserWithLink(string orgId, MOrganizationUser user)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVOrganizationUser()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var userName = user.UserName!;
+            var userValidateResult = ValidationUtils.ValidateUserName(userName);
+            if (userValidateResult.Status != "OK")
+            {
+                r.Status = userValidateResult.Status;
+                r.Description = userValidateResult.Description;
+
+                return r;
+            }
+
+            //Validate if user exist in org
+            var isUserExist = repository!.IsUserNameExist(userName);
+            if (isUserExist)
+            {
+                r.Status = "USERNAME_DUPLICATE";
+                r.Description = $"User name [{userName}] is already exist in org [{orgId}]!!!";
+
+                return r;
+            }
+
+            var email = user.TmpUserEmail;
+            if (string.IsNullOrEmpty(email))
+            {
+                r.Status = "INVALID_EMAIL_EMPTY";
+                r.Description = "Email address is blank, please check your TmpUserEmail field!!!";
+                return r;
+            }
+
+            //Validate email format
+            var emailValidateResult = ValidationUtils.ValidateEmail(email);
+            if (emailValidateResult.Status != "OK")
+            {
+                r.Status = emailValidateResult.Status;
+                r.Description = emailValidateResult.Description;
+
+                return r;
+            }
+
+            var registrationCase = IdentifyRegistrationCase(user);
+            if (registrationCase.Contains("ERROR"))
+            {
+                r.Status = registrationCase;
+                r.Description = "Email or username is being by used another!!!";
+
+                return r;
+            }
+
+            user.UserStatus = "Pending";
+            user.InvitedDate = DateTime.UtcNow;
+            user.IsOrgInitialUser = "NO";
+            user.PreviousUserStatus = "Pending";
+            user.RolesList = string.Join(",", user.Roles ?? []);
+
+            var result = repository!.AddUser(user);
+
+            var reg = new MUserRegister()
+            {
+                Email = email,
+                UserName = userName,
+                OrgUserId = result.OrgUserId.ToString(),
+                InvitedBy = user.InvitedBy,
+            };
+            var registrationUrl = GetInvitationLink(orgId, registrationCase, reg);
+
+            r.OrgUser = result;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.OrgUser.RolesList = "";
+            r.RegistrationUrl = registrationUrl;
+            r.OrgUser = result;
+
+            return r;
+        }
+
         public MVOrganizationUser? DeleteUserById(string orgId, string userId)
         {
             repository!.SetCustomOrgId(orgId);

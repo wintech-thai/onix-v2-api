@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Services
     {
         public MVOrganizationUser? AddUser(string orgId, MOrganizationUser user);
         public MVOrganizationUser? InviteUser(string orgId, MOrganizationUser user);
+        public MVOrganizationUser? InviteUserWithLink(string orgId, MOrganizationUser user);
         public MVOrganizationUser? DeleteUserById(string orgId, string userId);
         public IEnumerable<MOrganizationUser> GetUsers(string orgId, VMOrganizationUser param);
         public int GetUserCount(string orgId, VMOrganizationUser param);
