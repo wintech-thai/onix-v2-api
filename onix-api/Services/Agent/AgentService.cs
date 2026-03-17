@@ -142,14 +142,17 @@ namespace Its.Onix.Api.Services
 
             //Delete API key ด้วย
             var apiKeyId = currentAgent.Agent.ApiKeyId;
-            var k = _apiKeyRepo.DeleteApiKeyById(apiKeyId);
-
-            if (k == null)
+            if (!string.IsNullOrEmpty(apiKeyId))
             {
-                r.Status = "NOTFOUND";
-                r.Description = $"API key ID [{apiKeyId}] not found for the organization [{orgId}]";
+                var k = _apiKeyRepo.DeleteApiKeyById(apiKeyId);
 
-                return r;
+                if (k == null)
+                {
+                    r.Status = "NOTFOUND";
+                    r.Description = $"API key ID [{apiKeyId}] not found for the organization [{orgId}]";
+
+                    return r;
+                }
             }
 
             var m = await repository!.DeleteAgentById(agentId);
