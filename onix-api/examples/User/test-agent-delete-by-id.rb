@@ -11,7 +11,7 @@ $stdout.sync = true
 load_env("../.env")
 
 orgId = ENV['API_ORG']
-id = 'f234edd3-5a74-4e43-b618-92f551f575f7'
+id = 'c7324536-67b6-420a-97bc-deea9178f1b3'
 
 apiUrl = "api/Agent/org/#{orgId}/action/DeleteAgentById/#{id}"
 param = nil

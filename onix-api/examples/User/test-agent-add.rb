@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 
 apiUrl = "api/Agent/org/#{orgId}/action/AddAgent"
 param = {
-  Code: "SENSOR-001",
+  Code: "SENSOR-003",
   Description: "Test sensor #1",
   Tags: "testing",
 }
