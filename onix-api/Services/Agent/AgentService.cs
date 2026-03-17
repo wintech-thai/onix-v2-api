@@ -89,8 +89,10 @@ namespace Its.Onix.Api.Services
                 KeyName = $"Agent:{agent.Code}",
                 KeyStatus = "Active",
                 KeyDescription = $"API key for agent [{agent.Code}]",
+                ApiKey = Guid.NewGuid().ToString(),
 
                 //ให้ user กำหนด Role เอาเองไปก่อน
+                //TODO : เพิ่ม default role สำหรับ agent
             };
 
             var k = _apiKeyRepo.AddApiKey(apiKey);

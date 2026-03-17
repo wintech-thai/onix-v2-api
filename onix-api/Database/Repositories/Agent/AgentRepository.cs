@@ -79,6 +79,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Code = x.agent.Code,
                 Description = x.agent.Description,
                 Tags = x.agent.Tags,
+                ApiKeyId = x.agent.ApiKey!,
                 CreatedDate = x.agent.CreatedDate,
                 LastSeenDate = x.agent.LastSeenDate,
             });
