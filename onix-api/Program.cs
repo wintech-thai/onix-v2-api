@@ -101,6 +101,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAccountDocService, AccountDocService>();
             builder.Services.AddScoped<IVoucherService, VoucherService>();
             builder.Services.AddScoped<ICustomRoleService, CustomRoleService>();
+            builder.Services.AddScoped<IAgentService, AgentService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -131,6 +132,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAccountDocRepository, AccountDocRepository>();
             builder.Services.AddScoped<IVoucherRepository, VoucherRepository>();
             builder.Services.AddScoped<ICustomRoleRepository, CustomRoleRepository>();
+            builder.Services.AddScoped<IAgentRepository, AgentRepository>();
 
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();
