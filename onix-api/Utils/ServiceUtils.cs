@@ -50,6 +50,27 @@ namespace Its.Onix.Api.Utils
             return pin[0] + new string('*', pin.Length - 2) + pin[^1];
         }
 
+        public static string GetDomain(string orgType, string domainType)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+
+            var domainApiMap = new Dictionary<string, (string prod, string nonProd)>
+            {
+                { "PLEASE-SCAN", ("api.please-scan.com", "api-dev.please-scan.com") },
+                { "PLEASE-PROTECT", ("api.please-protect.com", "api-dev.please-protect.com") }
+            };
+
+            // default fallback
+            var defaultDomain = "unknown.dev-hubs.com";
+
+            if (domainType == "api" && domainApiMap.TryGetValue(orgType, out var domains))
+            {
+                return environment == "Production" ? domains.prod : domains.nonProd;
+            }
+
+            return defaultDomain;
+        }
+
         public static string GenerateSecureRandomString(int length)
         {
             if (length <= 0) throw new ArgumentException("Length must be greater than zero.");
