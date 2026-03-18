@@ -255,7 +255,7 @@ namespace Prom.LPR.Api.Controllers
             var (forgotPasswordUrl, result) = CreateEmailForgotPasswordJob(id, reg);
             mv.ForgotPasswordUrl = forgotPasswordUrl;
 
-            Response.Headers.Append("CUST_STATUS", result!.Status);
+            Response.Headers.Append("CUST_STATUS", mv.Status);
             return Ok(mv);
         }
     }
