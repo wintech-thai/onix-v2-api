@@ -3,6 +3,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
@@ -11,14 +12,17 @@ namespace Its.Onix.Api.Services
         private readonly IAgentRepository? repository = null;
         private readonly IApiKeyRepository? _apiKeyRepo = null;
         private readonly IOrganizationRepository? _orgRepo = null;
+        private readonly IRedisHelper _redis;
 
         public AgentService(IAgentRepository repo, 
             IApiKeyRepository apiKeyRepo,
+            IRedisHelper redis,
             IOrganizationRepository orgRepo) : base()
         {
             repository = repo;
             _apiKeyRepo = apiKeyRepo;
             _orgRepo = orgRepo;
+            _redis = redis;
         }
 
         public async Task<MVAgent> GetAgentById(string orgId, string agentId)
@@ -224,6 +228,46 @@ namespace Its.Onix.Api.Services
             r.Agent = result;
 
             return r;
+        }
+
+        private async void PublishMessage(JsonElement agentStat)
+        {
+            var stream = CacheHelper.CreateAgentStatStreamKey();
+
+            // แปลง JsonElement → Dictionary
+            var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(agentStat.GetRawText()) ?? new Dictionary<string, object>();
+
+            // เพิ่ม field ใหม่
+            dict["LogType"] = "AgentStat";
+            
+            var message = JsonSerializer.Serialize(dict);
+
+            _ = await _redis.PublishMessageAsync(stream!, message);
+        }
+
+        public async Task<MVAgent> AddAgentStat(string orgId, string agentId, JsonElement agentStat)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var cacheKey = CacheHelper.CreateAgentKey(orgId);
+            var agentObj = await _redis.GetObjectAsync<MVAgent>($"{cacheKey}:{agentId}");
+            if (agentObj == null)
+            {
+
+                var mvAgent = await GetAgentById(orgId, agentId);
+                _ = _redis.SetObjectAsync(cacheKey, mvAgent, TimeSpan.FromMinutes(10));
+
+                agentObj = mvAgent;
+            }
+
+            if (agentObj.Status != "OK")
+            {
+                return agentObj;
+            }
+
+            PublishMessage(agentStat);
+
+            return agentObj;
         }
     }
 }
