@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
@@ -12,5 +13,6 @@ namespace Its.Onix.Api.Services
         public Task<List<MAgent>> GetAgents(string orgId, VMAgent param);
         public Task<int> GetAgentCount(string orgId, VMAgent param);
         public Task<MVAgent> UpdateAgentById(string orgId, string agentId, MAgent agent);
+        public Task<MVAgent> AddAgentStat(string orgId, string agentId, JsonElement body);
     }
 }

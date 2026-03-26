@@ -43,6 +43,14 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateAgentStatStreamKey()
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+
+            var key = $"AgentStat:{environment}";
+            return key;
+        }
+
         public static string CreateScanItemActionCacheLoaderKey(string orgId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
@@ -61,6 +69,13 @@ namespace Its.Onix.Api.Utils
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             var key = $"CacheLoader:{environment}:ScanItemActions:{orgId}:{actionId}";
+            return key;
+        }
+
+        public static string CreateAgentKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"Agent:{environment}:AgentId:{orgId}";
             return key;
         }
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -74,12 +75,10 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/{id}/action/Heartbeat/{agentId}")]
-        public async Task<IActionResult> Heartbeat(string id, string agentId)
+        public async Task<IActionResult> Heartbeat(string id, string agentId, [FromBody] JsonElement body)
         {
-            //TODO : เปลี่ยนตรงนี้อีกทีนะ
-            var result = await svc.GetAgentById(id, agentId);
+            var result = await svc.AddAgentStat(id, agentId, body);
             return Ok(result);
         }
-        
     }
 }
