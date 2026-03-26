@@ -233,7 +233,14 @@ namespace Its.Onix.Api.Services
         private async void PublishMessage(JsonElement agentStat)
         {
             var stream = CacheHelper.CreateAgentStatStreamKey();
-            var message = JsonSerializer.Serialize(agentStat);
+
+            // แปลง JsonElement → Dictionary
+            var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(agentStat.GetRawText()) ?? new Dictionary<string, object>();
+
+            // เพิ่ม field ใหม่
+            dict["LogType"] = "AgentStat";
+            
+            var message = JsonSerializer.Serialize(dict);
 
             _ = await _redis.PublishMessageAsync(stream!, message);
         }
