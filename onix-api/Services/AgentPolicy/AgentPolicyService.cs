@@ -42,6 +42,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            result.PolicyDefinition = "";
+            //TODO : Parse PolicyDefinition to a JSON object and return to client for easy use in client side.
+
             r.AgentPolicy = result;
 
             return r;
@@ -76,6 +79,7 @@ namespace Its.Onix.Api.Services
             }
 
             var result = await repository!.AddAgentPolicy(agentPolicy);
+            result.PolicyDefinition = "";
 
             r.AgentPolicy = result;
 
@@ -118,6 +122,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            m.PolicyDefinition = "";
+
             r.AgentPolicy = m;
             return r;
         }
@@ -126,6 +132,8 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetAgentPolicies(param);
+
+            result.ForEach(m => m.PolicyDefinition = "");
 
             return result;
         }
