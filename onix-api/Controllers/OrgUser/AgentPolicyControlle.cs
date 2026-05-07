@@ -10,12 +10,12 @@ namespace Its.Onix.Api.Controllers
     [Authorize(Policy = "GenericRolePolicy")]
     [ApiController]
     [Route("/api/[controller]")]
-    public class AgentPolicyControlle : ControllerBase
+    public class AgentPolicyController : ControllerBase
     {
         private readonly IAgentPolicyService svc;
 
         [ExcludeFromCodeCoverage]
-        public AgentPolicyControlle(IAgentPolicyService service)
+        public AgentPolicyController(IAgentPolicyService service)
         {
             svc = service;
         }
