@@ -40,6 +40,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MVoucher>? Vouchers { get; set; }
         public DbSet<MCustomRole>? CustomRoles { get; set; }
         public DbSet<MAgent>? Agents { get; set; }
+        public DbSet<MAgentPolicy>? AgentPolicies { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
