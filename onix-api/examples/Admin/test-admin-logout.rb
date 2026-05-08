@@ -13,7 +13,7 @@ load_env("../.env")
 orgId = "global"
 keyFile = ".token"
 
-apiUrl = "admin-api/AuthAdmin/org/#{orgId}/action/Login"
+apiUrl = "api/OnlyUser/org/#{orgId}/action/Logout"
 param =  {
   UserName: "#{ENV['USER_NAME']}",
   Password: "#{ENV['USER_PASSWORD']}",

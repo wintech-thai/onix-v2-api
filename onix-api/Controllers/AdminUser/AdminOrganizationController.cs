@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 
-namespace Prom.LPR.Api.Controllers
+namespace Its.Onix.Api.Controllers
 {
     [ApiController]
     [Authorize(Policy = "GenericRolePolicy")]
