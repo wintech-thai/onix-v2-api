@@ -10,14 +10,21 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = 'global'
 keyFile = ".token"
+
+### 
+apiUrl = "admin-api/OnlyAdmin/org/#{orgId}/action/UpdatePassword"
+param =  {
+  CurrentPassword: "#{ENV['USER_PASSWORD']}",
+  NewPassword: "#{ENV['USER_PASSWORD_NEW']}",
+}
 token = File.read(keyFile)
 
-apiUrl = "admin-api/OnlyAdmin/org/#{orgId}/action/Logout"
-param = nil
 ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
 ENV['ACCESS_TOKEN'] = token
+
+#puts("===[#{token}]")
 
 result = make_request(:post, apiUrl, param)
 puts(result)
