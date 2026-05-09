@@ -10,16 +10,16 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = ENV['API_ORG']
+orgId = 'global'
 keyFile = ".token"
 
 ### 
-apiUrl = "api/OnlyUser/org/#{orgId}/action/UpdateUserByUserName/seubpong.mon"
+apiUrl = "admin-api/OnlyAdmin/org/#{orgId}/action/UpdateUserInfo"
 param = {
-  name: "SeubpongXX",
+  name: "SeubpongXXX",
   lastName: "Monsar",
   phoneNumber: "+660942494880",
-  secondaryEmail: "",
+  secondaryEmail: "james@example.com",
 }
 
 token = File.read(keyFile)

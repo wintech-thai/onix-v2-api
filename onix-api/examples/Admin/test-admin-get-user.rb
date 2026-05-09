@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ### 
-apiUrl = "api/OnlyUser/org/#{orgId}/action/GetUserByUserName/seubpong.mon"
+apiUrl = "admin-api/OnlyAdmin/org/global/action/GetUserInfo"
 param = nil
 
 token = File.read(keyFile)
