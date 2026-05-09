@@ -8,13 +8,13 @@ namespace Its.Onix.Api.Controllers
 {
     [ApiController]
     [Authorize(Policy = "GenericRolePolicy")]
-    [Route("/customer-api/[controller]")]
-    public class OnlyCustomerUserController : ControllerBase
+    [Route("/admin-api/[controller]")]
+    public class OnlyAdminController : ControllerBase
     {
         private readonly IUserService svc;
         private readonly IRedisHelper _redis;
 
-        public OnlyCustomerUserController(
+        public OnlyAdminController(
             IUserService service,
             IRedisHelper redis,
             IOrganizationService orgService)
@@ -69,7 +69,7 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
-        [Route("org/{id}/action/UpdatePassword")]
+        [Route("org/global/action/UpdatePassword")]
         public IActionResult UpdatePassword(string id, [FromBody] MUpdatePassword request)
         {
             var validateResult = ValidateUserIdentity();
@@ -98,7 +98,7 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
-        [Route("org/{id}/action/UpdateUserInfo")]
+        [Route("org/global/action/UpdateUserInfo")]
         public IActionResult UpdateUserInfo(string id, [FromBody] MUser request)
         {
             var validateResult = ValidateUserIdentity();
@@ -126,7 +126,7 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpGet]
-        [Route("org/{id}/action/GetUserInfo")]
+        [Route("org/global/action/GetUserInfo")]
         public IActionResult GetUserInfo(string id)
         {
             var validateResult = ValidateUserIdentity();
@@ -146,7 +146,7 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
-        [Route("org/{id}/action/Logout")]
+        [Route("org/global/action/Logout")]
         public IActionResult Logout(string id)
         {
             var validateResult = ValidateUserIdentity();
