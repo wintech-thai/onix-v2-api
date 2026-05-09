@@ -70,7 +70,7 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/global/action/UpdatePassword")]
-        public IActionResult UpdatePassword(string id, [FromBody] MUpdatePassword request)
+        public IActionResult UpdatePassword([FromBody] MUpdatePassword request)
         {
             var validateResult = ValidateUserIdentity();
             if (string.IsNullOrEmpty(validateResult.UserName))
@@ -82,7 +82,7 @@ namespace Its.Onix.Api.Controllers
             request.UserName = userName;
 
             //ใช้ userName ที่มาจาก JWT เท่านั้นเพื่อรับประกันว่าเปลี่ยน password เฉพาะของตัวเองเท่านั้น
-            var result = svc.UpdatePassword(id, userName, request);
+            var result = svc.UpdatePassword("global", userName, request);
             Response.Headers.Append("CUST_STATUS", result.Status);
 
             var message = $"{result.Description}";
@@ -99,7 +99,7 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/global/action/UpdateUserInfo")]
-        public IActionResult UpdateUserInfo(string id, [FromBody] MUser request)
+        public IActionResult UpdateUserInfo([FromBody] MUser request)
         {
             var validateResult = ValidateUserIdentity();
             if (string.IsNullOrEmpty(validateResult.UserName))
@@ -127,7 +127,7 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/global/action/GetUserInfo")]
-        public IActionResult GetUserInfo(string id)
+        public IActionResult GetUserInfo()
         {
             var validateResult = ValidateUserIdentity();
             if (string.IsNullOrEmpty(validateResult.UserName))
@@ -147,7 +147,7 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/global/action/Logout")]
-        public IActionResult Logout(string id)
+        public IActionResult Logout()
         {
             var validateResult = ValidateUserIdentity();
             if (string.IsNullOrEmpty(validateResult.UserName))
