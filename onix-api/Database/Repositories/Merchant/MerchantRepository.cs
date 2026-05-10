@@ -106,7 +106,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         private ExpressionStarter<MMerchant> MerchantPredicate(VMMerchant param)
         {
-            var pd = PredicateBuilder.New<MMerchant>();
+            var pd = PredicateBuilder.New<MMerchant>(true);
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {

@@ -93,6 +93,7 @@ namespace Its.Onix.Api.Services
             {
                 var merchant = org.Merchant!;
                 merchant.OrgId = customOrgId;
+                merchant.Status = org.Status;
 
                 var t = merchantService.AddMerchant(customOrgId, merchant);
                 var vmMerchant = t.Result;
