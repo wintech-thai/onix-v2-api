@@ -126,7 +126,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
 
         var keyword = $"{group}:{api}";
         apiCalled = keyword;
-
+Console.WriteLine($"=== DEBUG100 - Checking admin API [{apiCalled}]");
         if (ServiceUtils.IsAdminWhiteListedAPI(group, api))
         {
             //No need to check for permission just only for this API
