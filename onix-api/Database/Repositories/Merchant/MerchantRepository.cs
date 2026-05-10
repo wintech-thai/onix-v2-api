@@ -158,6 +158,12 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.ContactEmail = merchant.ContactEmail;
                 existing.ContactPhone = merchant.ContactPhone;
                 existing.Tags = merchant.Tags;
+                existing.PayinFeePct = merchant.PayinFeePct;
+                existing.PayoutFeePct = merchant.PayoutFeePct;
+                existing.PayinMinAmount = merchant.PayinMinAmount;
+                existing.PayinMaxAmount = merchant.PayinMaxAmount;
+                existing.PayoutMinAmount = merchant.PayoutMinAmount;
+                existing.PayoutMaxAmount = merchant.PayoutMaxAmount;
             }
 
             await context.SaveChangesAsync();
