@@ -62,23 +62,26 @@ namespace Its.Onix.Api.Authentications
 
             var jwt = tokenHandler.ReadJwtToken(accessToken);
             string userName = jwt.Claims.First(c => c.Type == "preferred_username").Value;
-
+Console.WriteLine($"DEBUG-AuthenticateBearer1 ======= [{pc.ApiName}] [{pc.ControllerName}] [{pc.ApiGroup}] ====");
             var user = new User();
             if (pc.ApiGroup == "user")
             {
                 user = bearerAuthRepo!.Authenticate(pc.OrgId, userName, "", request);
+Console.WriteLine($"DEBUG-AuthenticateBearer2 ======= [{pc.ApiName}] [{pc.ControllerName}] [{userName}] ====");
             }
             else if (pc.ApiGroup == "admin")
             {
                 //Admin mode
                 user = bearerAuthAdminRepo!.Authenticate(pc.OrgId, userName, "", request);
+Console.WriteLine($"DEBUG-AuthenticateBearer3 ======= [{pc.ApiName}] [{pc.ControllerName}] [{userName}] ====");
             }
             else if (pc.ApiGroup == "customer")
             {
                 //Customer mode
                 user = bearerAuthCustomerRepo!.Authenticate(pc.OrgId, userName, "", request);
+Console.WriteLine($"DEBUG-AuthenticateBearer4 ======= [{pc.ApiName}] [{pc.ControllerName}] [{userName}] ====");
             }
-
+Console.WriteLine($"DEBUG-AuthenticateBearer5 ======= [{pc.ApiName}] [{pc.ControllerName}] [{userName}] ====");
             var authResult = new AuthenResult()
             {
                 UserAuthen = user,
