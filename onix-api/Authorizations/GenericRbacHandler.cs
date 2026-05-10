@@ -118,9 +118,15 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var group = matches[0].Groups[1].Value;
         var api = matches[0].Groups[3].Value;
 
+
+        var tokens = api.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var apiName = tokens[0]; //บางครั้ง มี /xxxx/yyy ตามหลังต่อท้ายชื่อ API
+        api = char.ToUpper(apiName[0]) + apiName.Substring(1); //บางครั้งเรียกมาเป็นขึ้นต้นด้วยตัวเล็ก
+
+
         var keyword = $"{group}:{api}";
         apiCalled = keyword;
-
+Console.WriteLine($"=== DEBUG100 - Checking admin API [{apiCalled}]");
         if (ServiceUtils.IsAdminWhiteListedAPI(group, api))
         {
             //No need to check for permission just only for this API

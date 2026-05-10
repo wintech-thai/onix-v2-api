@@ -41,6 +41,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MCustomRole>? CustomRoles { get; set; }
         public DbSet<MAgent>? Agents { get; set; }
         public DbSet<MAgentPolicy>? AgentPolicies { get; set; }
+        public DbSet<MMerchant>? Merchants { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

@@ -36,17 +36,19 @@ namespace Its.Onix.Api.Authentications
                 //Console.WriteLine($"WHITELISTED ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
                 return ou;
             }
+//Console.WriteLine($"DEBUG-ADMIN1 ======= [{pc.ApiName}] [{pc.ControllerName}] ====");
 
             var key = $"#{orgId}:VerifyAdminUser:#{user}";
             var t = _redis.GetObjectAsync<MVAdminUser>(key);
             var adminUser = t.Result;
-
+//Console.WriteLine($"DEBUG-ADMIN2 ======= [{key}] [{adminUser}] ====");
             if (adminUser == null)
             {
                 var m = service!.VerifyUserIsAdmin(user);
                 _ = _redis.SetObjectAsync(key, m, TimeSpan.FromMinutes(5));
 
                 adminUser = m;
+//Console.WriteLine($"DEBUG-ADMIN3 ======= [{key}] [{adminUser}] ====");
             }
 
             if (adminUser != null)
@@ -67,11 +69,12 @@ namespace Its.Onix.Api.Authentications
                         User = new MUser() { UserName = user },
                         AdminUser = new MAdminUser() { UserName = user },
                     };
+//Console.WriteLine($"DEBUG-ADMIN4 ======= [{ou.Status}] [{ou.Description}] ====");
 
                     return ou;
                 }
             }
-
+//Console.WriteLine($"DEBUG-ADMIN5 ======= [{key}] [{adminUser}] ====");
             return adminUser;
         }
 

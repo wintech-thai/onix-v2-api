@@ -132,6 +132,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Addresses = org.Addresses;
                 result.Channels = org.Channels;
                 result.LogoImagePath = org.LogoImagePath;
+                result.Status = org.Status;
 
                 await context.SaveChangesAsync();
             }
@@ -145,6 +146,18 @@ namespace Its.Onix.Api.Database.Repositories
             context.SaveChanges();
 
             return org;
+        }
+
+        public async Task<MOrganization?> UpdateOrganizationStatus(string status)
+        {
+            var result = await context!.Organizations!.Where(x => x.OrgCustomId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (result != null)
+            {
+                result.Status = status;
+                await context.SaveChangesAsync();
+            }
+
+            return result;
         }
     }
 }

@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     {
         public Task<MOrganization> GetOrganization(string orgId);
         public Task<MVOrganization> UpdateOrganization(string orgId, MOrganization org);
+        public Task<MVOrganization?> UpdateOrganizationStatus(string orgId, string status);
         public MVOrganizationUser AddUserToOrganization(string orgId, MOrganizationUser user);
         public bool IsUserNameExist(string orgId, string userName);
         public MVOrganizationUser VerifyUserInOrganization(string orgId, string userName);

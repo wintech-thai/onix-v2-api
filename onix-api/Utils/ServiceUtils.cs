@@ -177,10 +177,10 @@ namespace Its.Onix.Api.Utils
             var pattern1 = @"^\/api\/([^\/]+)\/org\/([^\/]+)\/action\/([^\/]+)";
             MatchCollection matchesUserApi = Regex.Matches(path, pattern1, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
-            var pattern2 = @"^\/admin-api\/([^\/]+)\/org\/([^\/]+)\/action\/([^\/]+)$";
+            var pattern2 = @"^\/admin-api\/([^\/]+)\/org\/([^\/]+)\/action\/([^\/]+)";
             MatchCollection matchesAdminApi = Regex.Matches(path, pattern2, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
-            var pattern3 = @"^\/customer-api\/([^\/]+)\/org\/([^\/]+)\/action\/([^\/]+)$";
+            var pattern3 = @"^\/customer-api\/([^\/]+)\/org\/([^\/]+)\/action\/([^\/]+)";
             MatchCollection matchesCustomerApi = Regex.Matches(path, pattern3, RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
             var result = new PathComponent();
