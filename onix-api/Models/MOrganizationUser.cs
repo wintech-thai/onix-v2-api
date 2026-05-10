@@ -57,8 +57,11 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public string? UserEmail { get; set; }
+        [NotMapped]
         public string? OrgName { get; set; }
+        [NotMapped]
         public string? OrgDesc { get; set; }
+        [NotMapped]
         public string? OrgType { get; set; }
 
         [NotMapped]
@@ -70,12 +73,17 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? CustomRoleDesc { get; set; }
 
+        [NotMapped]
+        public bool? InvitedByAdmin { get; set; }
+
         public MOrganizationUser()
         {
             OrgUserId = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             RolesList = "";
             Roles = [];
+
+            InvitedByAdmin = false;
         }
     }
 }
