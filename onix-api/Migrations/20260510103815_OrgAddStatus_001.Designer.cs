@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260510103815_OrgAddStatus_001")]
+    partial class OrgAddStatus_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1121,82 +1124,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("MasterRefs");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MMerchant", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("merchant_id");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<string>("ContactEmail")
-                        .HasColumnType("text")
-                        .HasColumnName("contact_email");
-
-                    b.Property<string>("ContactPhone")
-                        .HasColumnType("text")
-                        .HasColumnName("contact_phone");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<double?>("PayinFeePct")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payin_fee_pct");
-
-                    b.Property<double?>("PayinMaxAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payin_max_amount");
-
-                    b.Property<double?>("PayinMinAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payin_min_amount");
-
-                    b.Property<double?>("PayoutFeePct")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payout_fee_pct");
-
-                    b.Property<double?>("PayoutMaxAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payout_max_amount");
-
-                    b.Property<double?>("PayoutMinAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payout_min_amount");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("text")
-                        .HasColumnName("Status");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("Merchants");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MOrganization", b =>

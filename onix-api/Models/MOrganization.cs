@@ -24,7 +24,7 @@ namespace Its.Onix.Api.Models
         public string? OrgDescription { get; set; }
 
         [Column("org_type")]
-        public string? OrgType { get; set; }
+        public string? OrgType { get; set; } // PLEASE-SCAN, PLEASE-PROTECT, PELASE-PAYMENT
 
         [Column("tags")]
         public string? Tags { get; set; } // Comma separated string
@@ -38,6 +38,12 @@ namespace Its.Onix.Api.Models
         [Column("logo_image_path")]
         public string? LogoImagePath { get; set; } // JSON string
 
+        [Column("Status")]
+        public string? Status { get; set; } //Active, Pending, Disabled
+
+
+        [NotMapped]
+        public MMerchant? Merchant { get; set; }
 
         [NotMapped]
         public List<NameValue> AddressesArray { get; set; }

@@ -20,6 +20,14 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/AddOrganization")]
+        public IActionResult AddOrganization([FromBody] MOrganization request)
+        {
+            var result = _orgSvc.AddOrganization("notused", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/global/action/RegisterOrganization")]
         public IActionResult RegisterOrganization([FromBody] MOrganizeRegistration request)
         {

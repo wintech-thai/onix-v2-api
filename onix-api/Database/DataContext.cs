@@ -48,6 +48,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MCustomRole>? CustomRoles { get; set; }
     public DbSet<MAgent>? Agents { get; set; }
     public DbSet<MAgentPolicy>? AgentPolicies { get; set; }
+    public DbSet<MMerchant>? Merchants { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -173,5 +174,11 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MAgentPolicy>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+
+        modelBuilder.Entity<MMerchant>()
+            .HasIndex(t => new { t.Code }).IsUnique();
+
+        modelBuilder.Entity<MMerchant>()
+            .HasIndex(t => new { t.Name }).IsUnique();
     }
 }

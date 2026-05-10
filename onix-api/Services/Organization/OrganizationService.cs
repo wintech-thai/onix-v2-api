@@ -11,16 +11,19 @@ namespace Its.Onix.Api.Services
         private readonly IOrganizationRepository? repository = null;
         private readonly IOrganizationUserRepository _orgUserRepo;
         private readonly IUserService userService;
+        private readonly IMerchantService merchantService;
         private readonly IStorageUtils _storageUtil;
 
         public OrganizationService(
             IOrganizationRepository repo,
             IOrganizationUserRepository orgUserRepo,
             IUserService userSvc,
+            IMerchantService merchantSvc,
             IStorageUtils storageUtil) : base()
         {
             repository = repo;
             userService = userSvc;
+            merchantService = merchantSvc;
             _storageUtil = storageUtil;
             _orgUserRepo = orgUserRepo;
         }
@@ -34,7 +37,21 @@ namespace Its.Onix.Api.Services
         public MVOrganization AddOrganization(string orgId, MOrganization org)
         {
             var customOrgId = org.OrgCustomId;
-            var r = new MVOrganization();
+            repository!.SetCustomOrgId(customOrgId!);
+            
+            var r = new MVOrganization()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (string.IsNullOrEmpty(customOrgId))
+            {
+                r.Status = "ORGANIZATION_ID_REQUIRED";
+                r.Description = $"Organization ID is required !!!";
+
+                return r;
+            }
 
             var isExist = repository!.IsCustomOrgIdExist(customOrgId!);
             if (isExist)
@@ -45,13 +62,53 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            repository!.SetCustomOrgId(customOrgId!);
+            var orgType = org.OrgType;
+            if (string.IsNullOrEmpty(orgType))
+            {
+                r.Status = "ORGANIZATION_TYPE_REQUIRED";
+                r.Description = $"Organization type is required !!!";
+
+                return r;
+            }
+
+            if ((orgType == "PLEASE-PAYMENT") && org.Merchant == null)
+            {
+                //ถ้าเป็น PLEASE-PAYMENT จะต้องมีข้อมูล Merchant ด้วย
+                r.Status = "MERCHANT_INFO_REQUIRED";
+                r.Description = $"Merchant info is required for organization type [{orgType}] !!!";
+
+                return r;
+            }
+
             var result = repository!.AddOrganization(org);
+            if (result == null)
+            {
+                r.Status = "FAILED_TO_ADD_ORGANIZATION";
+                r.Description = "Failed to add organization !!!";
 
-            r.Status = "OK";
-            r.Description = "Success";
+                return r;
+            }
+
+            if (orgType == "PLEASE-PAYMENT")
+            {
+                var merchant = org.Merchant!;
+                merchant.OrgId = customOrgId;
+
+                var t = merchantService.AddMerchant(customOrgId, merchant);
+                var vmMerchant = t.Result;
+
+                if (vmMerchant.Status != "OK")
+                {
+                    r.Status = vmMerchant.Status;
+                    r.Description = vmMerchant.Description;
+
+                    return r;
+                }
+
+                result.Merchant = vmMerchant.Merchant;
+            }
+
             r.Organization = result;
-
             return r;
         }
 
@@ -153,7 +210,6 @@ namespace Its.Onix.Api.Services
             _storageUtil.DeleteObject(bucket, objectName!);
         }
 
-
         private void NormalizeFields(MOrganization org)
         {
             if (org.ChannelsArray == null)
@@ -213,6 +269,30 @@ namespace Its.Onix.Api.Services
             r.Organization = t.Result;
 
             return Task.FromResult(r);
+        }
+
+        public async Task<MVOrganization?> UpdateOrganizationStatus(string orgId, string status)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var validStatus = new string[] { "Active", "Disabled", "Pending" };
+
+            var r = new MVOrganization()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!validStatus.Contains(status))
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Invalid status [{status}]. Valid statuses are: {string.Join(", ", validStatus)}";
+                return r;
+            }
+            
+            var result = await repository.UpdateOrganizationStatus(status);
+            r.Organization = result;
+
+            return r;
         }
 
         public MVPresignedUrl GetLogoImageUploadPresignedUrl(string orgId)
