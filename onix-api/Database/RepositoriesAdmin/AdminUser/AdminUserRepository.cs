@@ -29,6 +29,7 @@ namespace Its.Onix.Api.Database.Repositories
                         CreatedDate = au.CreatedDate,
                         UserEmail = u.UserEmail,
                         Tags = au.Tags,
+                        AdminUserId = au.AdminUserId,
                     })
                 .Where(x => x.AdminUserId!.Equals(id)).FirstOrDefaultAsync();
 
