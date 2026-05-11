@@ -14,9 +14,10 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetAvailableBanks"
-param = nil
-
+apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetBankAccounts"
+param = {
+  "FullTextSearch": "",
+}
 
 token = File.read(keyFile)
 
@@ -25,5 +26,9 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:get, apiUrl, param)
+result = make_request(:post, apiUrl, param)
+puts(result)
+
+apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetBankAccountCount"
+result = make_request(:post, apiUrl, param)
 puts(result)

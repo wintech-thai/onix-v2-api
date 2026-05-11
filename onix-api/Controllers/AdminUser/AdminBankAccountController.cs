@@ -73,6 +73,17 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/AddBankAccount")]
+        public async Task<IActionResult> AddBankAccount([FromBody] MBankAccount request)
+        {
+            var result = await svc.AddBankAccount("global", request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/EnableBankAccountById/{bankAccountId}")]
         public async Task<IActionResult> EnableBankAccountById(string bankAccountId)
         {
