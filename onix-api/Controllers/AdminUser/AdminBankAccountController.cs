@@ -103,5 +103,32 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetBankAccountSelectedMerchantsById/{bankAccountId}")]
+        public async Task<IActionResult> GetBankAccountSelectedMerchantsById(string bankAccountId)
+        {
+            var result = await svc.GetBankAccountSelectedMerchants("global", bankAccountId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SelectMerchantById/{bankAccountId}/{merchantId}")]
+        public async Task<IActionResult> SelectMerchantById(string bankAccountId, string merchantId)
+        {
+            var result = await svc.SelectMerchant("global", bankAccountId, merchantId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UnSelectMerchantById/{bankAccountId}/{merchantId}")]
+        public async Task<IActionResult> UnSelectMerchantById(string bankAccountId, string merchantId)
+        {
+            var result = await svc.UnSelectMerchant("global", bankAccountId, merchantId);
+            return Ok(result);
+        }
     }
 }

@@ -43,6 +43,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MAgentPolicy>? AgentPolicies { get; set; }
         public DbSet<MMerchant>? Merchants { get; set; }
         public DbSet<MBankAccount>? BankAccounts { get; set; }
+        public DbSet<MBankAccountMerchant>? BankAccountMerchants { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

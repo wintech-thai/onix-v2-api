@@ -39,6 +39,83 @@ namespace Its.Onix.Api.Database.Repositories
             return exists;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetBankAccountSelectedMerchants(string bankAccountId)
+        {
+            //ดึงค่า BankAccountMerchant ที่มี bankAccountId ตรงกับที่ส่งมา และ OrgId ตรงกับ orgId
+            //ให้ left join BankAccounts มาด้วยเพื่อดึงข้อมูลของ BankAccount มาด้วย
+
+            var query =
+                from bam in context!.BankAccountMerchants!
+                join ba in context.BankAccounts! on bam.BankAccountId equals ba.Id.ToString() into ba_join
+                from ba in ba_join.DefaultIfEmpty()
+                where bam.BankAccountId == bankAccountId && bam.OrgId == orgId
+                select new MBankAccountMerchant
+                {
+                    Id = bam.Id,
+                    OrgId = bam.OrgId,
+                    BankAccountId = bam.BankAccountId,
+                    MerchantId = bam.MerchantId,
+                    CreatedDate = bam.CreatedDate,
+                    //ข้อมูลของ Bank Account
+                    BankCode = ba != null ? ba.BankCode : null,
+                    AccountNumber = ba != null ? ba.AccountNumber : null,
+                    AccountName = ba != null ? ba.AccountName : null,
+                    PromptPayId = ba != null ? ba.PromptPayId : null,
+                    AccountType = ba != null ? ba.AccountType : null,
+                    AccountCategory = ba != null ? ba.AccountCategory : null,
+                    AccountLevel = ba != null ? ba.AccountLevel : null
+                };
+                
+            return await query.ToListAsync();
+        }
+
+
+        public async Task<MBankAccountMerchant?> SelectMerchant(string bankAccountId, string merchantId)
+        {
+            //ให้ทำการเพิ่ม row ไปที่ MBankAccountMerchant โดยมีค่า bankAccountId, merchantId และ OrgId ที่ตรงกับ orgId ที่ส่งมา
+            //ถ้ามีอยู่แล้วไม่ต้องทำอะไร
+            var existing = await context!.BankAccountMerchants!.AsExpandable()
+                .Where(p => p!.BankAccountId!.Equals(bankAccountId) 
+                && p!.MerchantId!.Equals(merchantId) 
+                && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            // ถ้าไม่มีอยู่ ให้สร้างใหม่
+            var newMerchant = new MBankAccountMerchant
+            {
+                Id = Guid.NewGuid(),
+                BankAccountId = bankAccountId,
+                MerchantId = merchantId,
+                OrgId = orgId
+            };
+
+            context.BankAccountMerchants!.Add(newMerchant);
+            await context.SaveChangesAsync();
+
+            return newMerchant;
+        }
+
+        public async Task<MBankAccountMerchant?> UnSelectMerchant(string bankAccountId, string merchantId)
+        {
+            //ให้ทำการลบ row ออกจาก MBankAccountMerchant โดยมีค่า bankAccountId, merchantId และ OrgId ที่ตรงกับ orgId ที่ส่งมา
+            var existing = await context!.BankAccountMerchants!.AsExpandable()
+                .Where(p => p!.BankAccountId!.Equals(bankAccountId) 
+                && p!.MerchantId!.Equals(merchantId) 
+                && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+                
+            if (existing != null)
+            {
+                context.BankAccountMerchants!.Remove(existing);
+                await context.SaveChangesAsync();
+            }
+
+            return existing;
+        }
+
         public async Task<List<MBankAccount>> GetBankAccounts(VMBankAccount param)
         {
             var limit = 0;

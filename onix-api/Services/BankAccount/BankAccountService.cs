@@ -282,5 +282,73 @@ namespace Its.Onix.Api.Services
 
             return banks;
         }
+
+        public async Task<List<MBankAccountMerchant>> GetBankAccountSelectedMerchants(string orgId, string bankAccountId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var result = await repository.GetBankAccountSelectedMerchants(bankAccountId);
+            return result;
+        }
+
+        public async Task<MVBankAccountMerchant?> SelectMerchant(string orgId, string bankAccountId, string merchantId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var r = new MVBankAccountMerchant()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository.SelectMerchant(bankAccountId, merchantId);
+            if (result == null)            
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank Account ID [{bankAccountId}] or Merchant ID [{merchantId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+            
+            r.BankAccountMerchant = result;
+            return r;
+        }
+
+        public async Task<MVBankAccountMerchant?> UnSelectMerchant(string orgId,string bankAccountId, string merchantId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var r = new MVBankAccountMerchant()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository.UnSelectMerchant(bankAccountId, merchantId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank Account ID [{bankAccountId}] or Merchant ID [{merchantId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.BankAccountMerchant = result;
+            return r;
+        }
     }
 }
