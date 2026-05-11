@@ -68,6 +68,7 @@ namespace Its.Onix.Api.Database.Repositories
                 where au.AdminUserId == id
                 select new MAdminUser
                 {
+                    AdminUserId = au.AdminUserId,
                     UserId = au.UserId,
                     UserName = au.UserName,
                     RolesList = au.RolesList,
@@ -151,16 +152,17 @@ namespace Its.Onix.Api.Database.Repositories
                              from user in userGroup.DefaultIfEmpty()
                              select new MAdminUser
                              {
-                                 UserId = au.UserId,
-                                 UserName = au.UserName,
-                                 RolesList = au.RolesList,
-                                 CreatedDate = au.CreatedDate,
-                                 UserEmail = user != null ? user.UserEmail : null,
-                                 TmpUserEmail = au.TmpUserEmail,
-                                 UserStatus = au.UserStatus,
-                                 PreviousUserStatus = au.PreviousUserStatus,
-                                 InvitedDate = au.InvitedDate,
-                                 Tags = au.Tags,
+                                AdminUserId = au.AdminUserId,
+                                UserId = au.UserId,
+                                UserName = au.UserName,
+                                RolesList = au.RolesList,
+                                CreatedDate = au.CreatedDate,
+                                UserEmail = user != null ? user.UserEmail : null,
+                                TmpUserEmail = au.TmpUserEmail,
+                                UserStatus = au.UserStatus,
+                                PreviousUserStatus = au.PreviousUserStatus,
+                                InvitedDate = au.InvitedDate,
+                                Tags = au.Tags,
                              })
                 .Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)

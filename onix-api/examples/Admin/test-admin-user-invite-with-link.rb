@@ -10,12 +10,17 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = ENV['API_ORG']
+orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/OnlyAdmin/org/global/action/GetUserInfo"
-param = nil
+apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUserWithLink"
+param =  {
+  UserName: "seubpong.soodlor",
+  TmpUserEmail: "hello.seub@abcdefg.com",
+  Tags: "test,local",
+  Roles: [ 'OWNER' ],
+}
 
 token = File.read(keyFile)
 
@@ -24,5 +29,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:get, apiUrl, param)
+result = make_request(:post, apiUrl, param)
 puts(result)
