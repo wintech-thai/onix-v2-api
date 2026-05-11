@@ -49,6 +49,8 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MAgent>? Agents { get; set; }
     public DbSet<MAgentPolicy>? AgentPolicies { get; set; }
     public DbSet<MMerchant>? Merchants { get; set; }
+    public DbSet<MBankAccount>? BankAccounts { get; set; }
+    public DbSet<MBankAccountMerchant>? BankAccountMerchants { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -180,5 +182,11 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MMerchant>()
             .HasIndex(t => new { t.Name }).IsUnique();
+
+        modelBuilder.Entity<MBankAccount>()
+            .HasIndex(t => new { t.OrgId, t.AccountNumber }).IsUnique();
+
+        modelBuilder.Entity<MBankAccount>()
+            .HasIndex(t => new { t.OrgId, t.BankCode, t.AccountName }).IsUnique();
     }
 }

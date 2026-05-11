@@ -10,15 +10,13 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = ENV['API_ORG']
 keyFile = ".token"
+bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/GetUsers"
-param =  {
-  FullTextSearch: "",
-}
-
+apiUrl = "admin-api/AdminBankAccount/org/global/action/GetBankAccountSelectedMerchantsById/#{bankAccountId}"
+param = nil
 
 token = File.read(keyFile)
 
@@ -27,9 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
-puts(result)
-
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/GetUserCount"
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)

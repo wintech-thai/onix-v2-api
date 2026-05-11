@@ -14,10 +14,8 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/GetUsers"
-param =  {
-  FullTextSearch: "",
-}
+apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetAvailableBanks"
+param = nil
 
 
 token = File.read(keyFile)
@@ -27,9 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
-puts(result)
-
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/GetUserCount"
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)
