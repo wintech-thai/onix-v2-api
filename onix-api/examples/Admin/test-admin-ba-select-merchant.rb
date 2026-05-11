@@ -13,7 +13,7 @@ load_env("../.env")
 orgId = ENV['API_ORG']
 keyFile = ".token"
 bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
-merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
+merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0' #'ee1c4474-75da-4451-a6fa-f4e70c52c530'
 
 ### 
 apiUrl = "admin-api/AdminBankAccount/org/global/action/SelectMerchantById/#{bankAccountId}/#{merchantId}"
