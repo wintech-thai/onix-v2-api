@@ -350,5 +350,21 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+
+        public MVCustomPermission GetInitialAdminRolePermissions(string orgId)
+        {
+            var r = new MVCustomPermission()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var permissions = GetInitialPermission("admin-api", []);
+
+            r.Permissions = permissions;
+
+            return r;
+        }
     }
 }
