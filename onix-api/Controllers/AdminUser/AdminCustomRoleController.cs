@@ -52,7 +52,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/GetCustomRoleById/{customRoleId}")]
         public async Task<IActionResult> GetCustomRoleById(string customRoleId)
         {
-            var result = await svc.GetCustomRoleById("global", customRoleId);
+            var result = await svc.GetCustomRoleById("global", customRoleId, "admin-api");
             return Ok(result);
         }
 

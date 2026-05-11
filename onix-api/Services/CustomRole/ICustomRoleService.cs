@@ -6,7 +6,7 @@ namespace Its.Onix.Api.Services
 {
     public interface ICustomRoleService
     {
-        public Task<MVCustomRole> GetCustomRoleById(string orgId, string customRoleId);
+        public Task<MVCustomRole> GetCustomRoleById(string orgId, string customRoleId, string apiGroup = "api");
         public Task<MVCustomRole> AddCustomRole(string orgId, MCustomRole customRole);
         public Task<MVCustomRole> DeleteCustomRoleById(string orgId, string customRoleId);
         public Task<List<MCustomRole>> GetCustomRoles(string orgId, VMCustomRole param);

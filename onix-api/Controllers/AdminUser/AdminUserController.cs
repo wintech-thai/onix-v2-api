@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.ModelsViews;
+using System.Text.Json;
+using System.Text;
+using System.Web;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -13,11 +18,13 @@ namespace Its.Onix.Api.Controllers
     public class AdminUserController : ControllerBase
     {
         private readonly IAdminUserService svc;
+        private readonly IRedisHelper _redis;
 
         [ExcludeFromCodeCoverage]
-        public AdminUserController(IAdminUserService service)
+        public AdminUserController(IAdminUserService service, IRedisHelper redis)
         {
             svc = service;
+            _redis = redis;
         }
 
         [ExcludeFromCodeCoverage]
@@ -134,6 +141,83 @@ namespace Its.Onix.Api.Controllers
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
+        }
+
+        private string CreateForgotPasswordLink(string orgId, MUserRegister reg)
+        {
+            var regType = "forgot-password";
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "<REGISTER_SERVICE_DOMAIN>"; //คนที่เรียกใช้งานจะต้องเปลี่ยนเป็น domain ของ register service เอง
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}/{regType}/{orgId}/{token}?data={dataUrlSafe}";
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "AdminForgotPassword");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return registrationUrl;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetForgotPasswordLink/{userId}")]
+        public async Task<IActionResult> GetForgotPasswordLink(string userId)
+        {
+            var id = "global";
+
+            //ต้องใช้งานอย่างระมัดระวัง อย่างไป grant สิทธ์ให้ user แบบมั่ว ๆ ซั่ว ๆ นะ
+            //จริง ๆ ควรต้องส่งไปยัง email เลยแต่ ณ ตอนนี้ไม่มีระบบ email
+            var mv = new MVOrganizationUserRegistration()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var mvAdminUser = await svc.GetUserById(userId);
+            if (mvAdminUser.Status != "OK")
+            {
+                Response.Headers.Append("CUST_STATUS", mvAdminUser.Status);
+                return Ok(mvAdminUser);
+            }
+
+            var user = mvAdminUser.AdminUser!;
+            if (user == null)
+            {
+                mv.Status = "EMPTY_USER_RETURN";
+                mv.Description = $"No user return for org user ID [{userId}] !!!";
+
+                Response.Headers.Append("CUST_STATUS", mv.Status);
+                return Ok(mv);
+            }
+
+            if (user.UserStatus != "Active")
+            {
+                mv.Status = "USER_NOT_ACTIVE";
+                mv.Description = $"User status is [{user.UserStatus}] for org user ID [{userId}] !!!";
+
+                Response.Headers.Append("CUST_STATUS", mv.Status);
+                return Ok(mv);
+            }
+
+            var reg = new MUserRegister()
+            {
+                Email = user.UserEmail,
+                UserName = user.UserName!,
+                OrgUserId = id,
+            };
+
+            var forgotPasswordUrl = CreateForgotPasswordLink(id, reg);
+            mv.ForgotPasswordUrl = forgotPasswordUrl;
+
+            Response.Headers.Append("CUST_STATUS", mv.Status);
+            return Ok(mv);
         }
     }
 }

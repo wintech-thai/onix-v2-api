@@ -23,7 +23,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
         }
 
-        public async Task<MVCustomRole> GetCustomRoleById(string orgId, string customRoleId)
+        public async Task<MVCustomRole> GetCustomRoleById(string orgId, string customRoleId, string apiGroup = "api")
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -64,7 +64,7 @@ namespace Its.Onix.Api.Services
                 flatPermissions = GetFlatenPermission(perms);
             }
 
-            var permissions = GetInitialPermission("api", flatPermissions);
+            var permissions = GetInitialPermission(apiGroup, flatPermissions);
 
             r.CustomRole = result;
             r.CustomRole.Permissions = permissions;
