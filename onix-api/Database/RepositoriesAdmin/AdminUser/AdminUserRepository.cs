@@ -128,6 +128,39 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
+        public IQueryable<MAdminUser> GetSelection()
+        {
+            var query =
+                from au in context!.AdminUsers
+
+                join usr in context.Users!
+                    on au.UserId equals usr.UserId.ToString() into joinedUser
+                from user in joinedUser.DefaultIfEmpty()
+
+                join cr in context.CustomRoles!
+                    on au.CustomRoleId equals cr.RoleId.ToString() into joinedRole
+                from role in joinedRole.DefaultIfEmpty()
+
+                select new { au, user, role };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MAdminUser
+            {
+                AdminUserId = x.au.AdminUserId,
+                UserId = x.au.UserId,
+                UserName = x.au.UserName,
+                RolesList = x.au.RolesList,
+                CreatedDate = x.au.CreatedDate,
+                UserEmail = x.user.UserEmail,
+                TmpUserEmail = x.au.TmpUserEmail,
+                UserStatus = x.au.UserStatus,
+                PreviousUserStatus = x.au.PreviousUserStatus,
+                InvitedDate = x.au.InvitedDate,
+                Tags = x.au.Tags,
+                CustomRoleId = x.au.CustomRoleId,
+                CustomRoleName = x.role.RoleName,
+                CustomRoleDesc = x.role.RoleDescription,
+            });
+        }
+
         public async Task<IEnumerable<MAdminUser>> GetUsersLeftJoin(VMAdminUser param)
         {
             var limit = 0;
@@ -146,30 +179,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = UserPredicate(param!);
-
-            var arr = await (from au in context!.AdminUsers
-                             join u in context.Users!
-                             on au.UserName equals u.UserName into userGroup
-                             from user in userGroup.DefaultIfEmpty()
-                             select new MAdminUser
-                             {
-                                AdminUserId = au.AdminUserId,
-                                UserId = au.UserId,
-                                UserName = au.UserName,
-                                RolesList = au.RolesList,
-                                CreatedDate = au.CreatedDate,
-                                UserEmail = user != null ? user.UserEmail : null,
-                                TmpUserEmail = au.TmpUserEmail,
-                                UserStatus = au.UserStatus,
-                                PreviousUserStatus = au.PreviousUserStatus,
-                                InvitedDate = au.InvitedDate,
-                                Tags = au.Tags,
-                             })
-                .Where(predicate)
-                .OrderByDescending(e => e.CreatedDate)
-                .Skip(offset)
-                .Take(limit)
-                .ToListAsync();
+            var arr = await GetSelection().Where(predicate).OrderByDescending(e => e.CreatedDate).Skip(offset).Take(limit).ToListAsync();
 
             return arr;
         }
@@ -211,6 +221,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.RolesList = user.RolesList;
                 result.Tags = user.Tags;
+                result.CustomRoleId = user.CustomRoleId;
 
                 await context!.SaveChangesAsync();
             }
