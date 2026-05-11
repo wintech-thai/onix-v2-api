@@ -39,34 +39,53 @@ namespace Its.Onix.Api.Database.Repositories
             return exists;
         }
 
+
+        //=== Start V2 ===
+        public IQueryable<MBankAccountMerchant> GetSelectionV2()
+        {
+            var query =
+                from bam in context!.BankAccountMerchants
+
+                join ba in context.BankAccounts!
+                    on bam.BankAccountId equals ba.Id.ToString() into bankAccounts
+                from bankaccount in bankAccounts.DefaultIfEmpty()
+
+                join mc in context.Merchants!
+                    on bam.MerchantId equals mc.Id.ToString() into merchants
+                from merchant in merchants.DefaultIfEmpty()
+
+                select new { bam, bankaccount, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MBankAccountMerchant
+            {
+                Id = x.bam.Id,
+                OrgId = x.bam.OrgId,
+                BankAccountId = x.bam.BankAccountId,
+                MerchantId = x.bam.MerchantId,
+                CreatedDate = x.bam.CreatedDate,
+
+                //ข้อมูลของ Bank Account
+                BankCode = x.bankaccount != null ? x.bankaccount.BankCode : null,
+                AccountNumber = x.bankaccount != null ? x.bankaccount.AccountNumber : null,
+                AccountName = x.bankaccount != null ? x.bankaccount.AccountName : null,
+                PromptPayId = x.bankaccount != null ? x.bankaccount.PromptPayId : null,
+                AccountType = x.bankaccount != null ? x.bankaccount.AccountType : null,
+                AccountCategory = x.bankaccount != null ? x.bankaccount.AccountCategory : null,
+                AccountLevel = x.bankaccount != null ? x.bankaccount.AccountLevel : null,
+
+                //ข้อมูลของ Merchant
+                MerchantCode = x.merchant != null ? x.merchant.Code : null,
+                MerchantName = x.merchant != null ? x.merchant.Name : null,
+                MerchantStatus = x.merchant != null ? x.merchant.Status : null,
+            });
+        }
+
         public async Task<List<MBankAccountMerchant>> GetBankAccountSelectedMerchants(string bankAccountId)
         {
-            //ดึงค่า BankAccountMerchant ที่มี bankAccountId ตรงกับที่ส่งมา และ OrgId ตรงกับ orgId
-            //ให้ left join BankAccounts มาด้วยเพื่อดึงข้อมูลของ BankAccount มาด้วย
+            var result = await GetSelectionV2().AsExpandable()
+                .OrderByDescending(e => e.CreatedDate)
+                .ToListAsync();
 
-            var query =
-                from bam in context!.BankAccountMerchants!
-                join ba in context.BankAccounts! on bam.BankAccountId equals ba.Id.ToString() into ba_join
-                from ba in ba_join.DefaultIfEmpty()
-                where bam.BankAccountId == bankAccountId && bam.OrgId == orgId
-                select new MBankAccountMerchant
-                {
-                    Id = bam.Id,
-                    OrgId = bam.OrgId,
-                    BankAccountId = bam.BankAccountId,
-                    MerchantId = bam.MerchantId,
-                    CreatedDate = bam.CreatedDate,
-                    //ข้อมูลของ Bank Account
-                    BankCode = ba != null ? ba.BankCode : null,
-                    AccountNumber = ba != null ? ba.AccountNumber : null,
-                    AccountName = ba != null ? ba.AccountName : null,
-                    PromptPayId = ba != null ? ba.PromptPayId : null,
-                    AccountType = ba != null ? ba.AccountType : null,
-                    AccountCategory = ba != null ? ba.AccountCategory : null,
-                    AccountLevel = ba != null ? ba.AccountLevel : null
-                };
-                
-            return await query.ToListAsync();
+            return result;
         }
 
 
