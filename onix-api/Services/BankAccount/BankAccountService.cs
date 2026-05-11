@@ -81,8 +81,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var isNoExist = await repository!.IsBankAccountNoExist(bankAccount.AccountNumber);
-            if (!isNoExist)
+            var isAccountNoExist = await repository!.IsBankAccountNoExist(bankAccount.AccountNumber);
+            if (isAccountNoExist)
             {
                 r.Status = "ACCOUNT_NUMBER_DUPLICATE";
                 r.Description = $"Bank Account number [{bankAccount.AccountNumber}] already exist!!!";
@@ -91,7 +91,7 @@ namespace Its.Onix.Api.Services
             }
 
             var isNameExist = await repository!.IsBankAccountNameExist(bankAccount.BankCode, bankAccount.AccountName);
-            if (!isNameExist)
+            if (isNameExist)
             {
                 r.Status = "ACCOUNT_NAME_DUPLICATE";
                 r.Description = $"Bank Account name [{bankAccount.AccountName}] already exist!!!";
