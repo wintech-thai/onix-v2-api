@@ -28,6 +28,31 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/InviteOrganizationUser/{orgId}")]
+        public IActionResult InviteOrganizationUser(string orgId, [FromBody] MOrganizationUser request)
+        {
+            var invitedBy = "unknown";
+
+            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (nameObj != null)
+            {
+                invitedBy = nameObj.ToString();
+            }
+
+            var ou = new MOrganizationUser()
+            {
+                UserName = request.UserName,
+                TmpUserEmail = request.UserEmail,
+                InvitedBy = invitedBy,
+                InvitedByAdmin = true,
+                Roles = [ "OWNER" ],
+            };
+            var orgUserStatus = _orgUserSvc.InviteUserWithLink(orgId, ou);
+
+            return Ok(orgUserStatus);
+        }
+
+        [HttpPost]
         [Route("org/global/action/RegisterOrganization")]
         public IActionResult RegisterOrganization([FromBody] MOrganizeRegistration request)
         {

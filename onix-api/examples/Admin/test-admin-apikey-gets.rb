@@ -14,13 +14,9 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUser"
+apiUrl = "admin-api/AdminApiKey/org/#{orgId}/action/GetApiKeys"
 param =  {
-  UserName: "seubpong.soodlor",
-  TmpUserEmail: "hello.seub@please-scan.com",
-  Tags: "test,local",
-  InvitedBy: "seubpong.mon",
-  Roles: [ 'OWNER' ],
+  FullTextSearch: "",
 }
 
 token = File.read(keyFile)
@@ -33,6 +29,6 @@ ENV['ACCESS_TOKEN'] = token
 result = make_request(:post, apiUrl, param)
 puts(result)
 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/GetUserCount"
+apiUrl = "admin-api/AdminApiKey/org/#{orgId}/action/GetApiKeyCount"
 result = make_request(:post, apiUrl, param)
 puts(result)

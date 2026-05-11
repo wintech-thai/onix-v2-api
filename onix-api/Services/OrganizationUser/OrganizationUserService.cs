@@ -347,6 +347,12 @@ namespace Its.Onix.Api.Services
             user.UserStatus = "Pending";
             user.InvitedDate = DateTime.UtcNow;
             user.IsOrgInitialUser = "NO";
+            
+            if (user.InvitedByAdmin == true)
+            {
+                user.IsOrgInitialUser = "YES";
+            }
+
             user.PreviousUserStatus = "Pending";
             user.RolesList = string.Join(",", user.Roles ?? []);
 

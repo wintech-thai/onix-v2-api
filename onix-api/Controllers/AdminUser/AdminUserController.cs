@@ -41,6 +41,26 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/InviteUserWithLink")]
+        public async Task<IActionResult> InviteUserWithLink([FromBody] MAdminUser request)
+        {
+            var invitedByName = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (invitedByName == null)
+            {
+                invitedByName = "Unknown";
+            }
+
+            request.InvitedBy = invitedByName.ToString();
+
+            var result = await svc.InviteUserWithLink(request);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            Response.Headers.Append("CUST_DESC", result!.Description);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/global/action/DeleteUserById/{userId}")]
         public async Task<IActionResult> DeleteUserById(string userId)

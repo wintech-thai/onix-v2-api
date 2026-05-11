@@ -246,7 +246,8 @@ namespace Its.Onix.Api.Services
                     return "ERROR_NAME_IS_USED_BY_ANOTHER";
                 }
 
-                //case1 : (username, email) มีอยู่แล้วใน table Users => Ok "สร้างใน OrganizationsUsers เท่านั้น"
+                //case1 : (username, email) มีอยู่แล้วใน table Users => Ok "สร้างใน AdminUsers เท่านั้น"
+                //case นี้เกิดจากเป็น user ปกติ แต่ถูก invited เข้ามาเป็น admin ด้วย
                 return "OK_TO_ADD_IN_ORG1";
             }
 
@@ -316,6 +317,31 @@ namespace Its.Onix.Api.Services
             _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 12)); //หมดอายุ 12 ชั่วโมง
 
             return result;
+        }
+
+        private string CreateInvitationLink(string orgId, string regCase, MUserRegister reg)
+        {
+            var regType = "admin-signup-confirm";
+            if (regCase == "OK_TO_ADD_IN_ORG1")
+            {
+                //เป็น link ที่ให้กด accept เท่านั้น ไม่ต้องให้กรอก user/password
+                regType = "admin-invite-confirm";
+            }
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://<REGISTER_SERVICE_DOMAIN>/{regType}/{orgId}/{token}?data={dataUrlSafe}";
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "AdminSignUp");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 12)); //หมดอายุ 12 ชั่วโมง
+
+            return registrationUrl;
         }
 
         public async Task<MVAdminUser?> InviteUser(MAdminUser user)
@@ -397,6 +423,87 @@ namespace Its.Onix.Api.Services
             return r;
         }
         
+        public async Task<MVAdminUser?> InviteUserWithLink(MAdminUser user)
+        {
+            var r = new MVAdminUser()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var userName = user.UserName!;
+            var userValidateResult = ValidationUtils.ValidateUserName(userName);
+            if (userValidateResult.Status != "OK")
+            {
+                r.Status = userValidateResult.Status;
+                r.Description = userValidateResult.Description;
+
+                return r;
+            }
+
+            //Validate if user exist in org
+            var isUserExist = await repository!.IsUserNameExist(userName);
+            if (isUserExist)
+            {
+                r.Status = "USERNAME_DUPLICATE";
+                r.Description = $"User name [{userName}] is already exist!!!";
+
+                return r;
+            }
+
+            var email = user.TmpUserEmail;
+            if (string.IsNullOrEmpty(email))
+            {
+                r.Status = "INVALID_EMAIL_EMPTY";
+                r.Description = "Email address is blank, please check your TmpUserEmail field!!!";
+                return r;
+            }
+
+            //Validate email format
+            var emailValidateResult = ValidationUtils.ValidateEmail(email);
+            if (emailValidateResult.Status != "OK")
+            {
+                r.Status = emailValidateResult.Status;
+                r.Description = emailValidateResult.Description;
+
+                return r;
+            }
+
+            var registrationCase = IdentifyRegistrationCase(user);
+            if (registrationCase.Contains("ERROR"))
+            {
+                r.Status = registrationCase;
+                r.Description = "Email or username is being by used another!!!";
+
+                return r;
+            }
+
+            user.UserStatus = "Pending";
+            user.InvitedDate = DateTime.UtcNow;
+            user.PreviousUserStatus = "Pending";
+            user.RolesList = string.Join(",", user.Roles ?? []);
+
+            var result = await repository!.AddUser(user);
+
+            var tmpOrgId = "global";
+            var reg = new MUserRegister()
+            {
+                Email = email,
+                UserName = userName,
+                OrgUserId = result.AdminUserId.ToString(),
+                InvitedBy = user.InvitedBy,
+            };
+            var url = CreateInvitationLink(tmpOrgId, registrationCase, reg);
+
+            r.RegistrationUrl = url;
+
+            r.AdminUser = result;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.AdminUser.RolesList = "";
+
+            return r;
+        }
+
         public MVAdminUser VerifyUserIsAdmin(string userName)
         {
             var u = userRepository!.GetUserByName(userName);

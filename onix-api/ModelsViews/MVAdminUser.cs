@@ -10,5 +10,6 @@ namespace Its.Onix.Api.ModelsViews
         public string? Description { get; set; }
         public MAdminUser? AdminUser { get; set; }
         public MUser? User { get; set; }
+        public string? RegistrationUrl { get; set; }
     }
 }

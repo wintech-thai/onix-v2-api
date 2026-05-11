@@ -12,7 +12,7 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-url = "https://register-dev.please-scan.com/global/admin-invite-confirm/38b9bfe6-7a48-4967-9145-b69443f76bb8?data=eyJFbWFpbCI6ImhlbGxvLnNldWJAcGxlYXNlLXNjYW4uY29tIiwiVXNlck5hbWUiOiJzZXVicG9uZy5zb29kbG9yIiwiUGFzc3dvcmQiOm51bGwsIk5hbWUiOm51bGwsIkxhc3RuYW1lIjpudWxsLCJJbnZpdGVkQnkiOiJzZXVicG9uZy5tb24iLCJPcmdVc2VySWQiOiJmZDBlMjE3OC1hMTA2LTQyMDktOTY3OC04NmNiMWYwNGMyMGUifQ%3d%3d"
+url = "https://web-dev.please-payment.com/admin-signup-confirm/global/6f42e74e-e0c5-448a-a8a5-369b7e78338e?data=eyJFbWFpbCI6ImhlbGxvLnNldWJAYWJjZGVmZy5jb20iLCJVc2VyTmFtZSI6InNldWJwb25nLnNvb2Rsb3IiLCJQYXNzd29yZCI6bnVsbCwiTmFtZSI6bnVsbCwiTGFzdG5hbWUiOm51bGwsIkludml0ZWRCeSI6InNldWJwb25nLm1vbiIsIk9yZ1VzZXJJZCI6IjE0MTg2MTNiLTA3MmUtNDE2MC04ZmUwLWQ1YjVmNjNlMmE2NSIsIk9yZ1R5cGUiOm51bGx9"
 uri = URI.parse(url)
 
 # แปลง query string เป็น hash
@@ -25,8 +25,8 @@ parts = path.split('/').reject(&:empty?)
 decoded = Base64.decode64(data)
 dataObj = JSON.parse(decoded)
 
-orgId = parts[0]
-regType = parts[1]
+orgId = parts[1]
+regType = parts[0]
 token = parts[2]
 
 api = "ConfirmNewUserInvitation"

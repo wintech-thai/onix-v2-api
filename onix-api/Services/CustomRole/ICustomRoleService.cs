@@ -13,5 +13,6 @@ namespace Its.Onix.Api.Services
         public Task<int> GetCustomRoleCount(string orgId, VMCustomRole param);
         public Task<MVCustomRole> UpdateCustomRoleById(string orgId, string customRoleId, MCustomRole customRole);
         public MVCustomPermission GetInitialUserRolePermissions(string orgId); /* สำหรับ Level ที่เป็น API ของ User (console) */
+        public MVCustomPermission GetInitialAdminRolePermissions(string orgId); /* สำหรับ Level ที่เป็น API ของ Admin (console) */
     }
 }
