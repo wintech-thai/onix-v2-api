@@ -104,6 +104,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAgentService, AgentService>();
             builder.Services.AddScoped<IAgentPolicyService, AgentPolicyService>();
             builder.Services.AddScoped<IMerchantService, MerchantService>();
+            builder.Services.AddScoped<IBankAccountService, BankAccountService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -137,12 +138,12 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAgentRepository, AgentRepository>();
             builder.Services.AddScoped<IAgentPolicyRepository, AgentPolicyRepository>();
             builder.Services.AddScoped<IMerchantRepository, MerchantRepository>();
-
             builder.Services.AddTransient<IAuthorizationHandler, GenericRbacHandler>();
             builder.Services.AddScoped<IBasicAuthenticationRepo, BasicAuthenticationRepo>();
             builder.Services.AddScoped<IBearerAuthenticationAdminRepo, BearerAuthenticationAdminRepo>();
             builder.Services.AddScoped<IBearerAuthenticationCustomerRepo, BearerAuthenticationCustomerRepo>();
             builder.Services.AddScoped<IBearerAuthenticationRepo, BearerAuthenticationRepo>();
+            builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
 
             builder.Services.AddAuthentication("BasicOrBearer")
                 .AddScheme<AuthenticationSchemeOptions, AuthenticationHandlerProxy>("BasicOrBearer", null);

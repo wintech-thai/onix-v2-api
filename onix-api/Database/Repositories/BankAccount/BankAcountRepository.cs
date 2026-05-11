@@ -1,0 +1,211 @@
+using LinqKit;
+using Its.Onix.Api.Models;
+using Its.Onix.Api.ViewsModels;
+using System.Data.Entity;
+
+namespace Its.Onix.Api.Database.Repositories
+{
+    public class BankAccountRepository : BaseRepository, IBankAccountRepository
+    {
+        public BankAccountRepository(IDataContext ctx)
+        {
+            context = ctx;
+        }
+
+        public async Task<bool> IsBankAccountNoExist(string accountNo)
+        {
+            var exists = await context!.BankAccounts!.AsExpandable().AnyAsync(p => p!.AccountNumber!.Equals(accountNo) && p!.OrgId!.Equals(orgId));
+            return exists;
+        }
+
+        public async Task<bool> IsBankAccountNameExist(string bankCode, string accountName)
+        {
+            var exists = await context!.BankAccounts!.AsExpandable()
+                .AnyAsync(p => p!.BankCode!.Equals(bankCode) && p!.AccountName!.Equals(accountName) && p!.OrgId!.Equals(orgId));
+            return exists;
+        }
+
+        public async Task<MBankAccount?> GetBankAccountByAccountNo(string accountNo)
+        {
+            var exists = await context!.BankAccounts!.AsExpandable()
+                .Where(p => p!.AccountNumber!.Equals(accountNo) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return exists;
+        }
+
+        public async Task<MBankAccount?> GetBankAccountByAccountName(string bankCode, string accountName)
+        {
+            var exists = await context!.BankAccounts!.AsExpandable()
+                .Where(p => p!.BankCode!.Equals(bankCode) && p!.AccountName!.Equals(accountName) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return exists;
+        }
+
+        public async Task<List<MBankAccount>> GetBankAccounts(VMBankAccount param)
+        {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset-1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = BankAccountPredicate(param!);
+            var result = await GetSelection().AsExpandable()
+            .Where(predicate)
+            .OrderByDescending(e => e.CreatedDate)
+            .Skip(offset)
+            .Take(limit)
+            .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<int> GetBankAccountCount(VMBankAccount param)
+        {
+            var predicate = BankAccountPredicate(param!);
+            var result = await context!.BankAccounts!.Where(predicate).AsExpandable().CountAsync();
+
+            return result;
+        }
+
+        public async Task<MBankAccount?> GetBankAccountById(string bankAccountId)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            var u = await GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+        public IQueryable<MBankAccount> GetSelection()
+        {
+            var query =
+                from ba in context!.BankAccounts!
+                select new { ba };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MBankAccount
+            {
+                Id = x.ba.Id,
+                OrgId = x.ba.OrgId,
+                AccountNumber = x.ba.AccountNumber,
+                AccountName = x.ba.AccountName,
+                BankCode = x.ba.BankCode,
+                CreatedDate = x.ba.CreatedDate,
+                Tags = x.ba.Tags,
+                AccountType = x.ba.AccountType,
+                AccountCategory = x.ba.AccountCategory,
+                AccountLevel = x.ba.AccountLevel,
+                PayinMinAmount = x.ba.PayinMinAmount,
+                PayinMaxAmount = x.ba.PayinMaxAmount,
+                PayoutMinAmount = x.ba.PayoutMinAmount,
+                PayoutMaxAmount = x.ba.PayoutMaxAmount,
+                DailyQuota = x.ba.DailyQuota,
+                CurrentDailyPayinAmount = x.ba.CurrentDailyPayinAmount,
+                CurrentDailyPayinCount = x.ba.CurrentDailyPayinCount,
+                CurrentBalance = x.ba.CurrentBalance,
+                DailyPayinCountQuota = x.ba.DailyPayinCountQuota,
+                Status = x.ba.Status
+            });
+        }
+
+        private ExpressionStarter<MBankAccount> BankAccountPredicate(VMBankAccount param)
+        {
+            var pd = PredicateBuilder.New<MBankAccount>();
+
+            pd = pd.And(p => p.OrgId!.Equals(orgId));
+
+            if (param.AccountCategory != null)
+            {
+                pd = pd.And(p => p.AccountCategory == param.AccountCategory);
+            }
+
+            if (param.AccountLevel != null)
+            {
+                pd = pd.And(p => p.AccountLevel == param.AccountLevel);
+            }
+
+            if (param.AccountType != null)
+            {
+                pd = pd.And(p => p.AccountType == param.AccountType);
+            }
+
+            if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
+            {
+                var fullTextPd = PredicateBuilder.New<MBankAccount>();
+                fullTextPd = fullTextPd.Or(p => p.AccountName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.AccountNumber!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PromptPayId!.Contains(param.FullTextSearch));
+
+                pd = pd.And(fullTextPd);
+            }
+
+            return pd;
+        }
+
+        public async Task<MBankAccount> AddBankAccount(MBankAccount bankAccount)
+        {
+            bankAccount.OrgId = orgId;
+            bankAccount.CreatedDate = DateTime.UtcNow;
+
+            await context!.BankAccounts!.AddAsync(bankAccount);
+            await context.SaveChangesAsync();
+
+            return bankAccount;
+        }
+
+        public async Task<MBankAccount?> DeleteBankAccountById(string bankAccountId)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            var existing = await context!.BankAccounts!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                context.BankAccounts!.Remove(existing);
+                await context.SaveChangesAsync();
+            }
+
+            return existing;
+        }
+
+        public async Task<MBankAccount?> UpdateBankAccountById(string bankAccountId, MBankAccount bankAccount)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            var existing = await context!.BankAccounts!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.AccountName = bankAccount.AccountName;
+                existing.AccountNumber = bankAccount.AccountNumber;
+                existing.PromptPayId = bankAccount.PromptPayId;
+                existing.AccountType = bankAccount.AccountType;
+                existing.AccountLevel = bankAccount.AccountLevel;
+                existing.Tags = bankAccount.Tags;
+                existing.PayinMinAmount = bankAccount.PayinMinAmount;
+                existing.PayinMaxAmount = bankAccount.PayinMaxAmount; 
+                existing.PayoutMinAmount = bankAccount.PayoutMinAmount;
+                existing.PayoutMaxAmount = bankAccount.PayoutMaxAmount;
+                existing.DailyQuota = bankAccount.DailyQuota;
+                existing.DailyPayinCountQuota = bankAccount.DailyPayinCountQuota;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MBankAccount?> UpdateBankAccountStatusById(string bankAccountId, string status)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            var existing = context!.BankAccounts!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
+            if (existing != null)
+            {
+                existing.Status = status;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+    }
+}
