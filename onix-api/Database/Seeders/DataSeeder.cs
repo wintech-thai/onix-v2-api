@@ -169,6 +169,12 @@ public class DataSeeder
         context.SaveChanges();
     }
 
+    private void SeedDefaultRoles3()
+    {
+        AddRole("PAYMENT_REQUEST", "PaymentRequest:SubmitPayInRequest", "ORGANIZATION", "For merchant to submit payment request");
+        context.SaveChanges();
+    }
+
     public void Seed()
     {
         SeedDefaultOrganization();
@@ -178,6 +184,7 @@ public class DataSeeder
         SeedDefaultRoles();
         UpdateApiKeyRole();
         SeedDefaultRoles2();
+        SeedDefaultRoles3();
 
         UpdateScanItemTemplateDefaultIfNull();
     }

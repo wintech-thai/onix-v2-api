@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.ViewsModels;
+using YamlDotNet.Serialization.BufferedDeserialization.TypeDiscriminators;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -12,11 +14,15 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IOrganizationService _orgSvc;
         private readonly IOrganizationUserService _orgUserSvc;
+        private readonly IApiKeyService _apiKeySvc;
 
-        public AdminOrganizationController(IOrganizationService service, IOrganizationUserService orgUserSvc)
+        public AdminOrganizationController(IOrganizationService service, 
+            IOrganizationUserService orgUserSvc,
+            IApiKeyService apiKeySvc)
         {
             _orgSvc = service;
             _orgUserSvc = orgUserSvc;
+            _apiKeySvc = apiKeySvc;
         }
 
         [HttpPost]
@@ -25,6 +31,62 @@ namespace Its.Onix.Api.Controllers
         {
             var result = _orgSvc.AddOrganization("notused", request);
             return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/CreatePaymentRequestApiKey/{orgId}")]
+        public IActionResult CreatePaymentRequestApiKey(string orgId)
+        {
+            var uuid = Guid.NewGuid();
+
+            var request = new MApiKey()
+            {
+                KeyType = "PaymentRequest",
+                KeyName = $"PayInRequest:{uuid}",
+                KeyDescription = "Auto generated key, DO NOT delete!!!",
+                Roles = [ "PAYMENT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+            };
+
+            var apiKey = _apiKeySvc.AddApiKey(orgId, request);
+            return Ok(apiKey);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetPaymentRequestApiKeys/{orgId}")]
+        public IActionResult GetPaymentRequestApiKeys(string orgId)
+        {
+            var request = new VMApiKey()
+            {
+                KeyType = "PaymentRequest", 
+            };
+
+            var keys = _apiKeySvc.GetApiKeys(orgId, request);
+
+            return Ok(keys);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/DeletePaymentRequestApiKeyById/{orgId}/{apiKeyId}")]
+        public IActionResult DeletePaymentRequestApiKeyById(string orgId, string apiKeyId)
+        {
+            var apiKey = _apiKeySvc.DeleteApiKeyById(orgId, apiKeyId);
+            return Ok(apiKey);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/EnablePaymentRequestApiKeyById/{orgId}/{apiKeyId}")]
+        public IActionResult EnablePaymentRequestApiKeyById(string orgId, string apiKeyId)
+        {
+            var apiKey = _apiKeySvc.UpdateApiKeyStatusById(orgId, apiKeyId, "Active");
+            return Ok(apiKey);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/DisableRequestApiKeyById/{orgId}/{apiKeyId}")]
+        public IActionResult DisableRequestApiKeyById(string orgId, string apiKeyId)
+        {
+            var apiKey = _apiKeySvc.UpdateApiKeyStatusById(orgId, apiKeyId, "Disabled");
+            return Ok(apiKey);
         }
 
         [HttpPost]

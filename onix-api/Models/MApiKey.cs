@@ -37,6 +37,9 @@ namespace Its.Onix.Api.Models
         [Column("key_status")]
         public string? KeyStatus { get; set; } /* Active, Disabled */
 
+        [Column("key_type")]
+        public string? KeyType { get; set; } /* PaymentRequest */
+
         [Column("roles_list")]
         public string? RolesList { get; set; }
 

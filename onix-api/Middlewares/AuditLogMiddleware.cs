@@ -49,6 +49,7 @@ namespace Its.Onix.Api.AuditLogs
             var fullUrl = $"{method} {path}{query}";
             var requestSize = context.Request.ContentLength ?? 0;
             var userAgent = context.Request.Headers["User-Agent"].ToString();
+            var appType = context.Request.Headers["Onix-Application-Type"].ToString(); //PLEASE-PROTECT-CENTER, PLEASE-SCAN, PLEASE-PAYMENT-ADMIN ฯลฯ
 
             var cfClientIp = "";
             if (context.Request.Headers.ContainsKey("CF-Connecting-IP"))
@@ -116,6 +117,7 @@ namespace Its.Onix.Api.AuditLogs
                 CustomStatus = custStatus,
                 CustomDesc = statusDesc,
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                ApplicationType = appType,
 
                 userInfo = new UserInfo()
                 {

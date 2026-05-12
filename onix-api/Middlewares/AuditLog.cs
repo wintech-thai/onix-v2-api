@@ -23,11 +23,13 @@ namespace Its.Onix.Api.AuditLogs
         public UserInfo? userInfo { get; set; }
         public object? ContextData { get; set; }
         public string LogType { get; set; }
+        public string ApplicationType { get; set; }
 
         public AuditLog()
         {
             userInfo = new UserInfo();
             LogType = "AuditLog";
+            ApplicationType = "PLEASE-SCAN";
         }
     }
 }

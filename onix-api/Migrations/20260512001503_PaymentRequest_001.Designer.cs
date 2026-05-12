@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260512001503_PaymentRequest_001")]
+    partial class PaymentRequest_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -349,10 +352,6 @@ namespace onix.api.Migrations
                     b.Property<string>("KeyStatus")
                         .HasColumnType("text")
                         .HasColumnName("key_status");
-
-                    b.Property<string>("KeyType")
-                        .HasColumnType("text")
-                        .HasColumnName("key_type");
 
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
@@ -1504,10 +1503,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("direction");
 
-                    b.Property<DateTime?>("ExpireDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expire_date");
-
                     b.Property<double?>("GeneratedAmount")
                         .HasColumnType("double precision")
                         .HasColumnName("generated_amount");
@@ -1523,10 +1518,6 @@ namespace onix.api.Migrations
                     b.Property<string>("PaymentTxId")
                         .HasColumnType("text")
                         .HasColumnName("payment_tx_id");
-
-                    b.Property<string>("QrProvider")
-                        .HasColumnType("text")
-                        .HasColumnName("qr_provider");
 
                     b.Property<string>("RefId")
                         .HasColumnType("text")

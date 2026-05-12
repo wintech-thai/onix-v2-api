@@ -57,6 +57,14 @@ namespace Its.Onix.Api.Database.Repositories
 
             pd = pd.And(p => p.OrgId!.Equals(orgId));
 
+            if ((param.KeyType != null) && (param.KeyType != ""))
+            {
+                var keyTypePd = PredicateBuilder.New<MApiKey>();
+                keyTypePd = keyTypePd.Or(p => p.KeyType!.Equals(param.KeyType));
+
+                pd = pd.And(keyTypePd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MApiKey>();
@@ -89,6 +97,7 @@ namespace Its.Onix.Api.Database.Repositories
                 KeyCreatedDate = x.ak.KeyCreatedDate,
                 KeyExpiredDate = x.ak.KeyExpiredDate,
                 KeyDescription = x.ak.KeyDescription,
+                KeyType = x.ak.KeyType,
                 KeyStatus = x.ak.KeyStatus,
                 RolesList = x.ak.RolesList,
                 CustomRoleId = x.ak.CustomRoleId,
