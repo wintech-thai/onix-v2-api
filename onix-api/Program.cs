@@ -105,6 +105,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAgentPolicyService, AgentPolicyService>();
             builder.Services.AddScoped<IMerchantService, MerchantService>();
             builder.Services.AddScoped<IBankAccountService, BankAccountService>();
+            builder.Services.AddScoped<IPaymentRequestService, PaymentRequestService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -144,6 +145,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IBearerAuthenticationCustomerRepo, BearerAuthenticationCustomerRepo>();
             builder.Services.AddScoped<IBearerAuthenticationRepo, BearerAuthenticationRepo>();
             builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
+            builder.Services.AddScoped<IPaymentRequestRepository, PaymentRequestRepository>();
 
             builder.Services.AddAuthentication("BasicOrBearer")
                 .AddScheme<AuthenticationSchemeOptions, AuthenticationHandlerProxy>("BasicOrBearer", null);

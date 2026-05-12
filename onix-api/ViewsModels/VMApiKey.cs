@@ -6,5 +6,6 @@ namespace Its.Onix.Api.ViewsModels
     public class VMApiKey : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
+        public string? KeyType { get; set; }
     }
 }

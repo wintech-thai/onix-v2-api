@@ -57,6 +57,11 @@ namespace Its.Onix.Api.Database.Repositories
 
             pd = pd.And(p => p.OrgId!.Equals(orgId));
 
+            if ((param.KeyType != null) && (param.KeyType != ""))
+            {
+                pd = pd.And(p => p.KeyType == param.KeyType);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MApiKey>();

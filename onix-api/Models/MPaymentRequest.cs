@@ -55,6 +55,9 @@ namespace Its.Onix.Api.Models
         [Column("requested_amount")]
         public double? RequestedAmount { get; set; } //จำนวนเงิน > 0
 
+        [Column("qr_provider")]
+        public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan
+
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
@@ -84,8 +87,9 @@ namespace Its.Onix.Api.Models
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
-        [NotMapped]
-        public string? ApiKey { get; set; }
+        [Column("expire_date")]
+        public DateTime? ExpireDate { get; set; }
+
         [NotMapped]
         public string? MerchantName { get; set; }
         [NotMapped]

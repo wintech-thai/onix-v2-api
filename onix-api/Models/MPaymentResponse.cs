@@ -20,7 +20,6 @@ namespace Its.Onix.Api.Models
 
         public MPaymentResponse()
         {
-            CreatedAt = DateTime.UtcNow;
         }
     }
 }
