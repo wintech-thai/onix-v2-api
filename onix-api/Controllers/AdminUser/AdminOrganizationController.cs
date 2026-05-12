@@ -35,17 +35,20 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/global/action/CreatePaymentRequestApiKey/{orgId}")]
-        public IActionResult CreatePaymentRequestApiKey(string orgId, [FromBody] MApiKey request)
+        public IActionResult CreatePaymentRequestApiKey(string orgId)
         {
             var uuid = Guid.NewGuid();
 
-            request.KeyType = "PaymentRequest";
-            request.KeyName = $"PayInRequest:{uuid}";
-            request.KeyDescription = "Auto generated key, DO NOT delete!!!";
-            request.RolesList = "PAYMENT_REQUEST"; //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
-            var orgUserStatus = _apiKeySvc.AddApiKey(orgId, request);
+            var request = new MApiKey()
+            {
+                KeyType = "PaymentRequest",
+                KeyName = $"PayInRequest:{uuid}",
+                KeyDescription = "Auto generated key, DO NOT delete!!!",
+                RolesList = "PAYMENT_REQUEST", //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+            };
 
-            return Ok(orgUserStatus);
+            var apiKey = _apiKeySvc.AddApiKey(orgId, request);
+            return Ok(apiKey);
         }
 
         [HttpGet]
