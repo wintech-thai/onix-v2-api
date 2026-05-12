@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using YamlDotNet.Serialization.BufferedDeserialization.TypeDiscriminators;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -49,9 +50,13 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/global/action/GetPaymentRequestApiKeys/{orgId}")]
-        public IActionResult GetPaymentRequestApiKeys(string orgId, [FromBody] VMApiKey request)
+        public IActionResult GetPaymentRequestApiKeys(string orgId)
         {
-            request.KeyType = "PaymentRequest";
+            var request = new VMApiKey()
+            {
+                KeyType = "PaymentRequest", 
+            };
+
             var keys = _apiKeySvc.GetApiKeys(orgId, request);
 
             return Ok(keys);
