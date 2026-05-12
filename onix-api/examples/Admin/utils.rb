@@ -24,6 +24,7 @@ def make_request(method, apiName, data)
   host = ENV['API_HTTP_ENDPOINT']
   apiKey = ENV['API_KEY']
   accessToken = ENV['ACCESS_TOKEN']
+  appType = ENV['ONIX_APPLICATION_TYPE'] # optional
   
   uri = URI.parse("#{host}/#{apiName}")  
 
@@ -33,7 +34,9 @@ def make_request(method, apiName, data)
 
   request = request_class.new(uri.request_uri)
   request['Content-Type'] = 'application/json'
-  
+  # เพิ่ม custom header
+  request['Onix-Application-Type'] = appType || 'backend'
+
   if (!apiKey.nil?)
     request.basic_auth("api", apiKey)
     puts("===== Using API KEY =====")
