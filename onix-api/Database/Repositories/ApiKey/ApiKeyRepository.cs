@@ -97,6 +97,7 @@ namespace Its.Onix.Api.Database.Repositories
                 KeyCreatedDate = x.ak.KeyCreatedDate,
                 KeyExpiredDate = x.ak.KeyExpiredDate,
                 KeyDescription = x.ak.KeyDescription,
+                KeyType = x.ak.KeyType,
                 KeyStatus = x.ak.KeyStatus,
                 RolesList = x.ak.RolesList,
                 CustomRoleId = x.ak.CustomRoleId,

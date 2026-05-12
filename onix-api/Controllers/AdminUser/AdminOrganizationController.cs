@@ -57,7 +57,7 @@ namespace Its.Onix.Api.Controllers
         {
             var request = new VMApiKey()
             {
-                KeyType = "" //"PaymentRequest", 
+                KeyType = "PaymentRequest", 
             };
 
             var keys = _apiKeySvc.GetApiKeys(orgId, request);
