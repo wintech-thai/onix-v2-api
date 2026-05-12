@@ -16,9 +16,7 @@ userOrgId = "ppm-alfa888"
 
 ### 
 apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/CreatePaymentRequestApiKey/#{userOrgId}"
-param = {
-  
-}
+param = {}
 
 token = File.read(keyFile)
 
