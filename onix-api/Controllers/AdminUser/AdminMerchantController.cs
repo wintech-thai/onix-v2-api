@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.ModelsViews;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -28,6 +29,32 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.GetMerchantById("notused", merchantId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetMerchantPaymentRequestEndPoint/{merchantId}")]
+        public async Task<IActionResult> GetMerchantPaymentRequestEndPoint(string merchantId)
+        {
+            var mvMerchant = await svc.GetMerchantById("notused", merchantId);
+            if (mvMerchant.Status != "OK")
+            {
+                return Ok(mvMerchant);
+            }
+
+            var mc = mvMerchant.Merchant!;
+
+            var merchantOrgId = mc.OrgId;
+            var url = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPaymentRequest";
+
+            var result = new MVEndPoint()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentRequestUrl = url,
+            };
+
             return Ok(result);
         }
 
