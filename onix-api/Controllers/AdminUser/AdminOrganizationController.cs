@@ -44,7 +44,7 @@ namespace Its.Onix.Api.Controllers
                 KeyType = "PaymentRequest",
                 KeyName = $"PayInRequest:{uuid}",
                 KeyDescription = "Auto generated key, DO NOT delete!!!",
-                RolesList = "PAYMENT_REQUEST", //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+                Roles = [ "PAYMENT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
             };
 
             var apiKey = _apiKeySvc.AddApiKey(orgId, request);

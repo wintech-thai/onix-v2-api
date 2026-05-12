@@ -59,7 +59,10 @@ namespace Its.Onix.Api.Database.Repositories
 
             if ((param.KeyType != null) && (param.KeyType != ""))
             {
-                pd = pd.And(p => p.KeyType == param.KeyType);
+                var keyTypePd = PredicateBuilder.New<MApiKey>();
+                keyTypePd = keyTypePd.Or(p => p.KeyType!.Equals(param.KeyType));
+
+                pd = pd.And(keyTypePd);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
