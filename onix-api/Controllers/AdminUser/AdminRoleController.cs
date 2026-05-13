@@ -23,9 +23,9 @@ namespace Its.Onix.Api.Controllers
         // Use POST method, in the future we might send the body
         [HttpPost]
         [Route("org/global/action/GetRoles")]
-        public IActionResult GetRoles(string id, [FromBody] VMRole param)
+        public IActionResult GetRoles([FromBody] VMRole param)
         {
-            var result = svc.GetRoles(id, param);
+            var result = svc.GetRoles("global", param);
             return Ok(result);
         }
     }

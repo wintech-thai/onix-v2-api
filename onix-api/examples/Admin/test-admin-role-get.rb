@@ -14,7 +14,7 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/GetRoles"
+apiUrl = "admin-api/AdminRole/org/#{orgId}/action/GetRoles"
 param = nil
 
 token = File.read(keyFile)
