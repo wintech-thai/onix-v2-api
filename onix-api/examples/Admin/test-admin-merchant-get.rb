@@ -17,6 +17,7 @@ keyFile = ".token"
 apiUrl = "admin-api/AdminMerchant/org/global/action/GetMerchants"
 param = {
   FullTextSearch: "",
+  Status: "",
 }
 
 token = File.read(keyFile)

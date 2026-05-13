@@ -24,6 +24,9 @@ namespace Its.Onix.Api.Models
         [Column("name")]
         public string? Name { get; set; }
 
+        [Column("description")]
+        public string? Description { get; set; }
+
         [Column("contact_email")]
         public string? ContactEmail { get; set; }
 
