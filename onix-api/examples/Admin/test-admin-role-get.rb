@@ -14,13 +14,8 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUserWithLink"
-param =  {
-  UserName: "seubpong1.soodlor",
-  TmpUserEmail: "hello1.seub@abcdefg.com",
-  Tags: "test,local",
-  Roles: [ 'OWNER' ],
-}
+apiUrl = "admin-api/AdminRole/org/#{orgId}/action/GetRoles"
+param = {}
 
 token = File.read(keyFile)
 

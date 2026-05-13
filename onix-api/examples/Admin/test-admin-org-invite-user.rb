@@ -17,8 +17,8 @@ userOrgId = "ppm-alfa888"
 ### 
 apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/InviteOrganizationUser/#{userOrgId}"
 param =  {
-  UserName: "seubpong3.mon",
-  UserEmail: "pjame.fb3@gmail.com",
+  UserName: "seubpong4.mon",
+  UserEmail: "pjame.fb4@gmail.com",
 }
 
 token = File.read(keyFile)

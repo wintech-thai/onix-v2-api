@@ -17,6 +17,7 @@ keyFile = ".token"
 apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetBankAccounts"
 param = {
   "FullTextSearch": "",
+  "AccountCategory": "PayIn",
 }
 
 token = File.read(keyFile)

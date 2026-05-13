@@ -12,15 +12,11 @@ load_env("../.env")
 
 orgId = "global"
 keyFile = ".token"
+userOrgId = "ppm-alfa888"
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUserWithLink"
-param =  {
-  UserName: "seubpong1.soodlor",
-  TmpUserEmail: "hello1.seub@abcdefg.com",
-  Tags: "test,local",
-  Roles: [ 'OWNER' ],
-}
+apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/GetOrgUsers/#{userOrgId}"
+param = nil
 
 token = File.read(keyFile)
 
@@ -29,5 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)

@@ -9,6 +9,8 @@ namespace Its.Onix.Api.Models
     [Table("BankAccounts")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(AccountType))]
+    [Index(nameof(AccountCategory))]
     public class MBankAccount
     {
         [Key]
@@ -75,6 +77,8 @@ namespace Its.Onix.Api.Models
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
+        [Column("last_used_date")]
+        public DateTime? LastUsedDate { get; set; }
 
         public MBankAccount()
         {

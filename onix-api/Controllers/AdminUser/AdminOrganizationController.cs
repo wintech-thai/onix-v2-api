@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
-using Its.Onix.Api.ViewsModels;
-using YamlDotNet.Serialization.BufferedDeserialization.TypeDiscriminators;
+using Its.Onix.Api.ViewsModels;using YamlDotNet.Serialization.BufferedDeserialization.TypeDiscriminators;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -90,31 +89,6 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
-        [Route("org/global/action/InviteOrganizationUser/{orgId}")]
-        public IActionResult InviteOrganizationUser(string orgId, [FromBody] MOrganizationUser request)
-        {
-            var invitedBy = "unknown";
-
-            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
-            if (nameObj != null)
-            {
-                invitedBy = nameObj.ToString();
-            }
-
-            var ou = new MOrganizationUser()
-            {
-                UserName = request.UserName,
-                TmpUserEmail = request.UserEmail,
-                InvitedBy = invitedBy,
-                InvitedByAdmin = true,
-                Roles = [ "OWNER" ],
-            };
-            var orgUserStatus = _orgUserSvc.InviteUserWithLink(orgId, ou);
-
-            return Ok(orgUserStatus);
-        }
-
-        [HttpPost]
         [Route("org/global/action/RegisterOrganization")]
         public IActionResult RegisterOrganization([FromBody] MOrganizeRegistration request)
         {
@@ -151,6 +125,62 @@ namespace Its.Onix.Api.Controllers
             var orgUserStatus = _orgUserSvc.InviteUser(orgId, ou);
 
             return Ok(orgUserStatus);
+        }
+
+        //#### OrgUsers
+        [HttpPost]
+        [Route("org/global/action/InviteOrganizationUser/{orgId}")]
+        public IActionResult InviteOrganizationUser(string orgId, [FromBody] MOrganizationUser request)
+        {
+            var invitedBy = "unknown";
+
+            var nameObj = Response.HttpContext.Items["Temp-Identity-Name"];
+            if (nameObj != null)
+            {
+                invitedBy = nameObj.ToString();
+            }
+
+            var ou = new MOrganizationUser()
+            {
+                UserName = request.UserName,
+                TmpUserEmail = request.UserEmail,
+                InvitedBy = invitedBy,
+                InvitedByAdmin = true,
+                Roles = [ "OWNER" ],
+            };
+            var orgUserStatus = _orgUserSvc.InviteUserWithLink(orgId, ou);
+
+            return Ok(orgUserStatus);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/EnableOrgUserById/{orgId}/{orgUserId}")]
+        public IActionResult EnableOrgUserById(string orgId, string orgUserId)
+        {
+            var apiKey = _orgUserSvc.UpdateUserStatusById(orgId, orgUserId, "Active");
+            return Ok(apiKey);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/DisableOrgUserById/{orgId}/{orgUserId}")]
+        public IActionResult DisableOrgUserById(string orgId, string orgUserId)
+        {
+            var apiKey = _orgUserSvc.UpdateUserStatusById(orgId, orgUserId, "Disabled");
+            return Ok(apiKey);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetOrgUsers/{orgId}")]
+        public IActionResult GetOrgUsers(string orgId)
+        {
+            var request = new VMOrganizationUser()
+            {
+                FullTextSearch = "", 
+            };
+
+            var users = _orgUserSvc.GetUsersLeftJoin(orgId, request);
+
+            return Ok(users);
         }
     }
 }

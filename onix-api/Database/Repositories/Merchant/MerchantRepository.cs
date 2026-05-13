@@ -100,6 +100,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutMinAmount = x.merchant.PayoutMinAmount,
                 PayoutMaxAmount = x.merchant.PayoutMaxAmount,
                 Status = x.merchant.Status,
+                Description = x.merchant.Description,
                 CreatedDate = x.merchant.CreatedDate,
             });
         }
@@ -108,12 +109,21 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var pd = PredicateBuilder.New<MMerchant>(true);
 
+            if ((param.Status != null) && (param.Status != ""))
+            {
+                var merchantPd = PredicateBuilder.New<MMerchant>();
+                merchantPd = merchantPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(merchantPd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MMerchant>();
                 fullTextPd = fullTextPd.Or(p => p.Name!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Code!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ContactEmail!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ContactPhone!.Contains(param.FullTextSearch));
 
@@ -158,6 +168,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.ContactEmail = merchant.ContactEmail;
                 existing.ContactPhone = merchant.ContactPhone;
                 existing.Tags = merchant.Tags;
+                existing.Description = merchant.Description;
                 existing.PayinFeePct = merchant.PayinFeePct;
                 existing.PayoutFeePct = merchant.PayoutFeePct;
                 existing.PayinMinAmount = merchant.PayinMinAmount;

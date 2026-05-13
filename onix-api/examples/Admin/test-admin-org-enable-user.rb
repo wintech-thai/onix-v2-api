@@ -12,15 +12,14 @@ load_env("../.env")
 
 orgId = "global"
 keyFile = ".token"
+userOrgId = "ppm-alfa888"
+orgUserId = '37f90e58-428b-45aa-82cd-2b966e06c89e'
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUserWithLink"
-param =  {
-  UserName: "seubpong1.soodlor",
-  TmpUserEmail: "hello1.seub@abcdefg.com",
-  Tags: "test,local",
-  Roles: [ 'OWNER' ],
-}
+apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/EnableOrgUserById/#{userOrgId}/#{orgUserId}"
+#apiUrl = "admin-api/AdminOrganization/org/#{orgId}/action/DisableOrgUserById/#{userOrgId}/#{orgUserId}"
+
+param = nil
 
 token = File.read(keyFile)
 

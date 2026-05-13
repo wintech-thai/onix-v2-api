@@ -6,5 +6,6 @@ namespace Its.Onix.Api.ViewsModels
     public class VMMerchant : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
+        public string? Status { get; set; }
     }
 }
