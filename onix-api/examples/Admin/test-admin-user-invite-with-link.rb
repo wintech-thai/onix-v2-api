@@ -16,8 +16,8 @@ keyFile = ".token"
 ### 
 apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUserWithLink"
 param =  {
-  UserName: "seubpong.soodlor",
-  TmpUserEmail: "hello.seub@abcdefg.com",
+  UserName: "seubpong1.soodlor",
+  TmpUserEmail: "hello1.seub@abcdefg.com",
   Tags: "test,local",
   Roles: [ 'OWNER' ],
 }

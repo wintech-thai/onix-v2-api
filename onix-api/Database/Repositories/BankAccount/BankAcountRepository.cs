@@ -191,6 +191,7 @@ namespace Its.Onix.Api.Database.Repositories
                 AccountName = x.ba.AccountName,
                 BankCode = x.ba.BankCode,
                 CreatedDate = x.ba.CreatedDate,
+                LastUsedDate = x.ba.LastUsedDate,
                 Tags = x.ba.Tags,
                 AccountType = x.ba.AccountType,
                 AccountCategory = x.ba.AccountCategory,
