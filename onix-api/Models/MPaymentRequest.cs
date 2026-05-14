@@ -98,6 +98,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? MerchantCode { get; set; }
 
+        [NotMapped]
+        public MPaymentResponse? ResponseDataObj { get; set; }
+
         public MPaymentRequest()
         {
             Id = Guid.NewGuid();

@@ -44,6 +44,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            result.ResponseDataObj = JsonSerializer.Deserialize<MPaymentResponse>(result.ResponseData!);
+            result.ResponseData = "";
+
             r.PaymentRequest = result;
 
             return r;
