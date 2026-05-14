@@ -62,6 +62,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetPaymentRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> GetPaymentRequestById(string paymentRequestId)
+        {
+            var result = await svc.GetPaymentRequestById("global", paymentRequestId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/GetPayInRequestCount")]
         public async Task<IActionResult> GetAgentCount([FromBody] VMPaymentRequest request)
