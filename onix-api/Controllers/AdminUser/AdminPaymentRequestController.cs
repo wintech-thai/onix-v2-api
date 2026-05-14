@@ -46,6 +46,8 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mcVm);
             }
 
+            request.MerchantId = merchantId;
+            request.MerchantId2 = Guid.Parse(merchantId);
             var result = await svc.AddPaymentRequestPayIn(mc.OrgId, request);
             return Ok(result);
         }

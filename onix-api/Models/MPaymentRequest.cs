@@ -72,6 +72,9 @@ namespace Its.Onix.Api.Models
         [Column("merchant_id")]
         public string? MerchantId { get; set; } //เอาไว้ join หาข้อมูล merchant
 
+        [Column("merchant_id2")]
+        public Guid MerchantId2 { get; set; } //เอาไว้ join หาข้อมูล merchant
+
         [Column("payment_tx_id")]
         public string? PaymentTxId { get; set; } //เอาไว้ link กับ payment transaction ที่เกิดขึ้นจริง
 

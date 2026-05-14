@@ -17,7 +17,7 @@ keyFile = ".token"
 apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPayInRequests"
 param =  {
   FullTextSearch: "",
-  Direction: "PayIn",
+  Direction: "", #"PayIn",
   Status: "",
 }
 

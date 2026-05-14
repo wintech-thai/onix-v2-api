@@ -25,7 +25,7 @@ namespace Its.Onix.Api.Database.Repositories
                 from pr in context!.PaymentRequests
 
                 join mc in context.Merchants!
-                    on pr.MerchantId equals mc.Id.ToString() into merchants
+                    on pr.MerchantId2 equals mc.Id into merchants
                 from merchant in merchants.DefaultIfEmpty()
 
                 select new { pr, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
@@ -46,13 +46,14 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.pr.Status,
                 Direction = x.pr.Direction,
                 MerchantId = x.pr.MerchantId,
+                MerchantId2 = x.pr.MerchantId2,
                 PaymentTxId = x.pr.PaymentTxId,
                 GeneratedAmount = x.pr.GeneratedAmount,
                 ResponseData = x.pr.ResponseData,
                 CreatedDate = x.pr.CreatedDate,
 
-                MerchantName = x.merchant.Name,
-                MerchantCode = x.merchant.Code,
+                MerchantName = x.merchant != null ? x.merchant.Name : null,
+                MerchantCode = x.merchant != null ? x.merchant.Code : null,
             });
         }
 
@@ -105,7 +106,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             pd = pd.And(p => IsOrgMatch(p));
 
-            if ((param.Status != null) && (param.Status != ""))
+            if ((param.Direction != null) && (param.Direction != ""))
             {
                 var directionPd = PredicateBuilder.New<MPaymentRequest>();
                 directionPd = directionPd.Or(p => p.Direction!.Equals(param.Direction));
