@@ -102,9 +102,9 @@ namespace Its.Onix.Api.Database.Repositories
 
         private ExpressionStarter<MPaymentRequest> PaymentRequestPredicate(VMPaymentRequest param)
         {
-            var pd = PredicateBuilder.New<MPaymentRequest>();
+            var pd = PredicateBuilder.New<MPaymentRequest>(true);
 
-            pd = pd.And(p => IsOrgMatch(p));
+            //pd = pd.And(p => IsOrgMatch(p));
 
             if ((param.Direction != null) && (param.Direction != ""))
             {
