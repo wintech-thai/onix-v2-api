@@ -44,6 +44,18 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (orgId != "global")
+            {
+                //Filter ว่า data ที่ส่งออกไปต้องเป็นของ orgId นั้น ๆ เท่าน้้น
+                if (result.OrgId != orgId)
+                {
+                    r.Status = "ERROR_DATA_NOT_OWN_BY_ORG_ID";
+                    r.Description = $"Payment Request ID [{paymentRequestId}] own by organization [{orgId}] --> [{result.OrgId}]";
+
+                    return r;
+                }
+            }
+
             result.ResponseDataObj = JsonSerializer.Deserialize<MPaymentResponse>(result.ResponseData!);
             result.ResponseData = "";
 
@@ -132,7 +144,7 @@ namespace Its.Onix.Api.Services
                 Type = pr.Direction,
                 Status = pr.Status,
                 RequestedAmount = pr.RequestedAmount,
-                GeneratedAmount = pr.GeneratedAmount,
+                GeneratedAmount = pr.RequestedAmount, //ตรงนี้ต้อง random ทศนิยม
                 Currency = pr.Currency,
             };
 
@@ -144,8 +156,15 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetPaymentRequests(param);
 
-            //ไม่ให้ return ออกไปเพราะว่าใหญ่มาก
+            // ลบ ResponseData ออกเพื่อลด payload
             result.ForEach(p => p.ResponseData = "");
+
+            // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น
+            if (orgId != "global")
+            {
+                //ป้องกันความผิดพลาดไม่ให้ payment request ของ org หนึ่งไปโผล่ในอีก org หนึ่ง
+                result.RemoveAll(p => p.OrgId != orgId);
+            }
 
             return result;
         }
