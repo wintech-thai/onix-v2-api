@@ -17,7 +17,7 @@ merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
 ### 
 apiUrl = "admin-api/AdminPaymentRequest/org/global/action/SubmitPaymentRequestByMerchantId/#{merchantId}"
 param =  {
-  RefId: "XA-MSB-0001922-1",
+  RefId: "XA-MSB-0001922-3",
   Description: "ทดสอบยิง payment request เข้ามาเฉย ๆ",
   CustomerEmail: "",
   CustomerPhone: "",
@@ -25,7 +25,7 @@ param =  {
   BankCode: "SCB",
   BankAccountNo: "",
   BankAccountName: "",
-  RequestedAmount: 100,
+  RequestedAmount: 120,
   QrProvider: "PP",
   Tags: "testing",
 }
