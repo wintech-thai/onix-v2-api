@@ -16,9 +16,9 @@ keyFile = ".token"
 ### 
 apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUser"
 param =  {
-  UserName: "seubpong.soodlor",
-  TmpUserEmail: "hello.seub@abcdefg.com",
-  Tags: "test,local",
+  UserName: "seubpong.mon",
+  TmpUserEmail: "pjame.fb@gmail.com",
+  Tags: "P'James",
   InvitedBy: "seubpong.mon",
   Roles: [ 'OWNER' ],
 }
