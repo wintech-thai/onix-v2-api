@@ -105,14 +105,20 @@ namespace Its.Onix.Api.Database.Repositories
 
             pd = pd.And(p => IsOrgMatch(p));
 
-            if (param.Direction != null)
+            if ((param.Status != null) && (param.Status != ""))
             {
-                pd = pd.And(p => p.Direction == param.Direction);
+                var directionPd = PredicateBuilder.New<MPaymentRequest>();
+                directionPd = directionPd.Or(p => p.Direction!.Equals(param.Direction));
+
+                pd = pd.And(directionPd);
             }
 
-            if (param.Status != null)
+            if ((param.Status != null) && (param.Status != ""))
             {
-                pd = pd.And(p => p.Status == param.Status);
+                var statusPd = PredicateBuilder.New<MPaymentRequest>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
@@ -122,7 +128,6 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.MerchantName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.RefId!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);

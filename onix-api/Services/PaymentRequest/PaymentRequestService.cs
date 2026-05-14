@@ -67,6 +67,15 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            if (isRefIdExist)
+            {
+                r.Status = "REF_ID_DUPLICATE";
+                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
+
+                return r;
+            }
+
             if (paymentRequest.Currency != "THB")
             {
                 r.Status = "CURRENCY_NOT_SUPPORT";

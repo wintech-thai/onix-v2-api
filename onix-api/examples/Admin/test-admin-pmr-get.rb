@@ -12,22 +12,13 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
 
 ### 
-apiUrl = "admin-api/AdminPaymentRequest/org/global/action/SubmitPaymentRequestByMerchantId/#{merchantId}"
+apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPayInRequests"
 param =  {
-  RefId: "XA-MSB-0001922-1",
-  Description: "ทดสอบยิง payment request เข้ามาเฉย ๆ",
-  CustomerEmail: "",
-  CustomerPhone: "",
-  Currency: "THB",
-  BankCode: "SCB",
-  BankAccountNo: "",
-  BankAccountName: "",
-  RequestedAmount: 100,
-  QrProvider: "PP",
-  Tags: "testing",
+  FullTextSearch: "",
+  Direction: "PayIn",
+  Status: "",
 }
 
 token = File.read(keyFile)

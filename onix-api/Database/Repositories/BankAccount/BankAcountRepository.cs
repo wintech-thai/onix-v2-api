@@ -215,19 +215,28 @@ namespace Its.Onix.Api.Database.Repositories
 
             pd = pd.And(p => p.OrgId!.Equals(orgId));
 
-            if (param.AccountCategory != null)
+            if ((param.AccountCategory != null) && (param.AccountCategory != ""))
             {
-                pd = pd.And(p => p.AccountCategory == param.AccountCategory);
+                var accCatPd = PredicateBuilder.New<MBankAccount>();
+                accCatPd = accCatPd.Or(p => p.AccountCategory!.Equals(param.AccountCategory));
+
+                pd = pd.And(accCatPd);
             }
 
-            if (param.AccountLevel != null)
+            if ((param.AccountLevel != null) && (param.AccountLevel != ""))
             {
-                pd = pd.And(p => p.AccountLevel == param.AccountLevel);
+                var accLevelPd = PredicateBuilder.New<MBankAccount>();
+                accLevelPd = accLevelPd.Or(p => p.AccountLevel!.Equals(param.AccountLevel));
+
+                pd = pd.And(accLevelPd);
             }
 
-            if (param.AccountType != null)
+            if ((param.AccountType != null) && (param.AccountType != ""))
             {
-                pd = pd.And(p => p.AccountType == param.AccountType);
+                var accTypePd = PredicateBuilder.New<MBankAccount>();
+                accTypePd = accTypePd.Or(p => p.AccountType!.Equals(param.AccountType));
+
+                pd = pd.And(accTypePd);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
