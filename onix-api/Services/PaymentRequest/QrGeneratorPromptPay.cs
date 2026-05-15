@@ -133,14 +133,14 @@ namespace Its.Onix.Api.Services
 
         private QrGeneratorPayload GeneratePayload()
         {
-Console.WriteLine($"DEBUG A targetId=[{_bankAccount.PromptPayId}]"); 
+//Console.WriteLine($"DEBUG A targetId=[{_bankAccount.PromptPayId}]"); 
             var result = new QrGeneratorPayload()
             {
                 TargetId = _bankAccount.PromptPayId!,
                 Amount = _pqymentRequest.GeneratedAmount,
                 Reference1 = _pqymentRequest.RefId,
                 Reference2 = "",
-                AccountName = _bankAccount.AccountName, //ต้องเป็นภาษาอังกฤษ (ถ้าเป็นภาษาไทยต้องหาวิธีคำนวณ string lenght อีกที)
+                AccountName = $"{_bankAccount.BankCode}:{_bankAccount.AccountNumber}",
             };
             
             return result;
