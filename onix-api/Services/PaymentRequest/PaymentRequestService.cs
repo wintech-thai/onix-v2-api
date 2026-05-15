@@ -68,8 +68,8 @@ namespace Its.Onix.Api.Services
 
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest)
         {
-            repository!.SetCustomOrgId(orgId);
-            _bankAccountRepo!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
+            _bankAccountRepo!.SetCustomOrgId("global");
 
             var r = new MVPaymentResponse()
             {
@@ -171,7 +171,7 @@ namespace Its.Onix.Api.Services
                 AccountCategory = "PayIn",
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
-Console.WriteLine($"DEBUG 1"); 
+Console.WriteLine($"DEBUG 1 [{accountType}]"); 
             var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
             foreach (var bank in banks)
             {
