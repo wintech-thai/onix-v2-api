@@ -226,6 +226,7 @@ Console.WriteLine($"DEBUG 3");
                 GeneratedAmount = pr.RequestedAmount, //ตรงนี้ต้อง random ทศนิยม
                 Currency = pr.Currency,
                 QrCodeImage = qrResult.Base64Image,
+                QrCode = qrResult.QrPayload,
 
                 PayInBankAccountName = bnkAcct.AccountName,
                 PayInBankAccountNo = bnkAcct.AccountNumber,
