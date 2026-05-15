@@ -163,6 +163,17 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public async Task<List<MBankAccount>> GetAllBankAccounts(VMBankAccount param)
+        {
+            var predicate = BankAccountPredicate(param!);
+            var result = await GetSelection().AsExpandable()
+            .Where(predicate)
+            .OrderByDescending(e => e.CreatedDate)
+            .ToListAsync();
+
+            return result;
+        }
+
         public async Task<int> GetBankAccountCount(VMBankAccount param)
         {
             var predicate = BankAccountPredicate(param!);

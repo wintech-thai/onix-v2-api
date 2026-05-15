@@ -56,7 +56,7 @@ namespace Its.Onix.Api.Models
         public double? RequestedAmount { get; set; } //จำนวนเงิน > 0
 
         [Column("qr_provider")]
-        public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan
+        public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan (PP = Promptpay)
 
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน

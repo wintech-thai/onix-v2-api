@@ -4,17 +4,19 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Services
 {
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
         private readonly IPaymentRequestRepository? repository = null;
+        private readonly IBankAccountRepository? _bankAccountRepo = null;
 
-        public PaymentRequestService(IPaymentRequestRepository repo) : base()
+        public PaymentRequestService(IPaymentRequestRepository repo, IBankAccountRepository bankAcctRepo) : base()
         {
             repository = repo;
+            _bankAccountRepo = bankAcctRepo;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -116,24 +118,98 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : เพิ่ม logic สำหรับการสร้าง QR payment ตรงนี้
+            var bnkAcct = await GetPayInBankAccount(paymentRequest);
+            if (bnkAcct == null)
+            {
+                r.Status = "ERROR_NO_PAYIN_ACCOUNT_MATCH";
+                r.Description = $"No pay-in bank account match!!!";
+
+                return r;
+            }
+
+            var pmResponse = CreatePaymentResponse(paymentRequest, bnkAcct);
+            if (pmResponse.Status != "OK")
+            {
+                return pmResponse;
+            }
+
+            var jsonString = JsonSerializer.Serialize(pmResponse.PaymentResponse);
+            paymentRequest.ResponseData = jsonString;
+
+            //Logic สำหรับการสร้าง QR payment ตรงนี้
             paymentRequest.ResponseData = "This should not be seen data";
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
+            paymentRequest.BankAccountName = bnkAcct.AccountName;
+            paymentRequest.BankAccountNo = bnkAcct.AccountNumber;
+            paymentRequest.BankCode = bnkAcct.BankCode;
 
-            var pmResponse = CreatePaymentResponse(paymentRequest);
-            var jsonString = JsonSerializer.Serialize(pmResponse);
-
-            paymentRequest.ResponseData = jsonString;
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
-            r.PaymentResponse = pmResponse;
-            return r;
+            return pmResponse;
         }
 
-        private MPaymentResponse CreatePaymentResponse(MPaymentRequest pr)
+        private async Task<MBankAccount?> GetPayInBankAccount(MPaymentRequest pr)
         {
-            //TODO : Implement this
+            //1. เลือก list ของ bank account ที่ตรงกับ QrProvider ขึ้นมา
+            //2. แต่ละ bank account ให้ดูว่าเกิน condition ที่ตั้งไว้มั้ยเช่น 
+            //   2.1 ยอดรวมต่อวัน
+            //   2.2 เป็น bank account ของ merchant นั้นหรือไม่ ดูจากว่าเป็น global หรือ selected
+            //   2.3 bank account นั้น active อยู่หรือไม่ 
+            //3. เลือกตัวแรกที่เงื่อนไขผ่าน
+
+            var accountType = "UNKNOWN";
+            if (pr.QrProvider == "PP")
+            {
+                accountType = "PromptPay";
+            }
+
+            var param = new VMBankAccount()
+            {
+                AccountType = accountType,
+                AccountCategory = "PayIn",
+                AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
+            };
+
+            var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
+            foreach (var bank in banks)
+            {
+                //TODO : เพิ่มเงื่อนไขอื่น ๆ อีกสำรับ check
+
+                if (bank.Status == "Active")
+                {
+                    return bank; 
+                }
+            }
+
+            //ไม่มี bank account ที่ match
+            return null;
+        }
+
+        private MVPaymentResponse CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct)
+        {
+            var mvResponse = new MVPaymentResponse()
+            {
+                Status = "OK",
+                Description = "Success",    
+            };
+
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+
+            if (pr.QrProvider == "PP")
+            {
+                qrGenerator = new QrGeneratorPromptPay(pr, bnkAcct);
+                qrResult = qrGenerator.Generate();
+            }
+
+            if (qrResult == null)
+            {
+                mvResponse.Status = "INVALID_QR_PROVIDER";
+                mvResponse.Description = $"Invalid QR provider [{pr.QrProvider}]";
+                return mvResponse;
+            }
+
             var pmr = new MPaymentResponse()
             {
                 CreatedAt = pr.CreatedDate,
@@ -146,9 +222,16 @@ namespace Its.Onix.Api.Services
                 RequestedAmount = pr.RequestedAmount,
                 GeneratedAmount = pr.RequestedAmount, //ตรงนี้ต้อง random ทศนิยม
                 Currency = pr.Currency,
+                QrCodeImage = qrResult.Base64Image,
+
+                PayInBankAccountName = bnkAcct.AccountName,
+                PayInBankAccountNo = bnkAcct.AccountNumber,
+                PayInBankCode = bnkAcct.BankCode
             };
 
-            return pmr;
+            mvResponse.PaymentResponse = pmr;
+
+            return mvResponse;
         }
 
         public async Task<List<MPaymentRequest>> GetPaymentRequests(string orgId, VMPaymentRequest param)
