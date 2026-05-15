@@ -53,7 +53,7 @@ namespace Its.Onix.Api.Services
             var gui = FormatTag("00", "A000000677010111");
             var memberId = FormatTag(proxyType, target);
 
-            return FormatTag("29", gui + memberId);
+            return gui + memberId;
         }
 
         private (string,string) FormatTarget(string targetId)
