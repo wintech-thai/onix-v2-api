@@ -119,6 +119,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : Validate ว่า amount เกิน range ของ merchant มั้ย
+
             //TODO : implement logic สำหรับสร้างจุดทศนิยมตรงนี้
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
@@ -130,6 +132,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            //TODO : Validate ว่า amount เกิน range ของ bank account มั้ย
 
             var pmResponse = CreatePaymentResponse(paymentRequest, bnkAcct);
             if (pmResponse.Status != "OK")
