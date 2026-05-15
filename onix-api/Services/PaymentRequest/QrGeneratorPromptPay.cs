@@ -48,33 +48,37 @@ namespace Its.Onix.Api.Services
             return crc.ToString("X4");
         }
 
-        private string BuildPayInAccount(string target)
+        private string BuildPayInAccount(string target, string proxyType)
         {
             var gui = FormatTag("00", "A000000677010111");
-            var memberId = FormatTag("01", target);
+            var memberId = FormatTag(proxyType, target);
 
-            return gui + memberId;
+            return FormatTag("29", gui + memberId);
         }
 
-        private string FormatTarget(string targetId)
+        private (string,string) FormatTarget(string targetId)
         {
             var digits = targetId.Replace("-", "").Trim();
+            var target = "00";
 
             if (digits.StartsWith("0") && digits.Length == 10)
             {
                 // Mobile
                 digits = "0066" + digits.Substring(1);
+                target = "01";
             }
             else if (digits.Length == 13)
             {
                 // Tax ID
+                target = "02";
             }
             else if (digits.Length == 15)
             {
                 // E-Wallet
+                target = "03";
             }
 
-            return digits;
+            return (digits, target);
         }
 
         private string GenerateQrBarcode(QrGeneratorPayload payload)
@@ -82,7 +86,7 @@ namespace Its.Onix.Api.Services
             if (string.IsNullOrWhiteSpace(payload.TargetId))
                 throw new ArgumentException("TargetId is required.");
 
-            var target = FormatTarget(payload.TargetId);
+            var (target, proxyType) = FormatTarget(payload.TargetId);
 
             var sb = new StringBuilder();
 
@@ -90,7 +94,7 @@ namespace Its.Onix.Api.Services
             sb.Append("010212"); // Dynamic QR
 
             // Merchant Account Info
-            var merchantAccount = BuildPayInAccount(target);
+            var merchantAccount = BuildPayInAccount(target, proxyType);
             sb.Append(FormatTag("29", merchantAccount));
 
             sb.Append(FormatTag("52", payload.MerchantCategoryCode));
@@ -129,13 +133,14 @@ namespace Its.Onix.Api.Services
 
         private QrGeneratorPayload GeneratePayload()
         {
+Console.WriteLine($"DEBUG A targetId=[{_bankAccount.PromptPayId}]"); 
             var result = new QrGeneratorPayload()
             {
                 TargetId = _bankAccount.PromptPayId!,
                 Amount = _pqymentRequest.GeneratedAmount,
                 Reference1 = _pqymentRequest.RefId,
                 Reference2 = "",
-                AccountName = _bankAccount.AccountName,
+                AccountName = _bankAccount.AccountName, //ต้องเป็นภาษาอังกฤษ (ถ้าเป็นภาษาไทยต้องหาวิธีคำนวณ string lenght อีกที)
             };
             
             return result;

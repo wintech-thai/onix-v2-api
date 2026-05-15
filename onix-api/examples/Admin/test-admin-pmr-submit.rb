@@ -14,10 +14,12 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
 
+hhmmss = Time.now.strftime("%H%M%S")
+
 ### 
 apiUrl = "admin-api/AdminPaymentRequest/org/global/action/SubmitPaymentRequestByMerchantId/#{merchantId}"
 param =  {
-  RefId: "XA-MSB-0001922-10",
+  RefId: "XA-MSB-0001922-#{hhmmss}",
   RefId1: "INVOICE-0011223",
   RefId2: "ORDER-XSWKEKEI",
   Description: "ทดสอบยิง payment request เข้ามาเฉย ๆ",

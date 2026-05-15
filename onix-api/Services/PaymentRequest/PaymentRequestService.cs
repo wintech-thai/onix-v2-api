@@ -119,6 +119,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : implement logic สำหรับสร้างจุดทศนิยมตรงนี้
+            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+
             var bnkAcct = await GetPayInBankAccount(paymentRequest);
             if (bnkAcct == null)
             {
