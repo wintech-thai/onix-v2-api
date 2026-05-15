@@ -10,17 +10,15 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUser"
+apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPayInRequests"
 param =  {
-  UserName: "seubpong.mon",
-  TmpUserEmail: "pjame.fb@gmail.com",
-  Tags: "P'James",
-  InvitedBy: "seubpong.mon",
-  Roles: [ 'OWNER' ],
+  FullTextSearch: "",
+  Direction: "", #"PayIn",
+  Status: "",
 }
 
 token = File.read(keyFile)
@@ -29,6 +27,11 @@ ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเ
 ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
+
+result = make_request(:post, apiUrl, param)
+puts(result)
+
+apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPayInRequestCount"
 
 result = make_request(:post, apiUrl, param)
 puts(result)

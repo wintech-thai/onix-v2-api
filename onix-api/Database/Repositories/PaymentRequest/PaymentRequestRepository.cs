@@ -25,7 +25,7 @@ namespace Its.Onix.Api.Database.Repositories
                 from pr in context!.PaymentRequests
 
                 join mc in context.Merchants!
-                    on pr.MerchantId equals mc.Id.ToString() into merchants
+                    on pr.MerchantId2 equals mc.Id into merchants
                 from merchant in merchants.DefaultIfEmpty()
 
                 select new { pr, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
@@ -34,6 +34,8 @@ namespace Its.Onix.Api.Database.Repositories
                 Id = x.pr.Id,
                 OrgId = x.pr.OrgId,
                 RefId = x.pr.RefId,
+                RefId1 = x.pr.RefId1,
+                RefId2 = x.pr.RefId2,
                 Description = x.pr.Description,
                 CustomerEmail = x.pr.CustomerEmail,
                 CustomerPhone = x.pr.CustomerPhone,
@@ -46,13 +48,19 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.pr.Status,
                 Direction = x.pr.Direction,
                 MerchantId = x.pr.MerchantId,
+                MerchantId2 = x.pr.MerchantId2,
                 PaymentTxId = x.pr.PaymentTxId,
                 GeneratedAmount = x.pr.GeneratedAmount,
                 ResponseData = x.pr.ResponseData,
                 CreatedDate = x.pr.CreatedDate,
 
-                MerchantName = x.merchant.Name,
-                MerchantCode = x.merchant.Code,
+                PayinBankAccountId = x.pr.PayinBankAccountId,
+                PayinBankCode = x.pr.PayinBankCode,
+                PayinBankAccountNo = x.pr.PayinBankAccountNo,
+                PayinBankAccountName = x.pr.PayinBankAccountName,
+
+                MerchantName = x.merchant != null ? x.merchant.Name : null,
+                MerchantCode = x.merchant != null ? x.merchant.Code : null,
             });
         }
 
@@ -95,24 +103,28 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MPaymentRequest?> GetPaymentRequestById(string paymentRequestId)
         {
             Guid id = Guid.Parse(paymentRequestId);
-            var u = await GetPaymentRequestSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && IsOrgMatch(p)).FirstOrDefaultAsync();
+            var u = await GetPaymentRequestSelection().AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
             return u;
         }
 
         private ExpressionStarter<MPaymentRequest> PaymentRequestPredicate(VMPaymentRequest param)
         {
-            var pd = PredicateBuilder.New<MPaymentRequest>();
+            var pd = IsOrgMatchPredicate(null);
 
-            pd = pd.And(p => IsOrgMatch(p));
-
-            if (param.Direction != null)
+            if ((param.Direction != null) && (param.Direction != ""))
             {
-                pd = pd.And(p => p.Direction == param.Direction);
+                var directionPd = PredicateBuilder.New<MPaymentRequest>();
+                directionPd = directionPd.Or(p => p.Direction!.Equals(param.Direction));
+
+                pd = pd.And(directionPd);
             }
 
-            if (param.Status != null)
+            if ((param.Status != null) && (param.Status != ""))
             {
-                pd = pd.And(p => p.Status == param.Status);
+                var statusPd = PredicateBuilder.New<MPaymentRequest>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
@@ -122,7 +134,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.MerchantName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.RefId!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.RefId1!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.RefId2!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
@@ -142,21 +155,33 @@ namespace Its.Onix.Api.Database.Repositories
             return paymentRequest;
         }
 
-        private bool IsOrgMatch(MPaymentRequest param)
+        private ExpressionStarter<MPaymentRequest> IsOrgMatchPredicate(Guid? pmrId)
         {
+            var pd = PredicateBuilder.New<MPaymentRequest>(true);
             if (orgId == "global")
             {
-                return true;
+                return pd;
             }
 
-            var result = param.OrgId!.Equals(orgId);
-            return result;
+            var orgPd = PredicateBuilder.New<MPaymentRequest>(true);
+            orgPd = orgPd.And(p => p.OrgId!.Equals(orgId));
+            pd = pd.And(orgPd);
+
+            if (pmrId != null)
+            {
+                //ต้องมีการเอา Id ของ payment ไปเช็คด้วย เพื่อดึงเฉพาะตัวนั้น ๆ ออกมา
+                var pmrPd = PredicateBuilder.New<MPaymentRequest>(true);
+                pmrPd = pmrPd.And(p => p.Id!.Equals(pmrId));
+                pd = pd.And(pmrPd);
+            }
+
+            return pd;
         }
 
         public async Task<MPaymentRequest?> UpdatePaymentRequestById(string paymentRequestId, MPaymentRequest paymentRequest)
         {
             Guid id = Guid.Parse(paymentRequestId);
-            var existing = await context!.PaymentRequests!.AsExpandable().Where(p => p!.Id!.Equals(id) && IsOrgMatch(p)).FirstOrDefaultAsync();
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.Tags = paymentRequest.Tags;

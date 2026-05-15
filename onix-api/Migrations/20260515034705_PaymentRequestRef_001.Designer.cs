@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260515034705_PaymentRequestRef_001")]
+    partial class PaymentRequestRef_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1535,22 +1538,6 @@ namespace onix.api.Migrations
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
-
-                    b.Property<string>("PayinBankAccountId")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_id");
-
-                    b.Property<string>("PayinBankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_name");
-
-                    b.Property<string>("PayinBankAccountNo")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_no");
-
-                    b.Property<string>("PayinBankCode")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_code");
 
                     b.Property<string>("PaymentTxId")
                         .HasColumnType("text")

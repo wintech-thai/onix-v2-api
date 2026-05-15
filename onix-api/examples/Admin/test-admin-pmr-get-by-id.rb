@@ -10,18 +10,13 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = ENV['API_ORG']
 keyFile = ".token"
+pmrId = '790668a2-ba48-4d64-b15f-14166bc01849'
 
 ### 
-apiUrl = "admin-api/AdminUser/org/#{orgId}/action/InviteUser"
-param =  {
-  UserName: "seubpong.mon",
-  TmpUserEmail: "pjame.fb@gmail.com",
-  Tags: "P'James",
-  InvitedBy: "seubpong.mon",
-  Roles: [ 'OWNER' ],
-}
+apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPaymentRequestById/#{pmrId}"
+param = nil
 
 token = File.read(keyFile)
 
@@ -30,5 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result)

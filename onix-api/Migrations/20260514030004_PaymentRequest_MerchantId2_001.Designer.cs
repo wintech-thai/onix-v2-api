@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260514030004_PaymentRequest_MerchantId2_001")]
+    partial class PaymentRequest_MerchantId2_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1536,22 +1539,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
-                    b.Property<string>("PayinBankAccountId")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_id");
-
-                    b.Property<string>("PayinBankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_name");
-
-                    b.Property<string>("PayinBankAccountNo")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_no");
-
-                    b.Property<string>("PayinBankCode")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_code");
-
                     b.Property<string>("PaymentTxId")
                         .HasColumnType("text")
                         .HasColumnName("payment_tx_id");
@@ -1563,14 +1550,6 @@ namespace onix.api.Migrations
                     b.Property<string>("RefId")
                         .HasColumnType("text")
                         .HasColumnName("ref_id");
-
-                    b.Property<string>("RefId1")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id1");
-
-                    b.Property<string>("RefId2")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id2");
 
                     b.Property<double?>("RequestedAmount")
                         .HasColumnType("double precision")
@@ -1605,10 +1584,6 @@ namespace onix.api.Migrations
                     b.HasIndex("PaymentTxId");
 
                     b.HasIndex("RefId");
-
-                    b.HasIndex("RefId1");
-
-                    b.HasIndex("RefId2");
 
                     b.HasIndex("Status");
 

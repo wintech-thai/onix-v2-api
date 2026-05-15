@@ -18,6 +18,10 @@ namespace Its.Onix.Api.Models
         public DateTime? CreatedAt { get; set; }
         public DateTime? ExpireAt { get; set; }
 
+        public string? PayInBankAccountNo { get; set; }
+        public string? PayInBankAccountName { get; set; }
+        public string? PayInBankCode { get; set; }
+
         public MPaymentResponse()
         {
         }

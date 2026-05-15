@@ -10,6 +10,8 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(RefId))]
+    [Index(nameof(RefId1))]
+    [Index(nameof(RefId2))]
     [Index(nameof(Direction))]
     [Index(nameof(Status))]
     [Index(nameof(BankAccountNo))]
@@ -28,8 +30,15 @@ namespace Its.Onix.Api.Models
         [Column("org_id")]
         public string? OrgId { get; set; }
 
+
         [Column("ref_id")]
-        public string? RefId { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+        public string? RefId { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง, มีการ check unique ด้วย
+
+        [Column("ref_id1")]
+        public string? RefId1 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+        [Column("ref_id2")]
+        public string? RefId2 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
 
         [Column("description")]
         public string? Description { get; set; } //คำอธิบายการชำระเงิน
@@ -56,7 +65,20 @@ namespace Its.Onix.Api.Models
         public double? RequestedAmount { get; set; } //จำนวนเงิน > 0
 
         [Column("qr_provider")]
-        public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan
+        public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan (PP = Promptpay)
+
+
+        [Column("payin_bank_id")]
+        public string? PayinBankAccountId { get; set; } //Foreign key ไปยัง BankAccounts table
+
+        [Column("payin_bank_code")]
+        public string? PayinBankCode { get; set; }
+
+        [Column("payin_bank_account_no")]
+        public string? PayinBankAccountNo { get; set; }
+
+        [Column("payin_bank_account_name")]
+        public string? PayinBankAccountName { get; set; } 
 
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
@@ -71,6 +93,9 @@ namespace Its.Onix.Api.Models
 
         [Column("merchant_id")]
         public string? MerchantId { get; set; } //เอาไว้ join หาข้อมูล merchant
+
+        [Column("merchant_id2")]
+        public Guid MerchantId2 { get; set; } //เอาไว้ join หาข้อมูล merchant
 
         [Column("payment_tx_id")]
         public string? PaymentTxId { get; set; } //เอาไว้ link กับ payment transaction ที่เกิดขึ้นจริง
@@ -94,6 +119,9 @@ namespace Its.Onix.Api.Models
         public string? MerchantName { get; set; }
         [NotMapped]
         public string? MerchantCode { get; set; }
+
+        [NotMapped]
+        public MPaymentResponse? ResponseDataObj { get; set; }
 
         public MPaymentRequest()
         {
