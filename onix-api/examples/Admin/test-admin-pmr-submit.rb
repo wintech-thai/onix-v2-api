@@ -17,7 +17,9 @@ merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
 ### 
 apiUrl = "admin-api/AdminPaymentRequest/org/global/action/SubmitPaymentRequestByMerchantId/#{merchantId}"
 param =  {
-  RefId: "XA-MSB-0001922-4",
+  RefId: "XA-MSB-0001922-6",
+  RefId1: "INVOICE-0011223",
+  RefId2: "ORDER-XSWKEKEI",
   Description: "ทดสอบยิง payment request เข้ามาเฉย ๆ",
   CustomerEmail: "",
   CustomerPhone: "",

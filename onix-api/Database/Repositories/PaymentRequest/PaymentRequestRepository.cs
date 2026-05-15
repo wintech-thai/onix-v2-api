@@ -34,6 +34,8 @@ namespace Its.Onix.Api.Database.Repositories
                 Id = x.pr.Id,
                 OrgId = x.pr.OrgId,
                 RefId = x.pr.RefId,
+                RefId1 = x.pr.RefId1,
+                RefId2 = x.pr.RefId2,
                 Description = x.pr.Description,
                 CustomerEmail = x.pr.CustomerEmail,
                 CustomerPhone = x.pr.CustomerPhone,
@@ -51,6 +53,11 @@ namespace Its.Onix.Api.Database.Repositories
                 GeneratedAmount = x.pr.GeneratedAmount,
                 ResponseData = x.pr.ResponseData,
                 CreatedDate = x.pr.CreatedDate,
+
+                PayinBankAccountId = x.pr.PayinBankAccountId,
+                PayinBankCode = x.pr.PayinBankCode,
+                PayinBankAccountNo = x.pr.PayinBankAccountNo,
+                PayinBankAccountName = x.pr.PayinBankAccountName,
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
@@ -127,6 +134,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.MerchantName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.RefId!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.RefId1!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.RefId2!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);

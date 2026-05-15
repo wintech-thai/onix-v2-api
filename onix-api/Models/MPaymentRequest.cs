@@ -10,6 +10,8 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(RefId))]
+    [Index(nameof(RefId1))]
+    [Index(nameof(RefId2))]
     [Index(nameof(Direction))]
     [Index(nameof(Status))]
     [Index(nameof(BankAccountNo))]
@@ -28,8 +30,15 @@ namespace Its.Onix.Api.Models
         [Column("org_id")]
         public string? OrgId { get; set; }
 
+
         [Column("ref_id")]
-        public string? RefId { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+        public string? RefId { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง, มีการ check unique ด้วย
+
+        [Column("ref_id1")]
+        public string? RefId1 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+        [Column("ref_id2")]
+        public string? RefId2 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
 
         [Column("description")]
         public string? Description { get; set; } //คำอธิบายการชำระเงิน
@@ -57,6 +66,19 @@ namespace Its.Onix.Api.Models
 
         [Column("qr_provider")]
         public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan (PP = Promptpay)
+
+
+        [Column("payin_bank_id")]
+        public string? PayinBankAccountId { get; set; } //Foreign key ไปยัง BankAccounts table
+
+        [Column("payin_bank_code")]
+        public string? PayinBankCode { get; set; }
+
+        [Column("payin_bank_account_no")]
+        public string? PayinBankAccountNo { get; set; }
+
+        [Column("payin_bank_account_name")]
+        public string? PayinBankAccountName { get; set; } 
 
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน

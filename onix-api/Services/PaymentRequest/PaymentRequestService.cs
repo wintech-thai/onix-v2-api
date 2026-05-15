@@ -69,6 +69,7 @@ namespace Its.Onix.Api.Services
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest)
         {
             repository!.SetCustomOrgId(orgId);
+            _bankAccountRepo!.SetCustomOrgId(orgId);
 
             var r = new MVPaymentResponse()
             {
@@ -140,9 +141,9 @@ namespace Its.Onix.Api.Services
             paymentRequest.ResponseData = "This should not be seen data";
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
-            paymentRequest.BankAccountName = bnkAcct.AccountName;
-            paymentRequest.BankAccountNo = bnkAcct.AccountNumber;
-            paymentRequest.BankCode = bnkAcct.BankCode;
+            paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
+            paymentRequest.PayinBankAccountNo = bnkAcct.AccountNumber;
+            paymentRequest.PayinBankCode = bnkAcct.BankCode;
 
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
@@ -170,18 +171,20 @@ namespace Its.Onix.Api.Services
                 AccountCategory = "PayIn",
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
-
+Console.WriteLine($"DEBUG 1"); 
             var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
             foreach (var bank in banks)
             {
                 //TODO : เพิ่มเงื่อนไขอื่น ๆ อีกสำรับ check
-
+Console.WriteLine($"DEBUG 2.0 - [{bank.Status}], [{bank.AccountName}], [{bank.AccountNumber}], [{bank.BankCode}]");
                 if (bank.Status == "Active")
                 {
+Console.WriteLine($"DEBUG 2.1 - [{bank.Status}], [{bank.AccountName}], [{bank.AccountNumber}], [{bank.BankCode}]");
+
                     return bank; 
                 }
             }
-
+Console.WriteLine($"DEBUG 3");
             //ไม่มี bank account ที่ match
             return null;
         }
