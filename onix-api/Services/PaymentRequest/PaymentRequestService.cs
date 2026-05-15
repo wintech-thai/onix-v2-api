@@ -176,10 +176,10 @@ Console.WriteLine($"DEBUG 1 [{accountType}]");
             foreach (var bank in banks)
             {
                 //TODO : เพิ่มเงื่อนไขอื่น ๆ อีกสำรับ check
-Console.WriteLine($"DEBUG 2.0 - [{bank.Status}], [{bank.AccountName}], [{bank.AccountNumber}], [{bank.BankCode}]");
+Console.WriteLine($"DEBUG 2.0 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
                 if (bank.Status == "Active")
                 {
-Console.WriteLine($"DEBUG 2.1 - [{bank.Status}], [{bank.AccountName}], [{bank.AccountNumber}], [{bank.BankCode}]");
+Console.WriteLine($"DEBUG 2.1 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
 
                     return bank; 
                 }

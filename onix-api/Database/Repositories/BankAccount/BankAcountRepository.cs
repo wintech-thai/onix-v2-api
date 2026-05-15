@@ -211,6 +211,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayinMaxAmount = x.ba.PayinMaxAmount,
                 PayoutMinAmount = x.ba.PayoutMinAmount,
                 PayoutMaxAmount = x.ba.PayoutMaxAmount,
+                PromptPayId = x.ba.PromptPayId,
                 DailyQuota = x.ba.DailyQuota,
                 CurrentDailyPayinAmount = x.ba.CurrentDailyPayinAmount,
                 CurrentDailyPayinCount = x.ba.CurrentDailyPayinCount,
