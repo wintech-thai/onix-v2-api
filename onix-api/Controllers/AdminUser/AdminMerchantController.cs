@@ -25,10 +25,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/global/action/GetBankAccountsForMerchant/{merchantId}")]
-        public async Task<IActionResult> GetBankAccountsForMerchant(string merchantId)
+        [Route("org/global/action/GetPayInBankAccountsForMerchant/{merchantId}")]
+        public async Task<IActionResult> GetPayInBankAccountsForMerchant(string merchantId)
         {
-            var result = await _bankAccuntSvc.GetBankAccountsForMerchant("notused", merchantId);
+            var result = await _bankAccuntSvc.GetPayInBankAccountsForMerchant("notused", merchantId);
             return Ok(result);
         }
 

@@ -160,6 +160,7 @@ namespace Its.Onix.Api.Services
             //   2.1 ยอดรวมต่อวัน
             //   2.2 เป็น bank account ของ merchant นั้นหรือไม่ ดูจากว่าเป็น global หรือ selected
             //   2.3 bank account นั้น active อยู่หรือไม่ 
+            //   2.4 จำนวนเงินที่กรอก อยู่ใน range ที่ allow ของ bank account นั้น ๆ หรือไม่
             //3. เลือกตัวแรกที่เงื่อนไขผ่าน
 
             var accountType = "UNKNOWN";

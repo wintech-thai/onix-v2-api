@@ -423,19 +423,19 @@ namespace Its.Onix.Api.Services
             return banks;
         }
 
-        public async Task<List<MBankAccountMerchant>> GetBankAccountSelectedMerchants(string orgId, string bankAccountId)
+        public async Task<List<MBankAccountMerchant>> GetMerchantsForBankAccount(string orgId, string bankAccountId)
         {
             repository!.SetCustomOrgId(orgId);
 
-            var result = await repository.GetBankAccountSelectedMerchants(bankAccountId);
+            var result = await repository.GetMerchantsForBankAccount(bankAccountId);
             return result;
         }
 
-        public async Task<List<MBankAccountMerchant>> GetBankAccountsForMerchant(string orgId, string merchantId)
+        public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsForMerchant(string orgId, string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
 
-            var result = await repository.GetBankAccountsForMerchant(merchantId);
+            var result = await repository.GetPayInBankAccountsForMerchant(merchantId);
             return result;
         }
 
