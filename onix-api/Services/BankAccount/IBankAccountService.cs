@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Services
         public Task<MVBankAccount> DeleteBankAccountById(string orgId, string bankAccountId);
         public Task<List<MBankAccount>> GetBankAccounts(string orgId, VMBankAccount param);
         public List<MBank> GetAvailableBanks();
+        public List<MBank> GetAvailableSupportQrBanks();
         public Task<int> GetBankAccountCount(string orgId, VMBankAccount param);
         public Task<MVBankAccount> UpdateBankAccountById(string orgId, string bankAccountId, MBankAccount bankAccount);
         public Task<MVBankAccount?> UpdateBankAccountStatusById(string bankAccountId, string status);

@@ -52,6 +52,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetAvailableSupportQrBanks")]
+        public IActionResult GetAvailableSupportQrBanks()
+        {
+            var result = svc.GetAvailableSupportQrBanks();
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/GetBankAccountCount")]
         public async Task<IActionResult> GetBankAccountCount([FromBody] VMBankAccount param)

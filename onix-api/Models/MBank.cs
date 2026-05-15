@@ -9,9 +9,13 @@ namespace Its.Onix.Api.Models
 
         public string? BankNameEng { get; set; } //เป็นชื่อธนาคารมาตรฐานตาม BOT กำหนด
         public string? BankNameTh { get; set; } //เป็นชื่อธนาคารมาตรฐานตาม BOT กำหนด
+        public bool QrSupportFlag { get; set; } //สนับสนุน QR scan หรือยัง
+        public string Type { get; set; } //Native & Promptpay
 
         public MBank()
         {
+            QrSupportFlag = false;
+            Type = "Native";
         }
     }
 }

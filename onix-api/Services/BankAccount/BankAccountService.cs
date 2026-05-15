@@ -9,10 +9,156 @@ namespace Its.Onix.Api.Services
     public class BankAccountService : BaseService, IBankAccountService
     {
         private readonly IBankAccountRepository? repository = null;
+        private readonly List<MBank> _banks;
 
         public BankAccountService(IBankAccountRepository repo) : base()
         {
             repository = repo;
+            _banks = [
+                new() 
+                { 
+                    BankCode = "PP", 
+                    BankNameTh = "บริการพร้อมเพย์", 
+                    BankNameEng = "Prompt Pay",
+                    Type = "PromptPay",
+                    QrSupportFlag = true,
+                },
+
+                new() 
+                { 
+                    BankCode = "BAY", 
+                    BankNameTh = "ธนาคารกรุงศรีอยุธยา", 
+                    BankNameEng = "Bank of Ayudhya",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new () 
+                { 
+                    BankCode = "KBANK", 
+                    BankNameTh = "ธนาคารกสิกรไทย", 
+                    BankNameEng = "Kasikorn Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                { 
+                    BankCode = "KTB",
+                    BankNameTh = "ธนาคารกรุงไทย",
+                    BankNameEng = "Krung Thai Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                { 
+                    BankCode = "SCB", 
+                    BankNameTh = "ธนาคารไทยพาณิชย์", 
+                    BankNameEng = "Siam Commercial Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,  
+                },
+
+                new ()
+                { 
+                    BankCode = "BBL", 
+                    BankNameTh = "ธนาคารกรุงเทพ", 
+                    BankNameEng = "Bank of Bangkok",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new () 
+                { 
+                    BankCode = "TMB", 
+                    BankNameTh = "ธนาคารทหารไทย", 
+                    BankNameEng = "Bank of Thailand",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                { 
+                    BankCode = "GSB", 
+                    BankNameTh = "ธนาคารออมสิน", 
+                    BankNameEng = "Government Savings Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                {
+                    BankCode = "UOB", 
+                    BankNameTh = "ธนาคารยูโอบี", 
+                    BankNameEng = "United Overseas Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,                
+                },
+
+                new ()
+                { 
+                    BankCode = "CIMBT", 
+                    BankNameTh = "ธนาคารซีไอเอ็มบี ไทย", 
+                    BankNameEng = "Citibank (Thailand)",
+                    Type = "Native",
+                    QrSupportFlag = false, 
+                },
+
+                new ()
+                {
+                    BankCode = "SCBT", 
+                    BankNameTh = "ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย)", 
+                    BankNameEng = "Standard Chartered Bank (Thailand)",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                { 
+                    BankCode = "TISCO", 
+                    BankNameTh = "ธนาคารทิสโก้", 
+                    BankNameEng = "Tisco Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                { 
+                    BankCode = "LHFG", 
+                    BankNameTh = "ธนาคารแลนด์ แอนด์ เฮ้าส์", 
+                    BankNameEng = "Land and Houses Bank",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+                
+                new ()
+                {
+                    BankCode = "ICBC",
+                    BankNameTh = "ธนาคารไอซีบีซี (ไทย)", 
+                    BankNameEng = "Industrial and Commercial Bank of China (Thailand)",
+                    Type = "Native",
+                    QrSupportFlag = false,
+                },
+
+                new ()
+                { 
+                    BankCode = "CITI", 
+                    BankNameTh = "ธนาคารซิตี้แบงก์", 
+                    BankNameEng = "Citibank",
+                    Type = "Native",
+                    QrSupportFlag = false,  
+                },
+
+                new ()
+                { 
+                    BankCode = "EXIM", 
+                    BankNameTh = "ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย", 
+                    BankNameEng = "Export-Import_BANK_OF_THAILAND", 
+                    Type = "Native",
+                    QrSupportFlag = false,  
+                }
+            ];
         }
 
         public async Task<MVBankAccount> GetBankAccountById(string orgId, string bankAccountId)
@@ -261,24 +407,18 @@ namespace Its.Onix.Api.Services
 
         public List<MBank> GetAvailableBanks()
         {
-            var banks = new List<MBank>()
-            {
-                new MBank() { BankCode = "BAY", BankNameTh = "ธนาคารกรุงศรีอยุธยา", BankNameEng = "Bank of Ayudhya" },
-                new MBank() { BankCode = "KBANK", BankNameTh = "ธนาคารกสิกรไทย", BankNameEng = "Kasikorn Bank" },
-                new MBank() { BankCode = "KTB", BankNameTh = "ธนาคารกรุงไทย", BankNameEng = "Krung Thai Bank" },
-                new MBank() { BankCode = "SCB", BankNameTh = "ธนาคารไทยพาณิชย์", BankNameEng = "Siam Commercial Bank" },
-                new MBank() { BankCode = "BBL", BankNameTh = "ธนาคารกรุงเทพ", BankNameEng = "Bank of Bangkok" },
-                new MBank() { BankCode = "TMB", BankNameTh = "ธนาคารทหารไทย", BankNameEng = "Bank of Thailand" },
-                new MBank() { BankCode = "GSB", BankNameTh = "ธนาคารออมสิน", BankNameEng = "Government Savings Bank" },
-                new MBank() { BankCode = "UOB", BankNameTh = "ธนาคารยูโอบี", BankNameEng = "United Overseas Bank" },
-                new MBank() { BankCode = "CIMBT", BankNameTh = "ธนาคารซีไอเอ็มบี ไทย", BankNameEng = "Citibank (Thailand)" },
-                new MBank() { BankCode = "SCBT", BankNameTh = "ธนาคารสแตนดาร์ดชาร์เตอร์ด (ไทย)", BankNameEng = "Standard Chartered Bank (Thailand)" },
-                new MBank() { BankCode = "TISCO", BankNameTh = "ธนาคารทิสโก้", BankNameEng = "Tisco Bank" },
-                new MBank() { BankCode = "LHFG", BankNameTh = "ธนาคารแลนด์ แอนด์ เฮ้าส์", BankNameEng = "Land and Houses Bank" },
-                new MBank() { BankCode = "ICBC", BankNameTh = "ธนาคารไอซีบีซี (ไทย)", BankNameEng = "Industrial and Commercial Bank of China (Thailand)" },
-                new MBank() { BankCode = "CITI", BankNameTh = "ธนาคารซิตี้แบงก์", BankNameEng = "Citibank" },
-                new MBank() { BankCode = "EXIM", BankNameTh = "ธนาคารเพื่อการส่งออกและนำเข้าแห่งประเทศไทย", BankNameEng = "Export-Import_BANK_OF_THAILAND" }
-            };
+            var banks = _banks
+                .Where(b => b.Type.Equals("Native", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            return banks;
+        }
+
+        public List<MBank> GetAvailableSupportQrBanks()
+        {
+            var banks = _banks
+                .Where(b => b.Type.Equals("PromptPay", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             return banks;
         }
