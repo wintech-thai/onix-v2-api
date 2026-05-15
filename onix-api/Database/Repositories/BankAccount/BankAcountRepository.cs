@@ -82,12 +82,22 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<List<MBankAccountMerchant>> GetBankAccountSelectedMerchants(string bankAccountId)
         {
             var result = await GetSelectionV2().AsExpandable()
+                .Where(p => p.BankAccountId == bankAccountId)
                 .OrderByDescending(e => e.CreatedDate)
                 .ToListAsync();
 
             return result;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetBankAccountsForMerchant(string merchantId)
+        {
+            var result = await GetSelectionV2().AsExpandable()
+                .Where(p => p.MerchantId == merchantId)
+                .OrderByDescending(e => e.CreatedDate)
+                .ToListAsync();
+
+            return result;
+        }
 
         public async Task<MBankAccountMerchant?> SelectMerchant(string bankAccountId, string merchantId)
         {

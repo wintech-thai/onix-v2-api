@@ -14,9 +14,9 @@ orgId = "global"
 keyFile = ".token"
 
 ### 
+### ดึงชื่อ bank
 apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetAvailableBanks"
 param = nil
-
 
 token = File.read(keyFile)
 
@@ -25,5 +25,11 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
+result = make_request(:get, apiUrl, param)
+puts(result)
+puts("====")
+
+### ดึงชื่อ bank ที่ ณ ตอนนี้ระบบรองรับ QR scan
+apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetAvailableSupportQrBanks"
 result = make_request(:get, apiUrl, param)
 puts(result)
