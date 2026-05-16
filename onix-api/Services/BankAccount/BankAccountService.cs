@@ -287,9 +287,32 @@ namespace Its.Onix.Api.Services
         public async Task<List<MBankAccount>> GetBankAccounts(string orgId, VMBankAccount param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetBankAccounts(param);
 
-            return result;
+            var bankAccountMerchantAggr = await repository.GetMerchantCountByBankAccountId();
+            var dict = bankAccountMerchantAggr.ToDictionary(g => g.BankAccountId!, g => g.MerchantCount);
+
+            var bankAccounts = await repository!.GetBankAccounts(param);
+
+            foreach (var bankAccount in bankAccounts)
+            {
+                var bankAccountId = bankAccount.Id.ToString();
+
+                if (!string.IsNullOrEmpty(bankAccountId) && dict.TryGetValue(bankAccountId, out var merchantCount))
+                {
+                    bankAccount.MerchantLinkCount = merchantCount;
+                }
+                else
+                {
+                    bankAccount.MerchantLinkCount = 0;
+                }
+
+                if (bankAccount.AccountLevel == "Global")
+                {
+                    bankAccount.MerchantLinkCount = 99999; //เป็น global
+                }
+            }
+
+            return bankAccounts;
         }
 
         public async Task<int> GetBankAccountCount(string orgId, VMBankAccount param)

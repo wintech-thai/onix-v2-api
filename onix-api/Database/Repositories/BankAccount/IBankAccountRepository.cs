@@ -16,6 +16,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<List<MBankAccount>> GetAllBankAccounts(VMBankAccount param);
         public Task<List<MBankAccountMerchant>> GetMerchantsForBankAccount(string bankAccountId);
         public Task<List<MBankAccountMerchant>> GetPayInBankAccountsForMerchant(string merchantId);
+        public Task<List<MBankAccountMerchant>> GetMerchantCountByBankAccountId();
         
         public Task<MBankAccountMerchant?> SelectMerchant(string bankAccountId, string merchantId);
         public Task<MBankAccountMerchant?> UnSelectMerchant(string bankAccountId, string merchantId);
