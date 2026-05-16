@@ -169,6 +169,28 @@ namespace Its.Onix.Api.Controllers
             return Ok(apiKey);
         }
 
+        [HttpDelete]
+        [Route("org/global/action/DeleteOrgUserById/{orgId}/{orgUserId}")]
+        public IActionResult DeleteOrgUserById(string orgId, string orgUserId)
+        {
+            var mvUser = _orgUserSvc.GetUserByIdLeftJoin(orgId, orgUserId);
+            if (mvUser.Status != "OK")
+            {
+                return Ok(mvUser);
+            }
+
+            var user = mvUser.OrgUser!;
+            if (user.UserStatus != "Pending")
+            {
+                mvUser.Status = "ERROR_ONLY_ALLOW_FOR_PENDING_USER";
+                mvUser.Description = "Only allow for delete peinding user!!!";
+                return Ok(mvUser);
+            }
+
+            var result = _orgUserSvc.DeleteUserById(orgId, orgUserId);
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("org/global/action/GetOrgUsers/{orgId}")]
         public IActionResult GetOrgUsers(string orgId)

@@ -375,8 +375,9 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVBankAccount?> UpdateBankAccountStatusById(string bankAccountId, string status)
+        public async Task<MVBankAccount?> UpdateBankAccountStatusById(string orgId, string bankAccountId, string status)
         {
+            repository!.SetCustomOrgId(orgId);
             var r = new MVBankAccount()
             {
                 Status = "OK",
