@@ -32,6 +32,7 @@ param =  {
   RequestedAmount: 125,
   QrProvider: "PP",
   Tags: "testing",
+  #SelectedPayInBankAccountId:
 }
 
 token = File.read(keyFile)

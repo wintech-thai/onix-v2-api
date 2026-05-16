@@ -165,6 +165,8 @@ namespace Its.Onix.Api.Services
             //   2.2 เป็น bank account ของ merchant นั้นหรือไม่ ดูจากว่าเป็น global หรือ selected
             //   2.3 bank account นั้น active อยู่หรือไม่ 
             //   2.4 จำนวนเงินที่กรอก อยู่ใน range ที่ allow ของ bank account นั้น ๆ หรือไม่
+            //   2.5 ดู bank account ที่ match SelectedPayInBankAccountId มั้ยถ้า SelectedPayInBankAccountId ไม่เป็น null or empty
+            //       2.5.1 อันนี้ทำเพื่อให้ผู้ใช้ระบุ PayIn bank account ID เข้ามาเองเลย
             //3. เลือกตัวแรกที่เงื่อนไขผ่าน
 
             var accountType = "UNKNOWN";
