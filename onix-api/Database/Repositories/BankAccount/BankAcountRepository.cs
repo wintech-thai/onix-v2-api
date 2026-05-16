@@ -265,6 +265,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 var fullTextPd = PredicateBuilder.New<MBankAccount>();
                 fullTextPd = fullTextPd.Or(p => p.AccountName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.BankCode!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.AccountNumber!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PromptPayId!.Contains(param.FullTextSearch));
