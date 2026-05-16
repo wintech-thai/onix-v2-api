@@ -405,12 +405,18 @@ namespace Its.Onix.Api.Services
 
             if (u.Result.IsOrgInitialUser == "YES")
             {
-                r.Status = "NOT_ALLOW_DELETE_INITIAL_USER";
-                r.Description = $"Unable to delete initial user for the organization [{orgId}]";
+                if (u.Result.UserStatus != "Pending")
+                {
+                    //ห้ามลงถ้าเป็น Initial Org user และ status != Pending
+                    r.Status = "NOT_ALLOW_DELETE_INITIAL_USER";
+                    r.Description = $"Unable to delete initial user for the organization [{orgId}]";
 
-                return r;
+                    return r;
+                }
+
+                //ลบได้ถ้าเป็น Pending ต่อให้เป็น initial org user ก็ตาม
             }
-            
+
             var m = repository!.DeleteUserById(userId);
             r.OrgUser = m;
             if (m == null)
