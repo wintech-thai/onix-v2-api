@@ -80,6 +80,10 @@ namespace Its.Onix.Api.Models
         [Column("last_used_date")]
         public DateTime? LastUsedDate { get; set; }
 
+
+        [NotMapped]
+        public int? MerchantLinkCount { get; set; }
+
         public MBankAccount()
         {
             Id = Guid.NewGuid();
