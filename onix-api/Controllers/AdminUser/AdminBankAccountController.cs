@@ -106,7 +106,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/EnableBankAccountById/{bankAccountId}")]
         public async Task<IActionResult> EnableBankAccountById(string bankAccountId)
         {
-            var result = await svc.UpdateBankAccountStatusById(bankAccountId, "Active");
+            var result = await svc.UpdateBankAccountStatusById("global", bankAccountId, "Active");
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
@@ -117,7 +117,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/DisableBankAccountById/{bankAccountId}")]
         public async Task<IActionResult> DisableBankAccountById(string bankAccountId)
         {
-            var result = await svc.UpdateBankAccountStatusById(bankAccountId, "Disabled");
+            var result = await svc.UpdateBankAccountStatusById("global", bankAccountId, "Disabled");
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
