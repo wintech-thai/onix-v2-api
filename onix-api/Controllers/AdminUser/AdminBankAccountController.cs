@@ -52,6 +52,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetAvailableSupportQrBanks")]
+        public IActionResult GetAvailableSupportQrBanks()
+        {
+            var result = svc.GetAvailableSupportQrBanks();
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/GetBankAccountCount")]
         public async Task<IActionResult> GetBankAccountCount([FromBody] VMBankAccount param)
@@ -117,10 +125,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/global/action/GetBankAccountSelectedMerchantsById/{bankAccountId}")]
-        public async Task<IActionResult> GetBankAccountSelectedMerchantsById(string bankAccountId)
+        [Route("org/global/action/GetMerchantsForBankAccount/{bankAccountId}")]
+        public async Task<IActionResult> GetMerchantsForBankAccount(string bankAccountId)
         {
-            var result = await svc.GetBankAccountSelectedMerchants("global", bankAccountId);
+            var result = await svc.GetMerchantsForBankAccount("global", bankAccountId);
             return Ok(result);
         }
 

@@ -14,11 +14,22 @@ namespace Its.Onix.Api.Controllers
     public class AdminMerchantController : ControllerBase
     {
         private readonly IMerchantService svc;
+        private readonly IBankAccountService _bankAccuntSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminMerchantController(IMerchantService service)
+        public AdminMerchantController(IMerchantService service, IBankAccountService bankAccountSvc)
         {
             svc = service;
+            _bankAccuntSvc = bankAccountSvc;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetPayInBankAccountsForMerchant/{merchantId}")]
+        public async Task<IActionResult> GetPayInBankAccountsForMerchant(string merchantId)
+        {
+            var result = await _bankAccuntSvc.GetPayInBankAccountsForMerchant("notused", merchantId);
+            return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]

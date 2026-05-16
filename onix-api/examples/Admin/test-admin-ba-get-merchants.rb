@@ -10,12 +10,12 @@ $stdout.sync = true
 ################### Main #######################
 load_env("../.env")
 
-orgId = "global"
+orgId = ENV['API_ORG']
 keyFile = ".token"
+bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
 
 ### 
-### ดึงชื่อ bank
-apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetAvailableBanks"
+apiUrl = "admin-api/AdminBankAccount/org/global/action/GetMerchantsForBankAccount/#{bankAccountId}"
 param = nil
 
 token = File.read(keyFile)
@@ -25,11 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:get, apiUrl, param)
-puts(result)
-puts("====")
-
-### ดึงชื่อ bank ที่ ณ ตอนนี้ระบบรองรับ QR scan
-apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetAvailableSupportQrBanks"
 result = make_request(:get, apiUrl, param)
 puts(result)

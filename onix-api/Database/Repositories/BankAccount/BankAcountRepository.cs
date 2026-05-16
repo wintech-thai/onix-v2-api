@@ -79,15 +79,25 @@ namespace Its.Onix.Api.Database.Repositories
             });
         }
 
-        public async Task<List<MBankAccountMerchant>> GetBankAccountSelectedMerchants(string bankAccountId)
+        public async Task<List<MBankAccountMerchant>> GetMerchantsForBankAccount(string bankAccountId)
         {
             var result = await GetSelectionV2().AsExpandable()
+                .Where(p => p.BankAccountId == bankAccountId)
                 .OrderByDescending(e => e.CreatedDate)
                 .ToListAsync();
 
             return result;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsForMerchant(string merchantId)
+        {
+            var result = await GetSelectionV2().AsExpandable()
+                .Where(p => p.MerchantId == merchantId && p.AccountCategory == "PayIn")
+                .OrderByDescending(e => e.CreatedDate)
+                .ToListAsync();
+
+            return result;
+        }
 
         public async Task<MBankAccountMerchant?> SelectMerchant(string bankAccountId, string merchantId)
         {

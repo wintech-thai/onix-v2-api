@@ -67,6 +67,9 @@ namespace Its.Onix.Api.Models
         [Column("qr_provider")]
         public string? QrProvider { get; set; } //ธนาคารเจ้าของ QR code สำหรับให้ scan (PP = Promptpay)
 
+        [Column("selected_payin_bank_account_id")]
+        public string? SelectedPayInBankAccountId { get; set; } //Hidden field ใช้ระบุ PayIn bank account ID เข้ามาให้เอง
+
 
         [Column("payin_bank_id")]
         public string? PayinBankAccountId { get; set; } //Foreign key ไปยัง BankAccounts table
