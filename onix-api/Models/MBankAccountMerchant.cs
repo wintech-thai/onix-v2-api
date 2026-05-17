@@ -93,6 +93,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public int? MerchantCount { get; set; }
 
+        [NotMapped]
+        public int? BankAccountCount { get; set; }
+
         public MBankAccountMerchant()
         {
             Id = Guid.NewGuid();

@@ -61,6 +61,14 @@ namespace Its.Onix.Api.Models
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
+
+        [NotMapped]
+        public int? PayInBankAccountCount { get; set; }
+
+        [NotMapped]
+        public int? PayOutBankAccountCount { get; set; }
+
+
         public MMerchant()
         {
             Id = Guid.NewGuid();

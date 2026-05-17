@@ -21,6 +21,7 @@ namespace Its.Onix.Api.Models
         public string? PayInBankAccountNo { get; set; }
         public string? PayInBankAccountName { get; set; }
         public string? PayInBankCode { get; set; }
+        public string? PayInPromptPayId { get; set; }
 
         public MPaymentResponse()
         {

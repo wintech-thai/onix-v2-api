@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-
+ 
 ###
 merchantId = "cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0" 
 apiUrl = "admin-api/AdminMerchant/org/global/action/GetPayInBankAccountsForMerchant/#{merchantId}"

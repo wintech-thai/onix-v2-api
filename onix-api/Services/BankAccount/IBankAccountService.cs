@@ -15,7 +15,6 @@ namespace Its.Onix.Api.Services
         public Task<int> GetBankAccountCount(string orgId, VMBankAccount param);
         public Task<MVBankAccount> UpdateBankAccountById(string orgId, string bankAccountId, MBankAccount bankAccount);
         public Task<MVBankAccount?> UpdateBankAccountStatusById(string orgId, string bankAccountId, string status);
-
         public Task<List<MBankAccountMerchant>> GetMerchantsForBankAccount(string orgId, string bankAccountId);
         public Task<List<MBankAccountMerchant>> GetPayInBankAccountsForMerchant(string orgId, string merchantId);
         public Task<MVBankAccountMerchant?> SelectMerchant(string orgId, string bankAccountId, string merchantId);

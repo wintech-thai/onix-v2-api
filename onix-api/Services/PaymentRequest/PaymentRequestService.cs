@@ -169,6 +169,14 @@ namespace Its.Onix.Api.Services
             //       2.5.1 อันนี้ทำเพื่อให้ผู้ใช้ระบุ PayIn bank account ID เข้ามาเองเลย
             //3. เลือกตัวแรกที่เงื่อนไขผ่าน
 
+            if (!string.IsNullOrEmpty(pr.SelectedPayInBankAccountId))
+            {
+Console.WriteLine($"DEBUG 0 [{pr.SelectedPayInBankAccountId}]"); 
+                //มีการระบุ Bank Account ID เข้ามาเองโดย user
+                var bankAcct = await _bankAccountRepo!.GetBankAccountById(pr.SelectedPayInBankAccountId);
+                return bankAcct;
+            }
+
             var accountType = "UNKNOWN";
             if (pr.QrProvider == "PP")
             {
@@ -181,17 +189,30 @@ namespace Its.Onix.Api.Services
                 AccountCategory = "PayIn",
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
-//Console.WriteLine($"DEBUG 1 [{accountType}]"); 
+Console.WriteLine($"DEBUG 1 [{accountType}] [{pr.SelectedPayInBankAccountId}]"); 
+            //TODO : ควรปรับให้เอา AccountLevel ให้มีลำดับความสำคัญขึ้นมาก่อน
             var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
             foreach (var bank in banks)
             {
-                //TODO : เพิ่มเงื่อนไขอื่น ๆ อีกสำรับ check
 //Console.WriteLine($"DEBUG 2.0 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
-                if (bank.Status == "Active")
+                if (bank.Status == "Disabled")
                 {
-//Console.WriteLine($"DEBUG 2.1 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
+Console.WriteLine($"DEBUG 2.1 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
+                    continue;
+                }
 
-                    return bank; 
+                //Here - Bank Account Status is "Active"
+                if (bank.AccountLevel == "Global")
+                {
+Console.WriteLine($"DEBUG 2.2 - [{bank.Status}], [{bank.AccountLevel}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
+                    return bank;
+                }
+
+                if (bank.AccountLevel == "Selected")
+                {
+                    //TODO : ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
+Console.WriteLine($"DEBUG 2.3 - [{bank.Status}], [{bank.AccountLevel}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
+                    return bank;
                 }
             }
 //Console.WriteLine($"DEBUG 3");
@@ -240,7 +261,8 @@ namespace Its.Onix.Api.Services
 
                 PayInBankAccountName = bnkAcct.AccountName,
                 PayInBankAccountNo = bnkAcct.AccountNumber,
-                PayInBankCode = bnkAcct.BankCode
+                PayInBankCode = bnkAcct.BankCode,
+                PayInPromptPayId = bnkAcct.PromptPayId,
             };
 
             mvResponse.PaymentResponse = pmr;
