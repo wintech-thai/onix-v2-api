@@ -171,6 +171,7 @@ namespace Its.Onix.Api.Services
 
             if (!string.IsNullOrEmpty(pr.SelectedPayInBankAccountId))
             {
+Console.WriteLine($"DEBUG 0 [{pr.SelectedPayInBankAccountId}]"); 
                 //มีการระบุ Bank Account ID เข้ามาเองโดย user
                 var bankAcct = await _bankAccountRepo!.GetBankAccountById(pr.SelectedPayInBankAccountId);
                 return bankAcct;
@@ -188,7 +189,7 @@ namespace Its.Onix.Api.Services
                 AccountCategory = "PayIn",
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
-Console.WriteLine($"DEBUG 1 [{accountType}]"); 
+Console.WriteLine($"DEBUG 1 [{accountType}] [{pr.SelectedPayInBankAccountId}]"); 
             var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
             foreach (var bank in banks)
             {
