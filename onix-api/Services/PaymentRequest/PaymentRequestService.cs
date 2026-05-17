@@ -58,7 +58,14 @@ namespace Its.Onix.Api.Services
                 }
             }
 
-            result.ResponseDataObj = JsonSerializer.Deserialize<MPaymentResponse>(result.ResponseData!);
+            try
+            {
+                result.ResponseDataObj = JsonSerializer.Deserialize<MPaymentResponse>(result.ResponseData!);
+            }
+            catch
+            {
+                result.ResponseDataObj = null;
+            }
 
             List<string> lines;
             try
