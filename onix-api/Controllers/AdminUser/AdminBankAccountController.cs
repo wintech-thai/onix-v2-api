@@ -133,6 +133,15 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetPayInBankAccountsForMerchant/{merchantId}")]
+        public async Task<IActionResult> GetPayInBankAccountsForMerchant(string merchantId)
+        {
+            var result = await svc.GetPayInBankAccountsForMerchant("global", merchantId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/SelectMerchantById/{bankAccountId}/{merchantId}")]
         public async Task<IActionResult> SelectMerchantById(string bankAccountId, string merchantId)

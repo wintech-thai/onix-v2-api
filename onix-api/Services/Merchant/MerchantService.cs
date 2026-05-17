@@ -10,16 +10,19 @@ namespace Its.Onix.Api.Services
     {
         private readonly IMerchantRepository? repository = null;
         private readonly IOrganizationRepository? _orgRepo = null;
+        private readonly IBankAccountRepository? _bankAccountRepo = null;
         //private readonly IRedisHelper _redis;
 
         public MerchantService(IMerchantRepository repo,
             IApiKeyRepository apiKeyRepo,
+            IBankAccountRepository bankAccountRepo,
             //IRedisHelper redis,
             IOrganizationRepository orgRepo) : base()
         {
             repository = repo;
             _orgRepo = orgRepo;
            // _redis = redis;
+           _bankAccountRepo = bankAccountRepo;
         }
 
         public async Task<MVMerchant> GetMerchantById(string orgId, string merchantId)
@@ -150,9 +153,31 @@ namespace Its.Onix.Api.Services
         public async Task<List<MMerchant>> GetMerchants(string orgId, VMMerchant param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetMerchants(param);
 
-            return result;
+            var merchantBankAccountsAggr = await _bankAccountRepo!.GetBankAccountCountByMerchantId();
+            var dict = merchantBankAccountsAggr.ToDictionary(g => $"{g.MerchantId!}:{g.AccountCategory}", g => g.BankAccountCount);
+
+            var merchants = await repository!.GetMerchants(param);
+
+            foreach (var merchant in merchants)
+            {
+                var payInKey = $"{merchant.Id.ToString()}:PayIn";
+                var payOutKey = $"{merchant.Id.ToString()}:PayOut";
+
+                merchant.PayInBankAccountCount = 0;
+                if (dict.TryGetValue(payInKey, out var payInBankAccountCount))
+                {
+                    merchant.PayInBankAccountCount = payInBankAccountCount;
+                }
+
+                merchant.PayOutBankAccountCount = 0;
+                if (dict.TryGetValue(payOutKey, out var payOutBankAccountCount))
+                {
+                    merchant.PayOutBankAccountCount = payOutBankAccountCount;
+                }
+            }
+
+            return merchants;
         }
 
         public async Task<int> GetMerchantCount(string orgId, VMMerchant param)

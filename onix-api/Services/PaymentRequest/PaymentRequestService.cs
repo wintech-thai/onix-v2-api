@@ -190,10 +190,10 @@ Console.WriteLine($"DEBUG 0 [{pr.SelectedPayInBankAccountId}]");
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
 Console.WriteLine($"DEBUG 1 [{accountType}] [{pr.SelectedPayInBankAccountId}]"); 
+            //TODO : ควรปรับให้เอา AccountLevel ให้มีลำดับความสำคัญขึ้นมาก่อน
             var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
             foreach (var bank in banks)
             {
-                //TODO : เพิ่มเงื่อนไขอื่น ๆ อีกสำรับ check
 //Console.WriteLine($"DEBUG 2.0 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
                 if (bank.Status == "Disabled")
                 {
