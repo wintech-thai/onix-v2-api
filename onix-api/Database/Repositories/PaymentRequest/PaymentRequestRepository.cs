@@ -52,6 +52,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PaymentTxId = x.pr.PaymentTxId,
                 GeneratedAmount = x.pr.GeneratedAmount,
                 ResponseData = x.pr.ResponseData,
+                ProcessingMessages = x.pr.ProcessingMessages,
                 CreatedDate = x.pr.CreatedDate,
 
                 PayinBankAccountId = x.pr.PayinBankAccountId,
