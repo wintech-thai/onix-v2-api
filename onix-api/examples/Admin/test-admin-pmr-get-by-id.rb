@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmrId = '0ad665c1-5afc-4005-9b1d-3a081dc3c875'
+pmrId = 'c493f057-9763-453a-892b-94fc26f997f7'
 
 ### 
 apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPaymentRequestById/#{pmrId}"

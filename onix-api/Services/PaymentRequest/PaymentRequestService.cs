@@ -72,10 +72,12 @@ namespace Its.Onix.Api.Services
             {
                 lines = JsonSerializer.Deserialize<List<string>>(result.ProcessingMessages!) ?? new List<string>();
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"ERROR - [{ex.Message}]");
                 lines = [];
             }
+            
             result.ProcessingSteps = lines;
 
             result.ResponseData = "";
@@ -168,7 +170,6 @@ namespace Its.Onix.Api.Services
             paymentRequest.ProcessingMessages = messageString;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
-            paymentRequest.ResponseData = "This should not be seen data";
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
             paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
