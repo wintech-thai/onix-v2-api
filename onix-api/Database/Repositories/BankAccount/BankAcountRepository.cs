@@ -105,7 +105,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MBankAccountMerchant>> GetBankAccountCountByMerchantId()
         {
-            var result = await context!.BankAccountMerchants!.AsExpandable()
+            var result = await GetSelectionV2().AsExpandable()
                 .GroupBy(x => new{ x.MerchantId, x.AccountCategory })
                 .Select(g => new MBankAccountMerchant()
                 {
