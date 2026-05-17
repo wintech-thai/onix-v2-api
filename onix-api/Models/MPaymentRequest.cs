@@ -110,6 +110,9 @@ namespace Its.Onix.Api.Models
         [Column("response_data")]
         public string? ResponseData { get; set; } /* JSON string */
 
+        [Column("processing_messages")]
+        public string? ProcessingMessages { get; set; } /* JSON string */
+
 
         //System fields
         [Column("created_date")]
@@ -125,11 +128,14 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public MPaymentResponse? ResponseDataObj { get; set; }
+        [NotMapped]
+        public List<string>? ProcessingSteps { get; set; }
 
         public MPaymentRequest()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
+            ProcessingSteps = [];
         }
     }
 }
