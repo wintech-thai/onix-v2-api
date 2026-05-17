@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
+merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0' #'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0'
 
 hhmmss = Time.now.strftime("%H%M%S")
 
