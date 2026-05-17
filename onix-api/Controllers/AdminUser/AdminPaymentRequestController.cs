@@ -48,7 +48,7 @@ namespace Its.Onix.Api.Controllers
 
             request.MerchantId = merchantId;
             request.MerchantId2 = Guid.Parse(merchantId);
-            var result = await svc.AddPaymentRequestPayIn(mc.OrgId, request);
+            var result = await svc.AddPaymentRequestPayIn(mc.OrgId, request, mc);
             return Ok(result);
         }
 

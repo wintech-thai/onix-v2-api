@@ -88,7 +88,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest)
+        public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
             _bankAccountRepo!.SetCustomOrgId("global");
@@ -155,8 +155,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Validate ว่า amount เกิน range ของ bank account มั้ย
-
             var pmResponse = CreatePaymentResponse(paymentRequest, bnkAcct);
             if (pmResponse.Status != "OK")
             {
@@ -183,6 +181,7 @@ namespace Its.Onix.Api.Services
 
         private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr)
         {
+            var merchantId = pr.MerchantId!;
             List<string> lines = [];
 
             //1. เลือก list ของ bank account ที่ตรงกับ QrProvider ขึ้นมา
@@ -217,32 +216,54 @@ namespace Its.Onix.Api.Services
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
 
-            //TODO : ควรปรับให้เอา AccountLevel ให้มีลำดับความสำคัญขึ้นมาก่อน
+
+            var selectedBankAccounts = await _bankAccountRepo!.GetPayInBankAccountsForMerchant(merchantId);
+            var dict = selectedBankAccounts.ToDictionary(g => g.BankAccountId!, g => g.AccountNumber);
+
             lines.Add($"Step03 - Get all PayIn bank accounts : accountType -> [{accountType}]");
 
-            var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
-            foreach (var bank in banks)
+            var rawBankAccounts = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
+
+            //ควรปรับให้เอา AccountLevel ที่เป็น Selected ขึ้นมาก่อน
+            var bankAccounts = rawBankAccounts
+                .OrderByDescending(x => x.AccountLevel)
+                .ThenByDescending(x => x.CreatedDate)
+                .ToList();
+
+            //TODO : อนาคตอาจจะให้ loop จาก selectedBankAccounts union กับ global bank accounts ก็ได้
+            foreach (var bankAccount in bankAccounts)
             {
-                if (bank.Status == "Disabled")
+                var bankAccountId = bankAccount.Id.ToString()!;
+                var bankCode = bankAccount.BankCode;
+                var bankAccountNo = bankAccount.AccountNumber;
+                var bankAccountName = bankAccount.AccountName;
+                var promptPayId = bankAccount.PromptPayId;
+
+                if (bankAccount.Status == "Disabled")
                 {
-                    lines.Add($"Step03 - Skip disabled bank account : Account -> [{bank.BankCode} - {bank.AccountName}] [{bank.AccountNumber}] [{bank.PromptPayId}]");
+                    lines.Add($"Step03 - Skip disabled bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                     continue;
                 }
 
                 //Here - Bank Account Status is "Active"
-                if (bank.AccountLevel == "Global")
+                if (bankAccount.AccountLevel == "Global")
                 {
-                    lines.Add($"Step04 - Use global bank account : Account -> [{bank.BankCode} - {bank.AccountName}] [{bank.AccountNumber}] [{bank.PromptPayId}]");
-
-                    return (bank, lines);
+                    lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                    return (bankAccount, lines);
                 }
 
-                if (bank.AccountLevel == "Selected")
+                if (bankAccount.AccountLevel == "Selected")
                 {
-                    //TODO : ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
-                    lines.Add($"Step05 - Use selected bank account : Account -> [{bank.BankCode} - {bank.AccountName}] [{bank.AccountNumber}] [{bank.PromptPayId}]");
-
-                    return (bank, lines);
+                    //ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
+                    if (dict.ContainsKey(bankAccountId))
+                    {
+                        lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                        return (bankAccount, lines);
+                    }
+                    else
+                    {
+                        lines.Add($"Step05.2 - Skip unselected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");                        
+                    }
                 }
             }
             
