@@ -4,8 +4,6 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Its.Onix.Api.Services
 {
@@ -119,7 +117,7 @@ namespace Its.Onix.Api.Services
             {
                 Status = "UnIdentified",
                 Direction = "PayIn",
-                TxAmount = paymentNotiLine.PaymentAmount,
+                TxAmountDecimal = paymentNotiLine.PaymentAmount,
                 FromBankAccountNo = paymentNotiLine.SourceBankAccountNo,
                 FromBankCode = paymentNotiLine.SourceBankCode,
             };
@@ -132,8 +130,11 @@ namespace Its.Onix.Api.Services
                 pt.Status = "Identified";
                 pt.Currency = pmr.Currency;
                 pt.PayInFeePct = pmr.PayInFeePct;
-                pt.PayInFee = 0.00; //คำนวณตรงนี้
-                pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee ;
+                pt.PayInFee = pt.TxAmount * pmr.PayInFeePct / 100.0;
+                pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee;
+
+                pt.PayInFeeDecimal = (decimal) pt.PayInFee!;
+                pt.PayInTotalAmountDecimal = pt.TxAmountDecimal - pt.PayInFeeDecimal;
 
                 pt.PayInBankAccountId = pmr.PayinBankAccountId;
                 pt.PayInBankCode = pmr.PayinBankCode;

@@ -6,8 +6,8 @@ namespace Its.Onix.Api.Models
 
     public class MPaymentNotiLine
     {
-        public double? PaymentAmount { get; set; } //ยอดเงินเข้า
-        public double? RemainAmount { get; set; } //เงินที่เหลือ - ใน Line จะแจ้งตรงนี้มาด้วย
+        public decimal? PaymentAmount { get; set; } //ยอดเงินเข้า
+        public decimal? RemainAmount { get; set; } //เงินที่เหลือ - ใน Line จะแจ้งตรงนี้มาด้วย
         public string? TxType { get; set; } //PayIn, PayOut
         public string? SourceBankCode { get; set; } //ธนาคารต้นทาง
         public string? SourceBankAccountNo { get; set; } //XX3090 - จะ mask data แล้วแสดง 4 ตัวหลัง

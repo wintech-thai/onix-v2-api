@@ -53,11 +53,17 @@ namespace Its.Onix.Api.Models
         [Column("tx_amount")]
         public double? TxAmount { get; set; } //จำนวนเงินเข้ามาจริง ๆ
 
+        [Column("tx_amount_decimal")]
+        public decimal? TxAmountDecimal { get; set; } //จำนวนเงินเข้ามาจริง ๆ
+
         [Column("pay_in_fee_pct")]
         public double? PayInFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมรับเข้า
 
         [Column("pay_in_fee")]
         public double? PayInFee { get; set; } //ค่าธรรมเนียมรับเข้า
+
+        [Column("pay_in_fee_decimal")]
+        public decimal? PayInFeeDecimal { get; set; } //ค่าธรรมเนียมรับเข้า
 
         [Column("pay_out_fee_pct")]
         public double? PayOutFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียม withdraw
@@ -67,6 +73,10 @@ namespace Its.Onix.Api.Models
 
         [Column("total_payin_amount")]
         public double? PayInTotalAmount { get; set; } //ยอดเงินที่เข้าไปที่ merchantจริง ๆ
+
+        [Column("total_payin_amount_decimal")]
+        public decimal? PayInTotalAmountDecimal { get; set; } //ยอดเงินที่เข้าไปที่ merchantจริง ๆ
+
 
         [Column("total_payout_amount")]
         public double? PayOutTotalAmount { get; set; } //ยอดเงินที่โอนออกไปให้ merchantจริง ๆ

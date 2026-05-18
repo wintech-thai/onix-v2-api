@@ -63,6 +63,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayinPromptPayId = x.pr.PayinPromptPayId,
                 PayinAccountType = x.pr.PayinAccountType,
                 PayinAccountLevel = x.pr.PayinAccountLevel,
+                PayInFeePct = x.pr.PayInFeePct,
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
