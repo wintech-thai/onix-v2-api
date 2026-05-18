@@ -51,6 +51,7 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantId2 = x.pr.MerchantId2,
                 PaymentTxId = x.pr.PaymentTxId,
                 GeneratedAmount = x.pr.GeneratedAmount,
+                GeneratedAmountStr = x.pr.GeneratedAmountStr,
                 ResponseData = x.pr.ResponseData,
                 ProcessingMessages = x.pr.ProcessingMessages,
                 CreatedDate = x.pr.CreatedDate,
@@ -91,6 +92,74 @@ namespace Its.Onix.Api.Database.Repositories
             .OrderByDescending(e => e.CreatedDate)
             .Skip(offset)
             .Take(limit)
+            .ToListAsync();
+
+            return result;
+        }
+
+        private ExpressionStarter<MPaymentRequest> PaymentRequestPredicate2(VMPaymentRequest param)
+        {
+            var pd = IsOrgMatchPredicate(null);
+
+            if ((param.Direction != null) && (param.Direction != ""))
+            {
+                var directionPd = PredicateBuilder.New<MPaymentRequest>();
+                directionPd = directionPd.Or(p => p.Direction!.Equals(param.Direction));
+
+                pd = pd.And(directionPd);
+            }
+
+            if ((param.Status != null) && (param.Status != ""))
+            {
+                var statusPd = PredicateBuilder.New<MPaymentRequest>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
+            }
+
+            // FromDate
+            if (param.FromDate.HasValue)
+            {
+                var fromDatePd = PredicateBuilder.New<MPaymentRequest>();
+                fromDatePd = fromDatePd.Or(p => p.CreatedDate >= param.FromDate.Value);
+
+                pd = pd.And(fromDatePd);
+            }
+
+            // ToDate
+            if (param.ToDate.HasValue)
+            {
+                var toDatePd = PredicateBuilder.New<MPaymentRequest>();
+                toDatePd = toDatePd.Or(p => p.CreatedDate <= param.ToDate.Value);
+
+                pd = pd.And(toDatePd);
+            }
+
+            if ((param.GeneratedAmountStr != null) && (param.GeneratedAmountStr != ""))
+            {
+                var amountStrPd = PredicateBuilder.New<MPaymentRequest>();
+                amountStrPd = amountStrPd.Or(p => p.GeneratedAmountStr!.Equals(param.GeneratedAmountStr));
+
+                pd = pd.And(amountStrPd);
+            }
+
+            if ((param.BankAccountId != null) && (param.BankAccountId != ""))
+            {
+                var bankAccountIdPd = PredicateBuilder.New<MPaymentRequest>();
+                bankAccountIdPd = bankAccountIdPd.Or(p => p.PayinBankAccountId!.Equals(param.BankAccountId));
+
+                pd = pd.And(bankAccountIdPd);
+            }
+
+            return pd;
+        }
+
+        public async Task<List<MPaymentRequest>> GetPaymentRequestsForPaymentTx(VMPaymentRequest param)
+        {
+            var predicate = PaymentRequestPredicate2(param!);
+            var result = await GetPaymentRequestSelection().AsExpandable()
+            .Where(predicate)
+            .OrderByDescending(e => e.CreatedDate)
             .ToListAsync();
 
             return result;
@@ -170,6 +239,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             paymentRequest.OrgId = orgId;
             paymentRequest.CreatedDate = DateTime.UtcNow;
+            paymentRequest.GeneratedAmountStr = paymentRequest.GeneratedAmount.ToString();
 
             await context!.PaymentRequests!.AddAsync(paymentRequest);
             await context.SaveChangesAsync();

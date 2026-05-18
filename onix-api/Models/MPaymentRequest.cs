@@ -20,6 +20,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(CreatedDate))]
     [Index(nameof(PaymentTxId))]
     [Index(nameof(MerchantId))]
+    [Index(nameof(GeneratedAmountStr))]
 
     public class MPaymentRequest
     {
@@ -90,8 +91,10 @@ namespace Its.Onix.Api.Models
         public string? PayinAccountType { get; set; }
          
         [Column("payin_account_level")]
-        public string? PayinAccountLevel { get; set; } 
+        public string? PayinAccountLevel { get; set; }
         
+        [Column("pay_in_fee_pct")]
+        public double? PayInFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมรับเข้า
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
@@ -115,6 +118,10 @@ namespace Its.Onix.Api.Models
 
         [Column("generated_amount")]
         public double? GeneratedAmount { get; set; } //จำนวนเงินที่เอา RequestedAmount มาทำการ random เศษสตางค์
+
+        [Column("generated_amount_str")]
+        public string? GeneratedAmountStr { get; set; } //จำนวนเงินเป็น string เอาไว้ match กับ transaction
+
 
         [Column("response_data")]
         public string? ResponseData { get; set; } /* JSON string */

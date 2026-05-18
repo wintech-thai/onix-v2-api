@@ -12,22 +12,21 @@ namespace Its.Onix.Api.Controllers
     [Route("/admin-api/[controller]")]
     public class AdminPaymentTxController : ControllerBase
     {
-        private readonly IPaymentRequestService svc;
-        private readonly IMerchantService _merchantSvc;
+        private readonly IPaymentTransactionService svc;
 
         [ExcludeFromCodeCoverage]
-        public AdminPaymentTxController(IPaymentRequestService service, IMerchantService merchantService)
+        public AdminPaymentTxController(IPaymentTransactionService service)
         {
             svc = service;
-            _merchantSvc = merchantService;
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
-        public IActionResult SubmitLinePaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiLine request)
+        public async Task<IActionResult> SubmitLinePaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiLine request)
         {
-            return Ok("");
+            var result = await svc.ProcessLinePaymentTxNotification("global", bankAccountId, request);
+            return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
@@ -49,28 +48,30 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
-        [Route("org/global/action/GetPayInRequests")]
-        public async Task<IActionResult> GetPayInRequests([FromBody] VMPaymentRequest request)
+        [Route("org/global/action/GetPayInTransactions")]
+        public async Task<IActionResult> GetPayInTransactions([FromBody] VMPaymentTransaction request)
         {
             request.Direction = "PayIn";
-            var result = await svc.GetPaymentRequests("global", request);
+            var result = await svc.GetPaymentTransactions("global", request);
 
             return Ok(result);
         }
 
         [HttpGet]
-        [Route("org/global/action/GetPaymentRequestById/{paymentRequestId}")]
-        public async Task<IActionResult> GetPaymentRequestById(string paymentRequestId)
+        [Route("org/global/action/GetPaymentTransactionById/{paymentTransactionId}")]
+        public async Task<IActionResult> GetPaymentTransactionById(string paymentTransactionId)
         {
-            var result = await svc.GetPaymentRequestById("global", paymentRequestId);
+            var result = await svc.GetPaymentTransactionById("global", paymentTransactionId);
             return Ok(result);
         }
 
         [HttpPost]
-        [Route("org/global/action/GetPayInRequestCount")]
-        public async Task<IActionResult> GetAgentCount([FromBody] VMPaymentRequest request)
+        [Route("org/global/action/GetPayInTransactionCount")]
+        public async Task<IActionResult> GetPayInTransactionCount([FromBody] VMPaymentTransaction request)
         {
-            var result = await svc.GetPaymentRequestCount("global", request);
+            request.Direction = "PayIn";
+            var result = await svc.GetPaymentTransactionCount("global", request);
+
             return Ok(result);
         }
     }

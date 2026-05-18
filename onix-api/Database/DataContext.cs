@@ -52,6 +52,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MBankAccount>? BankAccounts { get; set; }
     public DbSet<MBankAccountMerchant>? BankAccountMerchants { get; set; }
     public DbSet<MPaymentRequest>? PaymentRequests { get; set; }
+    public DbSet<MPaymentTransaction>? PaymentTransactions { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -192,5 +193,8 @@ public class DataContext : DbContext, IDataContext
 
         modelBuilder.Entity<MPaymentRequest>()
             .HasIndex(t => new { t.OrgId, t.RefId }).IsUnique();
+
+        modelBuilder.Entity<MPaymentTransaction>()
+            .HasIndex(t => new { t.PaymentRequestId }).IsUnique();
     }
 }
