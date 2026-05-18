@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260518084915_PaymentTx_001")]
+    partial class PaymentTx_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1540,10 +1543,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
-                    b.Property<double?>("PayInFeePct")
-                        .HasColumnType("double precision")
-                        .HasColumnName("pay_in_fee_pct");
-
                     b.Property<string>("PayinAccountLevel")
                         .HasColumnType("text")
                         .HasColumnName("payin_account_level");
@@ -1711,10 +1710,6 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("pay_in_fee");
 
-                    b.Property<decimal?>("PayInFeeDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("pay_in_fee_decimal");
-
                     b.Property<double?>("PayInFeePct")
                         .HasColumnType("double precision")
                         .HasColumnName("pay_in_fee_pct");
@@ -1722,10 +1717,6 @@ namespace onix.api.Migrations
                     b.Property<double?>("PayInTotalAmount")
                         .HasColumnType("double precision")
                         .HasColumnName("total_payin_amount");
-
-                    b.Property<decimal?>("PayInTotalAmountDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("total_payin_amount_decimal");
 
                     b.Property<string>("PayOutBankAccountName")
                         .HasColumnType("text")
@@ -1771,10 +1762,6 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("tx_amount");
 
-                    b.Property<decimal?>("TxAmountDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("tx_amount_decimal");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedDate");
@@ -1787,7 +1774,8 @@ namespace onix.api.Migrations
 
                     b.HasIndex("PayInBankAccountId");
 
-                    b.HasIndex("PaymentRequestId");
+                    b.HasIndex("PaymentRequestId")
+                        .IsUnique();
 
                     b.HasIndex("Status");
 

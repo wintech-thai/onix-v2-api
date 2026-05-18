@@ -7,10 +7,12 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
         public Task<bool> IsRefIdExist(string refId);
+        public Task<List<MPaymentRequest>> GetPaymentRequestsForPaymentTx(VMPaymentRequest param);
         public Task<List<MPaymentRequest>> GetPaymentRequests(VMPaymentRequest param);
         public Task<int> GetPaymentRequestCount(VMPaymentRequest param);
         public Task<MPaymentRequest?> GetPaymentRequestById(string paymentRequestId);
         public Task<MPaymentRequest> AddPaymentRequest(MPaymentRequest paymentRequest);
         public Task<MPaymentRequest?> UpdatePaymentRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
+        public Task<MPaymentRequest?> UpdatePaymentRequestPaidStatusById(string paymentRequestId, string paymentTxId);
     }
 }
