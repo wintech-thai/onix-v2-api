@@ -194,7 +194,6 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MPaymentRequest>()
             .HasIndex(t => new { t.OrgId, t.RefId }).IsUnique();
 
-        modelBuilder.Entity<MPaymentTransaction>()
-            .HasIndex(t => new { t.PaymentRequestId }).IsUnique();
+        modelBuilder.Entity<MPaymentTransaction>();
     }
 }

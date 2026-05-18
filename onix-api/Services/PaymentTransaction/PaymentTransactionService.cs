@@ -84,6 +84,7 @@ namespace Its.Onix.Api.Services
             var prParam = new VMPaymentRequest()
             {
                 BankAccountId = bankAccountId,
+                Status = "Pending",
                 GeneratedAmountStr = paymentNotiLine.PaymentAmount.ToString(), //เอาเลขเศษสตางค์ไป match ด้วย
                 FromDate = DateTime.UtcNow.AddHours(-1),
             };
@@ -96,6 +97,7 @@ namespace Its.Onix.Api.Services
                 if (pr.Status == "Paid")
                 {
                     //อาจจะเจอตัวที่จำนวนเงินเท่ากันแล้วชำระไปแล้ว
+                    //ไม่ควรเจอ case นี้เพราะว่าเราเลือกแต่ Pending มาเท่านั้น
                     continue;
                 }
 
@@ -131,7 +133,7 @@ namespace Its.Onix.Api.Services
                 pt.Status = "Identified";
                 pt.Currency = pmr.Currency;
                 pt.PayInFeePct = pmr.PayInFeePct;
-                pt.PayInFee = pt.TxAmount * pmr.PayInFeePct / 100.0;
+                pt.PayInFee = (double) Math.Round((decimal) (pt.TxAmount * pmr.PayInFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
                 pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee;
 
                 pt.PayInFeeDecimal = (decimal) pt.PayInFee!;
@@ -147,6 +149,12 @@ namespace Its.Onix.Api.Services
             }
 
             var mpt = await repository!.AddPaymentTransaction(pt);
+
+            if ((pmr != null) && (mpt != null))
+            {
+                var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, mpt.Id.ToString()!);
+            }
+            
 
             var mvPt = new MVPaymentTransaction()
             {
