@@ -231,6 +231,7 @@ namespace Its.Onix.Api.Services
                 .ToList();
 
             //TODO : อนาคตอาจจะให้ loop จาก selectedBankAccounts union กับ global bank accounts ก็ได้
+            //จะดีกว่าในกรณีที่มี bank accounts เยอะ ๆ มาก ๆ ในระบบ แต่เลือกมาสำหรับ merchant นั้นไม่กี bank account
             foreach (var bankAccount in bankAccounts)
             {
                 var bankAccountId = bankAccount.Id.ToString()!;

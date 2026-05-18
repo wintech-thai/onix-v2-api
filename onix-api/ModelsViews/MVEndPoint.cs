@@ -9,5 +9,6 @@ namespace Its.Onix.Api.ModelsViews
         public string? Status { get; set; }
         public string? Description { get; set; }
         public string? PaymentRequestUrl { get; set; }
+        public string? PaymentTxNotiUrl { get; set; }
     }
 }
