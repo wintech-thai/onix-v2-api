@@ -117,6 +117,7 @@ namespace Its.Onix.Api.Services
             {
                 Status = "UnIdentified",
                 Direction = "PayIn",
+                TxAmount = (double) paymentNotiLine.PaymentAmount!,
                 TxAmountDecimal = paymentNotiLine.PaymentAmount,
                 FromBankAccountNo = paymentNotiLine.SourceBankAccountNo,
                 FromBankCode = paymentNotiLine.SourceBankCode,
