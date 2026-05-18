@@ -173,6 +173,9 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
             paymentRequest.PayinBankAccountNo = bnkAcct.AccountNumber;
             paymentRequest.PayinBankCode = bnkAcct.BankCode;
+            paymentRequest.PayinPromptPayId = bnkAcct.PromptPayId;
+            paymentRequest.PayinAccountType = bnkAcct.AccountType;
+            paymentRequest.PayinAccountLevel = bnkAcct.AccountLevel;
 
             _ = await repository!.AddPaymentRequest(paymentRequest);
 

@@ -167,7 +167,7 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/global/action/GetBankAccountPayInTxLineEndPoint/{bankAccountId}")]
-        public async Task<IActionResult> GetMerchantPaymentRequestEndPoint(string bankAccountId)
+        public async Task<IActionResult> GetBankAccountPayInTxLineEndPoint(string bankAccountId)
         {
             var mVBankAccount = await svc.GetBankAccountById("global", bankAccountId);
             if (mVBankAccount.Status != "OK")

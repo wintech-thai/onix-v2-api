@@ -83,6 +83,15 @@ namespace Its.Onix.Api.Models
         [Column("payin_bank_account_name")]
         public string? PayinBankAccountName { get; set; } 
 
+        [Column("payin_promptpay_id")]
+        public string? PayinPromptPayId { get; set; } 
+
+        [Column("payin_account_type")]
+        public string? PayinAccountType { get; set; }
+         
+        [Column("payin_account_level")]
+        public string? PayinAccountLevel { get; set; } 
+        
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
