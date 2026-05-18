@@ -31,15 +31,6 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
-        public IActionResult SubmitScbPaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiScb request)
-        {
-            //ใส่เป็น place holder ไว้ก่อน สำหรับธนาคาคาร SCB
-            return Ok("");
-        }
-
-        [ExcludeFromCodeCoverage]
-        [HttpPost]
         [Route("org/global/action/SubmitKtbPaymentTxNotification/{bankAccountId}")]
         public IActionResult SubmitKtbPaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiKtb request)
         {
