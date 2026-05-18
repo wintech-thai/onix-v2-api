@@ -58,15 +58,37 @@ namespace Its.Onix.Api.Services
                 }
             }
 
-            result.ResponseDataObj = JsonSerializer.Deserialize<MPaymentResponse>(result.ResponseData!);
+            try
+            {
+                result.ResponseDataObj = JsonSerializer.Deserialize<MPaymentResponse>(result.ResponseData!);
+            }
+            catch
+            {
+                result.ResponseDataObj = null;
+            }
+
+            List<string> lines;
+            try
+            {
+                lines = JsonSerializer.Deserialize<List<string>>(result.ProcessingMessages!) ?? new List<string>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR - [{ex.Message}]");
+                lines = [];
+            }
+            
+            result.ProcessingSteps = lines;
+
             result.ResponseData = "";
+            result.ProcessingMessages = "";
 
             r.PaymentRequest = result;
 
             return r;
         }
 
-        public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest)
+        public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
             _bankAccountRepo!.SetCustomOrgId("global");
@@ -124,7 +146,7 @@ namespace Its.Onix.Api.Services
             //TODO : implement logic สำหรับสร้างจุดทศนิยมตรงนี้
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
-            var bnkAcct = await GetPayInBankAccount(paymentRequest);
+            var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest);
             if (bnkAcct == null)
             {
                 r.Status = "ERROR_NO_PAYIN_ACCOUNT_MATCH";
@@ -132,8 +154,6 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            //TODO : Validate ว่า amount เกิน range ของ bank account มั้ย
 
             var pmResponse = CreatePaymentResponse(paymentRequest, bnkAcct);
             if (pmResponse.Status != "OK")
@@ -144,8 +164,10 @@ namespace Its.Onix.Api.Services
             var jsonString = JsonSerializer.Serialize(pmResponse.PaymentResponse);
             paymentRequest.ResponseData = jsonString;
 
+            var messageString = JsonSerializer.Serialize(lines);
+            paymentRequest.ProcessingMessages = messageString;
+
             //Logic สำหรับการสร้าง QR payment ตรงนี้
-            paymentRequest.ResponseData = "This should not be seen data";
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
             paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
@@ -157,8 +179,11 @@ namespace Its.Onix.Api.Services
             return pmResponse;
         }
 
-        private async Task<MBankAccount?> GetPayInBankAccount(MPaymentRequest pr)
+        private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr)
         {
+            var merchantId = pr.MerchantId!;
+            List<string> lines = [];
+
             //1. เลือก list ของ bank account ที่ตรงกับ QrProvider ขึ้นมา
             //2. แต่ละ bank account ให้ดูว่าเกิน condition ที่ตั้งไว้มั้ยเช่น 
             //   2.1 ยอดรวมต่อวัน
@@ -171,16 +196,17 @@ namespace Its.Onix.Api.Services
 
             if (!string.IsNullOrEmpty(pr.SelectedPayInBankAccountId))
             {
-Console.WriteLine($"DEBUG 0 [{pr.SelectedPayInBankAccountId}]"); 
+                lines.Add($"Step01 - User specified bank account ID : SelectedPayInBankAccountId -> [{pr.SelectedPayInBankAccountId}]");
                 //มีการระบุ Bank Account ID เข้ามาเองโดย user
                 var bankAcct = await _bankAccountRepo!.GetBankAccountById(pr.SelectedPayInBankAccountId);
-                return bankAcct;
+                return (bankAcct, lines);
             }
 
             var accountType = "UNKNOWN";
             if (pr.QrProvider == "PP")
             {
                 accountType = "PromptPay";
+                lines.Add($"Step02 - Get bank account type : accountType -> [{accountType}]");
             }
 
             var param = new VMBankAccount()
@@ -189,35 +215,63 @@ Console.WriteLine($"DEBUG 0 [{pr.SelectedPayInBankAccountId}]");
                 AccountCategory = "PayIn",
                 AccountLevel = "", //เอามาทั้ง global และ selected แล้วค่อยมาเลือกอีกที
             };
-Console.WriteLine($"DEBUG 1 [{accountType}] [{pr.SelectedPayInBankAccountId}]"); 
-            //TODO : ควรปรับให้เอา AccountLevel ให้มีลำดับความสำคัญขึ้นมาก่อน
-            var banks = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
-            foreach (var bank in banks)
+
+
+            var selectedBankAccounts = await _bankAccountRepo!.GetPayInBankAccountsForMerchant(merchantId);
+            var dict = selectedBankAccounts.ToDictionary(g => g.BankAccountId!, g => g.AccountNumber);
+
+            lines.Add($"Step03 - Get all PayIn bank accounts : accountType -> [{accountType}]");
+
+            var rawBankAccounts = await _bankAccountRepo!.GetAllBankAccounts(param); //ไม่มีเรื่องการทำ paging ตรงนี้ ถ้ามี bank account เยอะค่อยว่ากันในอนาคต
+
+            //ควรปรับให้เอา AccountLevel ที่เป็น Selected ขึ้นมาก่อน
+            var bankAccounts = rawBankAccounts
+                .OrderByDescending(x => x.AccountLevel)
+                .ThenByDescending(x => x.CreatedDate)
+                .ToList();
+
+            //TODO : อนาคตอาจจะให้ loop จาก selectedBankAccounts union กับ global bank accounts ก็ได้
+            //จะดีกว่าในกรณีที่มี bank accounts เยอะ ๆ มาก ๆ ในระบบ แต่เลือกมาสำหรับ merchant นั้นไม่กี bank account
+            foreach (var bankAccount in bankAccounts)
             {
-//Console.WriteLine($"DEBUG 2.0 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
-                if (bank.Status == "Disabled")
+                var bankAccountId = bankAccount.Id.ToString()!;
+                var bankCode = bankAccount.BankCode;
+                var bankAccountNo = bankAccount.AccountNumber;
+                var bankAccountName = bankAccount.AccountName;
+                var promptPayId = bankAccount.PromptPayId;
+
+                if (bankAccount.Status == "Disabled")
                 {
-Console.WriteLine($"DEBUG 2.1 - [{bank.Status}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
+                    lines.Add($"Step03 - Skip disabled bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                     continue;
                 }
 
                 //Here - Bank Account Status is "Active"
-                if (bank.AccountLevel == "Global")
+                if (bankAccount.AccountLevel == "Global")
                 {
-Console.WriteLine($"DEBUG 2.2 - [{bank.Status}], [{bank.AccountLevel}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
-                    return bank;
+                    lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                    return (bankAccount, lines);
                 }
 
-                if (bank.AccountLevel == "Selected")
+                if (bankAccount.AccountLevel == "Selected")
                 {
-                    //TODO : ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
-Console.WriteLine($"DEBUG 2.3 - [{bank.Status}], [{bank.AccountLevel}], [{bank.AccountName}], [{bank.PromptPayId}], [{bank.BankCode}]");
-                    return bank;
+                    //ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
+                    if (dict.ContainsKey(bankAccountId))
+                    {
+                        lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                        return (bankAccount, lines);
+                    }
+                    else
+                    {
+                        lines.Add($"Step05.2 - Skip unselected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");                        
+                    }
                 }
             }
-//Console.WriteLine($"DEBUG 3");
+            
+            lines.Add($"Step06 - No bank account match!!!");
+
             //ไม่มี bank account ที่ match
-            return null;
+            return (null, lines);
         }
 
         private MVPaymentResponse CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct)
@@ -276,7 +330,11 @@ Console.WriteLine($"DEBUG 2.3 - [{bank.Status}], [{bank.AccountLevel}], [{bank.A
             var result = await repository!.GetPaymentRequests(param);
 
             // ลบ ResponseData ออกเพื่อลด payload
-            result.ForEach(p => p.ResponseData = "");
+            result.ForEach(p => 
+            { 
+                p.ResponseData = ""; 
+                p.ProcessingMessages = "";
+            });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น
             if (orgId != "global")

@@ -52,6 +52,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PaymentTxId = x.pr.PaymentTxId,
                 GeneratedAmount = x.pr.GeneratedAmount,
                 ResponseData = x.pr.ResponseData,
+                ProcessingMessages = x.pr.ProcessingMessages,
                 CreatedDate = x.pr.CreatedDate,
 
                 PayinBankAccountId = x.pr.PayinBankAccountId,
@@ -158,14 +159,13 @@ namespace Its.Onix.Api.Database.Repositories
         private ExpressionStarter<MPaymentRequest> IsOrgMatchPredicate(Guid? pmrId)
         {
             var pd = PredicateBuilder.New<MPaymentRequest>(true);
-            if (orgId == "global")
+            if (orgId != "global")
             {
-                return pd;
+                //ต้องเอา orgId มา where ด้วย
+                var orgPd = PredicateBuilder.New<MPaymentRequest>(true);
+                orgPd = orgPd.And(p => p.OrgId!.Equals(orgId));
+                pd = pd.And(orgPd);
             }
-
-            var orgPd = PredicateBuilder.New<MPaymentRequest>(true);
-            orgPd = orgPd.And(p => p.OrgId!.Equals(orgId));
-            pd = pd.And(orgPd);
 
             if (pmrId != null)
             {

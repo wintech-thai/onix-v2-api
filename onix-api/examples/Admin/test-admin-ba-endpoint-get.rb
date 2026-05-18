@@ -12,10 +12,10 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmrId = '3cb1e165-0fe7-49fc-8fed-4c78c774bec4'
+bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
 
 ### 
-apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPaymentRequestById/#{pmrId}"
+apiUrl = "admin-api/AdminBankAccount/org/global/action/GetBankAccountPayInTxLineEndPoint/#{bankAccountId}"
 param = nil
 
 token = File.read(keyFile)

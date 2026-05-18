@@ -13,19 +13,43 @@ namespace Its.Onix.Api.Controllers
     public class PaymentRequestController : ControllerBase
     {
         private readonly IPaymentRequestService svc;
+        private readonly IMerchantService _merchantSvc;
 
         [ExcludeFromCodeCoverage]
-        public PaymentRequestController(IPaymentRequestService service)
+        public PaymentRequestController(IPaymentRequestService service, IMerchantService merchantService)
         {
             svc = service;
+            _merchantSvc = merchantService;
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/SubmitPaymentRequest")]
-        public async Task<IActionResult> SubmitPayInRequest(string id, [FromBody] MPaymentRequest request)
+        [Route("org/{id}/action/SubmitPaymentRequest/{merchantId}")]
+        public async Task<IActionResult> SubmitPaymentRequest(string id, string merchantId, [FromBody] MPaymentRequest request)
         {
-            var result = await svc.AddPaymentRequestPayIn(id, request);
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return Ok(mcVm);
+            }
+
+            var mc = mcVm.Merchant;
+            if (mc == null)
+            {
+                return Ok(mcVm);
+            }
+
+            if (string.IsNullOrEmpty(mc.OrgId))
+            {
+                mcVm.Status = "ERROR_ORG_ID_EMPTY";
+                mcVm.Description = "Organization ID is null or empty";
+                return Ok(mcVm);
+            }
+
+            request.MerchantId = merchantId;
+            request.MerchantId2 = Guid.Parse(merchantId);
+
+            var result = await svc.AddPaymentRequestPayIn(id, request, mc);
             return Ok(result);
         }
 

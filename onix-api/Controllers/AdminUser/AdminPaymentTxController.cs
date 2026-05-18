@@ -10,13 +10,13 @@ namespace Its.Onix.Api.Controllers
     [Authorize(Policy = "GenericRolePolicy")]
     [ApiController]
     [Route("/admin-api/[controller]")]
-    public class AdminPaymentRequestController : ControllerBase
+    public class AdminPaymentTxController : ControllerBase
     {
         private readonly IPaymentRequestService svc;
         private readonly IMerchantService _merchantSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminPaymentRequestController(IPaymentRequestService service, IMerchantService merchantService)
+        public AdminPaymentTxController(IPaymentRequestService service, IMerchantService merchantService)
         {
             svc = service;
             _merchantSvc = merchantService;
@@ -24,32 +24,28 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/SubmitPaymentRequestByMerchantId/{merchantId}")]
-        public async Task<IActionResult> SubmitPaymentRequestByMerchantId(string merchantId, [FromBody] MPaymentRequest request)
+        [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
+        public IActionResult SubmitLinePaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiLine request)
         {
-            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
-            if (mcVm.Status != "OK")
-            {
-                return Ok(mcVm);
-            }
+            return Ok("");
+        }
 
-            var mc = mcVm.Merchant;
-            if (mc == null)
-            {
-                return Ok(mcVm);
-            }
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
+        public IActionResult SubmitScbPaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiScb request)
+        {
+            //ใส่เป็น place holder ไว้ก่อน สำหรับธนาคาคาร SCB
+            return Ok("");
+        }
 
-            if (string.IsNullOrEmpty(mc.OrgId))
-            {
-                mcVm.Status = "ERROR_ORG_ID_EMPTY";
-                mcVm.Description = "Organization ID is null or empty";
-                return Ok(mcVm);
-            }
-
-            request.MerchantId = merchantId;
-            request.MerchantId2 = Guid.Parse(merchantId);
-            var result = await svc.AddPaymentRequestPayIn(mc.OrgId, request, mc);
-            return Ok(result);
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SubmitKtbPaymentTxNotification/{bankAccountId}")]
+        public IActionResult SubmitKtbPaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiKtb request)
+        {
+            //ใส่เป็น place holder ไว้ก่อน สำหรับธนาคาคาร KTB
+            return Ok("");
         }
 
         [HttpPost]

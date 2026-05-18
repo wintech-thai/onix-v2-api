@@ -175,6 +175,12 @@ public class DataSeeder
         context.SaveChanges();
     }
 
+    private void SeedDefaultRoles4()
+    {
+        AddRole("PAYMENT_TX_LINE", "AdminPaymentTx:SubmitLinePaymentTxNotification", "ADMIN", "For LINE agent to submit payment transaction notification");
+        context.SaveChanges();
+    }
+
     public void Seed()
     {
         SeedDefaultOrganization();
@@ -185,6 +191,7 @@ public class DataSeeder
         UpdateApiKeyRole();
         SeedDefaultRoles2();
         SeedDefaultRoles3();
+        SeedDefaultRoles4();
 
         UpdateScanItemTemplateDefaultIfNull();
     }

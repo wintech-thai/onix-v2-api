@@ -12,11 +12,11 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmrId = '3cb1e165-0fe7-49fc-8fed-4c78c774bec4'
+bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
 
 ### 
-apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetPaymentRequestById/#{pmrId}"
-param = nil
+apiUrl = "admin-api/AdminBankAccount/org/global/action/CreateLinePaymentTxNotiApiKey/#{bankAccountId}"
+param = {}
 
 token = File.read(keyFile)
 
@@ -25,5 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:get, apiUrl, param)
+result = make_request(:post, apiUrl, param)
 puts(result)

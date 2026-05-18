@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.ModelsViews;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -13,11 +14,13 @@ namespace Its.Onix.Api.Controllers
     public class AdminBankAccountController : ControllerBase
     {
         private readonly IBankAccountService svc;
+        private readonly IApiKeyService _apiKeySvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminBankAccountController(IBankAccountService service)
+        public AdminBankAccountController(IBankAccountService service, IApiKeyService apiKeySvc)
         {
             svc = service;
+            _apiKeySvc = apiKeySvc;
         }
 
         [ExcludeFromCodeCoverage]
@@ -158,5 +161,63 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.UnSelectMerchant("global", bankAccountId, merchantId);
             return Ok(result);
         }
+
+
+        //Line noti API keys
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetBankAccountPayInTxLineEndPoint/{bankAccountId}")]
+        public async Task<IActionResult> GetMerchantPaymentRequestEndPoint(string bankAccountId)
+        {
+            var mVBankAccount = await svc.GetBankAccountById("global", bankAccountId);
+            if (mVBankAccount.Status != "OK")
+            {
+                return Ok(mVBankAccount);
+            }
+
+            var url = $"https://<PAYMENT-TX-SERVICE>/admin-api/AdminPaymentTx/org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}";
+
+            var result = new MVEndPoint()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentTxNotiUrl = url,
+            };
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/CreateLinePaymentTxNotiApiKey/{bankAccountId}")]
+        public IActionResult CreatePaymentRequestApiKey(string bankAccountId)
+        {
+            var uuid = Guid.NewGuid();
+
+            var request = new MApiKey()
+            {
+                KeyType = $"LinePaymentTxNoti:{bankAccountId}",
+                KeyName = $"PayInTxNoti:{uuid}",
+                KeyDescription = "Auto generated key, DO NOT delete!!!",
+                Roles = [ "PAYMENT_TX_LINE" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+            };
+
+            var apiKey = _apiKeySvc.AddApiKey("global", request);
+            return Ok(apiKey);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetLinePaymentTxNotiApiKeys/{bankAccountId}")]
+        public IActionResult GetPaymentRequestApiKeys(string bankAccountId)
+        {
+            var request = new VMApiKey()
+            {
+                KeyType = $"LinePaymentTxNoti:{bankAccountId}", 
+            };
+
+            var keys = _apiKeySvc.GetApiKeys("global", request);
+
+            return Ok(keys);
+        }
+
     }
 }
