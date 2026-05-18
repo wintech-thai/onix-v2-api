@@ -12,20 +12,11 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
-
-hhmmss = Time.now.strftime("%H%M%S")
 
 ### 
-apiUrl = "admin-api/AdminPaymentTx/org/global/action/SubmitLinePaymentTxNotification/#{bankAccountId}"
+apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactions"
 param =  {
-  PaymentAmount: 12.08, #ต้อง match กับ payment request ก่อนหน้าด้วย
-  RemainAmount: 0.00,
-  TxType: "PayIn",
-  SourceBankCode: "KTB",
-  SourceBankAccountNo: "XX-0987",
-  DestinationBankCode: "TMB",
-  DestinationAccountNo: "XX-9032",
+  FullTextSearch: "",
 }
 
 token = File.read(keyFile)
@@ -34,6 +25,11 @@ ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเ
 ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
+
+result = make_request(:post, apiUrl, param)
+puts(result)
+
+apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactionCount"
 
 result = make_request(:post, apiUrl, param)
 puts(result)
