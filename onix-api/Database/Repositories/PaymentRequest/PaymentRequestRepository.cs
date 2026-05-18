@@ -59,6 +59,9 @@ namespace Its.Onix.Api.Database.Repositories
                 PayinBankCode = x.pr.PayinBankCode,
                 PayinBankAccountNo = x.pr.PayinBankAccountNo,
                 PayinBankAccountName = x.pr.PayinBankAccountName,
+                PayinPromptPayId = x.pr.PayinPromptPayId,
+                PayinAccountType = x.pr.PayinAccountType,
+                PayinAccountLevel = x.pr.PayinAccountLevel,
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
@@ -126,6 +129,24 @@ namespace Its.Onix.Api.Database.Repositories
                 statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
 
                 pd = pd.And(statusPd);
+            }
+
+            // FromDate
+            if (param.FromDate.HasValue)
+            {
+                var fromDatePd = PredicateBuilder.New<MPaymentRequest>();
+                fromDatePd = fromDatePd.Or(p => p.CreatedDate >= param.FromDate.Value);
+
+                pd = pd.And(fromDatePd);
+            }
+
+            // ToDate
+            if (param.ToDate.HasValue)
+            {
+                var toDatePd = PredicateBuilder.New<MPaymentRequest>();
+                toDatePd = toDatePd.Or(p => p.CreatedDate <= param.ToDate.Value);
+
+                pd = pd.And(toDatePd);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
