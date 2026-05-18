@@ -144,7 +144,26 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SelectMerchantById/{bankAccountId}/{merchantId}")]
+        public async Task<IActionResult> SelectMerchantById(string bankAccountId, string merchantId)
+        {
+            var result = await svc.SelectMerchant("global", bankAccountId, merchantId);
+            return Ok(result);
+        }
 
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UnSelectMerchantById/{bankAccountId}/{merchantId}")]
+        public async Task<IActionResult> UnSelectMerchantById(string bankAccountId, string merchantId)
+        {
+            var result = await svc.UnSelectMerchant("global", bankAccountId, merchantId);
+            return Ok(result);
+        }
+
+
+        //Line noti API keys
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/global/action/GetBankAccountPayInTxLineEndPoint/{bankAccountId}")]
@@ -168,26 +187,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
-        [HttpPost]
-        [Route("org/global/action/SelectMerchantById/{bankAccountId}/{merchantId}")]
-        public async Task<IActionResult> SelectMerchantById(string bankAccountId, string merchantId)
-        {
-            var result = await svc.SelectMerchant("global", bankAccountId, merchantId);
-            return Ok(result);
-        }
-
-        [ExcludeFromCodeCoverage]
-        [HttpPost]
-        [Route("org/global/action/UnSelectMerchantById/{bankAccountId}/{merchantId}")]
-        public async Task<IActionResult> UnSelectMerchantById(string bankAccountId, string merchantId)
-        {
-            var result = await svc.UnSelectMerchant("global", bankAccountId, merchantId);
-            return Ok(result);
-        }
-
-
-        //Line noti API keys
         [HttpPost]
         [Route("org/global/action/CreateLinePaymentTxNotiApiKey/{bankAccountId}")]
         public IActionResult CreatePaymentRequestApiKey(string bankAccountId)
@@ -197,7 +196,7 @@ namespace Its.Onix.Api.Controllers
             var request = new MApiKey()
             {
                 KeyType = $"LinePaymentTxNoti:{bankAccountId}",
-                KeyName = $"PayInTxNotification:{uuid}",
+                KeyName = $"PayInTxNoti:{uuid}",
                 KeyDescription = "Auto generated key, DO NOT delete!!!",
                 Roles = [ "PAYMENT_TX_LINE" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
             };
