@@ -71,6 +71,7 @@ namespace Its.Onix.Api.Database.Repositories
                 AccountType = x.bankaccount != null ? x.bankaccount.AccountType : null,
                 AccountCategory = x.bankaccount != null ? x.bankaccount.AccountCategory : null,
                 AccountLevel = x.bankaccount != null ? x.bankaccount.AccountLevel : null,
+                BankAccountStatus = x.bankaccount != null ? x.bankaccount.Status : null,
 
                 //ข้อมูลของ Merchant
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
