@@ -177,6 +177,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinAccountType = bnkAcct.AccountType;
             paymentRequest.PayinAccountLevel = bnkAcct.AccountLevel;
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
+            paymentRequest.PayinBankAccountId = bnkAcct.Id.ToString();
 
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
