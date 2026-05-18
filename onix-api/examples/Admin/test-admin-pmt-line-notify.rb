@@ -30,8 +30,8 @@ param =  {
 
 token = File.read(keyFile)
 
-ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
-ENV['ACCESS_TOKEN'] = token
+ENV['API_KEY'] = ENV['PAYMENT_LINE_NOTI_KEY'] # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
+#ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
