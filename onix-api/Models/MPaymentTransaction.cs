@@ -140,7 +140,7 @@ namespace Its.Onix.Api.Models
         public List<string>? ProcessingSteps { get; set; }
 
         [NotMapped]
-        public JsonElement RawInputObj { get; set; }
+        public JsonElement? RawInputObj { get; set; }
 
 
         public MPaymentTransaction()
