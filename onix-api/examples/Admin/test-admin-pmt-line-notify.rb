@@ -19,7 +19,7 @@ hhmmss = Time.now.strftime("%H%M%S")
 ### 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/SubmitLinePaymentTxNotification/#{bankAccountId}"
 param =  {
-  PaymentAmount: 1200.23, #ต้อง match กับ payment request ก่อนหน้าด้วย
+  PaymentAmount: 234.65, #ต้อง match กับ payment request ก่อนหน้าด้วย
   RemainAmount: 0.00,
   TxType: "PayIn",
   SourceBankCode: "KTB",

@@ -154,8 +154,6 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
             if (pmr != null)
             {
-                lines.Add($"STEP5 : Info -> Found TxAmount=[{pt.TxAmountDecimal}], PayInFeePct=[{pmr.PayInFeePct}], PayInFee=[{pt.PayInFeeDecimal}], PayInTotal=[{pt.PayInTotalAmountDecimal}]");
-
                 repository!.SetCustomOrgId(pmr.OrgId!); //ตรงนี้เป็น orgId ของ Merchant
 
                 pt.Status = "Identified";
@@ -174,6 +172,8 @@ namespace Its.Onix.Api.Services
                 pt.PaymentRequestId = pmr.Id.ToString();
 
                 pt.MerchantId = pmr.MerchantId;
+
+                lines.Add($"STEP5 : Info -> Found TxAmount=[{pt.TxAmountDecimal}], PayInFeePct=[{pmr.PayInFeePct}], PayInFee=[{pt.PayInFeeDecimal}], PayInTotal=[{pt.PayInTotalAmountDecimal}]");
             }
 
             pt.RawInput = JsonSerializer.Serialize(paymentNotiLine); //"{}";
