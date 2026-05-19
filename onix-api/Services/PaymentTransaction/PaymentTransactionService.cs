@@ -64,19 +64,37 @@ namespace Its.Onix.Api.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR - [{ex.Message}]");
+                Console.WriteLine($"ERROR1 - [{ex.Message}]");
                 lines = [];
             }
-            
+
+            JsonElement rawInputObj;
+            try
+            {
+                rawInputObj = JsonSerializer.Deserialize<JsonElement>(result.RawInput!);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR2 - [{ex.Message}]");
+                rawInputObj = JsonSerializer.Deserialize<JsonElement>("{}");
+            }
+
+
             result.ProcessingSteps = lines;
+            result.RawInputObj = rawInputObj;
+
             result.ProcessingMessages = "";
+            result.RawInput = "";
 
             r.PaymentTransaction = result;
 
             return r;
         }
 
-        public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(string orgId, string bankAccountId, MPaymentNotiLine paymentNotiLine)
+        public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
+            string orgId, 
+            string bankAccountId, 
+            MPaymentNotiLine paymentNotiLine)
         {
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
@@ -90,26 +108,34 @@ namespace Its.Onix.Api.Services
             };
 
             MPaymentRequest? pmr = null;
+            List<string> lines = [];
 
             var paymentRequests = await _paymentRequestRepo.GetPaymentRequestsForPaymentTx(prParam);
+            var matchCount = paymentRequests.Count;
+
+            lines.Add($"STEP1 : Info -> Found [{matchCount}] payment request matche, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
             foreach (var pr in paymentRequests)
             {
                 if (pr.Status == "Paid")
                 {
                     //อาจจะเจอตัวที่จำนวนเงินเท่ากันแล้วชำระไปแล้ว
                     //ไม่ควรเจอ case นี้เพราะว่าเราเลือกแต่ Pending มาเท่านั้น
+                    lines.Add($"STEP2 : Warning -> Found Satus=[{pr.Status}], PaymentRequestId=[{pr.Id.ToString()}], Amount=[{pr.GeneratedAmount}]");
                     continue;
                 }
 
                 if (pr.PayinBankAccountId != bankAccountId)
                 {
                     //ไม่ควรเจอ case นี้เพราะว่าเรา select เฉพาะ bankAccountId ออกมาแล้ว
+                    lines.Add($"STEP3 : Warning -> Different BankAccountId BankAccountId=[{pr.PayinBankAccountId}], PaymentRequestId=[{pr.Id.ToString()}], Amount=[{pr.GeneratedAmount}]");
                     continue;
                 }
 
                 if (pr.Status == "Pending")
                 {
                     //หยิบตัวนี้มาใช้เลย
+                    lines.Add($"STEP4 : Success -> Found Satus=[{pr.Status}], BankAccountId=[{pr.PayinBankAccountId}], Amount=[{pr.GeneratedAmount}]");
+
                     pmr = pr;
                     break;
                 }
@@ -128,6 +154,8 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
             if (pmr != null)
             {
+                lines.Add($"STEP5 : Info -> Found TxAmount=[{pt.TxAmountDecimal}], PayInFeePct=[{pmr.PayInFeePct}], PayInFee=[{pt.PayInFeeDecimal}], PayInTotal=[{pt.PayInTotalAmountDecimal}]");
+
                 repository!.SetCustomOrgId(pmr.OrgId!); //ตรงนี้เป็น orgId ของ Merchant
 
                 pt.Status = "Identified";
@@ -148,13 +176,15 @@ namespace Its.Onix.Api.Services
                 pt.MerchantId = pmr.MerchantId;
             }
 
+            pt.RawInput = JsonSerializer.Serialize(paymentNotiLine);
+            pt.ProcessingMessages = JsonSerializer.Serialize(lines);
+
             var mpt = await repository!.AddPaymentTransaction(pt);
 
             if ((pmr != null) && (mpt != null))
             {
                 var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, mpt.Id.ToString()!);
             }
-            
 
             var mvPt = new MVPaymentTransaction()
             {
@@ -176,6 +206,7 @@ namespace Its.Onix.Api.Services
             result.ForEach(p => 
             { 
                 p.ProcessingMessages = "";
+                p.RawInput = "";
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น

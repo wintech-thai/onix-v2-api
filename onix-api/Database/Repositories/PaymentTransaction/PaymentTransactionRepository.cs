@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.pt.Status,
                 Direction = x.pt.Direction,
                 TxAmount = x.pt.TxAmount,
+
                 PayInFeePct = x.pt.PayInFeePct,
                 PayInFee = x.pt.PayInFee,
                 PayOutFeePct = x.pt.PayOutFeePct,
@@ -49,10 +50,14 @@ namespace Its.Onix.Api.Database.Repositories
                 PayOutBankCode = x.pt.PayOutBankCode,
                 PayOutBankAccountNo = x.pt.PayOutBankAccountNo,
                 PayOutBankAccountName = x.pt.PayOutBankAccountName,
+                
                 FromBankCode = x.pt.FromBankCode,
                 FromBankAccountNo = x.pt.FromBankAccountNo,
                 FromBankAccountName = x.pt.FromBankAccountName,
+                
                 ProcessingMessages = x.pt.ProcessingMessages,
+                RawInput = x.pt.RawInput,
+                
                 CreatedDate = x.pt.CreatedDate,
                 MerchantName = x.pt.MerchantName,
                 MerchantCode = x.pt.MerchantCode,

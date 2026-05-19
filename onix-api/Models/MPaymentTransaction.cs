@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using IndexAttribute = Microsoft.EntityFrameworkCore.IndexAttribute;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Models
 {
@@ -121,6 +122,10 @@ namespace Its.Onix.Api.Models
         [Column("processing_messages")]
         public string? ProcessingMessages { get; set; } /* JSON string */
 
+        [Column("raw_input")]
+        public string? RawInput { get; set; } /* JSON string */
+
+
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
@@ -133,6 +138,10 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public List<string>? ProcessingSteps { get; set; }
+
+        [NotMapped]
+        public JsonElement RawInputObj { get; set; }
+
 
         public MPaymentTransaction()
         {
