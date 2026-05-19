@@ -19,7 +19,7 @@ hhmmss = Time.now.strftime("%H%M%S")
 ### 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/SubmitLinePaymentTxNotification/#{bankAccountId}"
 param =  {
-  PaymentAmount: 54.67, #ต้อง match กับ payment request ก่อนหน้าด้วย
+  PaymentAmount: 234.65, #ต้อง match กับ payment request ก่อนหน้าด้วย
   RemainAmount: 0.00,
   TxType: "PayIn",
   SourceBankCode: "KTB",
@@ -30,8 +30,8 @@ param =  {
 
 token = File.read(keyFile)
 
-ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
-ENV['ACCESS_TOKEN'] = token
+ENV['API_KEY'] = ENV['PAYMENT_LINE_NOTI_KEY'] # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
+#ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 

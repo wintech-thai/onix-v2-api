@@ -229,6 +229,11 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.RefId1!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.RefId2!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.GeneratedAmountStr!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinBankCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinBankAccountNo!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinBankAccountName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinPromptPayId!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

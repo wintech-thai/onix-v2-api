@@ -36,26 +36,35 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.pt.Status,
                 Direction = x.pt.Direction,
                 TxAmount = x.pt.TxAmount,
+                TxAmountDecimal = x.pt.TxAmountDecimal,
+
                 PayInFeePct = x.pt.PayInFeePct,
                 PayInFee = x.pt.PayInFee,
+                PayInFeeDecimal = x.pt.PayInFeeDecimal,
+                PayInTotalAmount = x.pt.PayInTotalAmount,
+                PayInTotalAmountDecimal = x.pt.PayInTotalAmountDecimal,
+                PayInBankAccountId = x.pt.PayInBankAccountId,
+                PayInBankCode = x.pt.PayInBankCode,
+                PayInBankAccountNo = x.pt.PayInBankAccountNo,
+                PayInBankAccountName = x.pt.PayInBankAccountName,
+
                 PayOutFeePct = x.pt.PayOutFeePct,
                 PayOutFee = x.pt.PayOutFee,
-                PayInTotalAmount = x.pt.PayInTotalAmount,
                 PayOutTotalAmount = x.pt.PayOutTotalAmount,
-                PayInBankAccountId = x.pt.OrgId,
-                PayInBankCode = x.pt.OrgId,
-                PayInBankAccountNo = x.pt.OrgId,
-                PayInBankAccountName = x.pt.OrgId,
-                PayOutBankCode = x.pt.OrgId,
-                PayOutBankAccountNo = x.pt.OrgId,
-                PayOutBankAccountName = x.pt.OrgId,
-                FromBankCode = x.pt.OrgId,
-                FromBankAccountNo = x.pt.OrgId,
-                FromBankAccountName = x.pt.OrgId,
-                ProcessingMessages = x.pt.OrgId,
+                PayOutBankCode = x.pt.PayOutBankCode,
+                PayOutBankAccountNo = x.pt.PayOutBankAccountNo,
+                PayOutBankAccountName = x.pt.PayOutBankAccountName,
+
+                FromBankCode = x.pt.FromBankCode,
+                FromBankAccountNo = x.pt.FromBankAccountNo,
+                FromBankAccountName = x.pt.FromBankAccountName,
+                
+                ProcessingMessages = x.pt.ProcessingMessages,
+                RawInput = x.pt.RawInput,
+                
                 CreatedDate = x.pt.CreatedDate,
-                MerchantName = x.pt.OrgId,
-                MerchantCode = x.pt.OrgId,
+                MerchantName = x.pt.MerchantName,
+                MerchantCode = x.pt.MerchantCode,
             });
         }
 
@@ -147,6 +156,9 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.MerchantName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayInBankCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayInBankAccountNo!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayInBankAccountName!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
