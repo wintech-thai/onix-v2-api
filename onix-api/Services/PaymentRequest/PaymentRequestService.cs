@@ -350,7 +350,7 @@ namespace Its.Onix.Api.Services
                 Type = pr.Direction,
                 Status = pr.Status,
                 RequestedAmount = pr.RequestedAmount,
-                GeneratedAmount = pr.RequestedAmount, //ตรงนี้ต้อง random ทศนิยม
+                GeneratedAmount = pr.GeneratedAmount, //ตรงนี้ต้อง random ทศนิยม
                 Currency = pr.Currency,
                 QrCodeImage = qrResult.Base64Image,
                 QrCode = qrResult.QrPayload,
