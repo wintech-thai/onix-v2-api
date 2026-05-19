@@ -16,7 +16,7 @@ keyFile = ".token"
 ### 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactions"
 param =  {
-  FullTextSearch: "Seubpong",
+  FullTextSearch: "334.84",
 }
 
 token = File.read(keyFile)
