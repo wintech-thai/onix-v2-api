@@ -156,6 +156,9 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.MerchantName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayInBankCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayInBankAccountNo!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayInBankAccountName!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
