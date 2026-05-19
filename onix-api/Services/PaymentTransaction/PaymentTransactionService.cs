@@ -177,7 +177,7 @@ namespace Its.Onix.Api.Services
             }
 
             //pt.RawInput = JsonSerializer.Serialize(paymentNotiLine);
-            //pt.ProcessingMessages = JsonSerializer.Serialize(lines);
+            pt.ProcessingMessages = JsonSerializer.Serialize(lines);
 
             var mpt = await repository!.AddPaymentTransaction(pt);
 
