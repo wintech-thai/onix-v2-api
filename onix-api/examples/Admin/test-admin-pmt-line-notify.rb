@@ -12,14 +12,14 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-bankAccountId = 'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
+bankAccountId = '00c52e50-15cc-429d-9ec4-ab93afc99057' #'a0ebc677-6aa3-4454-9e7e-ee1aa6361e4b'
 
 hhmmss = Time.now.strftime("%H%M%S")
 
 ### 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/SubmitLinePaymentTxNotification/#{bankAccountId}"
 param =  {
-  PaymentAmount: 234.65, #ต้อง match กับ payment request ก่อนหน้าด้วย
+  PaymentAmount: 435.76, #ต้อง match กับ payment request ก่อนหน้าด้วย
   RemainAmount: 0.00,
   TxType: "PayIn",
   SourceBankCode: "KTB",

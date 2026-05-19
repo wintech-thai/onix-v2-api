@@ -61,6 +61,8 @@ namespace Its.Onix.Api.Models
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
+        [Column("random_decimal")]
+        public bool? RandomDecimal { get; set; } //Active, Pending, Disabled
 
         [NotMapped]
         public int? PayInBankAccountCount { get; set; }
@@ -73,6 +75,7 @@ namespace Its.Onix.Api.Models
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
+            RandomDecimal = true;
         }
     }
 }

@@ -88,6 +88,33 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant)
+        {
+            var amt = paymentRequest.RequestedAmount;
+            if (amt == null)
+            {
+                return 0;
+            }
+            
+            if (merchant.RandomDecimal != true)
+            {
+                //ไม่ต้องปรับอะไรทั้งนั้น
+                return amt;
+            }
+
+            // เอาเฉพาะเลขหน้าทศนิยม
+            var integerPart = Math.Truncate(amt.Value);
+
+            // random ทศนิยม 01-99
+            var random = new Random();
+            var decimalPart = random.Next(1, 100);
+
+            // ประกอบกลับเป็นจำนวนใหม่ เช่น 190 + 0.78 = 190.78
+            var newAmt = integerPart + (decimalPart / 100.0);
+
+            return Math.Round(newAmt, 2);
+        }
+
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
@@ -141,10 +168,20 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Validate ว่า amount เกิน range ของ merchant มั้ย
+            //Validate ว่า amount เกิน range ของ merchant มั้ย
+            var minAmt = merchant.PayinMinAmount;
+            var maxAmt = merchant.PayinMaxAmount;
+            var requestAmt = paymentRequest.RequestedAmount;
 
-            //TODO : implement logic สำหรับสร้างจุดทศนิยมตรงนี้
-            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+            if ((requestAmt < minAmt) || (requestAmt > maxAmt))
+            {
+                r.Status = "ERROR_VALUE_NOT_IN_RANGE";
+                r.Description = $"Amount [{requestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
+
+                return r;
+            }
+
+            paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant);
 
             var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest);
             if (bnkAcct == null)
