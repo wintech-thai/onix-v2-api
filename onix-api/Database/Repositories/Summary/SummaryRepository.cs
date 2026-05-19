@@ -28,7 +28,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MAggregateData>> GetMerchantCountByStatus(VMSummary param)
         {
-            var result = await context!.Merchants!
+            var result = await context!.Merchants!.AsExpandable()
                 .Where(IsOrgMatchPredicate<MMerchant>())
                 .GroupBy(x => x.Status)
                 .Select(g => new MAggregateData()
@@ -42,7 +42,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MAggregateData>> GetMerchantCount(VMSummary param)
         {
-            var result = await context!.Merchants!
+            var result = await context!.Merchants!.AsExpandable()
                 .Where(IsOrgMatchPredicate<MMerchant>())
                 .GroupBy(x => 1)
                 .Select(g => new MAggregateData()
