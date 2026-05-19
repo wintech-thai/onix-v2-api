@@ -176,7 +176,7 @@ namespace Its.Onix.Api.Services
                 pt.MerchantId = pmr.MerchantId;
             }
 
-            //pt.RawInput = JsonSerializer.Serialize(paymentNotiLine);
+            pt.RawInput = "{}"; //JsonSerializer.Serialize(paymentNotiLine);
             pt.ProcessingMessages = JsonSerializer.Serialize(lines);
 
             var mpt = await repository!.AddPaymentTransaction(pt);
