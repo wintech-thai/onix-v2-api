@@ -23,7 +23,12 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var query =
                 from pt in context!.PaymentTransactions
-                select new { pt };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+
+                join mc in context.Merchants!
+                    on pt.MerchantId equals mc.Id.ToString() into merchants
+                from merchant in merchants.DefaultIfEmpty()
+
+                select new { pt, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MPaymentTransaction
             {
                 Id = x.pt.Id,
@@ -61,10 +66,11 @@ namespace Its.Onix.Api.Database.Repositories
                 
                 ProcessingMessages = x.pt.ProcessingMessages,
                 RawInput = x.pt.RawInput,
-                
+
                 CreatedDate = x.pt.CreatedDate,
-                MerchantName = x.pt.MerchantName,
-                MerchantCode = x.pt.MerchantCode,
+                MerchantName = x.merchant.Name,
+                MerchantCode = x.merchant.Code,
+                TxAmountStr = x.pt.TxAmountDecimal.ToString(),
             });
         }
 
@@ -159,6 +165,10 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.PayInBankCode!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PayInBankAccountNo!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PayInBankAccountName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.TxAmountStr!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.FromBankCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.FromBankAccountNo!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.FromBankAccountName!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

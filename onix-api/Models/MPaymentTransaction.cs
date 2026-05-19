@@ -142,6 +142,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public JsonElement? RawInputObj { get; set; }
 
+        [NotMapped]
+        public string? TxAmountStr { get; set; } //เอาไว้สำหรับ query
+
 
         public MPaymentTransaction()
         {
