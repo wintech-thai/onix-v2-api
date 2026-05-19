@@ -105,7 +105,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetPaymentTransactionCount(VMPaymentTransaction param)
         {
             var predicate = PaymentTransactionPredicate(param!);
-            var result = await context!.PaymentTransactions!.Where(predicate).AsExpandable().CountAsync();
+            var result = await GetPaymentTransactionSelection().Where(predicate).AsExpandable().CountAsync();
 
             return result;
         }
