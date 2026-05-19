@@ -88,6 +88,34 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant)
+        {
+            var amt = paymentRequest.RequestedAmount;
+            if (amt == null)
+            {
+                return 0;
+            }
+            
+            if (merchant.RandomDecimal == false)
+            {
+                //ไม่ต้องปรับอะไรทั้งนั้น
+                return amt;
+            }
+
+            // merchant.RandomDecimal is true or null
+            // เอาเฉพาะเลขหน้าทศนิยม
+            var integerPart = Math.Truncate(amt.Value);
+
+            // random ทศนิยม 01-99
+            var random = new Random();
+            var decimalPart = random.Next(1, 100);
+
+            // ประกอบกลับเป็นจำนวนใหม่ เช่น 190 + 0.78 = 190.78
+            var newAmt = integerPart + (decimalPart / 100.0);
+
+            return Math.Round(newAmt, 2);
+        }
+
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
@@ -141,10 +169,20 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Validate ว่า amount เกิน range ของ merchant มั้ย
+            //Validate ว่า amount เกิน range ของ merchant มั้ย
+            var minAmt = merchant.PayinMinAmount;
+            var maxAmt = merchant.PayinMaxAmount;
+            var requestAmt = paymentRequest.RequestedAmount;
 
-            //TODO : implement logic สำหรับสร้างจุดทศนิยมตรงนี้
-            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+            if ((requestAmt < minAmt) || (requestAmt > maxAmt))
+            {
+                r.Status = "ERROR_VALUE_NOT_IN_RANGE";
+                r.Description = $"Amount [{requestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
+
+                return r;
+            }
+
+            paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant);
 
             var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest);
             if (bnkAcct == null)
@@ -194,7 +232,6 @@ namespace Its.Onix.Api.Services
             //   2.1 ยอดรวมต่อวัน
             //   2.2 เป็น bank account ของ merchant นั้นหรือไม่ ดูจากว่าเป็น global หรือ selected
             //   2.3 bank account นั้น active อยู่หรือไม่ 
-            //   2.4 จำนวนเงินที่กรอก อยู่ใน range ที่ allow ของ bank account นั้น ๆ หรือไม่
             //   2.5 ดู bank account ที่ match SelectedPayInBankAccountId มั้ยถ้า SelectedPayInBankAccountId ไม่เป็น null or empty
             //       2.5.1 อันนี้ทำเพื่อให้ผู้ใช้ระบุ PayIn bank account ID เข้ามาเองเลย
             //3. เลือกตัวแรกที่เงื่อนไขผ่าน
@@ -313,7 +350,7 @@ namespace Its.Onix.Api.Services
                 Type = pr.Direction,
                 Status = pr.Status,
                 RequestedAmount = pr.RequestedAmount,
-                GeneratedAmount = pr.RequestedAmount, //ตรงนี้ต้อง random ทศนิยม
+                GeneratedAmount = pr.GeneratedAmount, //ตรงนี้ต้อง random ทศนิยม
                 Currency = pr.Currency,
                 QrCodeImage = qrResult.Base64Image,
                 QrCode = qrResult.QrPayload,
