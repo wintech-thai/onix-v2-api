@@ -254,6 +254,7 @@ namespace Its.Onix.Api.Services
 
             //ตรงนี้จะได้ balance ที่ลดหรือเพิ่มแล้ว
             tx.CurrentBalance = currBal.BalanceEnd;
+            tx.CurrentBalanceDecimal = currBal.BalanceEndDecimal;
             tx.TxType = -1;
             var result = await repository!.AddPointTxWithBalance(tx, currBal, dailyBal);
 
