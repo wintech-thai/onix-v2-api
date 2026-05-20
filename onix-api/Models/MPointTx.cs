@@ -64,6 +64,8 @@ namespace Its.Onix.Api.Models
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
+            TxAmount = 0;
+            TxAmountDecimal = 0;
         }
     }
 }
