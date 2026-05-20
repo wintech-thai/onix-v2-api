@@ -14,10 +14,8 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactions"
-param =  {
-  FullTextSearch: "334.84",
-}
+apiUrl = "admin-api/AdminSummary/org/global/action/GetMerchantSummary"
+param = {}
 
 token = File.read(keyFile)
 
@@ -25,11 +23,6 @@ ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเ
 ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
-
-result = make_request(:post, apiUrl, param)
-puts(result)
-
-apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactionCount"
 
 result = make_request(:post, apiUrl, param)
 puts(result)

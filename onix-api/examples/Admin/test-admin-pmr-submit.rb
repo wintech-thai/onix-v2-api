@@ -29,7 +29,7 @@ param =  {
   BankCode: "SCB",
   BankAccountNo: "",
   BankAccountName: "",
-  RequestedAmount: 125,
+  RequestedAmount: 325,
   QrProvider: "PP",
   Tags: "testing",
   #SelectedPayInBankAccountId:

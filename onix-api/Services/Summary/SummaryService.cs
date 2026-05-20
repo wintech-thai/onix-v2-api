@@ -1,0 +1,37 @@
+using Its.Onix.Api.Database.Repositories;
+using Its.Onix.Api.ViewsModels;
+using Microsoft.IdentityModel.Tokens;
+
+namespace Its.Onix.Api.Services
+{
+    public class SummaryService : BaseService, ISummaryService
+    {
+        private readonly ISummaryRepository _repo;
+
+        public SummaryService(ISummaryRepository repo)
+        {
+            _repo = repo;
+        }
+
+        public async Task<MerchantSummary> GetMerchantSummary(string orgId, VMSummary param)
+        {
+            _repo.SetCustomOrgId(orgId);
+
+            var result = new MerchantSummary
+            {
+                MerchantCount = 0
+            };
+
+            var summ1 = await _repo.GetMerchantCount(param);
+            if (!summ1.IsNullOrEmpty())
+            {
+                var t = summ1[0];
+                result.MerchantCount = (int) t.AggregateCount1!;
+            }
+
+            result.MerchantCountByStatus = await _repo.GetMerchantCountByStatus(param);
+
+            return result;
+        }
+    }
+}

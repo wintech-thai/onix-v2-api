@@ -9,7 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("Merchants")]
 
     [Index(nameof(OrgId))]
-    public class MMerchant
+    public class MMerchant : IOrgEntity
     {
         [Key]
         [Column("merchant_id")]
