@@ -31,8 +31,17 @@ namespace Its.Onix.Api.Models
         [Column("customer_id")]
         public string? CustomerId { get; set; }
 
+
+        [Column("merchant_id")]
+        public string? MerchantId { get; set; }
+
+
         [Column("point_balance")]
         public long? PointBalance { get; set; }
+
+        [Column("point_balance_decimal")]
+        public decimal? PointBalanceDecimal { get; set; }
+
 
         //System fields
         [Column("created_date")]

@@ -1,6 +1,6 @@
+using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
-using LinqKit;
 using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
@@ -93,6 +93,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 //update ไปที่ Items ด้วย
                 wallet!.PointBalance = bal.BalanceEnd;
+                wallet!.PointBalanceDecimal = bal.BalanceEndDecimal;
 
                 customerId = wallet.CustomerId;
             }
@@ -125,6 +126,11 @@ namespace Its.Onix.Api.Database.Repositories
                 result.TxOut = bal.TxOut;
                 result.BalanceBegin = bal.BalanceBegin;
                 result.BalanceEnd = bal.BalanceEnd;
+
+                result.TxInDecimal = bal.TxInDecimal;
+                result.TxOutDecimal = bal.TxOutDecimal;
+                result.BalanceBeginDecimal = bal.BalanceBeginDecimal;
+                result.BalanceEndDecimal = bal.BalanceEndDecimal;
             }
 
             return bal;
@@ -211,6 +217,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MWallet?> GetWalletByCustomerId(string customerId)
         {
             var u = await context!.Wallets!.Where(p => p!.CustomerId!.Equals(customerId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+        public async Task<MWallet?> GetWalletByMerchantId(string merchantId)
+        {
+            var u = await context!.Wallets!.Where(p => p!.MerchantId!.Equals(merchantId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             return u;
         }
 
