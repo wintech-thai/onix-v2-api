@@ -185,7 +185,7 @@ namespace Its.Onix.Api.Services
             else
             {
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
-                var ba = await _bankAccountRepo.GetBankAccountById("global");
+                var ba = await _bankAccountRepo.GetBankAccountById(bankAccountId);
                 if (ba == null)
                 {
                     lines.Add($"STEP7 : Info -> Unable to found bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
