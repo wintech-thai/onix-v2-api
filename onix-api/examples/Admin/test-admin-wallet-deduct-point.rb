@@ -21,7 +21,7 @@ param = {
   Tags: "ทดสอบ",
   Description: "ทดสอบลดยอด",
   TxAmount: 10, #เอาแต่จำนวนเต็ม
-  TxAmountDecimal: 10
+  TxAmountDecimal: 10.10
 }
 
 token = File.read(keyFile)
