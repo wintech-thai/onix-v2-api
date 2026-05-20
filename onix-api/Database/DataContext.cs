@@ -53,6 +53,8 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MBankAccountMerchant>? BankAccountMerchants { get; set; }
     public DbSet<MPaymentRequest>? PaymentRequests { get; set; }
     public DbSet<MPaymentTransaction>? PaymentTransactions { get; set; }
+    public DbSet<MWebhookConfig>? WebhookConfigs { get; set; }
+
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -195,5 +197,11 @@ public class DataContext : DbContext, IDataContext
             .HasIndex(t => new { t.OrgId, t.RefId }).IsUnique();
 
         modelBuilder.Entity<MPaymentTransaction>();
+
+
+        modelBuilder.Entity<MWebhookConfig>()
+            .HasIndex(t => new { t.OrgId, t.EventName }).IsUnique();
+        modelBuilder.Entity<MWebhookConfig>()
+            .HasIndex(t => new { t.MerchantId, t.EventName }).IsUnique();
     }
 }

@@ -46,6 +46,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MBankAccountMerchant>? BankAccountMerchants { get; set; }
         public DbSet<MPaymentRequest>? PaymentRequests { get; set; }
         public DbSet<MPaymentTransaction>? PaymentTransactions { get; set; }
+        public DbSet<MWebhookConfig>? WebhookConfigs { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

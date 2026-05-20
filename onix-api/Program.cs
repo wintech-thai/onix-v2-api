@@ -108,6 +108,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPaymentRequestService, PaymentRequestService>();
             builder.Services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
             builder.Services.AddScoped<ISummaryService, SummaryService>();
+            builder.Services.AddScoped<IWebhookConfigService, WebhookConfigService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -150,6 +151,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPaymentRequestRepository, PaymentRequestRepository>();
             builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
             builder.Services.AddScoped<ISummaryRepository, SummaryRepository>();
+            builder.Services.AddScoped<IWebhookConfigRepository, WebhookConfigRepository>();
 
 
             builder.Services.AddAuthentication("BasicOrBearer")
