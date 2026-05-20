@@ -11,11 +11,16 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPaymentTransactionRepository? repository = null;
         private readonly IPaymentRequestRepository? _paymentRequestRepo = null;
+        private readonly IBankAccountRepository? _bankAccountRepo = null;
 
-        public PaymentTransactionService(IPaymentTransactionRepository repo, IPaymentRequestRepository paymentRequestRepo) : base()
+        public PaymentTransactionService(
+            IPaymentTransactionRepository repo, 
+            IPaymentRequestRepository paymentRequestRepo,
+            IBankAccountRepository bankAccountRepo) : base()
         {
             repository = repo;
             _paymentRequestRepo = paymentRequestRepo;
+            _bankAccountRepo = bankAccountRepo;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)
@@ -98,6 +103,7 @@ namespace Its.Onix.Api.Services
         {
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
+            _bankAccountRepo!.SetCustomOrgId("global");
 
             var prParam = new VMPaymentRequest()
             {
@@ -145,6 +151,7 @@ namespace Its.Onix.Api.Services
             {
                 Status = "UnIdentified",
                 Direction = "PayIn",
+                Currency = "THB",
                 TxAmount = (double) paymentNotiLine.PaymentAmount!,
                 TxAmountDecimal = paymentNotiLine.PaymentAmount,
                 FromBankAccountNo = paymentNotiLine.SourceBankAccountNo,
@@ -174,6 +181,24 @@ namespace Its.Onix.Api.Services
                 pt.MerchantId = pmr.MerchantId;
 
                 lines.Add($"STEP5 : Info -> Found TxAmount=[{pt.TxAmountDecimal}], PayInFeePct=[{pmr.PayInFeePct}], PayInFee=[{pt.PayInFeeDecimal}], PayInTotal=[{pt.PayInTotalAmountDecimal}]");
+            }
+            else
+            {
+                lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
+                var ba = await _bankAccountRepo.GetBankAccountById("global");
+                if (ba == null)
+                {
+                    lines.Add($"STEP7 : Info -> Unable to found bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
+                }
+                else
+                {
+                    lines.Add($"STEP8 : Info -> Only able to identify bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
+
+                    pt.PayInBankAccountId = bankAccountId;
+                    pt.PayInBankCode = ba.BankCode;
+                    pt.PayInBankAccountNo = ba.AccountNumber;
+                    pt.PayInBankAccountName = ba.AccountName;
+                }
             }
 
             pt.RawInput = JsonSerializer.Serialize(paymentNotiLine); //"{}";
