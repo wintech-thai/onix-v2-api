@@ -28,8 +28,13 @@ namespace Its.Onix.Api.Models
         [Column("description")]
         public string? Description { get; set; }
 
+
         [Column("tx_amount")]
         public long? TxAmount { get; set; } /* Point tx amount */
+
+        [Column("tx_amount_decimal")]
+        public decimal? TxAmountDecimal { get; set; } /* Point tx amount */
+
 
         [Column("tx_type")]
         public int? TxType { get; set; } /* 1=IN, 2=OUT */
@@ -38,8 +43,14 @@ namespace Its.Onix.Api.Models
         [Column("current_balance")]
         public long? CurrentBalance { get; set; }
 
+        [Column("current_balance_decimal")]
+        public decimal? CurrentBalanceDecimal { get; set; }
+
         [Column("previous_balance")]
         public long? PreviousBalance { get; set; }
+
+        [Column("previous_balance_decimal")]
+        public decimal? PreviousBalanceDecimal { get; set; }
 
 
         //System fields

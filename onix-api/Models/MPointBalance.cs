@@ -34,6 +34,7 @@ namespace Its.Onix.Api.Models
         [Column("balance_date_key")] //000000 for current balance
         public string? BalanceDateKey { get; set; }
 
+
         [Column("tx_in")]
         public long? TxIn { get; set; }
 
@@ -45,6 +46,20 @@ namespace Its.Onix.Api.Models
 
         [Column("balance_end")]
         public long? BalanceEnd { get; set; }
+
+
+
+        [Column("tx_in_decimal")]
+        public decimal? TxInDecimal { get; set; }
+
+        [Column("tx_out_decimal")]
+        public decimal? TxOutDecimal { get; set; }
+
+        [Column("balance_begin_decimal")]
+        public decimal? BalanceBeginDecimal { get; set; }
+
+        [Column("balance_end_decimal")]
+        public decimal? BalanceEndDecimal { get; set; }
 
 
         //System fields

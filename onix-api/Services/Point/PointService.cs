@@ -41,6 +41,12 @@ namespace Its.Onix.Api.Services
                     TxOut = 0,
                     BalanceBegin = 0,
                     BalanceEnd = 0,
+
+                    TxInDecimal = 0,
+                    TxOutDecimal = 0,
+                    BalanceBeginDecimal = 0,
+                    BalanceEndDecimal = 0,
+
                     IsNew = true,
                 };
             }
@@ -52,12 +58,18 @@ namespace Its.Onix.Api.Services
             return bal;
         }
 
-        private async Task<MPointBalance> GetDailyBalance(string walletId, long? currentAmt)
+        private async Task<MPointBalance> GetDailyBalance(string walletId, long? currentAmt, decimal? currentAmtDecimal)
         {
             var amt = currentAmt;
             if (amt == null)
             {
                 amt = 0;
+            }
+
+            var amtDecimal = currentAmtDecimal;
+            if (amtDecimal == null)
+            {
+                amtDecimal = 0;
             }
 
             var dateString = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -82,6 +94,12 @@ namespace Its.Onix.Api.Services
                     TxOut = 0,
                     BalanceBegin = amt,
                     BalanceEnd = amt,
+
+                    TxInDecimal = 0,
+                    TxOutDecimal = 0,
+                    BalanceBeginDecimal = amtDecimal,
+                    BalanceEndDecimal = amtDecimal,
+
                     IsNew = true,
                 };
             }
@@ -112,27 +130,51 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (tx.TxAmountDecimal == null || tx.TxAmountDecimal < 0)
+            {
+                r.Status = "INVALID_TX_AMOUNT_DECIMAL";
+                r.Description = "TxAmount must be greater than 0 for point addition!!!";
+
+                return r;
+            }
+
+
             var txAmt = tx.TxAmount;
+            var txAmtDecimal = tx.TxAmountDecimal;
             var currBal = await GetCurrentBalance(tx.WalletId!);
 
-            //เอา balance ปัจจุบันมาก่อน
-
             var previousBal = currBal.BalanceEnd;
-            tx.PreviousBalance = previousBal;
+            var previousBalDecimal = currBal.BalanceEndDecimal;
 
+            //เอา balance ปัจจุบันมาก่อน
+            var dailyBal = await GetDailyBalance(tx.WalletId!, previousBal, previousBalDecimal);
+
+            // Legacy type Long
+            tx.PreviousBalance = previousBal;
             currBal.TxIn = currBal.TxIn + txAmt;
             currBal.BalanceEnd = currBal.BalanceEnd + txAmt;
             currBal.BalanceDate = DateTime.UtcNow;
 
-            var dailyBal = await GetDailyBalance(tx.WalletId!, previousBal);
             dailyBal.TxIn = dailyBal.TxIn + txAmt;
             dailyBal.BalanceEnd = dailyBal.BalanceEnd + txAmt;
             dailyBal.BalanceDate = DateTime.UtcNow;
+
+            // New type Decimal
+            tx.PreviousBalanceDecimal = previousBalDecimal;
+            currBal.TxInDecimal = currBal.TxInDecimal + txAmtDecimal;
+            currBal.BalanceEndDecimal = currBal.BalanceEndDecimal + txAmtDecimal;
+            currBal.BalanceDate = DateTime.UtcNow;
+            
+            dailyBal.TxInDecimal = dailyBal.TxInDecimal + txAmtDecimal;
+            dailyBal.BalanceEndDecimal = dailyBal.BalanceEndDecimal + txAmtDecimal;
+            dailyBal.BalanceDate = DateTime.UtcNow;
+
 
             tx.TxType = 1;
 
             //ตรงนี้จะได้ balance ที่ลดหรือเพิ่มแล้ว
             tx.CurrentBalance = currBal.BalanceEnd;
+            tx.CurrentBalanceDecimal = currBal.BalanceEndDecimal;
             var result = await repository!.AddPointTxWithBalance(tx, currBal, dailyBal);
 
             r.Status = "OK";
@@ -161,31 +203,58 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (tx.TxAmountDecimal == null || tx.TxAmountDecimal < 0)
+            {
+                r.Status = "INVALID_TX_AMOUNT_DECIMAL";
+                r.Description = "TxAmountDecimal must be greater than 0 for point deduction!!!";
+
+                return r;
+            }
+
+
             var txAmt = tx.TxAmount;
+            var txAmtDecimal = tx.TxAmountDecimal;
             var currBal = await GetCurrentBalance(tx.WalletId!);
 
             //เอา balance ปัจจุบันมาก่อน
             var previousBal = currBal.BalanceEnd;
-            tx.PreviousBalance = previousBal;
+            var previousBalDecimal = currBal.BalanceEndDecimal;
+            var dailyBal = await GetDailyBalance(tx.WalletId!, previousBal, previousBalDecimal);
 
+            tx.PreviousBalance = previousBal;
+            tx.PreviousBalanceDecimal = previousBalDecimal;
+            currBal.BalanceDate = DateTime.UtcNow;
+            dailyBal.BalanceDate = DateTime.UtcNow;
+
+            //Legacy type Long
             currBal.TxOut = currBal.TxOut + txAmt;
             currBal.BalanceEnd = currBal.BalanceEnd - txAmt;
-            currBal.BalanceDate = DateTime.UtcNow;
-
             if (currBal.BalanceEnd < 0)
             {
                 r.Status = "INVALID_BALANCE_LESS_THAN_ZERO";
                 r.Description = "Balance cannot be less than 0!!!";
                 return r;
             }
-
-            var dailyBal = await GetDailyBalance(tx.WalletId!, previousBal);
             dailyBal.TxOut = dailyBal.TxOut + txAmt;
             dailyBal.BalanceEnd = dailyBal.BalanceEnd - txAmt;
-            dailyBal.BalanceDate = DateTime.UtcNow;
+            
+
+            //New type Decimal
+            currBal.TxOutDecimal = currBal.TxOutDecimal + txAmtDecimal;
+            currBal.BalanceEndDecimal = currBal.BalanceEndDecimal - txAmtDecimal;
+            if (currBal.BalanceEndDecimal < 0)
+            {
+                r.Status = "INVALID_BALANCE_LESS_THAN_ZERO_DECIMAL";
+                r.Description = "Balance (decimal) cannot be less than 0!!!";
+                return r;
+            }
+            dailyBal.TxOutDecimal = dailyBal.TxOutDecimal + txAmtDecimal;
+            dailyBal.BalanceEndDecimal = dailyBal.BalanceEndDecimal - txAmtDecimal;
+
 
             //ตรงนี้จะได้ balance ที่ลดหรือเพิ่มแล้ว
             tx.CurrentBalance = currBal.BalanceEnd;
+            tx.CurrentBalanceDecimal = currBal.BalanceEndDecimal;
             tx.TxType = -1;
             var result = await repository!.AddPointTxWithBalance(tx, currBal, dailyBal);
 
@@ -266,9 +335,11 @@ namespace Its.Onix.Api.Services
 
         public async Task<MVWallet> AddWallet(string orgId, MWallet wallet)
         {
-            var r = new MVWallet();
-            r.Status = "OK";
-            r.Description = "Success";
+            var r = new MVWallet
+            {
+                Status = "OK",
+                Description = "Success"
+            };
 
             repository!.SetCustomOrgId(orgId);
 
@@ -325,6 +396,35 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"Wallet not found for customer ID [{customerId}], organization [{orgId}]";
+            }
+
+            r.Wallet = result;
+            return r;
+        }
+
+        public async Task<MVWallet?> GetWalletByMerchantId(string orgId, string merchantId)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(merchantId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Merchant ID [{merchantId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetWalletByMerchantId(merchantId);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Wallet not found for merchant ID [{merchantId}], organization [{orgId}]";
             }
 
             r.Wallet = result;

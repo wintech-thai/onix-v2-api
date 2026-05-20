@@ -11,17 +11,20 @@ namespace Its.Onix.Api.Services
         private readonly IMerchantRepository? repository = null;
         private readonly IOrganizationRepository? _orgRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
+        private readonly IPointRepository? _pointRepo = null;
         //private readonly IRedisHelper _redis;
 
         public MerchantService(IMerchantRepository repo,
             IApiKeyRepository apiKeyRepo,
             IBankAccountRepository bankAccountRepo,
+            IPointRepository pointRepo,
             //IRedisHelper redis,
             IOrganizationRepository orgRepo) : base()
         {
             repository = repo;
             _orgRepo = orgRepo;
            // _redis = redis;
+           _pointRepo = pointRepo;
            _bankAccountRepo = bankAccountRepo;
         }
 
@@ -50,6 +53,24 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Merchant ID [{merchantId}] not found for the organization [{orgId}]";
 
                 return r;
+            }
+
+            _pointRepo!.SetCustomOrgId(result.OrgId!); //เอา OrgId ของ merchant มาใช้ได้เลย
+            var wallet = await _pointRepo!.GetWalletByMerchantId(merchantId);
+            if (wallet == null)
+            {
+                //ยังไม่เคยสร้าง wallet มาก่อนก็สร้างให้เลย
+                var w = new MWallet()
+                {
+                    Name = $"THB:{merchantId}",
+                    MerchantId = merchantId,
+                    PointBalance = 0,
+                    PointBalanceDecimal = 0,
+                    Tags = $"MerchantName={result.Name}",
+                    Description = $"Auto generated wallet for THB currency for [{result.Name}]",
+                };
+
+                var _ = await _pointRepo.AddWallet(w);
             }
 
             r.Merchant = result;
@@ -104,6 +125,30 @@ namespace Its.Onix.Api.Services
             }
 
             var result = await repository!.AddMerchant(merchant);
+
+            if (result != null)
+            {
+                var merchantId = result.Id.ToString()!;
+
+                //เพิ่ม wallet ให้อัตโนมัติ
+                _pointRepo!.SetCustomOrgId(result.OrgId!); //เอา OrgId ของ merchant มาใช้ได้เลย
+                var wallet = await _pointRepo!.GetWalletByMerchantId(merchantId);
+                if (wallet == null)
+                {
+                    //ยังไม่เคยสร้าง wallet มาก่อนก็สร้างให้เลย
+                    var w = new MWallet()
+                    {
+                        Name = $"THB:{merchantId}",
+                        MerchantId = merchantId,
+                        PointBalance = 0,
+                        PointBalanceDecimal = 0,
+                        Tags = $"MerchantName={result.Name}",
+                        Description = $"Auto generated wallet for THB currency for [{result.Name}]",
+                    };
+
+                    var _ = await _pointRepo.AddWallet(w);
+                }
+            }
 
             r.Merchant = result;
             return r;
