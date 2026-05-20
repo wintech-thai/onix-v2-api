@@ -107,6 +107,19 @@ namespace Its.Onix.Api.Database.Repositories
             return u;
         }
 
+        public async Task<MWebhookConfig?> UpdateWebhookConfigStatusById(string webhookConfigId, bool isEnable)
+        {
+            Guid id = Guid.Parse(webhookConfigId);
+            var existing = await context!.WebhookConfigs!.AsExpandable().Where(p => p!.WebhookId!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.IsActive = isEnable;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
         public async Task<MWebhookConfig?> UpdateWebhookConfigById(string webhookConfigId, MWebhookConfig webhookConfig)
         {
             Guid id = Guid.Parse(webhookConfigId);
@@ -117,7 +130,6 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.EventName = webhookConfig.EventName;
                 existing.EndpointUrl = webhookConfig.EndpointUrl;
                 existing.HttpMethod = webhookConfig.HttpMethod;
-                existing.IsActive = webhookConfig.IsActive;
                 existing.SecretKey = webhookConfig.SecretKey;
                 existing.SignatureAlgorithm = webhookConfig.SignatureAlgorithm;
                 existing.HeadersDefinition = webhookConfig.HeadersDefinition;

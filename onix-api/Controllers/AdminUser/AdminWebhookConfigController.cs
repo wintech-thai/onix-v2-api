@@ -72,5 +72,23 @@ namespace Prom.LPR.Api.Controllers
             var result = await svc.UpdateWebhookConfigById(orgId, webhookConfigId, request);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/EnableWebhookConfigById/{orgId}/{webhookConfigId}")]
+        public async Task<IActionResult> EnableWebhookConfigById(string orgId, string webhookConfigId)
+        {
+            var result = await svc.UpdateWebhookConfigStatusById(orgId, webhookConfigId, true);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/DisableWebhookConfigById/{orgId}/{webhookConfigId}")]
+        public async Task<IActionResult> DisableWebhookConfigById(string orgId, string webhookConfigId)
+        {
+            var result = await svc.UpdateWebhookConfigStatusById(orgId, webhookConfigId, false);
+            return Ok(result);
+        }
     }
 }

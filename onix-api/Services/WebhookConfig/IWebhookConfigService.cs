@@ -11,5 +11,6 @@ namespace Its.Onix.Api.Services
         public Task<List<MWebhookConfig>> GetWebhookConfigsByMerchantId(string orgId, string merchantId);
         public Task<int> GetWebhookConfigsCountByMerchantId(string orgId, string merchantId);
         public Task<MVWebhookConfig> UpdateWebhookConfigById(string orgId, string webhookConfigId, MWebhookConfig webhookConfig);
+        public Task<MVWebhookConfig> UpdateWebhookConfigStatusById(string orgId, string webhookConfigId, bool isEnable);
     }
 }

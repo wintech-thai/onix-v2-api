@@ -199,5 +199,39 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        public async Task<MVWebhookConfig> UpdateWebhookConfigStatusById(string orgId, string webhookConfigId, bool isEnable)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVWebhookConfig()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(webhookConfigId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Webhook config ID [{webhookConfigId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.UpdateWebhookConfigStatusById(webhookConfigId, isEnable);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Webhook config ID [{webhookConfigId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.WebhookConfig = result;
+            //ไม่ให้ส่งออกไป แต่เช็คเพิ่มเติมนะว่าไม่ได้ update กลับไปที่ DB
+            r.WebhookConfig.HeadersDefinition = "";
+
+            return r;
+        }
     }
 }

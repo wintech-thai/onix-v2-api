@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> IsEventNameExist(string name);
         public Task<List<MWebhookConfig>> GetWebhooksByMerchantId(string merchantId);
         public Task<MWebhookConfig> GetWebhookConfigByEventName(string eventName);
+        public Task<MWebhookConfig?> UpdateWebhookConfigStatusById(string webhookConfigId, bool isEnable);
         public Task<int> GetWebhookCountByMerchantId(string merchantId);
         public Task<MWebhookConfig?> DeleteWebhookConfigById(string webhookConfigId);
         public Task<MWebhookConfig?> GetWebhookConfigById(string webhookConfigId);
