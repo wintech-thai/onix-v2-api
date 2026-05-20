@@ -234,6 +234,7 @@ namespace Its.Onix.Api.Services
 
             if ((pmr != null) && (mpt != null))
             {
+                //ตรงนี้จะเป็น Identified ได้เสมอ
                 var paymentTxId = mpt.Id.ToString()!;
                 var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, paymentTxId);
 
