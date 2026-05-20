@@ -12,15 +12,18 @@ namespace Its.Onix.Api.Services
         private readonly IPaymentTransactionRepository? repository = null;
         private readonly IPaymentRequestRepository? _paymentRequestRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
+        private readonly IPointService? _pointService = null;
 
         public PaymentTransactionService(
             IPaymentTransactionRepository repo, 
             IPaymentRequestRepository paymentRequestRepo,
+            IPointService pointService,
             IBankAccountRepository bankAccountRepo) : base()
         {
             repository = repo;
             _paymentRequestRepo = paymentRequestRepo;
             _bankAccountRepo = bankAccountRepo;
+            _pointService = pointService;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)
@@ -201,22 +204,56 @@ namespace Its.Onix.Api.Services
                 }
             }
 
+            var merchantOrgId = "";
+            MVWallet? mvWallet = null;
+            if (pmr != null)
+            {
+                //ตรงนี้มีการ match merchant ได้
+                var merchantId = pmr.MerchantId!;
+                merchantOrgId = pmr.OrgId!;
+
+                //TODO : ตอนนี้มีแค่ wallet เดียวแต่ merchant, อนาคตถ้าต้องมี wallet ตาม currency ก็ต้องเปลี่ยนตรงนี้หน่อยนะ
+                mvWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
+                if (mvWallet!.Status != "OK")
+                {
+                    //TODO : ให้มี alert flag ใน Payment Tx หน่อย
+                    lines.Add($"STEP9 : Error -> No wallet found, MerchantId=[{merchantId}], MerchantOrgId=[{merchantOrgId}]");
+                }
+            }
+
             pt.RawInput = JsonSerializer.Serialize(paymentNotiLine); //"{}";
             pt.ProcessingMessages = JsonSerializer.Serialize(lines);
 
             var mpt = await repository!.AddPaymentTransaction(pt);
-
-            if ((pmr != null) && (mpt != null))
-            {
-                var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, mpt.Id.ToString()!);
-            }
-
             var mvPt = new MVPaymentTransaction()
             {
                 Status = "OK",
                 Description = "Success",
                 PaymentTransaction = mpt,
             };
+
+            if ((pmr != null) && (mpt != null))
+            {
+                var paymentTxId = mpt.Id.ToString()!;
+                var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, paymentTxId);
+
+                if (mvWallet != null)
+                {
+                    var wallet = mvWallet.Wallet;
+                    var pointTx = new MPointTx()
+                    {
+                        WalletId = wallet!.Id.ToString(),
+
+                        //TxAmount ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
+                        TxAmount =  (long)Math.Floor((decimal) pt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                        TxAmountDecimal = pt.PayInTotalAmountDecimal,
+
+                        Tags = $"PaymentTxId=[{paymentTxId}]",
+                    };
+
+                    await _pointService!.AddPoint(merchantOrgId, pointTx);
+                }
+            }
 
             return mvPt;
         }
