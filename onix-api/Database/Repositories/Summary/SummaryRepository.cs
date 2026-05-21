@@ -97,13 +97,40 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantCode = x.pmt.MerchantCode,
                 TxAmountDecimal = x.pmt.TxAmountDecimal,
                 PayInFeeDecimal = x.pmt.PayInFeeDecimal,
+                Direction = x.pmt.Direction,
             });
         }
 
-        public async Task<List<MAggregateData>> GetMerchantsPayInAmountSummary()
+        private ExpressionStarter<T> DateRangePredicate<T>(VMSummary param) where T : IOrgEntity
+        {
+            var pd = PredicateBuilder.New<T>(true);
+
+            // FromDate
+            if (param.FromDate.HasValue)
+            {
+                var fromDatePd = PredicateBuilder.New<T>(true);
+                fromDatePd = fromDatePd.And(p => p.CreatedDate >= param.FromDate.Value);
+
+                pd = pd.And(fromDatePd);
+            }
+
+            // ToDate
+            if (param.ToDate.HasValue)
+            {
+                var toDatePd = PredicateBuilder.New<T>(true);
+                toDatePd = toDatePd.And(p => p.CreatedDate <= param.ToDate.Value);
+
+                pd = pd.And(toDatePd);
+            }
+
+            return pd;
+        }
+
+        public async Task<List<MAggregateData>> GetMerchantsPayInAmountSummary(VMSummary param)
         {
             var result = await GetSelectionPaymentTx().AsExpandable()
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.Direction == "PayIn")
                 .GroupBy(x => x.MerchantCode)
                 .Select(g => new MAggregateData()
@@ -118,10 +145,11 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
-        public async Task<List<MAggregateData>> GetMerchantsPayOutAmountSummary()
+        public async Task<List<MAggregateData>> GetMerchantsPayOutAmountSummary(VMSummary param)
         {
             var result = await GetSelectionPaymentTx().AsExpandable()
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.Direction == "PayOut")
                 .GroupBy(x => x.MerchantCode)
                 .Select(g => new MAggregateData()

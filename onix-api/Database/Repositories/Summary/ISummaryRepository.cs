@@ -9,7 +9,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<List<MAggregateData>> GetMerchantCountByStatus(VMSummary param);
         public Task<List<MAggregateData>> GetMerchantCount(VMSummary param);
         public Task<List<MAggregateData>> GetMerchantsBalance();
-        public Task<List<MAggregateData>> GetMerchantsPayInAmountSummary();
-        public Task<List<MAggregateData>> GetMerchantsPayOutAmountSummary();
+        public Task<List<MAggregateData>> GetMerchantsPayInAmountSummary(VMSummary param);
+        public Task<List<MAggregateData>> GetMerchantsPayOutAmountSummary(VMSummary param);
     }
 }

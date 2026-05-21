@@ -32,8 +32,8 @@ namespace Its.Onix.Api.Services
             result.MerchantCountByStatus = await _repo.GetMerchantCountByStatus(param);
             result.MerchantsBalances = await _repo.GetMerchantsBalance();
 
-            result.MerchantsPayInSummary = await _repo.GetMerchantsPayInAmountSummary();
-            result.MerchantsPayOutSummary = await _repo.GetMerchantsPayOutAmountSummary();
+            result.MerchantsPayInSummary = await _repo.GetMerchantsPayInAmountSummary(param);
+            result.MerchantsPayOutSummary = await _repo.GetMerchantsPayOutAmountSummary(param);
 
             return result;
         }
