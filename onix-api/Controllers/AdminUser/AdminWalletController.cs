@@ -14,12 +14,16 @@ namespace Prom.LPR.Api.Controllers
     {
         private readonly IPointService svc;
         private readonly IMerchantService _merchantSvc;
+        private readonly IBankAccountService _bankAccountSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminWalletController(IPointService service, IMerchantService merchantSvc)
+        public AdminWalletController(IPointService service, 
+            IMerchantService merchantSvc,
+            IBankAccountService bankAccuntSvc)
         {
             svc = service;
             _merchantSvc = merchantSvc;
+            _bankAccountSvc = bankAccuntSvc;
         }
 
         [ExcludeFromCodeCoverage]
@@ -98,6 +102,15 @@ namespace Prom.LPR.Api.Controllers
             var merchantOrgId = mc.OrgId!;
             var result = await svc.GetWalletByMerchantId(merchantOrgId, merchantId);
 
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetWalletByBankAccountId/{bankAccountId}")]
+        public async Task<IActionResult> GetWalletByBankAccountId(string bankAccountId)
+        {
+            var result = await svc.GetWalletByBankAccountId("global", bankAccountId);
             return Ok(result);
         }
     }

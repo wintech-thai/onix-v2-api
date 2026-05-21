@@ -226,6 +226,13 @@ namespace Its.Onix.Api.Database.Repositories
             return u;
         }
 
+        public async Task<MWallet?> GetWalletByBankAccountId(string bankAccountId)
+        {
+            var u = await context!.Wallets!.Where(p => p!.BankAccountId!.Equals(bankAccountId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+
         public async Task<MWallet?> DeleteWalletById(string walletId)
         {
             Guid id = Guid.Parse(walletId);

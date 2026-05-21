@@ -35,6 +35,9 @@ namespace Its.Onix.Api.Models
         [Column("merchant_id")]
         public string? MerchantId { get; set; }
 
+        [Column("bank_account_id")]
+        public string? BankAccountId { get; set; }
+
 
         [Column("point_balance")]
         public long? PointBalance { get; set; }

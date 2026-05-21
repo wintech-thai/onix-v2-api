@@ -205,7 +205,11 @@ namespace Its.Onix.Api.Services
             }
 
             var merchantOrgId = "";
-            MVWallet? mvWallet = null;
+            var bankAccountOrgId = "global";
+
+            MVWallet? mcWallet = null;
+            MVWallet? baWallet = null;
+
             if (pmr != null)
             {
                 //ตรงนี้มีการ match merchant ได้
@@ -213,11 +217,18 @@ namespace Its.Onix.Api.Services
                 merchantOrgId = pmr.OrgId!;
 
                 //TODO : ตอนนี้มีแค่ wallet เดียวแต่ merchant, อนาคตถ้าต้องมี wallet ตาม currency ก็ต้องเปลี่ยนตรงนี้หน่อยนะ
-                mvWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
-                if (mvWallet!.Status != "OK")
+                mcWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
+                if (mcWallet!.Status != "OK")
                 {
                     //TODO : ให้มี alert flag ใน Payment Tx หน่อย
                     lines.Add($"STEP9 : Error -> No wallet found, MerchantId=[{merchantId}], MerchantOrgId=[{merchantOrgId}]");
+                }
+
+                baWallet = await _pointService!.GetWalletByBankAccountId(bankAccountOrgId, bankAccountId);
+                if (baWallet!.Status != "OK")
+                {
+                    //TODO : ให้มี alert flag ใน Payment Tx หน่อย
+                    lines.Add($"STEP10 : Error -> No wallet found, BankAccountId=[{bankAccountId}], BankAccountOrgId=[{bankAccountOrgId}]");
                 }
             }
 
@@ -238,21 +249,38 @@ namespace Its.Onix.Api.Services
                 var paymentTxId = mpt.Id.ToString()!;
                 var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, paymentTxId);
 
-                if (mvWallet != null)
+                if (mcWallet != null)
                 {
-                    var wallet = mvWallet.Wallet;
+                    var wallet = mcWallet.Wallet;
                     var pointTx = new MPointTx()
                     {
                         WalletId = wallet!.Id.ToString(),
 
-                        //TxAmount ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
                         TxAmount =  (long)Math.Floor((decimal) pt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                        //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
                         TxAmountDecimal = pt.PayInTotalAmountDecimal,
 
                         Tags = $"PaymentTxId=[{paymentTxId}]",
                     };
 
                     await _pointService!.AddPoint(merchantOrgId, pointTx);
+                }
+
+                if (baWallet != null)
+                {
+                    var wallet = baWallet.Wallet;
+                    var pointTx = new MPointTx()
+                    {
+                        WalletId = wallet!.Id.ToString(),
+
+                        TxAmount = 1, //นับจำนวนครั้งของ transaction เผื่อเอาไว้ใช้ check limit จำนวนครั้งต่อวัน
+                        //TxAmountDecimal ตรงนี้จะเป็นค่าที่ยังไม่หัก fee เพื่อนำไปเป็นยอดที่เข้า wallet
+                        TxAmountDecimal = pt.TxAmountDecimal,
+
+                        Tags = $"PaymentTxId=[{paymentTxId}]",
+                    };
+
+                    await _pointService!.AddPoint(bankAccountOrgId, pointTx);
                 }
             }
 
