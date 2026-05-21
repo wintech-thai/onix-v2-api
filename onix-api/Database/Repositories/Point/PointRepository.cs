@@ -284,7 +284,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MWallet>> GetWalletBalancesGroupByMerchantId()
         {
-            var result = await context!.Wallets!.AsExpandable()
+            var result = await context!.Wallets!
                 .GroupBy(x => new{ x.MerchantId })
                 .Select(g => new MWallet()
                 {
