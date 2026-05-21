@@ -91,10 +91,15 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var query =
                 from pmt in context!.PaymentTransactions
-                select new { pmt };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+
+                join mc in context.Merchants!
+                    on pmt.MerchantId equals mc.Id.ToString() into merchants
+                from merchant in merchants.DefaultIfEmpty()
+
+                select new { pmt, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MPaymentTransaction
             {
-                MerchantCode = x.pmt.MerchantCode,
+                MerchantCode = x.merchant.Code,
                 TxAmountDecimal = x.pmt.TxAmountDecimal,
                 PayInFeeDecimal = x.pmt.PayInFeeDecimal,
                 Direction = x.pmt.Direction,
@@ -132,6 +137,7 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
                 .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.Direction == "PayIn")
+                .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
                 .Select(g => new MAggregateData()
                 {
@@ -151,6 +157,7 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
                 .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.Direction == "PayOut")
+                .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
                 .Select(g => new MAggregateData()
                 {
