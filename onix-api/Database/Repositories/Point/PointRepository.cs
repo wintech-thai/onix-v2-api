@@ -79,14 +79,12 @@ namespace Its.Onix.Api.Database.Repositories
                 limit = param.Limit;
             }
 
-Console.WriteLine($"DEBUG3 : Limit=[{param.Limit}], Offset=[{param.Offset}]");
-Console.WriteLine($"DEBUG4 : Limit=[{limit}], Offset=[{offset}]");
+//Console.WriteLine($"DEBUG3 : Limit=[{param.Limit}], Offset=[{param.Offset}]");
+//Console.WriteLine($"DEBUG4 : Limit=[{limit}], Offset=[{offset}]");
 
             var predicate = PointTxsPredicate(param!);
             var r = await context!.PointTxs!
                 .Where(predicate)
-                .Skip(offset)
-                .Take(limit)
                 .CountAsync();
 
             return r;
