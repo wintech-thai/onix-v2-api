@@ -26,28 +26,28 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
-        public async Task<List<MAggregateData>> GetMerchantCountByStatus(VMSummary param)
+        public async Task<List<MerchantSummaryData>> GetMerchantCountByStatus(VMSummary param)
         {
             var result = await context!.Merchants!.AsExpandable()
                 .Where(IsOrgMatchPredicate<MMerchant>())
                 .GroupBy(x => x.Status)
-                .Select(g => new MAggregateData()
+                .Select(g => new MerchantSummaryData()
                 {
-                    AggregateKey1 = g.Key,
-                    AggregateCount1 = g.Count()
+                    MerchantStatus = g.Key,
+                    MerchantCount = g.Count()
                 }).ToListAsync();
 
             return result;
         }
 
-        public async Task<List<MAggregateData>> GetMerchantCount(VMSummary param)
+        public async Task<List<MerchantSummaryData>> GetMerchantCount(VMSummary param)
         {
             var result = await context!.Merchants!.AsExpandable()
                 .Where(IsOrgMatchPredicate<MMerchant>())
                 .GroupBy(x => 1)
-                .Select(g => new MAggregateData()
+                .Select(g => new MerchantSummaryData()
                 {
-                    AggregateCount1 = g.Count()
+                    MerchantCount = g.Count()
                 }).ToListAsync();
 
             return result;
@@ -70,18 +70,18 @@ namespace Its.Onix.Api.Database.Repositories
             });
         }
 
-        public async Task<List<MAggregateData>> GetMerchantsBalance()
+        public async Task<List<MerchantSummaryData>> GetMerchantsBalance()
         {
             var result = await GetSelectionWallet().AsExpandable()
                 .Where(IsOrgMatchPredicate<MWallet>())
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
-                .Select(g => new MAggregateData()
+                .Select(g => new MerchantSummaryData()
                 {
-                    AggregateKey1 = g.Key,
-                    AggregateAmount1 = g.Sum(x => x.PointBalanceDecimal)
+                    MerchantCode = g.Key,
+                    BalanceAmount = g.Sum(x => x.PointBalanceDecimal)
                 })
-                .OrderByDescending(x => x.AggregateAmount1)
+                .OrderByDescending(x => x.BalanceAmount)
                 .ToListAsync();
 
             return result;
@@ -131,7 +131,7 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
-        public async Task<List<MAggregateData>> GetMerchantsPayInAmountSummary(VMSummary param)
+        public async Task<List<MerchantSummaryData>> GetMerchantsPayInAmountSummary(VMSummary param)
         {
             var result = await GetSelectionPaymentTx().AsExpandable()
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
@@ -139,19 +139,19 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(x => x.Direction == "PayIn")
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
-                .Select(g => new MAggregateData()
+                .Select(g => new MerchantSummaryData()
                 {
-                    AggregateKey1 = g.Key,
-                    AggregateAmount1 = g.Sum(x => x.TxAmountDecimal),
-                    AggregateAmount2 = g.Sum(x => x.PayInFeeDecimal)
+                    MerchantCode = g.Key,
+                    TxAmount = g.Sum(x => x.TxAmountDecimal),
+                    FeeAmount = g.Sum(x => x.PayInFeeDecimal)
                 })
-                .OrderByDescending(x => x.AggregateAmount1)
+                .OrderByDescending(x => x.TxAmount)
                 .ToListAsync();
 
             return result;
         }
 
-        public async Task<List<MAggregateData>> GetMerchantsPayOutAmountSummary(VMSummary param)
+        public async Task<List<MerchantSummaryData>> GetMerchantsPayOutAmountSummary(VMSummary param)
         {
             var result = await GetSelectionPaymentTx().AsExpandable()
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
@@ -159,13 +159,13 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(x => x.Direction == "PayOut")
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
-                .Select(g => new MAggregateData()
+                .Select(g => new MerchantSummaryData()
                 {
-                    AggregateKey1 = g.Key,
-                    AggregateAmount1 = g.Sum(x => x.TxAmountDecimal),
-                    AggregateAmount2 = g.Sum(x => x.PayInFeeDecimal)
+                    MerchantCode = g.Key,
+                    TxAmount = g.Sum(x => x.TxAmountDecimal),
+                    FeeAmount = g.Sum(x => x.PayInFeeDecimal)
                 })
-                .OrderByDescending(x => x.AggregateAmount1)
+                .OrderByDescending(x => x.TxAmount)
                 .ToListAsync();
 
             return result;

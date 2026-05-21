@@ -26,7 +26,7 @@ namespace Its.Onix.Api.Services
             if (!summ1.IsNullOrEmpty())
             {
                 var t = summ1[0];
-                result.MerchantCount = (int) t.AggregateCount1!;
+                result.MerchantCount = (int) t.MerchantCount!;
             }
 
             result.MerchantCountByStatus = await _repo.GetMerchantCountByStatus(param);

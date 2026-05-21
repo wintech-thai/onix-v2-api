@@ -5,10 +5,10 @@ namespace Its.Onix.Api.Services
     public class MerchantSummary
     {
         public int MerchantCount { get; set; }
-        public List<MAggregateData> MerchantCountByStatus { get; set; }
-        public List<MAggregateData> MerchantsBalances { get; set; }
-        public List<MAggregateData> MerchantsPayInSummary { get; set; }
-        public List<MAggregateData> MerchantsPayOutSummary { get; set; }
+        public List<MerchantSummaryData> MerchantCountByStatus { get; set; }
+        public List<MerchantSummaryData> MerchantsBalances { get; set; }
+        public List<MerchantSummaryData> MerchantsPayInSummary { get; set; }
+        public List<MerchantSummaryData> MerchantsPayOutSummary { get; set; }
 
         public MerchantSummary()
         {
