@@ -282,6 +282,21 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
+        public async Task<List<MWallet>> GetWalletBalancesGroupByMerchantId()
+        {
+            var result = await context!.Wallets!.AsExpandable()
+                .GroupBy(x => new{ x.MerchantId })
+                .Select(g => new MWallet()
+                {
+                    MerchantId = g.Key.MerchantId,
+                    PointBalance = g.Sum(x => x.PointBalance),
+                    PointBalanceDecimal = g.Sum(x => x.PointBalanceDecimal),
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task<List<MWallet>> GetWallets(VMWallet param)
         {
             var limit = 0;
