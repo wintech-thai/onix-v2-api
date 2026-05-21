@@ -70,6 +70,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public int? PayOutBankAccountCount { get; set; }
 
+        [NotMapped]
+        public decimal? CurrentBalance { get; set; }
+
 
         public MMerchant()
         {

@@ -198,11 +198,16 @@ namespace Its.Onix.Api.Services
         public async Task<List<MMerchant>> GetMerchants(string orgId, VMMerchant param)
         {
             repository!.SetCustomOrgId(orgId);
+            _pointRepo!.SetCustomOrgId(orgId);
 
             var merchantBankAccountsAggr = await _bankAccountRepo!.GetBankAccountCountByMerchantId();
-            var dict = merchantBankAccountsAggr.ToDictionary(g => $"{g.MerchantId!}:{g.AccountCategory}", g => g.BankAccountCount);
+            var dict1 = merchantBankAccountsAggr.ToDictionary(g => $"{g.MerchantId!}:{g.AccountCategory}", g => g.BankAccountCount);
+
+            var merchantBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByMerchantId();
+            var dict2 = merchantBalanceAggr.ToDictionary(g => $"{g.MerchantId!}", g => g.PointBalanceDecimal);
 
             var merchants = await repository!.GetMerchants(param);
+
 
             foreach (var merchant in merchants)
             {
@@ -210,15 +215,21 @@ namespace Its.Onix.Api.Services
                 var payOutKey = $"{merchant.Id.ToString()}:PayOut";
 
                 merchant.PayInBankAccountCount = 0;
-                if (dict.TryGetValue(payInKey, out var payInBankAccountCount))
+                if (dict1.TryGetValue(payInKey, out var payInBankAccountCount))
                 {
                     merchant.PayInBankAccountCount = payInBankAccountCount;
                 }
 
                 merchant.PayOutBankAccountCount = 0;
-                if (dict.TryGetValue(payOutKey, out var payOutBankAccountCount))
+                if (dict1.TryGetValue(payOutKey, out var payOutBankAccountCount))
                 {
                     merchant.PayOutBankAccountCount = payOutBankAccountCount;
+                }
+
+                merchant.CurrentBalance = 0;
+                if (dict2.TryGetValue(merchant.Id.ToString()!, out var currentWalletBalance))
+                {
+                    merchant.CurrentBalance = currentWalletBalance;
                 }
             }
 
