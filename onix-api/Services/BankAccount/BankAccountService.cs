@@ -232,6 +232,24 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var cat = bankAccount.AccountCategory;
+
+            if (string.IsNullOrEmpty(bankAccount.AccountCategory))
+            {
+                r.Status = "BANK_ACCOUNT_CATEGORY_MISSING";
+                r.Description = $"Bank account category is missing!!!";
+
+                return r;
+            }
+
+            if ((cat != "PayIn") && (cat != "PayOut"))
+            {
+                r.Status = "BANK_ACCOUNT_CATEGORY_INVALID";
+                r.Description = $"Bank account category must be PayIn or PayOut !!!";
+
+                return r;
+            }
+
             if (string.IsNullOrEmpty(bankAccount.AccountName))
             {
                 r.Status = "ACCOUNT_NAME_MISSING";
