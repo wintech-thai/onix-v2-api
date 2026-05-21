@@ -9,11 +9,14 @@ namespace Its.Onix.Api.Services
     public class BankAccountService : BaseService, IBankAccountService
     {
         private readonly IBankAccountRepository? repository = null;
+        private readonly IPointRepository? _pointRepo = null;
         private readonly List<MBank> _banks;
 
-        public BankAccountService(IBankAccountRepository repo) : base()
+        public BankAccountService(IBankAccountRepository repo, IPointRepository pointRepo) : base()
         {
             repository = repo;
+            _pointRepo = pointRepo;
+
             _banks = [
                 new() 
                 { 
@@ -188,6 +191,24 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            _pointRepo!.SetCustomOrgId(result.OrgId!); //ตรงนี้จะเป็น global
+            var wallet = await _pointRepo!.GetWalletByBankAccountId(bankAccountId);
+            if (wallet == null)
+            {
+                //ยังไม่เคยสร้าง wallet มาก่อนก็สร้างให้เลย
+                var w = new MWallet()
+                {
+                    Name = $"THB:{bankAccountId}",
+                    BankAccountId = bankAccountId,
+                    PointBalance = 0,
+                    PointBalanceDecimal = 0,
+                    Tags = $"BankCode={result.BankCode}, BankAccountName={result.AccountNumber}, BankAccountName={result.AccountName}",
+                    Description = $"Auto generated wallet for THB currency for [{result.AccountName}]",
+                };
+
+                var _ = await _pointRepo.AddWallet(w);
+            }
+
             r.BankAccount = result;
 
             return r;
@@ -247,6 +268,31 @@ namespace Its.Onix.Api.Services
 
             bankAccount.Status = "Pending";
             var result = await repository!.AddBankAccount(bankAccount);
+
+
+            if (result != null)
+            {
+                var bankAccountId = result.Id.ToString()!;
+
+                //เพิ่ม wallet ให้อัตโนมัติ
+                _pointRepo!.SetCustomOrgId(result.OrgId!); //ตรงนี้จะเป็น global
+                var wallet = await _pointRepo!.GetWalletByBankAccountId(bankAccountId);
+                if (wallet == null)
+                {
+                    //ยังไม่เคยสร้าง wallet มาก่อนก็สร้างให้เลย
+                    var w = new MWallet()
+                    {
+                        Name = $"THB:{bankAccountId}",
+                        BankAccountId = bankAccountId,
+                        PointBalance = 0,
+                        PointBalanceDecimal = 0,
+                        Tags = $"BankCode={result.BankCode}, BankAccountName={result.AccountNumber}, BankAccountName={result.AccountName}",
+                        Description = $"Auto generated wallet for THB currency for [{result.AccountName}]",
+                    };
+
+                    var _ = await _pointRepo.AddWallet(w);
+                }
+            }
 
             r.BankAccount = result;
 
