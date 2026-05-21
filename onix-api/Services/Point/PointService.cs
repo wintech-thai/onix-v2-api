@@ -283,7 +283,7 @@ namespace Its.Onix.Api.Services
 
         public async Task<List<MPointTx>> GetPointTxsByWalletId(string orgId, VMPointTx param)
         {
-Console.WriteLine($"DEBUG2 : Limit=[{param.Limit}], Offset=[{param.Offset}]");
+
             repository.SetCustomOrgId(orgId);
             var result = await repository.GetPointTxsByWalletId(param);
             return result;

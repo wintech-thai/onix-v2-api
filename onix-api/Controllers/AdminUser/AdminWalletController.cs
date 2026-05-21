@@ -57,7 +57,7 @@ namespace Prom.LPR.Api.Controllers
             {
                 request.Limit = 100;
             }
-Console.WriteLine($"DEBUG1 : Limit=[{request.Limit}], Offset=[{request.Offset}]");
+
             request.WalletId = walletId;
             var result = await svc.GetPointTxsByWalletId(orgId, request);
 
