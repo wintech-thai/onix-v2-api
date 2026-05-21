@@ -10,7 +10,7 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(CustomerId))]
-    public class MWallet
+    public class MWallet : IOrgEntity
     {
         [Key]
         [Column("wallet_id")]
@@ -53,6 +53,9 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
+        [NotMapped]
+        public string? MerchantCode { get; set; }
+ 
         public MWallet()
         {
             Id = Guid.NewGuid();

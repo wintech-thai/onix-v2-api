@@ -52,5 +52,39 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result;
         }
+
+        public IQueryable<MWallet> GetSelectionWallet()
+        {
+            var query =
+                from wllet in context!.Wallets
+
+                join mc in context.Merchants!
+                    on wllet.MerchantId equals mc.Id.ToString() into merchants
+                from merchant in merchants.DefaultIfEmpty()
+
+                select new { wllet, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MWallet
+            {
+                MerchantCode = x.merchant.Code,
+                PointBalanceDecimal = x.wllet.PointBalanceDecimal,
+            });
+        }
+
+        public async Task<List<MAggregateData>> GetMerchantsBalance()
+        {
+            var result = await GetSelectionWallet().AsExpandable()
+                .Where(IsOrgMatchPredicate<MWallet>())
+                .Where(x => x.MerchantCode != null)
+                .GroupBy(x => x.MerchantCode)
+                .Select(g => new MAggregateData()
+                {
+                    AggregateKey1 = g.Key,
+                    AggregateAmount1 = g.Sum(x => x.PointBalanceDecimal)
+                })
+                .OrderByDescending(x => x.AggregateAmount1)
+                .ToListAsync();
+
+            return result;
+        }
     }
 }

@@ -18,7 +18,7 @@ orgId = 'ppm-alfa999' # ได้มาจาก GetWalletByMerchantId()
 ### 
 apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsByWalletId/#{orgId}/#{merchantId}"
 param = {
-  Offset: 1,
+  Offset: 10,
   Limit: 5,
 }
 
