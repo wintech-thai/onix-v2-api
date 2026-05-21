@@ -17,7 +17,10 @@ orgId = 'ppm-alfa999' # ได้มาจาก GetWalletByMerchantId()
 
 ### 
 apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsByWalletId/#{orgId}/#{merchantId}"
-param = {}
+param = {
+  Offset: 1,
+  Limit: 10,
+}
 
 token = File.read(keyFile)
 
