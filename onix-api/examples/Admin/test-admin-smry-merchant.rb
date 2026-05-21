@@ -3,6 +3,8 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'json'
+
 require './utils'
 
 $stdout.sync = true
@@ -25,4 +27,6 @@ ENV['ACCESS_TOKEN'] = token
 #puts("===[#{token}]")
 
 result = make_request(:post, apiUrl, param)
-puts(result)
+json_string = result.to_json
+puts json_string
+

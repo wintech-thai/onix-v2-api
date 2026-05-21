@@ -86,5 +86,54 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result;
         }
+
+        public IQueryable<MPaymentTransaction> GetSelectionPaymentTx()
+        {
+            var query =
+                from pmt in context!.PaymentTransactions
+                select new { pmt };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+            return query.Select(x => new MPaymentTransaction
+            {
+                MerchantCode = x.pmt.MerchantCode,
+                TxAmountDecimal = x.pmt.TxAmountDecimal,
+                PayInFeeDecimal = x.pmt.PayInFeeDecimal,
+            });
+        }
+
+        public async Task<List<MAggregateData>> GetMerchantsPayInAmountSummary()
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(x => x.Direction == "PayIn")
+                .GroupBy(x => x.MerchantCode)
+                .Select(g => new MAggregateData()
+                {
+                    AggregateKey1 = g.Key,
+                    AggregateAmount1 = g.Sum(x => x.TxAmountDecimal),
+                    AggregateAmount2 = g.Sum(x => x.PayInFeeDecimal)
+                })
+                .OrderByDescending(x => x.AggregateAmount1)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<MAggregateData>> GetMerchantsPayOutAmountSummary()
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(x => x.Direction == "PayOut")
+                .GroupBy(x => x.MerchantCode)
+                .Select(g => new MAggregateData()
+                {
+                    AggregateKey1 = g.Key,
+                    AggregateAmount1 = g.Sum(x => x.TxAmountDecimal),
+                    AggregateAmount2 = g.Sum(x => x.PayInFeeDecimal)
+                })
+                .OrderByDescending(x => x.AggregateAmount1)
+                .ToListAsync();
+
+            return result;
+        }
     }
 }
