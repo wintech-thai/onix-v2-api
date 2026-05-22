@@ -527,6 +527,14 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string orgId, string merchantId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var result = await repository.GetPayOutBankAccountsForMerchant(merchantId);
+            return result;
+        }
+
         public async Task<MVBankAccountMerchant?> SelectMerchant(string orgId, string bankAccountId, string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
