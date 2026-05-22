@@ -13,7 +13,7 @@ load_env("../.env")
 orgId = ENV['API_ORG']
 keyFile = ".token"
 merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0' # ppm-alfa999
-paymentBankAccountId = ''
+paymentBankAccountId = '5c21a7fe-d89f-4e0c-92f5-34fc017c9a4b'
 
 hhmmss = Time.now.strftime("%H%M%S")
 
