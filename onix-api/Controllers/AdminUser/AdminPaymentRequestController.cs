@@ -14,12 +14,17 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IPaymentRequestService svc;
         private readonly IMerchantService _merchantSvc;
+        private readonly IBankAccountService _bankAccountSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminPaymentRequestController(IPaymentRequestService service, IMerchantService merchantService)
+        public AdminPaymentRequestController(
+            IPaymentRequestService service, 
+            IMerchantService merchantService,
+            IBankAccountService bankAccountService)
         {
             svc = service;
             _merchantSvc = merchantService;
+            _bankAccountSvc = bankAccountService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -62,6 +67,34 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("org/global/action/GetPayOutRequests")]
+        public async Task<IActionResult> GetPayOutRequests([FromBody] VMPaymentRequest request)
+        {
+            request.Direction = "PayOut";
+            var result = await svc.GetPaymentRequests("global", request);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetPayInRequestCount")]
+        public async Task<IActionResult> GetPayInRequestCount([FromBody] VMPaymentRequest request)
+        {
+            request.Direction = "PayIn";
+            var result = await svc.GetPaymentRequestCount("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetPayOutRequestCount")]
+        public async Task<IActionResult> GetPayOutRequestCount([FromBody] VMPaymentRequest request)
+        {
+            request.Direction = "PayOut";
+            var result = await svc.GetPaymentRequestCount("global", request);
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("org/global/action/GetPaymentRequestById/{paymentRequestId}")]
         public async Task<IActionResult> GetPaymentRequestById(string paymentRequestId)
@@ -70,11 +103,49 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/GetPayInRequestCount")]
-        public async Task<IActionResult> GetAgentCount([FromBody] VMPaymentRequest request)
+        [Route("org/global/action/CreatePayOutRequest")]
+        public async Task<IActionResult> CreatePayOutRequest([FromBody] MPaymentRequest request)
         {
-            var result = await svc.GetPaymentRequestCount("global", request);
+            var merchantId = request.MerchantId!;
+            var bankAccountId = request.PayinBankAccountId!;
+
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return Ok(mcVm);
+            }
+
+            var mc = mcVm.Merchant;
+            if (mc == null)
+            {
+                return Ok(mcVm);
+            }
+
+            if (string.IsNullOrEmpty(mc.OrgId))
+            {
+                mcVm.Status = "ERROR_ORG_ID_EMPTY";
+                mcVm.Description = "Organization ID is null or empty";
+                return Ok(mcVm);
+            }
+
+            //Bank Account
+            var baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+            if (baVm.Status != "OK")
+            {
+                return Ok(baVm);
+            }
+
+            var ba = baVm.BankAccount;
+            if (ba == null)
+            {
+                return Ok(baVm);
+            }
+
+            request.MerchantId = merchantId;
+            request.MerchantId2 = Guid.Parse(merchantId);
+            var result = await svc.AddPaymentRequestPayOut(mc.OrgId, request, mc, ba);
             return Ok(result);
         }
     }

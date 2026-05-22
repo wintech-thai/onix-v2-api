@@ -116,6 +116,84 @@ namespace Its.Onix.Api.Services
             return Math.Round(newAmt, 2);
         }
 
+        public async Task<MVPaymentRequest> AddPaymentRequestPayOut(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (string.IsNullOrEmpty(paymentRequest.RefId))
+            {
+                r.Status = "REF_ID_MISSING";
+                r.Description = $"Ref ID is missing!!!";
+
+                return r;
+            }
+
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            if (isRefIdExist)
+            {
+                r.Status = "REF_ID_DUPLICATE";
+                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
+
+                return r;
+            }
+
+            if (paymentRequest.Currency != "THB")
+            {
+                r.Status = "CURRENCY_NOT_SUPPORT";
+                r.Description = $"Currency [{paymentRequest.Currency}] not currently support, only THB is allowed.";
+
+                return r;
+            }
+
+            if (paymentRequest.QrProvider != "PP") //PromptPay
+            {
+                //ตอนนี้ support แค่ PromptPay
+                r.Status = "BANK_PROVIDER_NOT_SUPPORT";
+                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only PP is allowed.";
+
+                return r;
+            }
+
+            if (paymentRequest.RequestedAmount <= 0)
+            {
+                r.Status = "INVALID_PAYMENT_AMOUNT";
+                r.Description = $"Request amount [{paymentRequest.RequestedAmount}] must be greater than 0.00";
+
+                return r;
+            }
+
+            paymentRequest.ResponseData = "{}";
+            paymentRequest.ProcessingMessages = "[]";
+            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+
+            //Logic สำหรับการสร้าง QR payment ตรงนี้
+            paymentRequest.Status = "Pending";
+            paymentRequest.Direction = "PayOut";
+
+            //ต่อให้เป็น PayOut เราก็จะใช้ฟีลด์ที่ขึ้นต้นด้วย PayinXXX
+            paymentRequest.PayinBankAccountName = bankAccount.AccountName;
+            paymentRequest.PayinBankAccountNo = bankAccount.AccountNumber;
+            paymentRequest.PayinBankCode = bankAccount.BankCode;
+            paymentRequest.PayinPromptPayId = bankAccount.PromptPayId;
+            paymentRequest.PayinAccountType = bankAccount.AccountType;
+            paymentRequest.PayinAccountLevel = bankAccount.AccountLevel;
+            paymentRequest.PayInFeePct = merchant.PayinFeePct;
+            paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
+
+            var result = await repository!.AddPaymentRequest(paymentRequest);
+
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
