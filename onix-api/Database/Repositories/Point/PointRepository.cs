@@ -305,10 +305,27 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<List<MWallet>> GetWalletBalancesGroupByMerchantId()
         {
             var result = await context!.Wallets!
+                .Where(x => x.MerchantId != null)
                 .GroupBy(x => new{ x.MerchantId })
                 .Select(g => new MWallet()
                 {
                     MerchantId = g.Key.MerchantId,
+                    PointBalance = g.Sum(x => x.PointBalance),
+                    PointBalanceDecimal = g.Sum(x => x.PointBalanceDecimal),
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<MWallet>> GetWalletBalancesGroupByBankAccountId()
+        {
+            var result = await context!.Wallets!
+                .Where(x => x.BankAccountId != null)
+                .GroupBy(x => new{ x.BankAccountId })
+                .Select(g => new MWallet()
+                {
+                    BankAccountId = g.Key.BankAccountId,
                     PointBalance = g.Sum(x => x.PointBalance),
                     PointBalanceDecimal = g.Sum(x => x.PointBalanceDecimal),
                 })

@@ -24,6 +24,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MWallet?> DeleteWalletById(string walletId);
         public Task<List<MWallet>> GetWallets(VMWallet param);
         public Task<List<MWallet>> GetWalletBalancesGroupByMerchantId();
+        public Task<List<MWallet>> GetWalletBalancesGroupByBankAccountId();
         public Task<int> GetWalletsCount(VMWallet param);
     }
 }

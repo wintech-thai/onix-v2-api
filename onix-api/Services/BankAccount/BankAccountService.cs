@@ -353,7 +353,10 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
 
             var bankAccountMerchantAggr = await repository.GetMerchantCountByBankAccountId();
-            var dict = bankAccountMerchantAggr.ToDictionary(g => g.BankAccountId!, g => g.MerchantCount);
+            var dict1 = bankAccountMerchantAggr.ToDictionary(g => g.BankAccountId!, g => g.MerchantCount);
+
+            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
+            var dict2 = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
 
             var bankAccounts = await repository!.GetBankAccounts(param);
 
@@ -361,7 +364,7 @@ namespace Its.Onix.Api.Services
             {
                 var bankAccountId = bankAccount.Id.ToString();
 
-                if (!string.IsNullOrEmpty(bankAccountId) && dict.TryGetValue(bankAccountId, out var merchantCount))
+                if (!string.IsNullOrEmpty(bankAccountId) && dict1.TryGetValue(bankAccountId, out var merchantCount))
                 {
                     bankAccount.MerchantLinkCount = merchantCount;
                 }
@@ -373,6 +376,12 @@ namespace Its.Onix.Api.Services
                 if (bankAccount.AccountLevel == "Global")
                 {
                     bankAccount.MerchantLinkCount = 99999; //เป็น global
+                }
+
+                bankAccount.CurrentWalletBalance = 0;
+                if (dict2.TryGetValue(bankAccount.Id.ToString()!, out var currentWalletBalance))
+                {
+                    bankAccount.CurrentWalletBalance = currentWalletBalance;
                 }
             }
 

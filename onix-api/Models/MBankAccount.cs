@@ -84,6 +84,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public int? MerchantLinkCount { get; set; }
 
+        [NotMapped]
+        public decimal? CurrentWalletBalance { get; set; }
+
         public MBankAccount()
         {
             Id = Guid.NewGuid();
