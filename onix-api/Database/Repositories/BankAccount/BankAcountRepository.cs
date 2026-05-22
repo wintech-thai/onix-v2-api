@@ -129,6 +129,16 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string merchantId)
+        {
+            var result = await GetSelectionV2().AsExpandable()
+                .Where(p => p.MerchantId == merchantId && p.AccountCategory == "PayOut")
+                .OrderByDescending(e => e.CreatedDate)
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task<MBankAccountMerchant?> SelectMerchant(string bankAccountId, string merchantId)
         {
             //ให้ทำการเพิ่ม row ไปที่ MBankAccountMerchant โดยมีค่า bankAccountId, merchantId และ OrgId ที่ตรงกับ orgId ที่ส่งมา

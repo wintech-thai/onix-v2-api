@@ -283,6 +283,7 @@ namespace Its.Onix.Api.Services
 
         public async Task<List<MPointTx>> GetPointTxsByWalletId(string orgId, VMPointTx param)
         {
+
             repository.SetCustomOrgId(orgId);
             var result = await repository.GetPointTxsByWalletId(param);
             return result;

@@ -64,8 +64,28 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<int> GetPointTxsCountByWalletId(VMPointTx param)
         {
+            var limit = 0;
+            var offset = 0;
+
+            //Param will never be null
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset-1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+//Console.WriteLine($"DEBUG3 : Limit=[{param.Limit}], Offset=[{param.Offset}]");
+//Console.WriteLine($"DEBUG4 : Limit=[{limit}], Offset=[{offset}]");
+
             var predicate = PointTxsPredicate(param!);
-            var r = await context!.PointTxs!.Where(predicate).CountAsync();
+            var r = await context!.PointTxs!
+                .Where(predicate)
+                .CountAsync();
 
             return r;
         }

@@ -20,7 +20,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(CreatedDate))]
     [Index(nameof(MerchantId))]
 
-    public class MPaymentTransaction
+    public class MPaymentTransaction : IOrgEntity
     {
         [Key]
         [Column("transaction_id")]

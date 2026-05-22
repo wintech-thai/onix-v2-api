@@ -3,8 +3,6 @@
 require 'net/http'
 require 'uri'
 require 'json'
-require 'json'
-
 require './utils'
 
 $stdout.sync = true
@@ -14,10 +12,11 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-
-### 
-apiUrl = "admin-api/AdminSummary/org/global/action/GetMerchantSummary"
-param = {}
+ 
+###
+merchantId = "cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0" # ppm-alfa999
+apiUrl = "admin-api/AdminMerchant/org/global/action/GetPayOutBankAccountsForMerchant/#{merchantId}"
+param = nil
 
 token = File.read(keyFile)
 
@@ -26,7 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
-json_string = result.to_json
-puts json_string
-
+result = make_request(:get, apiUrl, param)
+puts(result)
