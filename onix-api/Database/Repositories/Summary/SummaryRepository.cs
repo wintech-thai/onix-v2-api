@@ -103,6 +103,7 @@ namespace Its.Onix.Api.Database.Repositories
                 TxAmountDecimal = x.pmt.TxAmountDecimal,
                 PayInFeeDecimal = x.pmt.PayInFeeDecimal,
                 Direction = x.pmt.Direction,
+                CreatedDate = x.pmt.CreatedDate,
             });
         }
 
