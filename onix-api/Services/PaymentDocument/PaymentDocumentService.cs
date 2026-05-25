@@ -138,7 +138,13 @@ namespace Its.Onix.Api.Services
             var objectName = result.UploadedFilePath!;
             if (!string.IsNullOrEmpty(objectName))
             {
-                result.PreviewUrl = await _storageUtilsS3!.GenerateDownloadUrl(bucket, objectName, TimeSpan.FromMinutes(15), result.MimeType);
+                var previewUrl = await _storageUtilsS3!.GenerateDownloadUrl(bucket, objectName, TimeSpan.FromMinutes(15), result.MimeType);
+
+                var uri = new Uri(previewUrl);
+                // เอาเฉพาะ path + query
+                var relativeUrl = uri.PathAndQuery;
+                // ใส่ placeholder
+                result.PreviewUrl = $"<STORAGE-API-BASE>{relativeUrl}";
             }
 
             result.ProcessingSteps = lines;
