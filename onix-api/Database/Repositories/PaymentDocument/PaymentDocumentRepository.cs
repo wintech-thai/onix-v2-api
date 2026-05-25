@@ -69,7 +69,7 @@ namespace Its.Onix.Api.Database.Repositories
                 TxAmountStr = x.pd.TxAmountDecimal.ToString(),
 
                 MimeType = x.fileDocument.MimeType,
-                DocumentType = x.pd.DocumentType,
+                DocumentType = x.fileDocument.DocumentType,
             });
         }
 
