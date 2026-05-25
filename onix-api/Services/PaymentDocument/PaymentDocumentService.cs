@@ -11,13 +11,55 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPaymentDocumentRepository? repository = null;
         private readonly IFileDocumentService? _fileDocumentService = null;
+        private readonly IStorageUtilsS3? _storageUtilsS3 = null;
 
         public PaymentDocumentService(
-            IPaymentDocumentRepository repo, 
+            IPaymentDocumentRepository repo,
+            IStorageUtilsS3 storageUtilsS3,
             IFileDocumentService fileDocumentService) : base()
         {
             repository = repo;
             _fileDocumentService = fileDocumentService;
+            _storageUtilsS3 = storageUtilsS3;
+        }
+
+        public async Task<MVPresignedUrl> GetPayInSlipUploadPresignedUrl(string orgId, MMerchant merchant, VMUploadDocument param)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPresignedUrl()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var bucket = Environment.GetEnvironmentVariable("MINIO_BUCKET")!;
+            if (string.IsNullOrEmpty(bucket))
+            {
+                r.Status = "ERROR_BUCKET_NAME_NOT_CONFIGURED";
+                r.Description = "Bucket name is not configured in environment variable [MINIO_BUCKET]";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(param.MimeType))
+            {
+                r.Status = "ERROR_MIME_TYPE_IS_REQUIRED";
+                r.Description = "Mime type is required in request body";
+
+                return r;
+            }
+
+            var merchantId = merchant.Id!.ToString();
+            var fileName = Guid.NewGuid().ToString();
+
+            var objectName = $"{orgId}/{merchantId}/pay-in-slip/{fileName}";
+            var url = await _storageUtilsS3!.GenerateUploadUrl(bucket, objectName, TimeSpan.FromMinutes(15), param.MimeType);
+
+            r.PresignedUrl = url;
+            r.ObjectName = objectName;
+
+            return r;
         }
 
         public async Task<MVPaymentDocument> GetPaymentDocumentById(string orgId, string paymentDocumentId)
