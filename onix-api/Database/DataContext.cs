@@ -54,6 +54,8 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MPaymentRequest>? PaymentRequests { get; set; }
     public DbSet<MPaymentTransaction>? PaymentTransactions { get; set; }
     public DbSet<MWebhookConfig>? WebhookConfigs { get; set; }
+    public DbSet<MFileDocument>? FileDocuments { get; set; }
+    public DbSet<MPaymentDocument>? PaymentDocuments { get; set; }
 
 
     //=== Admin tables here =====
@@ -203,5 +205,11 @@ public class DataContext : DbContext, IDataContext
             .HasIndex(t => new { t.OrgId, t.EventName }).IsUnique();
         modelBuilder.Entity<MWebhookConfig>()
             .HasIndex(t => new { t.MerchantId, t.EventName }).IsUnique();
+
+
+        modelBuilder.Entity<MFileDocument>()
+            .HasIndex(t => new { t.OrgId, t.ObjectStoragePath }).IsUnique();
+
+        modelBuilder.Entity<MPaymentDocument>();
     }
 }

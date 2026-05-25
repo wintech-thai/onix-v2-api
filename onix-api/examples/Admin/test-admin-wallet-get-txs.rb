@@ -12,14 +12,14 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-merchantId = 'b4f4761e-b745-4bc8-a9d5-59e1ae7080b2' # ได้มาจาก GetWalletByMerchantId() 
-orgId = 'ppm-alfa999' # ได้มาจาก GetWalletByMerchantId() 
+walletId = '685928ab-d80c-454c-ba8b-0ef3f99f18b6' # ได้มาจาก GetWalletByMerchantId() 
+orgId = 'ppm-alfa888' # ได้มาจาก GetWalletByMerchantId() 
 
 ### 
-apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsByWalletId/#{orgId}/#{merchantId}"
+apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsByWalletId/#{orgId}/#{walletId}"
 param = {
-  Offset: 10,
-  Limit: 5,
+  #Offset: 0,
+  #Limit: 999,
 }
 
 token = File.read(keyFile)
@@ -34,6 +34,6 @@ puts(result)
 
 puts("===")
 
-apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsCountByWalletId/#{orgId}/#{merchantId}"
+apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsCountByWalletId/#{orgId}/#{walletId}"
 result = make_request(:post, apiUrl, param)
 puts(result)
