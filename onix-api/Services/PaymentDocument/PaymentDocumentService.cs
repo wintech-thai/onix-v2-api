@@ -56,7 +56,13 @@ namespace Its.Onix.Api.Services
             var objectName = $"{orgId}/{merchantId}/pay-in-slip/{fileName}";
             var url = await _storageUtilsS3!.GenerateUploadUrl(bucket, objectName, TimeSpan.FromMinutes(15), param.MimeType);
 
-            r.PresignedUrl = url;
+            var uri = new Uri(url);
+            // เอาเฉพาะ path + query
+            var relativeUrl = uri.PathAndQuery;
+            // ใส่ placeholder
+            var resultUrl = $"<STORAGE-API-BASE>{relativeUrl}";
+
+            r.PresignedUrl = resultUrl;
             r.ObjectName = objectName;
 
             return r;
