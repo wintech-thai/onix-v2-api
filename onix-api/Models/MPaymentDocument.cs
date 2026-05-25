@@ -123,6 +123,11 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? TxAmountStr { get; set; } //เอาไว้สำหรับ query
 
+        [NotMapped]
+        public string? MimeType { get; set; }
+        [NotMapped]
+        public string? DocumentType { get; set; }
+
 
         public MPaymentDocument()
         {

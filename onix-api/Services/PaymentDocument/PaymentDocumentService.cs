@@ -155,6 +155,41 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<MVPaymentDocument> AddPaymentDocument(string orgId, MPaymentDocument paymentDocument)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentDocument()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var fd = new MFileDocument()
+            {
+                ObjectStoragePath = paymentDocument.UploadedFilePath,
+                MimeType = paymentDocument.MimeType,
+                DocumentType = paymentDocument.DocumentType,
+            };
+
+            var newFileDocument = await _fileDocumentService!.AddFileDocument(orgId, fd);
+
+            paymentDocument.FileDocumentId = newFileDocument.FileDocument!.Id!.ToString();
+
+            var result = await repository!.AddPaymentDocument(paymentDocument);
+            if (result == null)
+            {
+                r.Status = "ERROR_ADD_PAYMENT_DOCUMENT";
+                r.Description = $"Error while adding payment document for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.PaymentDocument = result;
+
+            return r;
+        }
+
         public async Task<MVPaymentDocument> UpdatePaymentDocumentById(string orgId, string paymentDocumentId, MPaymentDocument paymentDocument)
         {
             repository!.SetCustomOrgId(orgId);

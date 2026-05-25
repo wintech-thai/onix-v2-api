@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Models;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -36,6 +37,28 @@ namespace Its.Onix.Api.Controllers
 
             var result = await svc.GetPayInSlipUploadPresignedUrl(mc.OrgId!, mc, request);
             Response.Headers.Append("CUST_STATUS", result!.Status);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/AddPayInDocument/{merchantId}")]
+        public async Task<IActionResult> AddPayInDocument(string merchantId, [FromBody] MPaymentDocument request)
+        {
+            var mVMerchant = await _merSvc.GetMerchantById("notused", merchantId);
+            if (mVMerchant.Status != "OK")
+            {
+                return Ok(mVMerchant);
+            }
+
+            var mc = mVMerchant.Merchant!;
+
+            request.Direction = "PayIn";
+            request.MerchantId = merchantId;
+            request.Currency = "THB";
+            request.Status = "Pending";
+            request.DocumentType = "PayInSlip";
+            var result = await svc.AddPaymentDocument(mc.OrgId!, request);
 
             return Ok(result);
         }
