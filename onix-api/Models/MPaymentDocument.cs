@@ -125,8 +125,12 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public string? MimeType { get; set; }
+
         [NotMapped]
         public string? DocumentType { get; set; }
+        
+        [NotMapped]
+        public string? PreviewUrl { get; set; }
 
 
         public MPaymentDocument()

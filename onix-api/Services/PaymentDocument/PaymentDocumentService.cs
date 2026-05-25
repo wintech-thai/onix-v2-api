@@ -86,6 +86,15 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var bucket = Environment.GetEnvironmentVariable("MINIO_BUCKET")!;
+            if (string.IsNullOrEmpty(bucket))
+            {
+                r.Status = "ERROR_BUCKET_NAME_NOT_CONFIGURED";
+                r.Description = "Bucket name is not configured in environment variable [MINIO_BUCKET]";
+
+                return r;
+            }
+
             var result = await repository!.GetPaymentDocumentById(paymentDocumentId);
             if (result == null)
             {
@@ -116,6 +125,20 @@ namespace Its.Onix.Api.Services
             {
                 Console.WriteLine($"ERROR1 - [{ex.Message}]");
                 lines = [];
+            }
+
+            if (string.IsNullOrEmpty(result.MimeType))
+            {
+                r.Status = "ERROR_MIME_TYPE_IS_REQUIRED";
+                r.Description = "Mime type is required in request body";
+
+                return r;
+            }
+
+            var objectName = result.UploadedFilePath!;
+            if (!string.IsNullOrEmpty(objectName))
+            {
+                result.PreviewUrl = await _storageUtilsS3!.GenerateDownloadUrl(bucket, objectName, TimeSpan.FromMinutes(15), result.MimeType);
             }
 
             result.ProcessingSteps = lines;

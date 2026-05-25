@@ -23,5 +23,15 @@ namespace Its.Onix.Api.Utils
 
             return await _minioClient.PresignedPutObjectAsync(args);
         }
+
+        public async Task<string> GenerateDownloadUrl(string bucketName, string objectName, TimeSpan validFor, string? contentType = null)
+        {
+            var args = new PresignedGetObjectArgs()
+                .WithBucket(bucketName)
+                .WithObject(objectName)
+                .WithExpiry((int) validFor.TotalSeconds);
+
+            return await _minioClient.PresignedGetObjectAsync(args);
+        }
     }
 }
