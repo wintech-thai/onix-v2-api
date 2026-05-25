@@ -28,7 +28,11 @@ namespace Its.Onix.Api.Database.Repositories
                     on pd.MerchantId equals mc.Id.ToString() into merchants
                 from merchant in merchants.DefaultIfEmpty()
 
-                select new { pd, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+                join fd in context.FileDocuments!
+                    on pd.FileDocumentId equals fd.Id.ToString() into fileDocuments
+                from fileDocument in fileDocuments.DefaultIfEmpty()
+
+                select new { pd, merchant, fileDocument };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MPaymentDocument
             {
                 Id = x.pd.Id,
@@ -42,6 +46,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Direction = x.pd.Direction,
                 TxAmount = x.pd.TxAmount,
                 TxAmountDecimal = x.pd.TxAmountDecimal,
+                FileDocumentId = x.pd.FileDocumentId,
 
                 PayInBankAccountId = x.pd.PayInBankAccountId,
                 PayInBankCode = x.pd.PayInBankCode,
@@ -62,6 +67,9 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantName = x.merchant.Name,
                 MerchantCode = x.merchant.Code,
                 TxAmountStr = x.pd.TxAmountDecimal.ToString(),
+
+                MimeType = x.fileDocument.MimeType,
+                DocumentType = x.pd.DocumentType,
             });
         }
 
