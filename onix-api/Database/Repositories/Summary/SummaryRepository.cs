@@ -171,5 +171,23 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result;
         }
+
+        public async Task<List<RevenueSummaryData>> GetRevenueTotalSummary(VMSummary param)
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.MerchantCode != null)
+                .GroupBy(x => x.Direction)
+                .Select(g => new RevenueSummaryData()
+                {
+                    Direction = g.Key,
+                    TxAmount = g.Sum(x => x.TxAmountDecimal),
+                    FeeAmount = g.Sum(x => x.PayInFeeDecimal)
+                })
+                .ToListAsync();
+
+            return result;
+        }
     }
 }

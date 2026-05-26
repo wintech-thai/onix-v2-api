@@ -27,5 +27,13 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.GetMerchantSummary("global", request);
             return Ok(result);
         }
+        
+        [HttpPost]
+        [Route("org/global/action/GetRevenueSummary")]
+        public async Task<IActionResult> GetRevenueSummary([FromBody] VMSummary request)
+        {
+            var result = await svc.GetRevenueSummary("global", request);
+            return Ok(result);
+        }
     }
 }

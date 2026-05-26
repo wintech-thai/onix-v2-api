@@ -6,5 +6,6 @@ namespace Its.Onix.Api.Services
     public interface ISummaryService
     {
         public Task<MerchantSummary> GetMerchantSummary(string orgId, VMSummary param);
+        public Task<RevenueSummary> GetRevenueSummary(string orgId, VMSummary param);
     }
 }
