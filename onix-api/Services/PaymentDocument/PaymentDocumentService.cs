@@ -314,6 +314,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : ให้สร้าง Payment Transaction ขึ้นมาใหม่ด้วย โดยมีข้อมูลบางส่วนมาจาก Payment Document ตัวนี้ และมีการเชื่อมโยงกันผ่าน PaymentDocumentId
+            //เอา PaymentTransactionId ไปใส่ใน PaymentDocument ด้วย เผื่อไว้สำหรับการอ้างอิงในอนาคต
+
             var result = await repository!.ApprovePaymentDocumentById(paymentDocumentId, paymentDocument);
             if (result == null)
             {

@@ -12,10 +12,10 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmdId = 'c89bd18d-df5a-4d71-b1ec-35814dc0a4c0'
+pmdId = '39679ce4-3f09-4b30-a6e5-c3effd539007'
 
 ### 
-apiUrl = "admin-api/AdminPaymentDocument/org/global/action/ApprovePayInDocumentById/#{pmdId}"
+apiUrl = "admin-api/AdminPaymentDocument/org/global/action/RejectPayInDocumentById/#{pmdId}"
 param = {
   TxAmountDecimal: 100.00,
   TxAmount: 100.00,
@@ -23,6 +23,7 @@ param = {
   RefId: "TestRefId-#{Time.now.to_i}",
   PayInBankAccountId: '35c050b6-3015-407c-8a0a-4f8a35eb8944',
   MerchantId: 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0',
+  RejectReason: "Test reject reason",
 }
 
 token = File.read(keyFile)
