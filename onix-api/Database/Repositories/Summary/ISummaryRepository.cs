@@ -12,5 +12,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<List<MerchantSummaryData>> GetMerchantsPayInAmountSummary(VMSummary param);
         public Task<List<MerchantSummaryData>> GetMerchantsPayOutAmountSummary(VMSummary param);
         public Task<List<RevenueSummaryData>> GetRevenueTotalSummary(VMSummary param);
+        public Task<List<DailyRevenueSummaryData>> GetDailyRevenueSummary(VMSummary param);
     }
 }

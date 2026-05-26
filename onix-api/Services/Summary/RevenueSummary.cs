@@ -10,11 +10,13 @@ namespace Its.Onix.Api.Services
         public decimal TotalPayOutFee { get; set; }
         public List<MerchantSummaryData> PayInByMerchant { get; set; }
         public List<MerchantSummaryData> PayOutByMerchant { get; set; }
+        public List<DailyRevenueSummaryData> DailyRevenue { get; set; }
 
         public RevenueSummary()
         {
             PayInByMerchant = [];
             PayOutByMerchant = [];
+            DailyRevenue = [];
         }
     }
 }
