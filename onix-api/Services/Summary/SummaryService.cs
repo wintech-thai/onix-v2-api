@@ -56,6 +56,7 @@ namespace Its.Onix.Api.Services
             result.PayInByMerchant = await _repo.GetMerchantsPayInAmountSummary(param);
             result.PayOutByMerchant = await _repo.GetMerchantsPayOutAmountSummary(param);
             result.DailyRevenue = await _repo.GetDailyRevenueSummary(param);
+            result.DailyMerchantRevenue = await _repo.GetDailyMerchantRevenueSummary(param);
 
             return result;
         }
