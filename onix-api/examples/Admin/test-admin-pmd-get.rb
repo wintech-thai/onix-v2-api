@@ -12,14 +12,12 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-walletId = '685928ab-d80c-454c-ba8b-0ef3f99f18b6' # ได้มาจาก GetWalletByMerchantId() 
-orgId = 'ppm-alfa888' # ได้มาจาก GetWalletByMerchantId() 
 
 ### 
-apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsByWalletId/#{orgId}/#{walletId}"
-param = {
-  #Offset: 0,
-  #Limit: 999,
+apiUrl = "admin-api/AdminPaymentDocument/org/global/action/GetPayInDocuments"
+param =  {
+  FullTextSearch: "",
+  Status: "",
 }
 
 token = File.read(keyFile)
@@ -32,8 +30,7 @@ ENV['ACCESS_TOKEN'] = token
 result = make_request(:post, apiUrl, param)
 puts(result)
 
-puts("===")
+apiUrl = "admin-api/AdminPaymentDocument/org/global/action/GetPayInDocumentCount"
 
-apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsCountByWalletId/#{orgId}/#{walletId}"
 result = make_request(:post, apiUrl, param)
 puts(result)

@@ -5,23 +5,12 @@ using Google.Cloud.Storage.V1;
 
 namespace Its.Onix.Api.Utils
 {
-    public interface IStorageUtils
-    {
-        string GenerateUploadUrl(string bucketName, string objectName, TimeSpan validFor, string? contentType = null);
-        bool IsObjectExist(string objectName);
-        public string GenerateDownloadUrl(string objectName, TimeSpan validFor, string? contentType = null);
-        public void UpdateMetaData(string bucketName, string objectName, string metaName, string metaValue);
-        public void DeleteObject(string bucketName, string objectName);
-        public Task<byte[]> PartialDownloadToStream(string bucketName, string objectName, long start, long end);
-        public Google.Apis.Storage.v1.Data.Object? GetStorageObject(string bucketName, string objectName);
-    }
-
-    public class StorageUtils : IStorageUtils
+    public class StorageUtilsGCP : IStorageUtils
     {
         private readonly UrlSigner _urlSigner;
         private readonly StorageClient _storageClient;
 
-        public StorageUtils(GoogleCredential credential, StorageClient storageClient)
+        public StorageUtilsGCP(GoogleCredential credential, StorageClient storageClient)
         {
             // สร้าง UrlSigner จาก service account credential
             _urlSigner = UrlSigner.FromCredential(

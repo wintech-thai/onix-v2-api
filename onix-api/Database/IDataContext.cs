@@ -47,6 +47,8 @@ namespace Its.Onix.Api.Database
         public DbSet<MPaymentRequest>? PaymentRequests { get; set; }
         public DbSet<MPaymentTransaction>? PaymentTransactions { get; set; }
         public DbSet<MWebhookConfig>? WebhookConfigs { get; set; }
+        public DbSet<MFileDocument>? FileDocuments { get; set; }
+        public DbSet<MPaymentDocument>? PaymentDocuments { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
