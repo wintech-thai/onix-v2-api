@@ -12,14 +12,18 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-walletId = '685928ab-d80c-454c-ba8b-0ef3f99f18b6' # ได้มาจาก GetWalletByMerchantId() 
-orgId = 'ppm-alfa888' # ได้มาจาก GetWalletByMerchantId() 
+pmdId = '39679ce4-3f09-4b30-a6e5-c3effd539007'
 
 ### 
-apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsByWalletId/#{orgId}/#{walletId}"
+apiUrl = "admin-api/AdminPaymentDocument/org/global/action/RejectPayInDocumentById/#{pmdId}"
 param = {
-  #Offset: 0,
-  #Limit: 999,
+  TxAmountDecimal: 100.00,
+  TxAmount: 100.00,
+  Currency: "THB",
+  RefId: "TestRefId-#{Time.now.to_i}",
+  PayInBankAccountId: '35c050b6-3015-407c-8a0a-4f8a35eb8944',
+  MerchantId: 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0',
+  RejectReason: "Test reject reason",
 }
 
 token = File.read(keyFile)
@@ -29,11 +33,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
-puts(result)
-
-puts("===")
-
-apiUrl = "admin-api/AdminWallet/org/global/action/GetPointTxsCountByWalletId/#{orgId}/#{walletId}"
 result = make_request(:post, apiUrl, param)
 puts(result)

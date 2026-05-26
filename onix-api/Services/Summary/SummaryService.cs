@@ -37,5 +37,28 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public async Task<RevenueSummary> GetRevenueSummary(string orgId, VMSummary param)
+        {
+            _repo.SetCustomOrgId(orgId);
+
+            var result = new RevenueSummary();
+
+            var totals = await _repo.GetRevenueTotalSummary(param);
+            var payIn = totals.FirstOrDefault(x => x.Direction == "PayIn");
+            var payOut = totals.FirstOrDefault(x => x.Direction == "PayOut");
+
+            result.TotalPayInAmount = payIn?.TxAmount ?? 0;
+            result.TotalPayOutAmount = payOut?.TxAmount ?? 0;
+            result.TotalPayInFee = payIn?.FeeAmount ?? 0;
+            result.TotalPayOutFee = payOut?.FeeAmount ?? 0;
+
+            result.PayInByMerchant = await _repo.GetMerchantsPayInAmountSummary(param);
+            result.PayOutByMerchant = await _repo.GetMerchantsPayOutAmountSummary(param);
+            result.DailyRevenue = await _repo.GetDailyRevenueSummary(param);
+            result.DailyMerchantRevenue = await _repo.GetDailyMerchantRevenueSummary(param);
+
+            return result;
+        }
     }
 }

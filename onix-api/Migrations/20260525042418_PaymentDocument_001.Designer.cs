@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260525042418_PaymentDocument_001")]
+    partial class PaymentDocument_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1617,14 +1620,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("processing_messages");
 
-                    b.Property<string>("RefId")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id");
-
-                    b.Property<string>("RejectReason")
-                        .HasColumnType("text")
-                        .HasColumnName("reject_reason");
-
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("status");
@@ -1658,8 +1653,6 @@ namespace onix.api.Migrations
                     b.HasIndex("PayInBankAccountId");
 
                     b.HasIndex("PaymentRequestId");
-
-                    b.HasIndex("RefId");
 
                     b.HasIndex("Status");
 

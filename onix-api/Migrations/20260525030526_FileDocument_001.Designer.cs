@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260525030526_FileDocument_001")]
+    partial class FileDocument_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1528,142 +1531,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("OrganizationsUsers");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MPaymentDocument", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("document_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Currency")
-                        .HasColumnType("text")
-                        .HasColumnName("currency");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text")
-                        .HasColumnName("description");
-
-                    b.Property<string>("Direction")
-                        .HasColumnType("text")
-                        .HasColumnName("direction");
-
-                    b.Property<string>("FileDocumentId")
-                        .HasColumnType("text")
-                        .HasColumnName("file_document_id");
-
-                    b.Property<string>("FromBankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("from_bank_account_name");
-
-                    b.Property<string>("FromBankAccountNo")
-                        .HasColumnType("text")
-                        .HasColumnName("from_bank_account_no");
-
-                    b.Property<string>("FromBankCode")
-                        .HasColumnType("text")
-                        .HasColumnName("from_bank_code");
-
-                    b.Property<string>("MerchantId")
-                        .HasColumnType("text")
-                        .HasColumnName("merchant_id");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("PayInBankAccountId")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_id");
-
-                    b.Property<string>("PayInBankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_name");
-
-                    b.Property<string>("PayInBankAccountNo")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_account_no");
-
-                    b.Property<string>("PayInBankCode")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_bank_code");
-
-                    b.Property<string>("PayOutBankAccountId")
-                        .HasColumnType("text")
-                        .HasColumnName("payout_bank_account_id");
-
-                    b.Property<string>("PayOutBankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("payout_bank_account_name");
-
-                    b.Property<string>("PayOutBankAccountNo")
-                        .HasColumnType("text")
-                        .HasColumnName("payout_bank_account_no");
-
-                    b.Property<string>("PayOutBankCode")
-                        .HasColumnType("text")
-                        .HasColumnName("payout_bank_code");
-
-                    b.Property<string>("PaymentRequestId")
-                        .HasColumnType("text")
-                        .HasColumnName("payment_request_id");
-
-                    b.Property<string>("ProcessingMessages")
-                        .HasColumnType("text")
-                        .HasColumnName("processing_messages");
-
-                    b.Property<string>("RefId")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id");
-
-                    b.Property<string>("RejectReason")
-                        .HasColumnType("text")
-                        .HasColumnName("reject_reason");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<double?>("TxAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("tx_amount");
-
-                    b.Property<decimal?>("TxAmountDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("tx_amount_decimal");
-
-                    b.Property<string>("UploadedFilePath")
-                        .HasColumnType("text")
-                        .HasColumnName("uploaded_file_path");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedDate");
-
-                    b.HasIndex("Direction");
-
-                    b.HasIndex("MerchantId");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("PayInBankAccountId");
-
-                    b.HasIndex("PaymentRequestId");
-
-                    b.HasIndex("RefId");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("PaymentDocuments");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MPaymentRequest", b =>

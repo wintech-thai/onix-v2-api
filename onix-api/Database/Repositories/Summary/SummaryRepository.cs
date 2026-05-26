@@ -171,5 +171,65 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result;
         }
+
+        public async Task<List<DailyRevenueSummaryData>> GetDailyRevenueSummary(VMSummary param)
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.MerchantCode != null)
+                .GroupBy(x => x.CreatedDate!.Value.Date)
+                .Select(g => new DailyRevenueSummaryData
+                {
+                    Date = g.Key,
+                    PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
+                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayInFeeDecimal)
+                })
+                .OrderBy(x => x.Date)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<DailyMerchantRevenueSummaryData>> GetDailyMerchantRevenueSummary(VMSummary param)
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.MerchantCode != null)
+                .GroupBy(x => new { x.CreatedDate!.Value.Date, x.MerchantCode })
+                .Select(g => new DailyMerchantRevenueSummaryData
+                {
+                    Date = g.Key.Date,
+                    MerchantCode = g.Key.MerchantCode,
+                    PayInAmount = g.Where(x => x.Direction == "PayIn").Sum(x => x.TxAmountDecimal),
+                    PayOutAmount = g.Where(x => x.Direction == "PayOut").Sum(x => x.TxAmountDecimal),
+                    PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
+                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayInFeeDecimal)
+                })
+                .OrderBy(x => x.Date)
+                .ThenBy(x => x.MerchantCode)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<RevenueSummaryData>> GetRevenueTotalSummary(VMSummary param)
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.MerchantCode != null)
+                .GroupBy(x => x.Direction)
+                .Select(g => new RevenueSummaryData()
+                {
+                    Direction = g.Key,
+                    TxAmount = g.Sum(x => x.TxAmountDecimal),
+                    FeeAmount = g.Sum(x => x.PayInFeeDecimal)
+                })
+                .ToListAsync();
+
+            return result;
+        }
     }
 }

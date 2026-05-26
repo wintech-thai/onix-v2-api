@@ -16,6 +16,7 @@ using Its.Onix.Api.Utils;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.ResponseCompression;
+using Minio;
 
 namespace Its.Onix.Api
 {
@@ -57,10 +58,38 @@ namespace Its.Onix.Api
 
             builder.Services.AddSingleton(sp =>
             {
+                var minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+                var minIoAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"); //User
+                var minIoSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"); //Password
+
+                if (string.IsNullOrWhiteSpace(minIoEndpoint))
+                {
+                    throw new InvalidOperationException("MINIO_ENDPOINT is not configured.");
+                }
+
+                var uri = new Uri(minIoEndpoint);
+                var clientBuilder = new MinioClient()
+                    .WithEndpoint(uri.Host, uri.Port)
+                    .WithCredentials(
+                        minIoAccessKey,
+                        minIoSecretKey);
+
+                if (uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                {
+                    clientBuilder = clientBuilder.WithSSL(false);
+                }
+
+                return clientBuilder.Build();
+            });
+
+
+            builder.Services.AddSingleton(sp =>
+            {
                 return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
                                     .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
             });
-            builder.Services.AddSingleton<IStorageUtils, StorageUtils>();
+            builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
+            builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
             builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -109,6 +138,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
             builder.Services.AddScoped<ISummaryService, SummaryService>();
             builder.Services.AddScoped<IWebhookConfigService, WebhookConfigService>();
+            builder.Services.AddScoped<IFileDocumentService, FileDocumentService>();
+            builder.Services.AddScoped<IPaymentDocumentService, PaymentDocumentService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -152,6 +183,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
             builder.Services.AddScoped<ISummaryRepository, SummaryRepository>();
             builder.Services.AddScoped<IWebhookConfigRepository, WebhookConfigRepository>();
+            builder.Services.AddScoped<IFileDocumentRepository, FileDocumentRepository>();
+            builder.Services.AddScoped<IPaymentDocumentRepository, PaymentDocumentRepository>();
 
 
             builder.Services.AddAuthentication("BasicOrBearer")
