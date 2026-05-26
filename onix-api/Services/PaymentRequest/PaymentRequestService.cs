@@ -322,7 +322,7 @@ namespace Its.Onix.Api.Services
                 return (bankAcct, lines);
             }
 
-            var accountType = "UNKNOWN";
+            var accountType = "UNKNOWN"; //Native - in the future
             if (pr.QrProvider == "PP")
             {
                 accountType = "PromptPay";

@@ -75,6 +75,9 @@ param =  {
   UploadedFilePath: objectName,
   MimeType: mimeType,
   TxAmountDecimal: 100.00,
+  PayInBankAccountId: '35c050b6-3015-407c-8a0a-4f8a35eb8944',
+  MerchantId: 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0',
+  RefId: "TestRefId-#{Time.now.to_i}",
 }
 
 result = make_request(:post, apiUrl, param)

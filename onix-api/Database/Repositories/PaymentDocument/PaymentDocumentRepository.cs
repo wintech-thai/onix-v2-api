@@ -56,6 +56,8 @@ namespace Its.Onix.Api.Database.Repositories
                 TxAmountDecimal = x.pd.TxAmountDecimal,
                 FileDocumentId = x.pd.FileDocumentId,
                 UploadedFilePath = x.pd.UploadedFilePath,
+                RejectReason = x.pd.RejectReason,
+                RefId = x.pd.RefId,
 
                 PayInBankAccountId = x.pd.PayInBankAccountId,
                 PayInBankCode = x.pd.PayInBankCode,

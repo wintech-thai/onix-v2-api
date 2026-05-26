@@ -536,6 +536,50 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsWithGlobalForMerchant(string orgId, string merchantId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var merchantBankAccounts = await repository.GetPayInBankAccountsForMerchant(merchantId);
+
+            var param = new VMBankAccount()
+            {
+                AccountCategory = "PayIn",
+                AccountLevel = "Global",
+            };
+            var globalBankAccounts = await repository.GetAllBankAccounts(param);    
+
+            var combinedBankAccounts = merchantBankAccounts
+                .Concat(
+                    globalBankAccounts
+                        .Where(g => !merchantBankAccounts.Any(m => m.BankAccountId == g.Id.ToString()))
+                        .Select(g => new MBankAccountMerchant
+                        {
+                            Id = g.Id,
+                            BankCode = g.BankCode,
+                            AccountNumber = g.AccountNumber,
+                            AccountName = g.AccountName,
+                            PromptPayId = g.PromptPayId,
+                            AccountType = g.AccountType,
+                            AccountCategory = g.AccountCategory,
+                            AccountLevel = g.AccountLevel,
+                            PayinMinAmount = g.PayinMinAmount,
+                            PayinMaxAmount = g.PayinMaxAmount,
+                            PayoutMinAmount = g.PayoutMinAmount,
+                            PayoutMaxAmount = g.PayoutMaxAmount,
+                            DailyQuota = g.DailyQuota,
+                            CurrentDailyPayinAmount = g.CurrentDailyPayinAmount,
+                            CurrentDailyPayinCount = g.CurrentDailyPayinCount,
+                            CurrentBalance = g.CurrentBalance,
+                            DailyPayinCountQuota = g.DailyPayinCountQuota,
+                            BankAccountStatus = g.Status,
+                        })
+                )
+                .ToList();
+
+            return combinedBankAccounts;
+        }
+
         public async Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string orgId, string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
