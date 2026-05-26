@@ -237,7 +237,142 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : เช็คว่าต้องเป็น Pending เท่านั้นถึงจะ Update ได้
+
             var result = await repository!.UpdatePaymentDocumentById(paymentDocumentId, paymentDocument);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.PaymentDocument = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentDocument> ApprovePaymentDocumentById(string orgId, string paymentDocumentId, MPaymentDocument paymentDocument)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentDocument()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(paymentDocumentId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] format is invalid";
+
+                return r;
+            }
+
+            //เช็คว่า fields ที่จำเป็นต้องถูก populate เข้ามาด้วย ประกอบไปด้วย
+            // MerchantId, RefId, PayInBankAccountId, TxAmount, TxAmountDecimal, Currency
+            if (string.IsNullOrEmpty(paymentDocument.MerchantId) || 
+                string.IsNullOrEmpty(paymentDocument.RefId) || 
+                string.IsNullOrEmpty(paymentDocument.Currency) || 
+                string.IsNullOrEmpty(paymentDocument.PayInBankAccountId) || 
+                paymentDocument.TxAmount == null || 
+                paymentDocument.TxAmountDecimal == null)
+            {
+                r.Status = "ERROR_REQUIRED_FIELDS_MISSING";
+                r.Description = "Required fields missing. Please make sure MerchantId, RefId, Currency, PayInBankAccountId, TxAmount and TxAmountDecimal are provided in request body";
+
+                return r;
+            }
+
+            var existingPd = await repository!.GetPaymentDocumentById(paymentDocumentId);
+            if (existingPd == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //เช็คว่าต้องเป็น Pending เท่านั้นถึงจะ Approve ได้
+            if (existingPd.Status != "Pending")
+            {
+                r.Status = "ERROR_ONLY_PENDING_PAYMENT_DOCUMENT_CAN_BE_APPROVED";
+                r.Description = $"Only payment document with status 'Pending' can be approved. Current status of this payment document is [{existingPd.Status}]";
+
+                return r;
+            }
+
+            //เช็คว่าไม่เคยมี RefId ไหนที่ถูก Approve มาก่อน
+            var prevApprovedPdWithSameRefId = await repository!.GetApprovedPaymentDocumentByRefId(paymentDocument.RefId!);
+            if (prevApprovedPdWithSameRefId != null)
+            {
+                r.Status = "ERROR_REF_ID_ALREADY_USED_BY_APPROVED_PAYMENT_DOCUMENT";
+                r.Description = $"Ref ID [{paymentDocument.RefId}] is already used by another approved payment document with ID [{prevApprovedPdWithSameRefId.Id}], OrgId=[{prevApprovedPdWithSameRefId.OrgId}]";
+
+                return r;
+            }
+
+            var result = await repository!.ApprovePaymentDocumentById(paymentDocumentId, paymentDocument);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.PaymentDocument = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentDocument> RejectPaymentDocumentById(string orgId, string paymentDocumentId, MPaymentDocument paymentDocument)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentDocument()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(paymentDocumentId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] format is invalid";
+
+                return r;
+            }
+
+            if (paymentDocument.RejectReason == null || paymentDocument.RejectReason.Trim() == "")
+            {
+                r.Status = "ERROR_REJECT_REASON_IS_REQUIRED";
+                r.Description = "Reject reason is required in request body when rejecting a payment document";
+
+                return r;
+            }
+
+            var existingPd = await repository!.GetPaymentDocumentById(paymentDocumentId);
+            if (existingPd == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //เช็คว่าต้องเป็น Pending เท่านั้นถึงจะ Reject ได้
+            if (existingPd.Status != "Pending")
+            {
+                r.Status = "ERROR_ONLY_PENDING_PAYMENT_DOCUMENT_CAN_BE_REJECTED";
+                r.Description = $"Only payment document with status 'Pending' can be rejected. Current status of this payment document is [{existingPd.Status}]";
+
+                return r;
+            }
+
+            var result = await repository!.RejectPaymentDocumentById(paymentDocumentId, paymentDocument);
             if (result == null)
             {
                 r.Status = "NOTFOUND";

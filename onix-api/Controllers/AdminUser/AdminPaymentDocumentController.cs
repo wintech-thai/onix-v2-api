@@ -41,6 +41,31 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+
+        [HttpPost]
+        [Route("org/global/action/UpdatePayInDocumentById/{paymentDocId}")]
+        public async Task<IActionResult> UpdatePayInDocumentById(string paymentDocId, [FromBody] MPaymentDocument request)
+        {
+            var result = await svc.UpdatePaymentDocumentById("global", paymentDocId, request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/ApprovePayInDocumentById/{paymentDocId}")]
+        public async Task<IActionResult> ApprovePayInDocumentById(string paymentDocId, [FromBody] MPaymentDocument request)
+        {
+            var result = await svc.ApprovePaymentDocumentById("global", paymentDocId, request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/RejectPayInDocumentById/{paymentDocId}")]
+        public async Task<IActionResult> RejectPayInDocumentById(string paymentDocId, [FromBody] MPaymentDocument request)
+        {
+            var result = await svc.RejectPaymentDocumentById("global", paymentDocId, request);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/AddPayInDocument/{merchantId}")]
         public async Task<IActionResult> AddPayInDocument(string merchantId, [FromBody] MPaymentDocument request)

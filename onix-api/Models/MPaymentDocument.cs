@@ -18,6 +18,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(Direction))]
     [Index(nameof(CreatedDate))]
     [Index(nameof(MerchantId))]
+    [Index(nameof(RefId))]
 
     public class MPaymentDocument : IOrgEntity
     {
@@ -62,6 +63,9 @@ namespace Its.Onix.Api.Models
         [Column("uploaded_file_path")]
         public string? UploadedFilePath { get; set; } //Path ของไฟล์ที่อัปโหลด
 
+        [Column("ref_id")]
+        public string? RefId { get; set; } //Reference ID สำหรับการอ้างอิงไฟล์
+
 
         //ข้อมูลเกี่ยวกับ บัญชีที่รับเงินโอนเข้ามา
         [Column("payin_bank_account_id")]
@@ -100,6 +104,10 @@ namespace Its.Onix.Api.Models
 
         [Column("from_bank_account_name")]
         public string? FromBankAccountName { get; set; }
+
+
+        [Column("reject_reason")]
+        public string? RejectReason { get; set; }
 
 
         //System fields

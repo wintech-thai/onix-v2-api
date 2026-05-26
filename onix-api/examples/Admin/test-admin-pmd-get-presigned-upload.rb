@@ -74,6 +74,7 @@ apiUrl = "admin-api/AdminPaymentDocument/org/global/action/AddPayInDocument/#{me
 param =  {
   UploadedFilePath: objectName,
   MimeType: mimeType,
+  TxAmountDecimal: 100.00,
 }
 
 result = make_request(:post, apiUrl, param)

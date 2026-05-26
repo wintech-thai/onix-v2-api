@@ -18,7 +18,15 @@ namespace Its.Onix.Api.Database.Repositories
             return exists;
         }
 
-        //=== Start V2 ===
+        public async Task<MPaymentDocument?> GetApprovedPaymentDocumentByRefId(string refId)
+        {
+            //ไม่ได้เอา orgId มาเช็คด้วย เพราะว่าเราต้องการดึงข้อมูลที่มี refId นี้ไม่ว่าจะเป็นของ org ไหนก็ตาม แต่ต้องมีสถานะเป็น Approved เท่านั้น ถึงจะดึงมาได้
+            var paymentDocument = await context!.PaymentDocuments!.AsExpandable()
+                .FirstOrDefaultAsync(p => p!.RefId!.Equals(refId) && p.Status!.Equals("Approved"));
+
+            return paymentDocument;
+        }
+
         public IQueryable<MPaymentDocument> GetPaymentDocumentSelection()
         {
             var query =
@@ -209,6 +217,22 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
+        public async Task<MPaymentDocument?> ApprovePaymentDocumentById(string paymentDocumentId, MPaymentDocument paymentDocument)
+        {
+            paymentDocument.Status = "Approved";
+            var result = await UpdatePaymentDocumentById(paymentDocumentId, paymentDocument);
+
+            return result;
+        }
+
+        public async Task<MPaymentDocument?> RejectPaymentDocumentById(string paymentDocumentId, MPaymentDocument paymentDocument)
+        {
+            paymentDocument.Status = "Rejected";
+            var result = await UpdatePaymentDocumentById(paymentDocumentId, paymentDocument);
+
+            return result;
+        }
+
         public async Task<MPaymentDocument?> UpdatePaymentDocumentById(string paymentDocumentId, MPaymentDocument paymentDocument)
         {
             Guid id = Guid.Parse(paymentDocumentId);
@@ -216,6 +240,37 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 existing.Tags = paymentDocument.Tags;
+
+                //ห้าม update merchant เพราะว่า org จะเปลี่ยนแล้วซับซ้อนขึ้น
+                //existing.MerchantId = paymentDocument.MerchantId;
+
+                existing.Description = paymentDocument.Description; 
+                existing.Currency = paymentDocument.Currency;
+                existing.Status = paymentDocument.Status;
+                
+                //ห้ามเปลี่ยนชนิกเอกสาร
+                //existing.Direction = paymentDocument.Direction;
+
+                existing.TxAmount = paymentDocument.TxAmount;
+                existing.TxAmountDecimal = paymentDocument.TxAmountDecimal;
+
+                //ไม่ให้มีการ update uploaded document, ทำได้แค่เฉพาะตอน add เท่านั้น
+                //existing.FileDocumentId = paymentDocument.FileDocumentId;
+                //existing.UploadedFilePath = paymentDocument.UploadedFilePath;
+
+                existing.RefId = paymentDocument.RefId;
+                existing.PayInBankAccountId = paymentDocument.PayInBankAccountId;
+                existing.PayInBankCode = paymentDocument.PayInBankCode;
+                existing.PayInBankAccountNo = paymentDocument.PayInBankAccountNo;
+                existing.PayInBankAccountName = paymentDocument.PayInBankAccountName;
+                existing.PayOutBankAccountId = paymentDocument.PayOutBankAccountId;
+                existing.PayOutBankCode = paymentDocument.PayOutBankCode;
+                existing.PayOutBankAccountNo = paymentDocument.PayOutBankAccountNo;
+                existing.PayOutBankAccountName = paymentDocument.PayOutBankAccountName;
+                existing.FromBankCode = paymentDocument.FromBankCode;
+                existing.FromBankAccountNo = paymentDocument.FromBankAccountNo;
+                existing.FromBankAccountName = paymentDocument.FromBankAccountName;
+                existing.RejectReason = paymentDocument.RejectReason;
             }
 
             await context.SaveChangesAsync();
