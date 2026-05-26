@@ -178,7 +178,7 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
                 .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.MerchantCode != null)
-                .GroupBy(x => DbFunctions.TruncateTime(x.CreatedDate))
+                .GroupBy(x => x.CreatedDate!.Value.Date)
                 .Select(g => new DailyRevenueSummaryData
                 {
                     Date = g.Key,
