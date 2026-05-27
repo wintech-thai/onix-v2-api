@@ -10,5 +10,6 @@ namespace Its.Onix.Api.ViewsModels
         public string? Status { get; set; }
         public string? BankAccountId { get; set; }
         public string? GeneratedAmountStr { get; set; }
+        public string? MerchantId { get; set; }
     }
 }

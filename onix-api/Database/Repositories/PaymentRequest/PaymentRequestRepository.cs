@@ -118,6 +118,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(statusPd);
             }
 
+            if ((param.MerchantId != null) && (param.MerchantId != ""))
+            {
+                var merchantIdPd = PredicateBuilder.New<MPaymentRequest>();
+                merchantIdPd = merchantIdPd.Or(p => p.MerchantId!.Equals(param.MerchantId));
+
+                pd = pd.And(merchantIdPd);
+            }
+
             // FromDate
             if (param.FromDate.HasValue)
             {
