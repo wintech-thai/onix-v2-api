@@ -105,6 +105,14 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<List<MPaymentRequest>> GetPaymentRequestsForPaymentTx(string orgId, VMPaymentRequest param)
+        {
+            _paymentRequestRepo!.SetCustomOrgId(orgId);
+            var result = await _paymentRequestRepo.GetPaymentRequestsForPaymentTx(param);
+
+            return result;
+        }
+
         public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
             string orgId, 
             string bankAccountId, 
@@ -116,17 +124,18 @@ namespace Its.Onix.Api.Services
 
             var prParam = new VMPaymentRequest()
             {
+                //ไม่ต้องระบุ merchantId เพราะว่าเรายังไม่รู้ว่า transaction นี้เป็นของ merchant ไหน
                 BankAccountId = bankAccountId,
                 Status = "Pending",
                 GeneratedAmountStr = paymentNotiLine.PaymentAmount.ToString(), //เอาเลขเศษสตางค์ไป match ด้วย
                 FromDate = DateTime.UtcNow.AddHours(-1),
             };
 
+            var paymentRequests = await GetPaymentRequestsForPaymentTx("global", prParam);
+            var matchCount = paymentRequests.Count;
+
             MPaymentRequest? pmr = null;
             List<string> lines = [];
-
-            var paymentRequests = await _paymentRequestRepo.GetPaymentRequestsForPaymentTx(prParam);
-            var matchCount = paymentRequests.Count;
 
             lines.Add($"STEP1 : Info -> Found [{matchCount}] payment request matche, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
             foreach (var pr in paymentRequests)
