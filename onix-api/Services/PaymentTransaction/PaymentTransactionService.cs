@@ -322,19 +322,21 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
-                    new NameValue { Name = "TX_AMOUNT", Value = pmt.TxAmountDecimal.ToString() },
+                    new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
                     new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
-                    new NameValue { Name = "REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
-                    new NameValue { Name = "GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
-                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmr?.PayInFeePct.ToString() },
+
+                    new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
                     new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
                     new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
 
+                    new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
+                    new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
                     new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeeDecimal.ToString() },
                     new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
+                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeePct.ToString() },
                 ]
             };
 
