@@ -144,7 +144,9 @@ namespace Its.Onix.Api.Services
 
             job.Configuration = JsonSerializer.Serialize(job.Parameters);
             var result = repository!.AddJob(job);
-            result.Configuration = "";
+            
+            //Comment ไว้เพราะมัน update กลับไปที่ DB อยู่
+            //result.Configuration = "";
 
             r.Job = result;
 
