@@ -140,6 +140,11 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? PreviewUrl { get; set; }
 
+        [NotMapped]
+        public string? PayInPromptPayId { get; set; } 
+
+        [NotMapped]
+        public string? PayInAccountType { get; set; }
 
         public MPaymentDocument()
         {
