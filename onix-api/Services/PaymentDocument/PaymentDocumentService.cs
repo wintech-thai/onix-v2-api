@@ -12,15 +12,18 @@ namespace Its.Onix.Api.Services
         private readonly IPaymentDocumentRepository? repository = null;
         private readonly IFileDocumentService? _fileDocumentService = null;
         private readonly IStorageUtilsS3? _storageUtilsS3 = null;
+        private readonly IPaymentTransactionService? _paymentTransactionService = null;
 
         public PaymentDocumentService(
             IPaymentDocumentRepository repo,
             IStorageUtilsS3 storageUtilsS3,
+            IPaymentTransactionService paymentTransactionService,
             IFileDocumentService fileDocumentService) : base()
         {
             repository = repo;
             _fileDocumentService = fileDocumentService;
             _storageUtilsS3 = storageUtilsS3;
+            _paymentTransactionService = paymentTransactionService;
         }
 
         public async Task<MVPresignedUrl> GetPayInSlipUploadPresignedUrl(string orgId, MMerchant merchant, VMUploadDocument param)
@@ -237,7 +240,23 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : เช็คว่าต้องเป็น Pending เท่านั้นถึงจะ Update ได้
+            var existingPd = await repository!.GetPaymentDocumentById(paymentDocumentId);
+            if (existingPd == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //เช็คว่าต้องเป็น Pending เท่านั้นถึงจะ Update ได้
+            if (existingPd.Status != "Pending")
+            {
+                r.Status = "ERROR_ONLY_PENDING_PAYMENT_DOCUMENT_CAN_BE_UPDATED";
+                r.Description = $"Only payment document with status 'Pending' can be updated. Current status of this payment document is [{existingPd.Status}]";
+
+                return r;
+            }
 
             var result = await repository!.UpdatePaymentDocumentById(paymentDocumentId, paymentDocument);
             if (result == null)
@@ -316,8 +335,26 @@ namespace Its.Onix.Api.Services
 
             //TODO : ให้เช็คว่าสามารถสร้าง Payment Transaction ที่ match กับ Payment Request ได้หรือไม่ ถ้าไม่ได้ก็ return error ออกไปเลย
 
-            //TODO : ให้สร้าง Payment Transaction ขึ้นมาใหม่ด้วย โดยมีข้อมูลบางส่วนมาจาก Payment Document ตัวนี้ และมีการเชื่อมโยงกันผ่าน PaymentDocumentId
+            //ให้สร้าง Payment Transaction ขึ้นมาใหม่ด้วย โดยมีข้อมูลบางส่วนมาจาก Payment Document ตัวนี้ และมีการเชื่อมโยงกันผ่าน PaymentDocumentId
+            var bankAccountId = paymentDocument.PayInBankAccountId!;
+            var inputData = new MPaymentNotiLine()
+            {
+                PaymentAmount = paymentDocument.TxAmountDecimal!,
+                MerchantId = paymentDocument.MerchantId!,
+            };
+
+            var mvTxDoc = await _paymentTransactionService!.ProcessLinePaymentTxNotification("notused", bankAccountId, inputData);
+            if (mvTxDoc.Status != "OK")
+            {
+                r.Status = mvTxDoc.Status;
+                r.Description = mvTxDoc.Description;
+
+                return r;
+            }
+
             //เอา PaymentTransactionId ไปใส่ใน PaymentDocument ด้วย เผื่อไว้สำหรับการอ้างอิงในอนาคต
+            var txDoc = mvTxDoc.PaymentTransaction!;
+            paymentDocument.PaymentTransactionId = txDoc.Id!.ToString();
 
             var result = await repository!.ApprovePaymentDocumentById(paymentDocumentId, paymentDocument);
             if (result == null)

@@ -19,6 +19,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(CreatedDate))]
     [Index(nameof(MerchantId))]
     [Index(nameof(RefId))]
+    [Index(nameof(PaymentTransactionId))]
 
     public class MPaymentDocument : IOrgEntity
     {
@@ -65,6 +66,9 @@ namespace Its.Onix.Api.Models
 
         [Column("ref_id")]
         public string? RefId { get; set; } //Reference ID สำหรับการอ้างอิงไฟล์
+
+        [Column("payment_transaction_id")]
+        public string? PaymentTransactionId { get; set; } //Reference ID สำหรับการอ้างอิงไฟล์
 
 
         //ข้อมูลเกี่ยวกับ บัญชีที่รับเงินโอนเข้ามา
