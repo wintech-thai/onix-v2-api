@@ -19,6 +19,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(Direction))]
     [Index(nameof(CreatedDate))]
     [Index(nameof(MerchantId))]
+    [Index(nameof(JobId))]
 
     public class MPaymentTransaction : IOrgEntity
     {
@@ -116,6 +117,9 @@ namespace Its.Onix.Api.Models
 
         [Column("from_bank_account_name")]
         public string? FromBankAccountName { get; set; }
+
+        [Column("job_id")]
+        public string? JobId { get; set; }
 
 
         //System fields

@@ -198,7 +198,9 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MPaymentRequest>()
             .HasIndex(t => new { t.OrgId, t.RefId }).IsUnique();
 
-        modelBuilder.Entity<MPaymentTransaction>();
+        //modelBuilder.Entity<MPaymentTransaction>();
+        modelBuilder.Entity<MPaymentTransaction>()
+            .HasIndex(t => new { t.JobId }).IsUnique();
 
 
         modelBuilder.Entity<MWebhookConfig>()
