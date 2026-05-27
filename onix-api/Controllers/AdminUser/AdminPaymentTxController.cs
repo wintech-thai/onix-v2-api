@@ -75,6 +75,18 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/GetPendingPayInRequestsForPaymentTx")]
+        public async Task<IActionResult> GetPendingPayInRequestsForPaymentTx(VMPaymentRequest request)
+        {
+            request.Direction = "PayIn";
+            request.Status = "Pending";
+            request.FromDate = DateTime.UtcNow.AddHours(-1);
+            var paymentRequests = await svc.GetPaymentRequestsForPaymentTx("global", request);
+
+            return Ok(paymentRequests);
+        }
+
+        [HttpPost]
         [Route("org/global/action/GetPayInTransactionCount")]
         public async Task<IActionResult> GetPayInTransactionCount([FromBody] VMPaymentTransaction request)
         {
