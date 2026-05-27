@@ -314,6 +314,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : ให้เช็คว่าสามารถสร้าง Payment Transaction ที่ match กับ Payment Request ได้หรือไม่ ถ้าไม่ได้ก็ return error ออกไปเลย
+
             //TODO : ให้สร้าง Payment Transaction ขึ้นมาใหม่ด้วย โดยมีข้อมูลบางส่วนมาจาก Payment Document ตัวนี้ และมีการเชื่อมโยงกันผ่าน PaymentDocumentId
             //เอา PaymentTransactionId ไปใส่ใน PaymentDocument ด้วย เผื่อไว้สำหรับการอ้างอิงในอนาคต
 

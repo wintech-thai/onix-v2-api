@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
  
 ###
-merchantId = "cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0" 
+merchantId = "0deca3a4-1328-4bea-8615-5eaf511ad8ff" 
 apiUrl = "admin-api/AdminBankAccount/org/global/action/GetPayInBankAccountsWithGlobalForMerchant/#{merchantId}"
 param = nil
 
