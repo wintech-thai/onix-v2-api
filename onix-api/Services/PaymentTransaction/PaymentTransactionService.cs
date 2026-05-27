@@ -13,17 +13,23 @@ namespace Its.Onix.Api.Services
         private readonly IPaymentRequestRepository? _paymentRequestRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
+        private readonly IJobService? _jobService = null;
+        private readonly IRedisHelper _redis;
 
         public PaymentTransactionService(
             IPaymentTransactionRepository repo, 
             IPaymentRequestRepository paymentRequestRepo,
             IPointService pointService,
-            IBankAccountRepository bankAccountRepo) : base()
+            IBankAccountRepository bankAccountRepo,
+            IJobService jobService,
+            IRedisHelper redis) : base()
         {
             repository = repo;
             _paymentRequestRepo = paymentRequestRepo;
             _bankAccountRepo = bankAccountRepo;
             _pointService = pointService;
+            _jobService = jobService;
+            _redis = redis;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)
@@ -235,6 +241,16 @@ namespace Its.Onix.Api.Services
             pt.RawInput = JsonSerializer.Serialize(paymentNotiLine); //"{}";
             pt.ProcessingMessages = JsonSerializer.Serialize(lines);
 
+            //สร้าง job ตรงนี้ พร้อมส่ง jobId ให้กับ Payment Tx เผื่อเอาไว้ใช้ดู log การ process ในแต่ละ step ได้ง่ายขึ้น
+            var jobType = "Payment.Failed";
+            if (pt.Status == "Identified")
+            {
+                jobType = "Payment.Success";
+            }
+            var job = CreatePaymentSuccessJob(merchantOrgId, jobType, pt, pmr!);
+            pt.JobId = job?.Id.ToString();
+
+
             var mpt = await repository!.AddPaymentTransaction(pt);
             var mvPt = new MVPaymentTransaction()
             {
@@ -284,7 +300,51 @@ namespace Its.Onix.Api.Services
                 }
             }
 
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(job);
+            _ = await _redis.PublishMessageAsync(stream!, message);
+
+
             return mvPt;
+        }
+
+        private MJob CreatePaymentSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
+        {
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "PaymentTransaction.CreatePaymentSuccessJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId },
+                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
+
+                    new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
+                    new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
+                    new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
+
+                    new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
+                    new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
+                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
+                    new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
+                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeePct.ToString() },
+                ]
+            };
+
+            //ยังไม่ต้อง trigger job ให้ทำงานทันที เดี๋ยวรอให้สร้าง Payment Tx เสร็จแล้วค่อย trigger พร้อมกับส่ง jobId ไปด้วยจะได้ดู log การ process ได้ง่ายขึ้น
+            var result = _jobService!.AddJob(orgId, job, false); 
+            var newJob = result?.Job!;
+
+            return newJob;
         }
 
 

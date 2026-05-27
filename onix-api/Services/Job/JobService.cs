@@ -120,12 +120,14 @@ namespace Its.Onix.Api.Services
             return null;
         }
 
-        public MVJob? AddJob(string orgId, MJob job)
+        public MVJob? AddJob(string orgId, MJob job, bool triggerJob = true)
         {
             repository!.SetCustomOrgId(orgId);
-            var r = new MVJob();
-            r.Status = "OK";
-            r.Description = "Success";
+            var r = new MVJob
+            {
+                Status = "OK",
+                Description = "Success"
+            };
 
             var email = GetEmail(job, "EMAIL_NOTI_ADDRESS");
             if (email != null)
@@ -142,7 +144,9 @@ namespace Its.Onix.Api.Services
 
             job.Configuration = JsonSerializer.Serialize(job.Parameters);
             var result = repository!.AddJob(job);
-            result.Configuration = "";
+            
+            //Comment ไว้เพราะมัน update กลับไปที่ DB อยู่
+            //result.Configuration = "";
 
             r.Job = result;
 
@@ -150,7 +154,10 @@ namespace Its.Onix.Api.Services
             var stream = $"JobSubmitted:{environment}:{job.Type}";
             var message = JsonSerializer.Serialize(r.Job);
 
-            _ = _redis.PublishMessageAsync(stream!, message);
+            if (triggerJob)
+            {
+                _ = _redis.PublishMessageAsync(stream!, message);
+            }
 
             return r;
         }

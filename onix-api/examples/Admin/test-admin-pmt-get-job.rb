@@ -12,12 +12,12 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
+pmtId = 'c7f1b284-e21b-489a-a9b9-21c69ddc4386'
+jobId = 'fd3fa695-fb3d-4276-9441-0a8da4811d43'
 
 ### 
-apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactions"
-param =  {
-  FullTextSearch: "678.1",
-}
+apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPaymentTransactionJobById/#{pmtId}/#{jobId}"
+param = nil
 
 token = File.read(keyFile)
 
@@ -26,10 +26,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
-puts(result)
-
-apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactionCount"
-
-result = make_request(:post, apiUrl, param)
-puts(result)
+result = make_request(:get, apiUrl, param)
+puts(result.to_json)

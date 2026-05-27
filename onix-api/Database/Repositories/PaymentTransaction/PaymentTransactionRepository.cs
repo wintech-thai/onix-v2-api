@@ -71,6 +71,7 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantName = x.merchant.Name,
                 MerchantCode = x.merchant.Code,
                 TxAmountStr = x.pt.TxAmountDecimal.ToString(),
+                JobId = x.pt.JobId,
             });
         }
 

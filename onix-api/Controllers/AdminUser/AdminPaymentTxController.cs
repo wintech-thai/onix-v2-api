@@ -13,11 +13,13 @@ namespace Its.Onix.Api.Controllers
     public class AdminPaymentTxController : ControllerBase
     {
         private readonly IPaymentTransactionService svc;
+        private readonly IJobService _jobService;
 
         [ExcludeFromCodeCoverage]
-        public AdminPaymentTxController(IPaymentTransactionService service)
+        public AdminPaymentTxController(IPaymentTransactionService service, IJobService jobService)
         {
             svc = service;
+            _jobService = jobService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -53,6 +55,22 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetPaymentTransactionById(string paymentTransactionId)
         {
             var result = await svc.GetPaymentTransactionById("global", paymentTransactionId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetPaymentTransactionJobById/{paymentTransactionId}/{jobId}")]
+        public async Task<IActionResult> GetPaymentTransactionJobById(string paymentTransactionId, string jobId)
+        {
+            var pmtVm = await svc.GetPaymentTransactionById("global", paymentTransactionId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentTransaction!;
+            var result = _jobService.GetJobById(pmt.OrgId!, jobId);
+
             return Ok(result);
         }
 
