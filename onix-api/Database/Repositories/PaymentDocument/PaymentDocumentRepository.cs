@@ -87,7 +87,8 @@ namespace Its.Onix.Api.Database.Repositories
                 MimeType = x.fileDocument.MimeType,
                 DocumentType = x.fileDocument.DocumentType,
                 PayInAccountType = x.bankAccount.AccountType,
-                PayInPromptPayId = x.bankAccount.PromptPayId
+                PayInPromptPayId = x.bankAccount.PromptPayId,
+                PaymentTransactionId = x.pd.PaymentTransactionId,
             });
         }
 
