@@ -116,6 +116,121 @@ namespace Its.Onix.Api.Services
             return Math.Round(newAmt, 2);
         }
 
+        public async Task<MVPaymentRequest> UpdatePaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest, MBankAccount bankAccount, MMerchant merchant)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
+            //Update ได้แต่เฉพาะ Payout เท่านั้น
+            //เป็น bank account ที่จะถูกโอนเงินออก
+            paymentRequest.PayoutBankAccountName = bankAccount!.AccountName;
+            paymentRequest.PayoutBankAccountNo = bankAccount.AccountNumber;
+            paymentRequest.PayoutBankCode = bankAccount.BankCode;
+            paymentRequest.PayoutPromptPayId = bankAccount.PromptPayId;
+            paymentRequest.PayoutAccountType = bankAccount.AccountType;
+            paymentRequest.PayoutAccountLevel = bankAccount.AccountLevel;
+            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+            paymentRequest.PayoutBankAccountId = bankAccount.Id.ToString();
+
+            var result = await repository!.UpdatePayOutRequestById(paymentRequestId, paymentRequest);
+
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentRequest> RejectPaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            var result = await repository!.UpdatePaymentStatusRejectById(paymentRequestId, paymentRequest);
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentRequest> ApprovePaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
         public async Task<MVPaymentRequest> AddPaymentRequestPayOut(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
