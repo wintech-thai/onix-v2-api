@@ -121,6 +121,7 @@ namespace Its.Onix.Api.Services
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
             _bankAccountRepo!.SetCustomOrgId("global");
+Console.WriteLine($"DEBUG1 - [{paymentNotiLine.MerchantId}], [{bankAccountId}]");
 
             var prParam = new VMPaymentRequest()
             {
