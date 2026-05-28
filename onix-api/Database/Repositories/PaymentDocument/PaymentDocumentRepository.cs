@@ -87,7 +87,8 @@ namespace Its.Onix.Api.Database.Repositories
                 MimeType = x.fileDocument.MimeType,
                 DocumentType = x.fileDocument.DocumentType,
                 PayInAccountType = x.bankAccount.AccountType,
-                PayInPromptPayId = x.bankAccount.PromptPayId
+                PayInPromptPayId = x.bankAccount.PromptPayId,
+                PaymentTransactionId = x.pd.PaymentTransactionId,
             });
         }
 
@@ -281,6 +282,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.FromBankAccountNo = paymentDocument.FromBankAccountNo;
                 existing.FromBankAccountName = paymentDocument.FromBankAccountName;
                 existing.RejectReason = paymentDocument.RejectReason;
+
+                existing.PaymentTransactionId = paymentDocument.PaymentTransactionId;
             }
 
             await context.SaveChangesAsync();

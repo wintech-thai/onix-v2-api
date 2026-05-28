@@ -96,6 +96,34 @@ namespace Its.Onix.Api.Models
         [Column("pay_in_fee_pct")]
         public double? PayInFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมรับเข้า
 
+
+        //PayOut fields - บัญชีที่เงินออกไปจ่ายให้ลูกค้า
+        [Column("payout_bank_id")]
+        public string? PayoutBankAccountId { get; set; } //Foreign key ไปยัง BankAccounts table
+
+        [Column("payout_bank_code")]
+        public string? PayoutBankCode { get; set; }
+
+        [Column("payout_bank_account_no")]
+        public string? PayoutBankAccountNo { get; set; }
+
+        [Column("payout_bank_account_name")]
+        public string? PayoutBankAccountName { get; set; } 
+
+        [Column("payout_promptpay_id")]
+        public string? PayoutPromptPayId { get; set; } 
+
+        [Column("payout_account_type")]
+        public string? PayoutAccountType { get; set; }
+         
+        [Column("payout_account_level")]
+        public string? PayoutAccountLevel { get; set; }
+        
+        [Column("payout_fee_pct")]
+        public double? PayoutFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมจ่ายออก
+
+
+
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
         public string? Tags { get; set; }
@@ -128,6 +156,9 @@ namespace Its.Onix.Api.Models
 
         [Column("processing_messages")]
         public string? ProcessingMessages { get; set; } /* JSON string */
+
+        [Column("reject_reason")]
+        public string? RejectReason { get; set; }
 
 
         //System fields

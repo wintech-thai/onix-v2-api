@@ -50,6 +50,16 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("org/global/action/GetPayOutTransactions")]
+        public async Task<IActionResult> GetPayOutTransactions([FromBody] VMPaymentTransaction request)
+        {
+            request.Direction = "PayOut";
+            var result = await svc.GetPaymentTransactions("global", request);
+
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("org/global/action/GetPaymentTransactionById/{paymentTransactionId}")]
         public async Task<IActionResult> GetPaymentTransactionById(string paymentTransactionId)
