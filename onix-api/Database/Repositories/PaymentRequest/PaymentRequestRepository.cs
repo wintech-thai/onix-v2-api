@@ -312,7 +312,45 @@ namespace Its.Onix.Api.Database.Repositories
             var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
             if (existing != null)
             {
-                existing.Tags = paymentRequest.Tags;
+                existing.PayinBankAccountId = paymentRequest.PayinBankAccountId;
+                existing.PayinBankCode = paymentRequest.PayinBankCode;
+                existing.PayinBankAccountNo = paymentRequest.PayinBankAccountNo;
+                existing.PayinBankAccountName = paymentRequest.PayinBankAccountName;
+                existing.PayinPromptPayId = paymentRequest.PayinPromptPayId;
+                existing.PayinAccountType = paymentRequest.PayinAccountType;
+                existing.PayinAccountLevel = paymentRequest.PayinAccountLevel;
+                existing.PayInFeePct = paymentRequest.PayInFeePct;
+
+                existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
+                existing.PayoutBankCode = paymentRequest.PayoutBankCode;
+                existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;
+                existing.PayoutBankAccountName = paymentRequest.PayoutBankAccountName;
+                existing.PayoutPromptPayId = paymentRequest.PayoutPromptPayId;
+                existing.PayoutAccountType = paymentRequest.PayoutAccountType;
+                existing.PayoutAccountLevel = paymentRequest.PayoutAccountLevel;
+                existing.PayoutFeePct = paymentRequest.PayoutFeePct;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MPaymentRequest?> UpdatePayOutRequestById(string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            //ให้ update เฉพาะ field ที่เกี่ยวกับการจ่ายเงินออกไปเท่านั้น เพื่อให้แน่ใจว่า field อื่น ๆ จะไม่ถูกแก้ไขโดยไม่ได้ตั้งใจ
+            Guid id = Guid.Parse(paymentRequestId);
+
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
+                existing.PayoutBankCode = paymentRequest.PayoutBankCode;
+                existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;
+                existing.PayoutBankAccountName = paymentRequest.PayoutBankAccountName;
+                existing.PayoutPromptPayId = paymentRequest.PayoutPromptPayId;
+                existing.PayoutAccountType = paymentRequest.PayoutAccountType;
+                existing.PayoutAccountLevel = paymentRequest.PayoutAccountLevel;
+                existing.PayoutFeePct = paymentRequest.PayoutFeePct;
             }
 
             await context.SaveChangesAsync();
