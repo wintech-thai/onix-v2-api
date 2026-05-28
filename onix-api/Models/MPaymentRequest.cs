@@ -157,6 +157,9 @@ namespace Its.Onix.Api.Models
         [Column("processing_messages")]
         public string? ProcessingMessages { get; set; } /* JSON string */
 
+        [Column("reject_reason")]
+        public string? RejectReason { get; set; }
+
 
         //System fields
         [Column("created_date")]

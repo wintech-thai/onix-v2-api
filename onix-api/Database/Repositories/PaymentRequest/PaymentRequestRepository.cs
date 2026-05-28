@@ -356,5 +356,41 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return existing;
         }
+
+        public async Task<MPaymentRequest?> UpdatePaymentStatusRejectById(string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.Status = "Rejected";
+                existing.RejectReason = paymentRequest.RejectReason;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MPaymentRequest?> UpdatePaymentStatusApprovedById(string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.Status = "Approved";
+                
+                existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
+                existing.PayoutBankCode = paymentRequest.PayoutBankCode;
+                existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;
+                existing.PayoutBankAccountName = paymentRequest.PayoutBankAccountName;
+                existing.PayoutPromptPayId = paymentRequest.PayoutPromptPayId;
+                existing.PayoutAccountType = paymentRequest.PayoutAccountType;
+                existing.PayoutAccountLevel = paymentRequest.PayoutAccountLevel;
+                existing.PayoutFeePct = paymentRequest.PayoutFeePct;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }

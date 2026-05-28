@@ -15,5 +15,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPaymentRequest?> UpdatePaymentRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<MPaymentRequest?> UpdatePayOutRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<MPaymentRequest?> UpdatePaymentRequestPaidStatusById(string paymentRequestId, string paymentTxId);
+        public Task<MPaymentRequest?> UpdatePaymentStatusRejectById(string paymentRequestId, MPaymentRequest paymentRequest);
+        public Task<MPaymentRequest?> UpdatePaymentStatusApprovedById(string paymentRequestId, MPaymentRequest paymentRequest);
     }
 }
