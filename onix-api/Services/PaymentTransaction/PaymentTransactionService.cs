@@ -121,10 +121,12 @@ namespace Its.Onix.Api.Services
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
             _bankAccountRepo!.SetCustomOrgId("global");
+Console.WriteLine($"DEBUG1 - [{paymentNotiLine.MerchantId}], [{bankAccountId}]");
 
             var prParam = new VMPaymentRequest()
             {
                 //ไม่ต้องระบุ merchantId เพราะว่าเรายังไม่รู้ว่า transaction นี้เป็นของ merchant ไหน
+                MerchantId = paymentNotiLine.MerchantId, //ตรงนี้อาจจะมี merchantId มาด้วยจาก Line ก็ได้ เผื่อเอาไว้ใช้ match ได้ง่ายขึ้นหน่อย
                 BankAccountId = bankAccountId,
                 Status = "Pending",
                 GeneratedAmountStr = paymentNotiLine.PaymentAmount.ToString(), //เอาเลขเศษสตางค์ไป match ด้วย

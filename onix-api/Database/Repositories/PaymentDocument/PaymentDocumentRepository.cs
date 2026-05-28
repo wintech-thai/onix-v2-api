@@ -32,6 +32,11 @@ namespace Its.Onix.Api.Database.Repositories
             var query =
                 from pd in context!.PaymentDocuments
 
+                join ba in context.BankAccounts!
+                    on pd.PayInBankAccountId equals ba.Id.ToString() into bankAccounts
+                from bankAccount in bankAccounts.DefaultIfEmpty()
+
+
                 join mc in context.Merchants!
                     on pd.MerchantId equals mc.Id.ToString() into merchants
                 from merchant in merchants.DefaultIfEmpty()
@@ -40,7 +45,7 @@ namespace Its.Onix.Api.Database.Repositories
                     on pd.FileDocumentId equals fd.Id.ToString() into fileDocuments
                 from fileDocument in fileDocuments.DefaultIfEmpty()
 
-                select new { pd, merchant, fileDocument };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+                select new { pd, merchant, fileDocument, bankAccount };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MPaymentDocument
             {
                 Id = x.pd.Id,
@@ -60,9 +65,9 @@ namespace Its.Onix.Api.Database.Repositories
                 RefId = x.pd.RefId,
 
                 PayInBankAccountId = x.pd.PayInBankAccountId,
-                PayInBankCode = x.pd.PayInBankCode,
-                PayInBankAccountNo = x.pd.PayInBankAccountNo,
-                PayInBankAccountName = x.pd.PayInBankAccountName,
+                PayInBankCode = x.bankAccount.BankCode,
+                PayInBankAccountNo = x.bankAccount.AccountNumber,
+                PayInBankAccountName = x.bankAccount.AccountName,
 
                 PayOutBankCode = x.pd.PayOutBankCode,
                 PayOutBankAccountNo = x.pd.PayOutBankAccountNo,
@@ -81,6 +86,8 @@ namespace Its.Onix.Api.Database.Repositories
 
                 MimeType = x.fileDocument.MimeType,
                 DocumentType = x.fileDocument.DocumentType,
+                PayInAccountType = x.bankAccount.AccountType,
+                PayInPromptPayId = x.bankAccount.PromptPayId
             });
         }
 
@@ -179,6 +186,7 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.FromBankCode!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.FromBankAccountNo!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.FromBankAccountName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.RefId!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

@@ -30,8 +30,3 @@ ENV['ACCESS_TOKEN'] = token
 
 result = make_request(:post, apiUrl, param)
 puts(result)
-
-apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPayInTransactionCount"
-
-result = make_request(:post, apiUrl, param)
-puts(result)

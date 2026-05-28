@@ -13,6 +13,7 @@ namespace Its.Onix.Api.Models
         public string? SourceBankAccountNo { get; set; } //XX3090 - จะ mask data แล้วแสดง 4 ตัวหลัง
         public string? DestinationBankCode { get; set; } //ธนาคารปลายทาง
         public string? DestinationAccountNo { get; set; } //XX9148 - จะ mask data แล้วแสดง 4 ตัวหลัง
+        public string? MerchantId { get; set; }
 
         public DateTime? TxDate { get; set; }
 
