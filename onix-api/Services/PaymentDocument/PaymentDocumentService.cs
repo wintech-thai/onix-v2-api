@@ -343,7 +343,7 @@ namespace Its.Onix.Api.Services
                 MerchantId = paymentDocument.MerchantId!,
             };
 
-            var mvTxDoc = await _paymentTransactionService!.ProcessLinePaymentTxNotification("notused", bankAccountId, inputData);
+            var mvTxDoc = await _paymentTransactionService!.ProcessLinePaymentTxNotification("global", bankAccountId, inputData);
             if (mvTxDoc.Status != "OK")
             {
                 r.Status = mvTxDoc.Status;
