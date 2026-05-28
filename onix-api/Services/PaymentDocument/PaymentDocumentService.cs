@@ -207,6 +207,7 @@ namespace Its.Onix.Api.Services
             var newFileDocument = await _fileDocumentService!.AddFileDocument(orgId, fd);
 
             paymentDocument.FileDocumentId = newFileDocument.FileDocument!.Id!.ToString();
+            paymentDocument.Status = "Pending";
 
             var result = await repository!.AddPaymentDocument(paymentDocument);
             if (result == null)
@@ -258,6 +259,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            paymentDocument.Status = "Pending"; //ถ้า update ได้ต้องยังคงเป็น Pending status อยู่
             var result = await repository!.UpdatePaymentDocumentById(paymentDocumentId, paymentDocument);
             if (result == null)
             {
