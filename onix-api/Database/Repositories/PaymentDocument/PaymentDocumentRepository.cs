@@ -282,6 +282,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.FromBankAccountNo = paymentDocument.FromBankAccountNo;
                 existing.FromBankAccountName = paymentDocument.FromBankAccountName;
                 existing.RejectReason = paymentDocument.RejectReason;
+
+                existing.PaymentTransactionId = paymentDocument.PaymentTransactionId;
             }
 
             await context.SaveChangesAsync();
