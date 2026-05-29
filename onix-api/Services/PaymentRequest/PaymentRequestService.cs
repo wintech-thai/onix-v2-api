@@ -331,7 +331,7 @@ namespace Its.Onix.Api.Services
 
                 Tags = $"PaymentRequestId=[{existing.Id.ToString()}]",
             };
-            await _pointService!.DeductPoint(orgId, pointTx2);
+            await _pointService!.DeductPoint("global", pointTx2);
             //===== update point wallet ===
 
 
