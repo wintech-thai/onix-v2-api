@@ -317,7 +317,7 @@ namespace Its.Onix.Api.Services
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่แจ้งโอนออก
                 TxAmountDecimal = pt.TxAmountDecimal,
 
-                Tags = $"PaymentRequestId=[{existing.Id.ToString()}]",
+                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
             };
             await _pointService!.DeductPoint(orgId, pointTx1);
 
@@ -329,7 +329,7 @@ namespace Its.Onix.Api.Services
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
                 TxAmountDecimal = pt.PayOutTotalAmountDecimal,
 
-                Tags = $"PaymentRequestId=[{existing.Id.ToString()}]",
+                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
             };
             await _pointService!.DeductPoint("global", pointTx2);
             //===== update point wallet ===
