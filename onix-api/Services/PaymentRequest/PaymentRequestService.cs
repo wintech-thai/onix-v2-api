@@ -271,7 +271,6 @@ namespace Its.Onix.Api.Services
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
             pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
-            pt.PaymentRequestId = paymentRequest.Id.ToString();
 
             pt.MerchantId = existing.MerchantId;
 
