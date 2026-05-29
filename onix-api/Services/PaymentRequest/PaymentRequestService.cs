@@ -331,7 +331,14 @@ namespace Its.Onix.Api.Services
 
                 Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
             };
-            await _pointService!.DeductPoint("global", pointTx2);
+            var pointVm = await _pointService!.DeductPoint("global", pointTx2);
+            if (pointVm.Status != "OK")
+            {
+                mvPt.Status = pointVm.Status;
+                mvPt.Description = pointVm.Description;
+                return mvPt;
+            }
+            
             //===== update point wallet ===
 
 
