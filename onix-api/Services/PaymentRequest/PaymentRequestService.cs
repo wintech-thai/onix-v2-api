@@ -325,7 +325,7 @@ namespace Its.Onix.Api.Services
             {
                 WalletId = bankWallet!.Id.ToString(),
 
-                TxAmount =  (long) Math.Floor((decimal) pt.PayOutTotalAmountDecimal!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                TxAmount =  1, //นับจำนวนครั้ง
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
                 TxAmountDecimal = pt.PayOutTotalAmountDecimal,
 
@@ -335,7 +335,7 @@ namespace Its.Onix.Api.Services
             if (pointVm.Status != "OK")
             {
                 mvPt.Status = pointVm.Status;
-                mvPt.Description = pointVm.Description;
+                mvPt.Description = $"{pointVm.Description}, [{bankWallet.PointBalanceDecimal}] WalletId=[{bankWallet.Id}]";
                 return mvPt;
             }
             
