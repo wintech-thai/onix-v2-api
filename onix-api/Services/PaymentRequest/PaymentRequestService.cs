@@ -325,7 +325,7 @@ namespace Its.Onix.Api.Services
             {
                 WalletId = bankWallet!.Id.ToString(),
 
-                TxAmount =  1, //นับจำนวนครั้ง
+                TxAmount =  0, //นับจำนวนครั้ง
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
                 TxAmountDecimal = pt.PayOutTotalAmountDecimal,
 
