@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmrId = 'c0585dd9-902c-400c-a91c-ae79f10204a2'
+pmrId = '9f0bf721-f0a2-4b8e-9bfe-12546bf4c077'
 paymentBankAccountId = '57e57db4-b583-405d-bd13-b21c93997524'
 
 token = File.read(keyFile)

@@ -12,12 +12,18 @@ namespace Its.Onix.Api.Services
         private readonly IPaymentRequestRepository? repository = null;
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
+        private readonly IPointService? _pointService = null;
 
-        public PaymentRequestService(IPaymentRequestRepository repo, IPaymentTransactionRepository paymentTxRepo, IBankAccountRepository bankAcctRepo) : base()
+        public PaymentRequestService(
+            IPaymentRequestRepository repo, 
+            IPaymentTransactionRepository paymentTxRepo, 
+            IBankAccountRepository bankAcctRepo,
+            IPointService pointService) : base()
         {
             repository = repo;
             _paymentTransactionRepo = paymentTxRepo;
             _bankAccountRepo = bankAcctRepo;
+            _pointService = pointService;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -247,6 +253,11 @@ namespace Its.Onix.Api.Services
         private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, MPaymentRequest paymentRequest, MPaymentRequest existing)
         {
             _paymentTransactionRepo!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
+            var mvPt = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
 
             var pt = new MPaymentTransaction
             {
@@ -277,18 +288,58 @@ namespace Its.Onix.Api.Services
             var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
             var dstBankAccountId = existing.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
 
+            var mcWallet = await _pointService!.GetWalletByMerchantId(orgId, existing.MerchantId!);
+            if (mcWallet!.Status != "OK")
+            {
+                mvPt.Status = mcWallet.Status;
+                mvPt.Description = $"Failed to get merchant wallet, MerchantId=[{existing.MerchantId}]";
+                return(mvPt);
+            }
+
+            var baWallet = await _pointService!.GetWalletByMerchantId(orgId, paymentRequest.PayoutBankAccountId!);
+            if (baWallet!.Status != "OK")
+            {
+                mvPt.Status = baWallet.Status;
+                mvPt.Description = $"Failed to get bank account wallet, BankAccountId=[{paymentRequest.PayoutBankAccountId}]";
+                return(mvPt);
+            }
+
             //TODO : ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
+            var merchantWallet = mcWallet.Wallet;
+            var bankWallet = baWallet.Wallet;
+
+            //===== update point wallet ===            
+            var pointTx1 = new MPointTx()
+            {
+                WalletId = merchantWallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) pt.TxAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                //TxAmountDecimal ตรงนี้จะเป็นค่าที่แจ้งโอนออก
+                TxAmountDecimal = pt.TxAmountDecimal,
+
+                Tags = $"PaymentRequestId=[{existing.Id.ToString()}]",
+            };
+            await _pointService!.DeductPoint(orgId, pointTx1);
+
+            var pointTx2 = new MPointTx()
+            {
+                WalletId = bankWallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) pt.PayOutTotalAmountDecimal!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
+                TxAmountDecimal = pt.PayOutTotalAmountDecimal,
+
+                Tags = $"PaymentRequestId=[{existing.Id.ToString()}]",
+            };
+            await _pointService!.DeductPoint(orgId, pointTx2);
+            //===== update point wallet ===
+
 
             pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
             pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
 
             var mpt = await _paymentTransactionRepo!.AddPaymentTransaction(pt);
-            var mvPt = new MVPaymentTransaction()
-            {
-                Status = "OK",
-                Description = "Success",
-                PaymentTransaction = mpt,
-            };
+            mvPt.PaymentTransaction = mpt;
 
             return mvPt;
         }
