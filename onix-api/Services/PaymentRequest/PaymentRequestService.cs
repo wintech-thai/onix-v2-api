@@ -241,6 +241,23 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var srcBankAccount = await _bankAccountRepo!.GetBankAccountById(paymentRequest.PayoutBankAccountId!);
+            if (srcBankAccount == null)
+            {
+                r.Status = "PAYOUT_BANK_ACCOUNT_NOT_FOUND";
+                r.Description = $"Payout bank account ID [{paymentRequest.PayoutBankAccountId}] not found";
+
+                return r;
+            }
+
+            paymentRequest.PayoutBankCode = srcBankAccount.BankCode;
+            paymentRequest.PayoutBankAccountNo = srcBankAccount.AccountNumber;
+            paymentRequest.PayoutBankAccountName = srcBankAccount.AccountName;
+            paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
+            paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
+            paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
+            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
             var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
@@ -304,9 +321,28 @@ namespace Its.Onix.Api.Services
                 return(mvPt);
             }
 
-            //TODO : ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
             var merchantWallet = mcWallet.Wallet;
             var bankWallet = baWallet.Wallet;
+
+            var merchantDeductAmt = pt.TxAmountDecimal;
+            var merchantCurrentBalance = merchantWallet!.PointBalanceDecimal;
+            var bankAccountDeductAmt = pt.PayOutTotalAmountDecimal;
+            var bankAccountCurrentBalance = bankWallet!.PointBalanceDecimal;
+
+            //ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
+            if (merchantCurrentBalance < merchantDeductAmt)
+            {
+                mvPt.Status = "ERROR_INSUFFICIENT_BALANCE";
+                mvPt.Description = $"Merchant wallet has insufficient balance, MerchantId=[{existing.MerchantId}], WalletId=[{merchantWallet.Id}], CurrentBalance=[{merchantCurrentBalance}], RequiredAmount=[{merchantDeductAmt}]";
+                return mvPt;
+            }
+
+            if (bankAccountCurrentBalance < bankAccountDeductAmt)
+            {
+                mvPt.Status = "ERROR_INSUFFICIENT_BALANCE";
+                mvPt.Description = $"Bank account has insufficient balance, BankAccountId=[{bankWallet.Id}], CurrentBalance=[{bankAccountCurrentBalance}], RequiredAmount=[{bankAccountDeductAmt}]";
+                return mvPt;
+            }
 
             //===== update point wallet ===            
             var pointTx1 = new MPointTx()
@@ -315,7 +351,7 @@ namespace Its.Onix.Api.Services
 
                 TxAmount =  (long) Math.Floor((decimal) pt.TxAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่แจ้งโอนออก
-                TxAmountDecimal = pt.TxAmountDecimal,
+                TxAmountDecimal = merchantDeductAmt,
 
                 Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
             };
@@ -327,7 +363,7 @@ namespace Its.Onix.Api.Services
 
                 TxAmount =  0, //นับจำนวนครั้ง
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
-                TxAmountDecimal = pt.PayOutTotalAmountDecimal,
+                TxAmountDecimal = bankAccountDeductAmt,
 
                 Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
             };
@@ -338,7 +374,7 @@ namespace Its.Onix.Api.Services
                 mvPt.Description = $"{pointVm.Description}, [{bankWallet.PointBalanceDecimal}], [{bankWallet.PointBalance}] WalletId=[{bankWallet.Id}], amount=[{pointTx2.TxAmountDecimal}]";
                 return mvPt;
             }
-            
+
             //===== update point wallet ===
 
 
