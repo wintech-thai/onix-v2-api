@@ -296,7 +296,7 @@ namespace Its.Onix.Api.Services
                 return(mvPt);
             }
 
-            var baWallet = await _pointService!.GetWalletByMerchantId(orgId, paymentRequest.PayoutBankAccountId!);
+            var baWallet = await _pointService!.GetWalletByBankAccountId(orgId, paymentRequest.PayoutBankAccountId!);
             if (baWallet!.Status != "OK")
             {
                 mvPt.Status = baWallet.Status;
