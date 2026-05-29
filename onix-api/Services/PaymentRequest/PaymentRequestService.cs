@@ -246,7 +246,7 @@ namespace Its.Onix.Api.Services
 
         private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, MPaymentRequest paymentRequest, MPaymentRequest existing)
         {
-            repository!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
+            _paymentTransactionRepo!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
 
             var pt = new MPaymentTransaction
             {
@@ -258,6 +258,7 @@ namespace Its.Onix.Api.Services
                 FromBankAccountNo = existing.PayoutBankAccountNo,
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
+                PaymentRequestId = existing.Id.ToString(),
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
