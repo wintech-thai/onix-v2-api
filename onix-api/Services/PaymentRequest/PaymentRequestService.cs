@@ -225,6 +225,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : สร้าง payment tx โดยที่ต้องเช็คยอด balance ของ merchant และ bank account ด้วยว่าพอมั้ย
+
             var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
             r.PaymentRequest = result;
 
