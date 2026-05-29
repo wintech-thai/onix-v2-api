@@ -241,6 +241,23 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var srcBankAccount = await _bankAccountRepo!.GetBankAccountById(paymentRequest.PayoutBankAccountId!);
+            if (srcBankAccount == null)
+            {
+                r.Status = "PAYOUT_BANK_ACCOUNT_NOT_FOUND";
+                r.Description = $"Payout bank account ID [{paymentRequest.PayoutBankAccountId}] not found";
+
+                return r;
+            }
+
+            paymentRequest.PayoutBankCode = srcBankAccount.BankCode;
+            paymentRequest.PayoutBankAccountNo = srcBankAccount.AccountNumber;
+            paymentRequest.PayoutBankAccountName = srcBankAccount.AccountName;
+            paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
+            paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
+            paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
+            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
             var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
