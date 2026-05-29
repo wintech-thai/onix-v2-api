@@ -305,6 +305,12 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
             paymentRequest.PayoutFeePct = merchant.PayinFeePct;
 
+            var requestAmt = paymentRequest.RequestedAmount ?? 0;
+            var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+
+            paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            paymentRequest.PayoutFeeDecimal = payoutFee;
+
             var result = await repository!.AddPaymentRequest(paymentRequest);
 
             r.PaymentRequest = result;

@@ -25,7 +25,7 @@ param =  {
   RefId2: "ORDER-XSWKEKEI",
   Description: "ทดสอบยิง payment request เข้ามาเฉย ๆ",
   Currency: "THB",
-  RequestedAmount: 325,
+  RequestedAmount: 325.43,
   QrProvider: "PP",
   Tags: "testing",
 
@@ -42,4 +42,4 @@ ENV['ACCESS_TOKEN'] = token
 #puts("===[#{token}]")
 
 result = make_request(:post, apiUrl, param)
-puts(result)
+puts(result.to_json)

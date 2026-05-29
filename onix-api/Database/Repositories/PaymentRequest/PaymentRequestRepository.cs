@@ -73,6 +73,8 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutAccountType = x.pr.PayoutAccountType,
                 PayoutAccountLevel = x.pr.PayoutAccountLevel,
                 PayoutFeePct = x.pr.PayoutFeePct,
+                PayoutFeeDecimal = x.pr.PayoutFeeDecimal,
+                PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
