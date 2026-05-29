@@ -113,6 +113,55 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
+
+            var pt = new MPaymentTransaction
+            {
+                Status = "Approved",
+                Direction = "PayOut",
+                Currency = "THB",
+                TxAmount = (double) paymentRequest.RequestedAmount!,
+                TxAmountDecimal = (decimal) paymentRequest.RequestedAmount!,
+                FromBankAccountNo = paymentRequest.PayoutBankAccountNo,
+                FromBankCode = paymentRequest.PayoutBankCode,
+                PayOutFeePct = paymentRequest.PayoutFeePct
+            };
+
+            pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+            pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
+
+            pt.PayoutFeeDecimal = (decimal) pt.PayOutFee!;
+            pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+
+            pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
+            pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
+            pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
+            pt.PaymentRequestId = paymentRequest.Id.ToString();
+
+            pt.MerchantId = paymentRequest.MerchantId;
+
+            var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
+            var dstBankAccountId = paymentRequest.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
+
+            //TODO : ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
+
+            pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
+            pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
+
+            var mpt = await repository!.AddPaymentTransaction(pt);
+            var mvPt = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentTransaction = mpt,
+            };
+
+            return mvPt;
+        }
+
         public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
             string orgId, 
             string bankAccountId, 
@@ -121,7 +170,7 @@ namespace Its.Onix.Api.Services
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
             _bankAccountRepo!.SetCustomOrgId("global");
-Console.WriteLine($"DEBUG1 - [{paymentNotiLine.MerchantId}], [{bankAccountId}]");
+//Console.WriteLine($"DEBUG1 - [{paymentNotiLine.MerchantId}], [{bankAccountId}]");
 
             var prParam = new VMPaymentRequest()
             {

@@ -123,7 +123,6 @@ namespace Its.Onix.Api.Models
         public double? PayoutFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมจ่ายออก
 
 
-
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
         public string? Tags { get; set; }

@@ -303,6 +303,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinAccountLevel = bankAccount.AccountLevel;
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
+            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
 
             var result = await repository!.AddPaymentRequest(paymentRequest);
 
