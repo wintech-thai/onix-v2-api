@@ -121,7 +121,12 @@ namespace Its.Onix.Api.Models
         
         [Column("payout_fee_pct")]
         public double? PayoutFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมจ่ายออก
+        [Column("payout_fee_decimal")]
 
+        public decimal? PayoutFeeDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
+
+        [Column("total_payout_amount_decimal")]
+        public decimal? PayOutTotalAmountDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
 
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน

@@ -4,19 +4,26 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Services
 {
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
         private readonly IPaymentRequestRepository? repository = null;
+        private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
+        private readonly IPointService? _pointService = null;
 
-        public PaymentRequestService(IPaymentRequestRepository repo, IBankAccountRepository bankAcctRepo) : base()
+        public PaymentRequestService(
+            IPaymentRequestRepository repo, 
+            IPaymentTransactionRepository paymentTxRepo, 
+            IBankAccountRepository bankAcctRepo,
+            IPointService pointService) : base()
         {
             repository = repo;
+            _paymentTransactionRepo = paymentTxRepo;
             _bankAccountRepo = bankAcctRepo;
+            _pointService = pointService;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -116,6 +123,234 @@ namespace Its.Onix.Api.Services
             return Math.Round(newAmt, 2);
         }
 
+        public async Task<MVPaymentRequest> UpdatePaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest, MBankAccount bankAccount, MMerchant merchant)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
+            //Update ได้แต่เฉพาะ Payout เท่านั้น
+            //เป็น bank account ที่จะถูกโอนเงินออก
+            paymentRequest.PayoutBankAccountName = bankAccount!.AccountName;
+            paymentRequest.PayoutBankAccountNo = bankAccount.AccountNumber;
+            paymentRequest.PayoutBankCode = bankAccount.BankCode;
+            paymentRequest.PayoutPromptPayId = bankAccount.PromptPayId;
+            paymentRequest.PayoutAccountType = bankAccount.AccountType;
+            paymentRequest.PayoutAccountLevel = bankAccount.AccountLevel;
+            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+            paymentRequest.PayoutBankAccountId = bankAccount.Id.ToString();
+
+            var result = await repository!.UpdatePayOutRequestById(paymentRequestId, paymentRequest);
+
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentRequest> RejectPaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            var result = await repository!.UpdatePaymentStatusRejectById(paymentRequestId, paymentRequest);
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentRequest> ApprovePaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
+            if (mvPtx.Status != "OK")
+            {
+                r.Status = mvPtx.Status;
+                r.Description = mvPtx.Description;
+
+                return r;
+            }
+
+            paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
+
+            var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
+            r.PaymentRequest = result;
+            r.PayoutTransaction = mvPtx.PaymentTransaction;
+
+            return r;
+        }
+
+        private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, MPaymentRequest paymentRequest, MPaymentRequest existing)
+        {
+            _paymentTransactionRepo!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
+            var mvPt = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var pt = new MPaymentTransaction
+            {
+                Status = "Approved",
+                Direction = "PayOut",
+                Currency = "THB",
+                TxAmount = (double) existing.RequestedAmount!,
+                TxAmountDecimal = (decimal) existing.RequestedAmount!,
+                FromBankAccountNo = existing.PayoutBankAccountNo,
+                FromBankCode = existing.PayoutBankCode,
+                PayOutFeePct = existing.PayoutFeePct,
+                PaymentRequestId = existing.Id.ToString(),
+            };
+
+            pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+            pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
+
+            pt.PayoutFeeDecimal = (decimal) pt.PayOutFee!;
+            pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+
+            pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
+            pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
+            pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
+
+            pt.MerchantId = existing.MerchantId;
+
+            var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
+            var dstBankAccountId = existing.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
+
+            var mcWallet = await _pointService!.GetWalletByMerchantId(orgId, existing.MerchantId!);
+            if (mcWallet!.Status != "OK")
+            {
+                mvPt.Status = mcWallet.Status;
+                mvPt.Description = $"Failed to get merchant wallet, MerchantId=[{existing.MerchantId}]";
+                return(mvPt);
+            }
+
+            var baWallet = await _pointService!.GetWalletByBankAccountId("global", paymentRequest.PayoutBankAccountId!);
+            if (baWallet!.Status != "OK")
+            {
+                mvPt.Status = baWallet.Status;
+                mvPt.Description = $"Failed to get bank account wallet, BankAccountId=[{paymentRequest.PayoutBankAccountId}]";
+                return(mvPt);
+            }
+
+            //TODO : ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
+            var merchantWallet = mcWallet.Wallet;
+            var bankWallet = baWallet.Wallet;
+
+            //===== update point wallet ===            
+            var pointTx1 = new MPointTx()
+            {
+                WalletId = merchantWallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) pt.TxAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                //TxAmountDecimal ตรงนี้จะเป็นค่าที่แจ้งโอนออก
+                TxAmountDecimal = pt.TxAmountDecimal,
+
+                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
+            };
+            await _pointService!.DeductPoint(orgId, pointTx1);
+
+            var pointTx2 = new MPointTx()
+            {
+                WalletId = bankWallet!.Id.ToString(),
+
+                TxAmount =  0, //นับจำนวนครั้ง
+                //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
+                TxAmountDecimal = pt.PayOutTotalAmountDecimal,
+
+                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
+            };
+            var pointVm = await _pointService!.DeductPoint("global", pointTx2);
+            if (pointVm.Status != "OK")
+            {
+                mvPt.Status = pointVm.Status;
+                mvPt.Description = $"{pointVm.Description}, [{bankWallet.PointBalanceDecimal}], [{bankWallet.PointBalance}] WalletId=[{bankWallet.Id}], amount=[{pointTx2.TxAmountDecimal}]";
+                return mvPt;
+            }
+            
+            //===== update point wallet ===
+
+
+            pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
+            pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
+
+            var mpt = await _paymentTransactionRepo!.AddPaymentTransaction(pt);
+            mvPt.PaymentTransaction = mpt;
+
+            return mvPt;
+        }
+
         public async Task<MVPaymentRequest> AddPaymentRequestPayOut(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
@@ -186,6 +421,13 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinAccountLevel = bankAccount.AccountLevel;
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
+            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+
+            var requestAmt = paymentRequest.RequestedAmount ?? 0;
+            var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+
+            paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            paymentRequest.PayoutFeeDecimal = payoutFee;
 
             var result = await repository!.AddPaymentRequest(paymentRequest);
 

@@ -9,5 +9,6 @@ namespace Its.Onix.Api.ModelsViews
         public string? Status { get; set; }
         public string? Description { get; set; }
         public MPaymentRequest? PaymentRequest { get; set; }
+        public MPaymentTransaction? PayoutTransaction { get; set; }
     }
 }

@@ -148,5 +148,71 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.AddPaymentRequestPayOut(mc.OrgId, request, mc, ba);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UpdatePayOutRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> UpdatePayOutRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            //หน้าจอที่เรียก API นี้จะให้ update แต่บัญชีธนาคารที่จะจ่ายเงินออกเท่านั้น 
+ 
+            var merchantId = request.MerchantId!;
+            var bankAccountId = request.PayoutBankAccountId!; //บัญชีธนาคารที่จะเอาเงินออก (ซึ่งจะเป็น bank account ของ pool กลางที่ใช้สำหรับจ่ายเงินออกเท่านั้น ไม่ใช่ bank account ของ merchant)
+
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return Ok(mcVm);
+            }
+
+            var mc = mcVm.Merchant;
+            if (mc == null)
+            {
+                return Ok(mcVm);
+            }
+
+            if (string.IsNullOrEmpty(mc.OrgId))
+            {
+                mcVm.Status = "ERROR_ORG_ID_EMPTY";
+                mcVm.Description = "Organization ID is null or empty";
+                return Ok(mcVm);
+            }
+
+            //Bank Account
+            var baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+            if (baVm.Status != "OK")
+            {
+                return Ok(baVm);
+            }
+
+            var ba = baVm.BankAccount;
+            if (ba == null)
+            {
+                return Ok(baVm);
+            }
+
+            request.MerchantId = merchantId;
+            request.MerchantId2 = Guid.Parse(merchantId);
+            var result = await svc.UpdatePaymentRequestPayOut(mc.OrgId, paymentRequestId, request, ba, mc);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/RejectPayOutRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> RejectPayOutRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var result = await svc.RejectPaymentRequestPayOut("global", paymentRequestId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/ApprovePayOutRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> ApprovePayOutRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var result = await svc.ApprovePaymentRequestPayOut("global", paymentRequestId, request);
+            return Ok(result);
+        }
     }
 }

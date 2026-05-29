@@ -12,5 +12,8 @@ namespace Its.Onix.Api.Services
         public Task<List<MPaymentRequest>> GetPaymentRequests(string orgId, VMPaymentRequest param);
         public Task<int> GetPaymentRequestCount(string orgId, VMPaymentRequest param);
         public Task<MVPaymentRequest> UpdatePaymentRequestById(string orgId, string paymentRequestId, MPaymentRequest paymentRequest);
+        public Task<MVPaymentRequest> UpdatePaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest, MBankAccount bankAccount, MMerchant merchant);
+        public Task<MVPaymentRequest> RejectPaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest);
+        public Task<MVPaymentRequest> ApprovePaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest);
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260529031130_PaymentTx_Payout_001")]
+    partial class PaymentTx_Payout_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1743,10 +1746,6 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("pay_in_fee_pct");
 
-                    b.Property<decimal?>("PayOutTotalAmountDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("total_payout_amount_decimal");
-
                     b.Property<string>("PayinAccountLevel")
                         .HasColumnType("text")
                         .HasColumnName("payin_account_level");
@@ -1802,10 +1801,6 @@ namespace onix.api.Migrations
                     b.Property<string>("PayoutBankCode")
                         .HasColumnType("text")
                         .HasColumnName("payout_bank_code");
-
-                    b.Property<decimal?>("PayoutFeeDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("payout_fee_decimal");
 
                     b.Property<double?>("PayoutFeePct")
                         .HasColumnType("double precision")

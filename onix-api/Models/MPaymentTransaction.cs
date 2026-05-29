@@ -97,7 +97,11 @@ namespace Its.Onix.Api.Models
         [Column("payin_bank_account_name")]
         public string? PayInBankAccountName { get; set; }
 
+
         //ข้อมูลเกี่ยวกับ บัญชีที่โอนออกไปปลายทาง
+        [Column("payout_bank_account_id")]
+        public string? PayOutBankAccountId { get; set; }
+
         [Column("payout_bank_code")]
         public string? PayOutBankCode { get; set; }
 
@@ -106,6 +110,13 @@ namespace Its.Onix.Api.Models
 
         [Column("payout_bank_account_name")]
         public string? PayOutBankAccountName { get; set; }
+
+
+        [Column("payout_fee_decimal")]
+        public decimal? PayoutFeeDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
+
+        [Column("total_payout_amount_decimal")]
+        public decimal? PayOutTotalAmountDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
 
 
         //ข้อมูลบัญชีต้นทางของผู้โอน

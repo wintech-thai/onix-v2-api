@@ -59,6 +59,9 @@ namespace Its.Onix.Api.Database.Repositories
                 PayOutBankCode = x.pt.PayOutBankCode,
                 PayOutBankAccountNo = x.pt.PayOutBankAccountNo,
                 PayOutBankAccountName = x.pt.PayOutBankAccountName,
+                PayOutBankAccountId = x.pt.PayOutBankAccountId,
+                PayoutFeeDecimal = x.pt.PayoutFeeDecimal,
+                PayOutTotalAmountDecimal = x.pt.PayOutTotalAmountDecimal,
 
                 FromBankCode = x.pt.FromBankCode,
                 FromBankAccountNo = x.pt.FromBankAccountNo,
