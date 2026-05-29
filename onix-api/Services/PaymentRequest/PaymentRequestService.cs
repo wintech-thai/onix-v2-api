@@ -335,7 +335,7 @@ namespace Its.Onix.Api.Services
             if (pointVm.Status != "OK")
             {
                 mvPt.Status = pointVm.Status;
-                mvPt.Description = $"{pointVm.Description}, [{bankWallet.PointBalanceDecimal}] WalletId=[{bankWallet.Id}]";
+                mvPt.Description = $"{pointVm.Description}, [{bankWallet.PointBalanceDecimal}], [{bankWallet.PointBalance}] WalletId=[{bankWallet.Id}], amount=[{pointTx2.TxAmountDecimal}]";
                 return mvPt;
             }
             

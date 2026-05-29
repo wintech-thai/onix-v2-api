@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmrId = '3e224b33-7cae-4a3f-9d5d-9af6b9b3eb93'
+pmrId = '3d502d55-00d3-48d0-a17c-0035810346d5'
 paymentBankAccountId = '35c050b6-3015-407c-8a0a-4f8a35eb8944'
 merchantId = 'cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0' # ppm-alfa999
 
