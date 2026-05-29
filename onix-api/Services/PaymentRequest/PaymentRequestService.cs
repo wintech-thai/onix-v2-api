@@ -4,18 +4,19 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace Its.Onix.Api.Services
 {
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
         private readonly IPaymentRequestRepository? repository = null;
+        private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
 
-        public PaymentRequestService(IPaymentRequestRepository repo, IBankAccountRepository bankAcctRepo) : base()
+        public PaymentRequestService(IPaymentRequestRepository repo, IPaymentTransactionRepository paymentTxRepo, IBankAccountRepository bankAcctRepo) : base()
         {
             repository = repo;
+            _paymentTransactionRepo = paymentTxRepo;
             _bankAccountRepo = bankAcctRepo;
         }
 
@@ -225,12 +226,71 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : สร้าง payment tx โดยที่ต้องเช็คยอด balance ของ merchant และ bank account ด้วยว่าพอมั้ย
+            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
+            if (mvPtx.Status != "OK")
+            {
+                r.Status = mvPtx.Status;
+                r.Description = mvPtx.Description;
+
+                return r;
+            }
+
+            paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
             var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
             r.PaymentRequest = result;
+            r.PayoutTransaction = mvPtx.PaymentTransaction;
 
             return r;
+        }
+
+        private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, MPaymentRequest paymentRequest, MPaymentRequest existing)
+        {
+            repository!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
+
+            var pt = new MPaymentTransaction
+            {
+                Status = "Approved",
+                Direction = "PayOut",
+                Currency = "THB",
+                TxAmount = (double) existing.RequestedAmount!,
+                TxAmountDecimal = (decimal) existing.RequestedAmount!,
+                FromBankAccountNo = existing.PayoutBankAccountNo,
+                FromBankCode = existing.PayoutBankCode,
+                PayOutFeePct = existing.PayoutFeePct,
+            };
+
+            pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+            pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
+
+            pt.PayoutFeeDecimal = (decimal) pt.PayOutFee!;
+            pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+
+            pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
+            pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
+            pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
+            pt.PaymentRequestId = paymentRequest.Id.ToString();
+
+            pt.MerchantId = existing.MerchantId;
+
+            var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
+            var dstBankAccountId = existing.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
+
+            //TODO : ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
+
+            pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
+            pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
+
+            var mpt = await _paymentTransactionRepo!.AddPaymentTransaction(pt);
+            var mvPt = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentTransaction = mpt,
+            };
+
+            return mvPt;
         }
 
         public async Task<MVPaymentRequest> AddPaymentRequestPayOut(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)

@@ -389,6 +389,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayoutAccountType = paymentRequest.PayoutAccountType;
                 existing.PayoutAccountLevel = paymentRequest.PayoutAccountLevel;
                 existing.PayoutFeePct = paymentRequest.PayoutFeePct;
+                existing.PaymentTxId = paymentRequest.PaymentTxId;
             }
 
             await context.SaveChangesAsync();
