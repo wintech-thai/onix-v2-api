@@ -129,6 +129,16 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsAll()
+        {
+            var result = await GetSelectionV2().AsExpandable()
+                .Where(p => p.AccountCategory == "PayIn")
+                .OrderByDescending(e => e.CreatedDate)
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string merchantId)
         {
             var result = await GetSelectionV2().AsExpandable()
