@@ -536,6 +536,22 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<List<MBankAccount>> GetPayInBankAccountsWithGlobalAll(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var merchantBankAccounts = await repository.GetPayInBankAccountsAll();
+
+            var param = new VMBankAccount()
+            {
+                AccountCategory = "PayIn",
+                AccountLevel = "Global",
+            };
+            var allBankAccounts = await repository.GetAllBankAccounts(param);    
+
+            return allBankAccounts;
+        }
+
         public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsWithGlobalForMerchant(string orgId, string merchantId)
         {
             repository!.SetCustomOrgId(orgId);

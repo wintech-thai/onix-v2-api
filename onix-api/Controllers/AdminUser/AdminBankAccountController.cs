@@ -154,6 +154,16 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetPayInBankAccountsWithGlobalAll")]
+        public async Task<IActionResult> GetPayInBankAccountsWithGlobalAll()
+        {
+            //ใช้สำหรับตอนโอนเงินออกไปให้กับ merchant
+            var result = await svc.GetPayInBankAccountsWithGlobalAll("global");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/SelectMerchantById/{bankAccountId}/{merchantId}")]
         public async Task<IActionResult> SelectMerchantById(string bankAccountId, string merchantId)
