@@ -78,6 +78,8 @@ namespace Its.Onix.Api.Database.Repositories
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
+                MerchantMinPayout = x.merchant != null ? x.merchant.PayoutMinAmount : null,
+                MerchantMaxPayout = x.merchant != null ? x.merchant.PayoutMaxAmount : null
             });
         }
 
