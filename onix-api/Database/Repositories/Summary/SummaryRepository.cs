@@ -226,7 +226,7 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     Direction = g.Key,
                     TxAmount = g.Sum(x => x.TxAmountDecimal),
-                    FeeAmount = g.Sum(x => x.PayInFeeDecimal + x.PayoutFeeDecimal)
+                    FeeAmount = g.Sum(x => (x.PayInFeeDecimal ?? 0) + (x.PayoutFeeDecimal ?? 0))
                 })
                 .ToListAsync();
 
