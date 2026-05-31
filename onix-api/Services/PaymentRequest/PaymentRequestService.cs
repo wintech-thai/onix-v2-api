@@ -440,9 +440,19 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+
+            if (bankAccount.AccountType == "PromptPay")
+            {
+                qrGenerator = new QrGeneratorPromptPay(paymentRequest, bankAccount);
+                qrResult = qrGenerator.Generate();
+            }
+
             paymentRequest.ResponseData = "{}";
             paymentRequest.ProcessingMessages = "[]";
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+            paymentRequest.QrCode = qrResult?.QrPayload;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
             paymentRequest.Status = "Pending";
