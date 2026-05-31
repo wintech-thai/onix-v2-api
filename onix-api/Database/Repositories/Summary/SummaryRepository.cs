@@ -102,6 +102,7 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantCode = x.merchant.Code,
                 TxAmountDecimal = x.pmt.TxAmountDecimal,
                 PayInFeeDecimal = x.pmt.PayInFeeDecimal,
+                PayoutFeeDecimal = x.pmt.PayoutFeeDecimal,
                 Direction = x.pmt.Direction,
                 CreatedDate = x.pmt.CreatedDate,
             });
@@ -164,7 +165,7 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     MerchantCode = g.Key,
                     TxAmount = g.Sum(x => x.TxAmountDecimal),
-                    FeeAmount = g.Sum(x => x.PayInFeeDecimal)
+                    FeeAmount = g.Sum(x => x.PayoutFeeDecimal)
                 })
                 .OrderByDescending(x => x.TxAmount)
                 .ToListAsync();
@@ -183,7 +184,7 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     Date = g.Key,
                     PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
-                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayInFeeDecimal)
+                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayoutFeeDecimal)
                 })
                 .OrderBy(x => x.Date)
                 .ToListAsync();
@@ -205,7 +206,7 @@ namespace Its.Onix.Api.Database.Repositories
                     PayInAmount = g.Where(x => x.Direction == "PayIn").Sum(x => x.TxAmountDecimal),
                     PayOutAmount = g.Where(x => x.Direction == "PayOut").Sum(x => x.TxAmountDecimal),
                     PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
-                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayInFeeDecimal)
+                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayoutFeeDecimal)
                 })
                 .OrderBy(x => x.Date)
                 .ThenBy(x => x.MerchantCode)
@@ -225,7 +226,7 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     Direction = g.Key,
                     TxAmount = g.Sum(x => x.TxAmountDecimal),
-                    FeeAmount = g.Sum(x => x.PayInFeeDecimal)
+                    FeeAmount = g.Sum(x => x.PayInFeeDecimal + x.PayoutFeeDecimal)
                 })
                 .ToListAsync();
 
