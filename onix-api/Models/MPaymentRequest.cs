@@ -177,6 +177,11 @@ namespace Its.Onix.Api.Models
         public string? MerchantName { get; set; }
         [NotMapped]
         public string? MerchantCode { get; set; }
+        [NotMapped]
+        public double? MerchantMinPayout { get; set; }
+        [NotMapped]
+        public double? MerchantMaxPayout { get; set; }
+
 
         [NotMapped]
         public MPaymentResponse? ResponseDataObj { get; set; }
