@@ -75,6 +75,8 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutFeePct = x.pr.PayoutFeePct,
                 PayoutFeeDecimal = x.pr.PayoutFeeDecimal,
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
+                QrCode = x.pr.QrCode,
+                RejectReason = x.pr.RejectReason,
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,

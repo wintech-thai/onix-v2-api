@@ -442,7 +442,6 @@ namespace Its.Onix.Api.Services
 
             paymentRequest.ResponseData = "{}";
             paymentRequest.ProcessingMessages = "[]";
-            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
             paymentRequest.Status = "Pending";
@@ -458,12 +457,29 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
             paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
             var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
 
             paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
             paymentRequest.PayoutFeeDecimal = payoutFee;
+
+            //สร้าง QR
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+            if (bankAccount.AccountType == "PromptPay")
+            {
+                var tmpPr = new MPaymentRequest()
+                {
+                    RefId = paymentRequest.RefId,
+                    GeneratedAmount = (double) paymentRequest.PayOutTotalAmountDecimal,
+                };
+
+                qrGenerator = new QrGeneratorPromptPay(tmpPr, bankAccount);
+                qrResult = qrGenerator.Generate();
+            }
+            paymentRequest.QrCode = qrResult?.QrPayload;
 
             var result = await repository!.AddPaymentRequest(paymentRequest);
 

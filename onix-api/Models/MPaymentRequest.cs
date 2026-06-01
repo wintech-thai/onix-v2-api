@@ -165,6 +165,9 @@ namespace Its.Onix.Api.Models
         [Column("reject_reason")]
         public string? RejectReason { get; set; }
 
+        [Column("qr_code")]
+        public string? QrCode { get; set; }
+
 
         //System fields
         [Column("created_date")]
@@ -172,6 +175,9 @@ namespace Its.Onix.Api.Models
 
         [Column("expire_date")]
         public DateTime? ExpireDate { get; set; }
+
+
+
 
         [NotMapped]
         public string? MerchantName { get; set; }
