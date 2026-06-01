@@ -546,7 +546,6 @@ namespace Its.Onix.Api.Services
             var param = new VMBankAccount()
             {
                 AccountCategory = "PayIn",
-                AccountLevel = "Global",
             };
             var allBankAccounts = await repository.GetAllBankAccounts(param);
 
