@@ -540,14 +540,25 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
 
-            var merchantBankAccounts = await repository.GetPayInBankAccountsAll();
+            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
+            var dict2 = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
 
             var param = new VMBankAccount()
             {
                 AccountCategory = "PayIn",
                 AccountLevel = "Global",
             };
-            var allBankAccounts = await repository.GetAllBankAccounts(param);    
+            var allBankAccounts = await repository.GetAllBankAccounts(param);
+
+            foreach (var bankAccount in allBankAccounts)
+            {
+                var bankAccountId = bankAccount.Id.ToString()!;
+                bankAccount.CurrentWalletBalance = 0;
+                if (dict2.TryGetValue(bankAccountId, out var currentWalletBalance))
+                {
+                    bankAccount.CurrentWalletBalance = currentWalletBalance;
+                }
+            }
 
             return allBankAccounts;
         }
