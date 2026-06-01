@@ -440,6 +440,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //ค่าตรงนี้เอาไปใช้ทำ QR
+            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+
             IQrGenerator qrGenerator;
             QrGeneratorResult? qrResult = null;
 
@@ -451,7 +454,6 @@ namespace Its.Onix.Api.Services
 
             paymentRequest.ResponseData = "{}";
             paymentRequest.ProcessingMessages = "[]";
-            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
             paymentRequest.QrCode = qrResult?.QrPayload;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
