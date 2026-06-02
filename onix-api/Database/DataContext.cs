@@ -56,6 +56,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MWebhookConfig>? WebhookConfigs { get; set; }
     public DbSet<MFileDocument>? FileDocuments { get; set; }
     public DbSet<MPaymentDocument>? PaymentDocuments { get; set; }
+    public DbSet<MConfiguration>? Configurations { get; set; }
 
 
     //=== Admin tables here =====
@@ -213,5 +214,8 @@ public class DataContext : DbContext, IDataContext
             .HasIndex(t => new { t.OrgId, t.ObjectStoragePath }).IsUnique();
 
         modelBuilder.Entity<MPaymentDocument>();
+
+        modelBuilder.Entity<MConfiguration>()
+            .HasIndex(t => new { t.OrgId, t.ConfigType }).IsUnique();
     }
 }
