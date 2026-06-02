@@ -44,7 +44,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/GetBrandConfig")]
         public async Task<IActionResult> GetBrandConfig()
         {
-            var result = await svc.GetBrandConfig("global");
+            var result = await svc.GetBrandConfig("global", true);
             return Ok(result);
         }
 
