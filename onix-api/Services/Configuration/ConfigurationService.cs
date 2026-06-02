@@ -18,7 +18,7 @@ namespace Its.Onix.Api.Services
         {
             var r = new MVConfiguration() 
             { 
-                Status = "SUCCESS",
+                Status = "OK",
                 Description = "Brand configuration retrieved successfully"
             };
 
@@ -47,7 +47,7 @@ namespace Its.Onix.Api.Services
             
             var r = new MVConfiguration() 
             { 
-                Status = "SUCCESS",
+                Status = "OK",
                 Description = "Brand configuration set successfully"
             };
 
@@ -65,6 +65,28 @@ namespace Its.Onix.Api.Services
             var c = await repository!.UpsertConfiguration(config);
 
             r.Configuration = c;
+            r.Configuration.ConfigValue = "";
+
+            return r;
+        }
+
+        public async Task<MVConfiguration?> SetConfigStatusById(string orgId, string configId, string status)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var config = await repository!.SetConfigurationStatusById(configId, status);
+
+            if (config == null)
+            {
+                return null;
+            }
+
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Configuration status updated successfully"
+            };
+
+            r.Configuration = config;
             r.Configuration.ConfigValue = "";
 
             return r;

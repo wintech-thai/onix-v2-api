@@ -9,5 +9,6 @@ namespace Its.Onix.Api.Database.Repositories
 
         public Task<MConfiguration?> GetConfigurationByType(string configType);
         public Task<MConfiguration> UpsertConfiguration(MConfiguration config);
+        public Task<MConfiguration?> SetConfigurationStatusById(string configId, string status);
     }
 }

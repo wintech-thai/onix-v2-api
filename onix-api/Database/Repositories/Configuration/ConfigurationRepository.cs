@@ -40,5 +40,21 @@ namespace Its.Onix.Api.Database.Repositories
             await context!.SaveChangesAsync();
             return config;
         }
+
+        public async Task<MConfiguration?> SetConfigurationStatusById(string configId, string status)
+        {
+            var id = Guid.Parse(configId);
+
+            var config = await context!.Configurations!.FirstOrDefaultAsync(c => (c.ConfigId == id) && c.OrgId!.Equals(orgId));
+            if (config == null)
+            {
+                return null;
+            }
+
+            config.Status = status;
+
+            await context!.SaveChangesAsync();
+            return config;
+        }
     }
 }

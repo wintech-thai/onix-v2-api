@@ -7,5 +7,6 @@ namespace Its.Onix.Api.Services
     {
         public Task<MVConfiguration?> GetBrandConfig(string orgId);
         public Task<MVConfiguration> SetBrandConfig(string orgId, MConfiguration config);
+        public Task<MVConfiguration?> SetConfigStatusById(string orgId, string configId, string status);
     }
 }

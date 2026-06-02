@@ -20,6 +20,24 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/EnableConfigById/{configId}")]
+        public async Task<IActionResult> EnableConfigById(string configId)
+        {
+            var result = await svc.SetConfigStatusById("global", configId, "Active");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/DisableConfigById/{configId}")]
+        public async Task<IActionResult> DisableConfigById(string configId)
+        {
+            var result = await svc.SetConfigStatusById("global", configId, "Disabled");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [AllowAnonymous] //ยอมให้ทุกคนเข้าถึงได้ เพราะต้องใช้ในการแสดงผลหน้าแรก
         [Route("org/global/action/GetBrandConfig")]

@@ -14,15 +14,22 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ### 
-apiUrl = "admin-api/AdminConfiguration/org/global/action/GetBrandConfig"
-param = nil
+apiUrl = "admin-api/AdminConfiguration/org/global/action/SetBrandConfig"
+param = {
+  Status: "Disabled",
+  BrandConfig: {
+    BrandName: "Test Brand",
+    LogoPath: "https://example.com/logo.png",
+    ThemeName: "GREEN_NATURAL",
+  }
+}
 
 token = File.read(keyFile)
 
 ENV['API_KEY'] = nil # ถ้าไม่ใช้ API KEY ก็เซ็ตเป็น nil
-ENV['ACCESS_TOKEN'] = nil # no need for authentication for this API
+ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:get, apiUrl, param)
+result = make_request(:post, apiUrl, param)
 puts(result.to_json)
