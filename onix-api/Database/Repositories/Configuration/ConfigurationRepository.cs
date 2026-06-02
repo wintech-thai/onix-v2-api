@@ -45,7 +45,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var id = Guid.Parse(configId);
 
-            var config = await context!.Configurations!.FirstOrDefaultAsync(c => (c.ConfigId == id) && c.OrgId!.Equals(orgId));
+            var config = await context!.Configurations!.AsExpandable().FirstOrDefaultAsync(c => (c.ConfigId == id) && c.OrgId!.Equals(orgId));
             if (config == null)
             {
                 return null;
