@@ -1,0 +1,60 @@
+using LinqKit;
+using Its.Onix.Api.Models;
+using System.Data.Entity;
+
+namespace Its.Onix.Api.Database.Repositories
+{
+    public class ConfigurationRepository : BaseRepository, IConfigurationRepository
+    {
+        public ConfigurationRepository(IDataContext ctx)
+        {
+            context = ctx;
+        }
+
+        public async Task<MConfiguration?> GetConfigurationByType(string configType)
+        {
+            var u = await context!.Configurations!.AsExpandable()
+                .Where(p => p!.ConfigType!.Equals(configType) && p!.OrgId!.Equals(orgId))
+                .FirstOrDefaultAsync();
+
+            return u;
+        }
+
+        public async Task<MConfiguration> UpsertConfiguration(MConfiguration config)
+        {
+            var existing = await GetConfigurationByType(config.ConfigType!);
+            if (existing != null)
+            {
+                // Update existing configuration
+                existing.ConfigValue = config.ConfigValue;
+                existing.CreatedDate = DateTime.UtcNow;
+            }
+            else
+            {
+                // Add new configuration
+                config.OrgId = orgId;
+                config.CreatedDate = DateTime.UtcNow;
+                context!.Configurations!.Add(config);
+            }
+
+            await context!.SaveChangesAsync();
+            return config;
+        }
+
+        public async Task<MConfiguration?> SetConfigurationStatusById(string configId, string status)
+        {
+            var id = Guid.Parse(configId);
+
+            var config = await context!.Configurations!.AsExpandable().FirstOrDefaultAsync(c => (c.ConfigId == id) && c.OrgId!.Equals(orgId));
+            if (config == null)
+            {
+                return null;
+            }
+
+            config.Status = status;
+
+            await context!.SaveChangesAsync();
+            return config;
+        }
+    }
+}

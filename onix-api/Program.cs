@@ -140,6 +140,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IWebhookConfigService, WebhookConfigService>();
             builder.Services.AddScoped<IFileDocumentService, FileDocumentService>();
             builder.Services.AddScoped<IPaymentDocumentService, PaymentDocumentService>();
+            builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -185,7 +186,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IWebhookConfigRepository, WebhookConfigRepository>();
             builder.Services.AddScoped<IFileDocumentRepository, FileDocumentRepository>();
             builder.Services.AddScoped<IPaymentDocumentRepository, PaymentDocumentRepository>();
-
+            builder.Services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
 
             builder.Services.AddAuthentication("BasicOrBearer")
                 .AddScheme<AuthenticationSchemeOptions, AuthenticationHandlerProxy>("BasicOrBearer", null);
