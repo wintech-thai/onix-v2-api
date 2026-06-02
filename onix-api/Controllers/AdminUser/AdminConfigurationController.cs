@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -44,6 +45,17 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetBrandConfig()
         {
             var result = await svc.GetBrandConfig("global");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/GetBrandLogoUploadPresignedUrl")]
+        public async Task<IActionResult> GetBrandLogoUploadPresignedUrl([FromBody] VMUploadDocument request)
+        {
+            var result = await svc.GetBrandLogoUploadPresignedUrl("global", request);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+
             return Ok(result);
         }
 

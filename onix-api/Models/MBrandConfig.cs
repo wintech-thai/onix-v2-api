@@ -4,7 +4,9 @@ namespace Its.Onix.Api.Models
     public class MBrandConfig
     {
         public string? BrandName { get; set; }
+        public string? DocumentId { get; set; }
         public string? LogoPath { get; set; }
+        public string? LogoMimeType { get; set; }
         public string? LogoImageUrl { get; set; }
         public string? ThemeName { get; set; }
 
@@ -12,6 +14,7 @@ namespace Its.Onix.Api.Models
         {
             BrandName = "PLEASE PAYMENT";
             LogoPath = "DEFAULT";
+            LogoMimeType = "";
             ThemeName = "DEFAULT";
         }
     }
