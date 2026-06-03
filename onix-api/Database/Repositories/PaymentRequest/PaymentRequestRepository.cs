@@ -363,6 +363,29 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+
+        public async Task<MPaymentRequest?> UpdateTransferRequestById(string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            //ให้ update เฉพาะ field ที่เกี่ยวกับการจ่ายเงินออกไปเท่านั้น เพื่อให้แน่ใจว่า field อื่น ๆ จะไม่ถูกแก้ไขโดยไม่ได้ตั้งใจ
+            Guid id = Guid.Parse(paymentRequestId);
+
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
+                existing.PayoutBankCode = paymentRequest.PayoutBankCode;
+                existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;
+                existing.PayoutBankAccountName = paymentRequest.PayoutBankAccountName;
+                existing.PayoutPromptPayId = paymentRequest.PayoutPromptPayId;
+                existing.PayoutAccountType = paymentRequest.PayoutAccountType;
+                existing.PayoutAccountLevel = paymentRequest.PayoutAccountLevel;
+                existing.PayoutFeePct = paymentRequest.PayoutFeePct;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
         public async Task<MPaymentRequest?> UpdatePaymentStatusRejectById(string paymentRequestId, MPaymentRequest paymentRequest)
         {
             Guid id = Guid.Parse(paymentRequestId);
