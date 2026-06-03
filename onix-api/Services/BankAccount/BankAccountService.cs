@@ -242,10 +242,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if ((cat != "PayIn") && (cat != "PayOut"))
+            if ((cat != "PayIn") && (cat != "PayOut") && (cat != "Transit"))
             {
                 r.Status = "BANK_ACCOUNT_CATEGORY_INVALID";
-                r.Description = $"Bank account category must be PayIn or PayOut !!!";
+                r.Description = $"Bank account category must be PayIn or PayOut or Transit !!!";
 
                 return r;
             }

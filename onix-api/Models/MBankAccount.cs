@@ -39,7 +39,7 @@ namespace Its.Onix.Api.Models
         public string? AccountType { get; set; } // Native, PromptPay
 
         [Column("account_category")]
-        public string? AccountCategory { get; set; } // PayIn, PayOut
+        public string? AccountCategory { get; set; } // PayIn, PayOut, Transit
 
         [Column("account_level")]
         public string? AccountLevel { get; set; } // Global, Selected - ใช้ได้ทุก merchant หรือใช้ได้เฉพาะบาง merchant
