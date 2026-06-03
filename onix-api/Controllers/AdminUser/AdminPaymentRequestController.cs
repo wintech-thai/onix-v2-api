@@ -127,7 +127,6 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/CreateTransferRequest")]
         public async Task<IActionResult> CreateTransferRequest([FromBody] MPaymentRequest request)
         {
-            var merchantId = request.MerchantId!;
             var dstBankAccountId = request.PayinBankAccountId!;
             var srcBankAccountId = request.PayoutBankAccountId!;
 
@@ -157,8 +156,6 @@ namespace Its.Onix.Api.Controllers
                 return Ok(baVmSrc);
             }
 
-            request.MerchantId = merchantId;
-            request.MerchantId2 = Guid.Parse(merchantId);
             var result = await svc.AddPaymentRequestTransfer("global", request, baDst, baSrc);
 
             return Ok(result);
