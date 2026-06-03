@@ -78,6 +78,16 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/GetTransferRequests")]
+        public async Task<IActionResult> GetTransferRequests([FromBody] VMPaymentRequest request)
+        {
+            request.Direction = "Transit";
+            var result = await svc.GetPaymentRequests("global", request);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/global/action/GetPayInRequestCount")]
         public async Task<IActionResult> GetPayInRequestCount([FromBody] VMPaymentRequest request)
         {
@@ -95,11 +105,86 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("org/global/action/GetTransferRequestCount")]
+        public async Task<IActionResult> GetTransferRequestCount([FromBody] VMPaymentRequest request)
+        {
+            request.Direction = "Transit";
+            var result = await svc.GetPaymentRequestCount("global", request);
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("org/global/action/GetPaymentRequestById/{paymentRequestId}")]
         public async Task<IActionResult> GetPaymentRequestById(string paymentRequestId)
         {
             var result = await svc.GetPaymentRequestById("global", paymentRequestId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/CreateTransferRequest")]
+        public async Task<IActionResult> CreateTransferRequest([FromBody] MPaymentRequest request)
+        {
+            var dstBankAccountId = request.PayinBankAccountId!;
+            var srcBankAccountId = request.PayoutBankAccountId!;
+
+            //Bank Account
+            var baVmDst = await _bankAccountSvc.GetBankAccountById("global", dstBankAccountId);
+            if (baVmDst.Status != "OK")
+            {
+                return Ok(baVmDst);
+            }
+
+            var baDst = baVmDst.BankAccount;
+            if (baDst == null)
+            {
+                return Ok(baVmDst);
+            }
+
+            //Bank Account
+            var baVmSrc = await _bankAccountSvc.GetBankAccountById("global", srcBankAccountId);
+            if (baVmSrc.Status != "OK")
+            {
+                return Ok(baVmSrc);
+            }
+
+            var baSrc = baVmSrc.BankAccount;
+            if (baSrc == null)
+            {
+                return Ok(baVmSrc);
+            }
+
+            var result = await svc.AddPaymentRequestTransfer("global", request, baDst, baSrc);
+
+            return Ok(result);
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UpdateTransferRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> UpdateTransferRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            //หน้าจอที่เรียก API นี้จะให้ update แต่บัญชีธนาคารที่จะจ่ายเงินออกเท่านั้น 
+            var bankAccountId = request.PayoutBankAccountId!; //บัญชีธนาคารที่จะเอาเงินออก (ซึ่งจะเป็น bank account ของ pool กลางที่ใช้สำหรับจ่ายเงินออกเท่านั้น ไม่ใช่ bank account ของ merchant)
+
+            //Bank Account
+            var baVmSrc = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+            if (baVmSrc.Status != "OK")
+            {
+                return Ok(baVmSrc);
+            }
+
+            var ba = baVmSrc.BankAccount;
+            if (ba == null)
+            {
+                return Ok(baVmSrc);
+            }
+
+            var result = await svc.UpdatePaymentRequestTransfer("global", paymentRequestId, request, ba);
+
             return Ok(result);
         }
 
@@ -212,6 +297,25 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> ApprovePayOutRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
         {
             var result = await svc.ApprovePaymentRequestPayOut("global", paymentRequestId, request);
+            return Ok(result);
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/RejectTransferRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> RejectTransferRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var result = await svc.RejectPaymentRequestTransfer("global", paymentRequestId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/ApproveTransferRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> ApproveTransferRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var result = await svc.ApprovePaymentRequestTransfer("global", paymentRequestId, request);
             return Ok(result);
         }
     }

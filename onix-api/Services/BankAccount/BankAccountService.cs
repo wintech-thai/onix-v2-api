@@ -242,10 +242,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if ((cat != "PayIn") && (cat != "PayOut"))
+            if ((cat != "PayIn") && (cat != "PayOut") && (cat != "Transit"))
             {
                 r.Status = "BANK_ACCOUNT_CATEGORY_INVALID";
-                r.Description = $"Bank account category must be PayIn or PayOut !!!";
+                r.Description = $"Bank account category must be PayIn or PayOut or Transit !!!";
 
                 return r;
             }
@@ -546,6 +546,32 @@ namespace Its.Onix.Api.Services
             var param = new VMBankAccount()
             {
                 AccountCategory = "PayIn",
+            };
+            var allBankAccounts = await repository.GetAllBankAccounts(param);
+
+            foreach (var bankAccount in allBankAccounts)
+            {
+                var bankAccountId = bankAccount.Id.ToString()!;
+                bankAccount.CurrentWalletBalance = 0;
+                if (dict2.TryGetValue(bankAccountId, out var currentWalletBalance))
+                {
+                    bankAccount.CurrentWalletBalance = currentWalletBalance;
+                }
+            }
+
+            return allBankAccounts;
+        }
+
+        public async Task<List<MBankAccount>> GetTransitBankAccountsAll(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
+            var dict2 = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
+
+            var param = new VMBankAccount()
+            {
+                AccountCategory = "Transit",
             };
             var allBankAccounts = await repository.GetAllBankAccounts(param);
 

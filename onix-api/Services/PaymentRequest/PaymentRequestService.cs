@@ -170,6 +170,151 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+
+        public async Task<MVPaymentRequest> UpdatePaymentRequestTransfer(string orgId, string paymentRequestId, MPaymentRequest paymentRequest, MBankAccount srcBa)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
+            //Update ได้แต่เฉพาะ Payout เท่านั้น
+            //เป็น bank account ที่จะถูกโอนเงินออก
+            paymentRequest.PayoutBankAccountName = srcBa!.AccountName;
+            paymentRequest.PayoutBankAccountNo = srcBa.AccountNumber;
+            paymentRequest.PayoutBankCode = srcBa.BankCode;
+            paymentRequest.PayoutPromptPayId = srcBa.PromptPayId;
+            paymentRequest.PayoutAccountType = srcBa.AccountType;
+            paymentRequest.PayoutAccountLevel = srcBa.AccountLevel;
+            paymentRequest.PayoutFeePct = 0;
+            paymentRequest.PayoutBankAccountId = srcBa.Id.ToString();
+
+            var result = await repository!.UpdateTransferRequestById(paymentRequestId, paymentRequest);
+
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentRequest> RejectPaymentRequestTransfer(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            var result = await repository!.UpdatePaymentStatusRejectById(paymentRequestId, paymentRequest);
+            r.PaymentRequest = result;
+
+            return r;
+        }
+
+        public async Task<MVPaymentRequest> ApprovePaymentRequestTransfer(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (existing.Status != "Pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = $"Payment Request ID [{paymentRequestId}] has invalid status [{existing.Status}] for update payout";
+
+                return r;
+            }
+
+            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
+            if (mvPtx.Status != "OK")
+            {
+                r.Status = mvPtx.Status;
+                r.Description = mvPtx.Description;
+
+                return r;
+            }
+
+            var srcBankAccount = await _bankAccountRepo!.GetBankAccountById(paymentRequest.PayoutBankAccountId!);
+            if (srcBankAccount == null)
+            {
+                r.Status = "PAYOUT_BANK_ACCOUNT_NOT_FOUND";
+                r.Description = $"Payout bank account ID [{paymentRequest.PayoutBankAccountId}] not found";
+
+                return r;
+            }
+
+            paymentRequest.PayoutBankCode = srcBankAccount.BankCode;
+            paymentRequest.PayoutBankAccountNo = srcBankAccount.AccountNumber;
+            paymentRequest.PayoutBankAccountName = srcBankAccount.AccountName;
+            paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
+            paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
+            paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
+            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+
+            paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
+
+            var result = await repository!.UpdatePaymentStatusApprovedById(paymentRequestId, paymentRequest);
+            r.PaymentRequest = result;
+            r.PayoutTransaction = mvPtx.PaymentTransaction;
+
+            return r;
+        }
+
         public async Task<MVPaymentRequest> RejectPaymentRequestPayOut(string orgId, string paymentRequestId, MPaymentRequest paymentRequest)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น global ได้
@@ -385,6 +530,117 @@ namespace Its.Onix.Api.Services
             mvPt.PaymentTransaction = mpt;
 
             return mvPt;
+        }
+
+        public async Task<MVPaymentRequest> AddPaymentRequestTransfer(string orgId, MPaymentRequest paymentRequest, MBankAccount destBa, MBankAccount srcBa)
+        {
+            repository!.SetCustomOrgId(orgId); //global
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (string.IsNullOrEmpty(paymentRequest.RefId))
+            {
+                r.Status = "REF_ID_MISSING";
+                r.Description = $"Ref ID is missing!!!";
+
+                return r;
+            }
+
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            if (isRefIdExist)
+            {
+                r.Status = "REF_ID_DUPLICATE";
+                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
+
+                return r;
+            }
+
+            if (paymentRequest.Currency != "THB")
+            {
+                r.Status = "CURRENCY_NOT_SUPPORT";
+                r.Description = $"Currency [{paymentRequest.Currency}] not currently support, only THB is allowed.";
+
+                return r;
+            }
+
+            if (paymentRequest.QrProvider != "PP") //PromptPay
+            {
+                //ตอนนี้ support แค่ PromptPay
+                r.Status = "BANK_PROVIDER_NOT_SUPPORT";
+                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only PP is allowed.";
+
+                return r;
+            }
+
+            if (paymentRequest.RequestedAmount <= 0)
+            {
+                r.Status = "INVALID_PAYMENT_AMOUNT";
+                r.Description = $"Request amount [{paymentRequest.RequestedAmount}] must be greater than 0.00";
+
+                return r;
+            }
+
+            paymentRequest.ResponseData = "{}";
+            paymentRequest.ProcessingMessages = "[]";
+
+            //Logic สำหรับการสร้าง QR payment ตรงนี้
+            paymentRequest.Status = "Pending";
+            paymentRequest.Direction = "Transit";
+
+            //ต่อให้เป็น Transit เราก็จะใช้ฟีลด์ที่ขึ้นต้นด้วย PayinXXX
+            paymentRequest.PayinBankAccountName = destBa.AccountName;
+            paymentRequest.PayinBankAccountNo = destBa.AccountNumber;
+            paymentRequest.PayinBankCode = destBa.BankCode;
+            paymentRequest.PayinPromptPayId = destBa.PromptPayId;
+            paymentRequest.PayinAccountType = destBa.AccountType;
+            paymentRequest.PayinAccountLevel = destBa.AccountLevel;
+            paymentRequest.PayInFeePct = 0;
+            paymentRequest.PayinBankAccountId = destBa.Id.ToString();
+            paymentRequest.PayoutFeePct = 0;
+            paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+
+            var requestAmt = paymentRequest.RequestedAmount ?? 0;
+            var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+
+            paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            paymentRequest.PayoutFeeDecimal = payoutFee;
+
+            //บัญชีต้นทาง
+            paymentRequest.PayoutBankAccountName = srcBa.AccountName;
+            paymentRequest.PayoutBankAccountNo = srcBa.AccountNumber;
+            paymentRequest.PayoutBankCode = srcBa.BankCode;
+            paymentRequest.PayoutPromptPayId = srcBa.PromptPayId;
+            paymentRequest.PayoutAccountType = srcBa.AccountType;
+            paymentRequest.PayoutAccountLevel = srcBa.AccountLevel;
+            paymentRequest.PayInFeePct = 0;
+            paymentRequest.PayoutBankAccountId = srcBa.Id.ToString();
+   
+            //สร้าง QR
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+            if (destBa.AccountType == "PromptPay")
+            {
+                var tmpPr = new MPaymentRequest()
+                {
+                    RefId = paymentRequest.RefId,
+                    GeneratedAmount = (double) paymentRequest.PayOutTotalAmountDecimal,
+                };
+
+                qrGenerator = new QrGeneratorPromptPay(tmpPr, destBa);
+                qrResult = qrGenerator.Generate();
+            }
+            paymentRequest.QrCode = qrResult?.QrPayload;
+
+            var result = await repository!.AddPaymentRequest(paymentRequest);
+
+            r.PaymentRequest = result;
+
+            return r;
         }
 
         public async Task<MVPaymentRequest> AddPaymentRequestPayOut(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)
