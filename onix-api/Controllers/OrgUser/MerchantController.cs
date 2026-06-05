@@ -37,19 +37,13 @@ namespace Its.Onix.Api.Controllers
         }
         private async Task<string?> GetCurrentMerchantId(string requestedOrgId)
         {
-            var userOrgId = GetCurrentOrgId();
-            if (string.IsNullOrEmpty(userOrgId))
-            {
-                return null;
-            }
-
-            if (!userOrgId.Equals(requestedOrgId, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(requestedOrgId))
             {
                 return null;
             }
 
             var param = new VMMerchant { Limit = 100, Offset = 0 };
-            var merchants = await _merchantSvc.GetMerchants(userOrgId, param);
+            var merchants = await _merchantSvc.GetMerchants(requestedOrgId, param);
 
             return merchants.FirstOrDefault()?.Id!.ToString();
         }
