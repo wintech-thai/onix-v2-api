@@ -33,8 +33,7 @@ namespace Its.Onix.Api.Controllers
 
         private string? GetCurrentOrgId()
         {
-            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
-                   User.FindFirst("OrgId")?.Value;
+            return User.FindFirst(ClaimTypes.GroupSid)?.Value;
         }
         private async Task<string?> GetCurrentMerchantId(string requestedOrgId)
         {
