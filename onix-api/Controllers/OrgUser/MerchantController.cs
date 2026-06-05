@@ -36,17 +36,21 @@ namespace Its.Onix.Api.Controllers
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                    User.FindFirst("OrgId")?.Value;
         }
-        // comment
-        private async Task<string?> GetCurrentMerchantId()
+        private async Task<string?> GetCurrentMerchantId(string requestedOrgId)
         {
-            var orgId = GetCurrentOrgId();
-            if (string.IsNullOrEmpty(orgId))
+            var userOrgId = GetCurrentOrgId();
+            if (string.IsNullOrEmpty(userOrgId))
+            {
+                return null;
+            }
+
+            if (!userOrgId.Equals(requestedOrgId, StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
 
             var param = new VMMerchant { Limit = 100, Offset = 0 };
-            var merchants = await _merchantSvc.GetMerchants(orgId, param);
+            var merchants = await _merchantSvc.GetMerchants(userOrgId, param);
 
             return merchants.FirstOrDefault()?.Id!.ToString();
         }
@@ -56,7 +60,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetMyMerchantId")]
         public async Task<IActionResult> GetMyMerchantId(string orgId)
         {
-            var merchantId = await GetCurrentMerchantId();
+            var merchantId = await GetCurrentMerchantId(orgId);
             if (string.IsNullOrEmpty(merchantId))
             {
                 return Ok(new { Status = "Error", Description = "Merchant not found" });
@@ -70,7 +74,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetMyMerchantInfo")]
         public async Task<IActionResult> GetMyMerchantInfo(string orgId)
         {
-            var merchantId = await GetCurrentMerchantId();
+            var merchantId = await GetCurrentMerchantId(orgId);
             if (string.IsNullOrEmpty(merchantId))
             {
                 return Ok(new { Status = "Error", Description = "Merchant not found" });
@@ -85,7 +89,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetMerchantPaymentEndpoint")]
         public async Task<IActionResult> GetMerchantPaymentEndpoint(string orgId)
         {
-            var merchantId = await GetCurrentMerchantId();
+            var merchantId = await GetCurrentMerchantId(orgId);
             if (string.IsNullOrEmpty(merchantId))
             {
                 return Ok(new { Status = "Error", Description = "Merchant not found" });
@@ -116,7 +120,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetMerchantWebhooks")]
         public async Task<IActionResult> GetMerchantWebhooks(string orgId)
         {
-            var merchantId = await GetCurrentMerchantId();
+            var merchantId = await GetCurrentMerchantId(orgId);
             if (string.IsNullOrEmpty(merchantId))
             {
                 return Ok(new { Status = "Error", Description = "Merchant not found" });
@@ -131,7 +135,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetMerchantWallet")]
         public async Task<IActionResult> GetMerchantWallet(string orgId)
         {
-            var merchantId = await GetCurrentMerchantId();
+            var merchantId = await GetCurrentMerchantId(orgId);
             if (string.IsNullOrEmpty(merchantId))
             {
                 return Ok(new { Status = "Error", Description = "Merchant not found" });
