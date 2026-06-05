@@ -36,7 +36,7 @@ namespace Its.Onix.Api.Controllers
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
                    User.FindFirst("OrgId")?.Value;
         }
-
+        // comment
         private async Task<string?> GetCurrentMerchantId()
         {
             var orgId = GetCurrentOrgId();
