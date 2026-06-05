@@ -45,9 +45,9 @@ namespace Its.Onix.Api.Controllers
             var param = new VMMerchant { Limit = 100, Offset = 0 };
             var merchants = await _merchantSvc.GetMerchants(requestedOrgId, param);
 
-            return merchants.FirstOrDefault()?.Id!.ToString();
+            return merchants.FirstOrDefault(m => m.OrgId == requestedOrgId)?.Id?.ToString();
         }
-
+        // comment
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{orgId}/action/GetMyMerchantId")]
