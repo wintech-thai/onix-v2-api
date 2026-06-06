@@ -7,67 +7,48 @@ using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
 {
-    [Authorize(Policy = "GenericRolePolicy")]
     [ApiController]
+    [Authorize(Policy = "GenericRolePolicy")]
     [Route("/api/[controller]")]
     public class PaymentRequestController : ControllerBase
     {
-        private readonly IPaymentRequestService svc;
-        private readonly IMerchantService _merchantSvc;
+        private readonly IPaymentRequestService _paymentRequestSvc;
 
         [ExcludeFromCodeCoverage]
-        public PaymentRequestController(IPaymentRequestService service, IMerchantService merchantService)
+        public PaymentRequestController(IPaymentRequestService paymentRequestSvc)
         {
-            svc = service;
-            _merchantSvc = merchantService;
+            _paymentRequestSvc = paymentRequestSvc;
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/SubmitPaymentRequest/{merchantId}")]
-        public async Task<IActionResult> SubmitPaymentRequest(string id, string merchantId, [FromBody] MPaymentRequest request)
+        [Route("org/{orgId}/action/GetPaymentRequests")]
+        public async Task<IActionResult> GetPaymentRequests(string orgId, [FromBody] VMPaymentRequest param)
         {
-            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
-            if (mcVm.Status != "OK")
+            if (param.Limit <= 0)
             {
-                return Ok(mcVm);
+                param.Limit = 100;
             }
 
-            var mc = mcVm.Merchant;
-            if (mc == null)
-            {
-                return Ok(mcVm);
-            }
-
-            if (string.IsNullOrEmpty(mc.OrgId))
-            {
-                mcVm.Status = "ERROR_ORG_ID_EMPTY";
-                mcVm.Description = "Organization ID is null or empty";
-                return Ok(mcVm);
-            }
-
-            request.MerchantId = merchantId;
-            request.MerchantId2 = Guid.Parse(merchantId);
-
-            var result = await svc.AddPaymentRequestPayIn(id, request, mc);
+            var result = await _paymentRequestSvc.GetPaymentRequests(orgId, param);
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{id}/action/GetPayInRequests")]
-        public async Task<IActionResult> GetPayInRequests(string id, [FromBody] VMPaymentRequest request)
+        [Route("org/{orgId}/action/GetPaymentRequestCount")]
+        public async Task<IActionResult> GetPaymentRequestCount(string orgId, [FromBody] VMPaymentRequest param)
         {
-            request.Direction = "PayIn";
-            var result = await svc.GetPaymentRequests(id, request);
-
+            var result = await _paymentRequestSvc.GetPaymentRequestCount(orgId, param);
             return Ok(result);
         }
 
-        [HttpPost]
-        [Route("org/{id}/action/GetPayInRequestCount")]
-        public async Task<IActionResult> GetAgentCount(string id, [FromBody] VMPaymentRequest request)
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPaymentRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> GetPaymentRequestById(string orgId, string paymentRequestId)
         {
-            var result = await svc.GetPaymentRequestCount(id, request);
+            var result = await _paymentRequestSvc.GetPaymentRequestById(orgId, paymentRequestId);
             return Ok(result);
         }
     }
