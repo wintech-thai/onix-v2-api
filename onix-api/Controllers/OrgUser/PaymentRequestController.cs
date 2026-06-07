@@ -70,12 +70,14 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/CreatePayOutRequest")]
         public async Task<IActionResult> CreatePayOutRequest(string orgId, [FromBody] MPaymentRequest request)
         {
-            var param = new VMMerchant { Limit = 1, Offset = 0 };
-            var merchants = await _merchantSvc.GetMerchants(orgId, param);
-            if (merchants == null || merchants.Count == 0)
-                return Ok(new { Status = "Error", Description = "No merchant found for this org" });
+            if (string.IsNullOrEmpty(request.MerchantId))
+                return Ok(new { Status = "Error", Description = "MerchantId is required" });
 
-            var merchant = merchants[0];
+            var merchantVm = await _merchantSvc.GetMerchantById(orgId, request.MerchantId);
+            if (merchantVm.Status != "OK" || merchantVm.Merchant == null)
+                return Ok(merchantVm);
+
+            var merchant = merchantVm.Merchant;
             var bankAccountId = request.PayinBankAccountId!;
             var baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
             if (baVm.Status != "OK" || baVm.BankAccount == null)
@@ -86,7 +88,7 @@ namespace Its.Onix.Api.Controllers
             request.Direction = "PayOut";
             request.Currency = "THB";
 
-            var result = await _paymentRequestSvc.AddPaymentRequestPayOut(merchant.OrgId!, request, merchant, baVm.BankAccount);
+            var result = await _paymentRequestSvc.AddPaymentRequestPayOut(orgId, request, merchant, baVm.BankAccount);
             return Ok(result);
         }
 
