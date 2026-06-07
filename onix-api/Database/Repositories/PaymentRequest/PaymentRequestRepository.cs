@@ -422,5 +422,15 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return existing;
         }
+
+        public async Task<bool> DeletePayOutRequestById(string paymentRequestId)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing == null) return false;
+            context.PaymentRequests!.Remove(existing);
+            await context.SaveChangesAsync();
+            return true;
+        }
     }
 }

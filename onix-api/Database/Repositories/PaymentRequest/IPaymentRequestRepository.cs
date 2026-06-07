@@ -20,5 +20,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPaymentRequest?> UpdatePaymentStatusApprovedById(string paymentRequestId, MPaymentRequest paymentRequest);
 
         public Task<MPaymentRequest?> UpdateTransferRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
+        public Task<bool> DeletePayOutRequestById(string paymentRequestId);
     }
 }
