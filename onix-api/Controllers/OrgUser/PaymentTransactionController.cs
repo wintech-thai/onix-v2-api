@@ -13,11 +13,13 @@ namespace Its.Onix.Api.Controllers
     public class PaymentTransactionController : ControllerBase
     {
         private readonly IPaymentTransactionService _paymentTransactionSvc;
+        private readonly IJobService _jobService;
 
         [ExcludeFromCodeCoverage]
-        public PaymentTransactionController(IPaymentTransactionService paymentTransactionSvc)
+        public PaymentTransactionController(IPaymentTransactionService paymentTransactionSvc, IJobService jobService)
         {
             _paymentTransactionSvc = paymentTransactionSvc;
+            _jobService = jobService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -49,6 +51,23 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetPaymentTransactionById(string orgId, string paymentTransactionId)
         {
             var result = await _paymentTransactionSvc.GetPaymentTransactionById(orgId, paymentTransactionId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPaymentTransactionJobById/{paymentTransactionId}/{jobId}")]
+        public async Task<IActionResult> GetPaymentTransactionJobById(string orgId, string paymentTransactionId, string jobId)
+        {
+            var pmtVm = await _paymentTransactionSvc.GetPaymentTransactionById(orgId, paymentTransactionId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentTransaction!;
+            var result = _jobService.GetJobById(pmt.OrgId!, jobId);
+
             return Ok(result);
         }
     }

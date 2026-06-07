@@ -37,3 +37,11 @@ apiUrl = "api/PaymentTransaction/org/#{orgId}/action/GetPaymentTransactionCount"
 puts("\n===== Get Payment Transaction Count =====")
 result = make_request(:post, apiUrl, param)
 puts(result)
+
+### Get Payment Transaction By ID
+paymentTransactionId = "YOUR_PAYMENT_TRANSACTION_ID"  # Replace with actual ID
+apiUrl = "api/PaymentTransaction/org/#{orgId}/action/GetPaymentTransactionById/#{paymentTransactionId}"
+
+puts("\n===== Get Payment Transaction By ID =====")
+result = make_request(:get, apiUrl)
+puts(result)
