@@ -428,7 +428,7 @@ namespace Its.Onix.Api.Database.Repositories
             Guid id = Guid.Parse(paymentRequestId);
             var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
             if (existing == null) return false;
-            context.PaymentRequests.Remove(existing);
+            context.PaymentRequests!.Remove(existing);
             await context.SaveChangesAsync();
             return true;
         }
