@@ -25,6 +25,6 @@ namespace Its.Onix.Api.Services
         public Task<MVPaymentRequest> RejectPaymentRequestTransfer(string orgId, string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<MVPaymentRequest> ApprovePaymentRequestTransfer(string orgId, string paymentRequestId, MPaymentRequest paymentRequest);
 
-
+        public Task<MVPaymentRequest> DeletePayOutRequestById(string orgId, string paymentRequestId);
     }
 }

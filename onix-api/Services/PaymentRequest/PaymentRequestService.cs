@@ -1055,5 +1055,34 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        public async Task<MVPaymentRequest> DeletePayOutRequestById(string orgId, string paymentRequestId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var existing = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            if (existing.Status?.ToLower() != "pending")
+            {
+                r.Status = "INVALID_STATUS";
+                r.Description = "Only Pending requests can be deleted";
+                return r;
+            }
+
+            await repository!.DeletePayOutRequestById(paymentRequestId);
+            return r;
+        }
     }
 }
