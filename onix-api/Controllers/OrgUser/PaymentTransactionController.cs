@@ -70,5 +70,17 @@ namespace Its.Onix.Api.Controllers
 
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/GetPendingPayInRequestsForPaymentTx")]
+        public async Task<IActionResult> GetPendingPayInRequestsForPaymentTx(string orgId, [FromBody] VMPaymentRequest request)
+        {
+            request.Direction = "PayIn";
+            request.Status = "Pending";
+            request.FromDate = DateTime.UtcNow.AddHours(-1);
+            var paymentRequests = await _paymentTransactionSvc.GetPaymentRequestsForPaymentTx("global", request);
+            return Ok(paymentRequests);
+        }
     }
 }
