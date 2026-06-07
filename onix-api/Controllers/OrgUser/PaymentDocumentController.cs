@@ -13,11 +13,13 @@ namespace Its.Onix.Api.Controllers
     public class PaymentDocumentController : ControllerBase
     {
         private readonly IPaymentDocumentService _paymentDocumentSvc;
+        private readonly IMerchantService _merchantSvc;
 
         [ExcludeFromCodeCoverage]
-        public PaymentDocumentController(IPaymentDocumentService paymentDocumentSvc)
+        public PaymentDocumentController(IPaymentDocumentService paymentDocumentSvc, IMerchantService merchantSvc)
         {
             _paymentDocumentSvc = paymentDocumentSvc;
+            _merchantSvc = merchantSvc;
         }
 
         [ExcludeFromCodeCoverage]
@@ -49,6 +51,24 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetPaymentDocumentById(string orgId, string paymentDocumentId)
         {
             var result = await _paymentDocumentSvc.GetPaymentDocumentById(orgId, paymentDocumentId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/GetPresignedUrl")]
+        public async Task<IActionResult> GetPresignedUrl(string orgId, [FromBody] VMUploadDocument request)
+        {
+            var param = new VMMerchant { Limit = 1, Offset = 0 };
+            var merchants = await _merchantSvc.GetMerchants(orgId, param);
+
+            if (merchants == null || merchants.Count == 0)
+            {
+                return Ok(new { Status = "Error", Description = "No merchant found for this org" });
+            }
+
+            var merchant = merchants[0];
+            var result = await _paymentDocumentSvc.GetPayInSlipUploadPresignedUrl(orgId, merchant, request);
             return Ok(result);
         }
 
