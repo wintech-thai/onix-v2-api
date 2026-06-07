@@ -35,7 +35,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             var merchantId = merchants[0].Id!.ToString();
-            var result = await _bankAccountSvc.GetPayInBankAccountsForMerchant(orgId, merchantId);
+            var result = await _bankAccountSvc.GetPayInBankAccountsWithGlobalForMerchant(orgId, merchantId);
             return Ok(result);
         }
     }
