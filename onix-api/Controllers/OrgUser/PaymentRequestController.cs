@@ -82,7 +82,7 @@ namespace Its.Onix.Api.Controllers
                 return Ok(baVm);
 
             request.MerchantId = merchant.Id!.ToString();
-            request.MerchantId2 = merchant.Id;
+            request.MerchantId2 = merchant.Id ?? Guid.Empty;
             request.Direction = "PayOut";
             request.Currency = "THB";
 
