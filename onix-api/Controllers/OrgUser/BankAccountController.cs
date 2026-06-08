@@ -45,7 +45,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetPayOutBankAccountsForMerchant")]
         public async Task<IActionResult> GetPayOutBankAccountsForMerchant(string orgId)
         {
-            var param = new VMMerchant { Limit = 1, Offset = 0 };
+            var param = new VMMerchant { Limit = 1, Offset = 0, FullTextSearch = orgId };
             var merchants = await _merchantSvc.GetMerchants(orgId, param);
 
             if (merchants == null || merchants.Count == 0)
@@ -53,7 +53,7 @@ namespace Its.Onix.Api.Controllers
                 return Ok(new { Status = "Error", Description = "No merchant found for this org" });
             }
 
-            var merchantId = merchants[0].Id!.ToString();
+            var merchantId = merchants[0].Id!.ToString()!;
             var result = await _bankAccountSvc.GetPayOutBankAccountsForMerchant(orgId, merchantId);
             return Ok(result);
         }
