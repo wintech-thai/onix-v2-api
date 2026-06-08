@@ -6,7 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Its.Onix.Api.Models
 {
     [ExcludeFromCodeCoverage]
-    [Table("NotiAlertChannels")]
+    [Table("NotiChannels")]
     [Index(nameof(ChannelName), IsUnique = false)]
     [Index(nameof(Description), IsUnique = false)]
     [Index(nameof(Tags), IsUnique = false)]
