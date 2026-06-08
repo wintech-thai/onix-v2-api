@@ -87,6 +87,25 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(eventTypePd);
             }
 
+
+            // FromDate
+            if (param.FromDate.HasValue)
+            {
+                var fromDatePd = PredicateBuilder.New<MJob>();
+                fromDatePd = fromDatePd.Or(p => p.CreatedDate >= param.FromDate.Value);
+
+                pd = pd.And(fromDatePd);
+            }
+
+            // ToDate
+            if (param.ToDate.HasValue)
+            {
+                var toDatePd = PredicateBuilder.New<MJob>();
+                toDatePd = toDatePd.Or(p => p.CreatedDate <= param.ToDate.Value);
+
+                pd = pd.And(toDatePd);
+            }
+
             return pd;
         }
 
