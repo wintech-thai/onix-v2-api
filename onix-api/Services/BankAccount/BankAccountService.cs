@@ -642,7 +642,7 @@ namespace Its.Onix.Api.Services
 
         public async Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string orgId, string merchantId)
         {
-            repository!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId("global");
 
             var result = await repository.GetPayOutBankAccountsForMerchant(merchantId);
             return result;
