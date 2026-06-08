@@ -26,7 +26,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/GetPayInBankAccountsForMerchant")]
         public async Task<IActionResult> GetPayInBankAccountsForMerchant(string orgId)
         {
-            var param = new VMMerchant { Limit = 1, Offset = 0 };
+            var param = new VMMerchant { Limit = 1, Offset = 0, FullTextSearch = orgId };
             var merchants = await _merchantSvc.GetMerchants(orgId, param);
 
             if (merchants == null || merchants.Count == 0)
