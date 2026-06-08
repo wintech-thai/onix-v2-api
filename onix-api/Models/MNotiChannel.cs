@@ -32,7 +32,7 @@ namespace Its.Onix.Api.Models
         public string? Tags { get; set; }
 
         [Column("type")]
-        public string? Type { get; set; } /* Discord, Slack, Email, LINE, Webhook */
+        public string? Type { get; set; } /* Discord, Telegram, Slack, Email, LINE, Webhook */
 
         [Column("status")]
         public string? Status { get; set; } /* Enabled, Disabled */
@@ -57,6 +57,10 @@ namespace Its.Onix.Api.Models
 
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
+
+
+        [NotMapped]
+        public IEnumerable<string>? EventTypes { get; set; }
 
         public MNotiChannel()
         {

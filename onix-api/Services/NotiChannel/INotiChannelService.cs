@@ -11,6 +11,10 @@ namespace Its.Onix.Api.Services
         public Task<MVNotiChannel> DeleteNotiChannelById(string orgId, string notiChannelId);
         public Task<List<MNotiChannel>> GetNotiChannels(string orgId, VMNotiChannel param);
         public Task<int> GetNotiChannelCount(string orgId, VMNotiChannel param);
+
+        public List<NameValue> GetEventTypes(string orgId);
+        public List<NameValue> GetChannelTypes(string orgId);
+        
         public Task<MVNotiChannel> UpdateNotiChannelById(string orgId, string notiChannelId, MNotiChannel notiChannel);
         public Task<MVNotiChannel> UpdateNotiChannelStatusById(string orgId, string notiChannelId, string status);
     }

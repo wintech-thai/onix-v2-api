@@ -16,6 +16,28 @@ namespace Its.Onix.Api.Services
             repository = repo;
         }
 
+        public List<NameValue> GetEventTypes(string orgId)
+        {
+            var list = new List<NameValue>
+            {
+                new() { Name = "Payment.Success", Value = "Payment success event" },
+                new() { Name = "Payment.Unidentified", Value = "Payment unidentified event" },
+            };
+
+            return list;
+        }
+
+        public List<NameValue> GetChannelTypes(string orgId)
+        {
+            var list = new List<NameValue>
+            {
+                new() { Name = "Discord", Value = "Discord" },
+                new() { Name = "Telegram", Value = "Telegram" },
+            };
+
+            return list;
+        }
+
         public async Task<MVNotiChannel> GetNotiChannelById(string orgId, string notiChannelId)
         {
             repository!.SetCustomOrgId(orgId);
@@ -42,6 +64,10 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            var evtTypes = result.EventsMatched != null ? result.EventsMatched.Split('|') : [];
+            result.EventTypes = evtTypes;
+            result.EventsMatched = "";
 
             r.NotiChannel = result;
             return r;
@@ -71,6 +97,9 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            var evtTypeStr = notiChannel.EventTypes != null ? string.Join("|", notiChannel.EventTypes) : null;
+            notiChannel.EventsMatched = evtTypeStr;
 
             var result = await repository!.AddNotiChannel(notiChannel);
             if (result == null)
@@ -130,6 +159,15 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetNotiChannels(param);
+
+            result.ForEach(m => 
+            {
+                var evtTypes = m.EventsMatched != null ? m.EventsMatched.Split('|') : [];
+                m.EventTypes = evtTypes;
+                m.EventsMatched = "";
+
+                m.MessageTemplate = ""; // do not return message template in the list API
+            });
 
             return result;
         }
