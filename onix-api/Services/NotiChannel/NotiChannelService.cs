@@ -3,6 +3,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using LinqKit;
 
 namespace Its.Onix.Api.Services
 {
@@ -278,11 +279,38 @@ namespace Its.Onix.Api.Services
             return eventTypeSet;
         }
 
+        public MVJob GetNotiEventById(string orgId, string notiEventId)
+        {
+            var r = new MVJob()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var result = _jobService.GetJobById(orgId, notiEventId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Notification event ID [{notiEventId}] not found for the organization [{orgId}]";
+            }
+
+            r.Job = result;
+
+            return r;
+        }
+
         public IEnumerable<MJob> GetNotiEvents(string orgId, VMJob param)
         {
             param.EventTypeSet = GetEventTypeSet();
 
             var result = _jobService.GetJobs(orgId, param);
+
+            result.ForEach(r => 
+            {
+                r.Configuration = ""; // do not return configuration in the event API
+                r.JobMessage = ""; // do not return job message in the event API
+            });
+
             return result;
         }
 

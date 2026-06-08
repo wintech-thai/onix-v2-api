@@ -14,6 +14,7 @@ namespace Its.Onix.Api.Services
 
         public IEnumerable<MJob> GetNotiEvents(string orgId, VMJob param);
         public int GetNotiEventCount(string orgId, VMJob param);
+        public MVJob GetNotiEventById(string orgId, string notiEventId);
 
         public List<NameValue> GetEventTypes(string orgId);
         public List<NameValue> GetChannelTypes(string orgId);
