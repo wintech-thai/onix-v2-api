@@ -592,14 +592,22 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
 
+            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
+            var balanceDict = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
+
             var merchantBankAccounts = await repository.GetPayInBankAccountsForMerchant(merchantId);
+            foreach (var ba in merchantBankAccounts)
+            {
+                var baId = ba.BankAccountId ?? ba.Id?.ToString() ?? "";
+                ba.CurrentBalance = balanceDict.TryGetValue(baId, out var bal) ? (double?)bal : 0;
+            }
 
             var param = new VMBankAccount()
             {
                 AccountCategory = "PayIn",
                 AccountLevel = "Global",
             };
-            var globalBankAccounts = await repository.GetAllBankAccounts(param);    
+            var globalBankAccounts = await repository.GetAllBankAccounts(param);
 
             var combinedBankAccounts = merchantBankAccounts
                 .Concat(
@@ -622,7 +630,7 @@ namespace Its.Onix.Api.Services
                             DailyQuota = g.DailyQuota,
                             CurrentDailyPayinAmount = g.CurrentDailyPayinAmount,
                             CurrentDailyPayinCount = g.CurrentDailyPayinCount,
-                            CurrentBalance = g.CurrentBalance,
+                            CurrentBalance = balanceDict.TryGetValue(g.Id.ToString()!, out var gBal) ? (double?)gBal : 0,
                             DailyPayinCountQuota = g.DailyPayinCountQuota,
                             BankAccountStatus = g.Status,
                         })
