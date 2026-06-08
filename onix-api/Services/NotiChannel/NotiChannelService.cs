@@ -219,6 +219,9 @@ namespace Its.Onix.Api.Services
                 }
             }
 
+            var evtTypeStr = notiChannel.EventTypes != null ? string.Join("|", notiChannel.EventTypes) : null;
+            notiChannel.EventsMatched = evtTypeStr;
+
             var result = await repository!.UpdateNotiChannelById(notiChannelId, notiChannel);
             if (result == null)
             {

@@ -23,7 +23,7 @@ param =  {
   Type: "Telegram",
   Status: "Enabled",
   TelegramWebhookUrl: "https://api.telegram.org/bot<token>",
-  TelegramBotToken: "9090009999999xxxxxxx",
+  TelegramChatId: "9090009999999xxxxxxx",
   EventTypes: [ 'Payment.Success', 'Payment.Failed' ],
 }
 

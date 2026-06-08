@@ -13,14 +13,16 @@ load_env("../.env")
 orgId = ENV['API_ORG']
 keyFile = ".token"
 
+hhmmss = Time.now.strftime("%H%M%S")
+
 ###
-notiChannelId = "cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0" 
+notiChannelId = "834dd641-906e-44a2-a4f9-d246f8f77541" 
 apiUrl = "admin-api/AdminNotiChannel/org/global/action/UpdateNotiChannelById/#{notiChannelId}"
 param = {
   ChannelName: "Payment notification #{hhmmss}",
   Description: "Test notification channel created at #{hhmmss}",
   TelegramWebhookUrl: "https://api.telegram.org/bot<token>",
-  TelegramBotToken: "9090009999999xxxxxxxzzzzz",
+  TelegramChatId: "9090009999999xxxxxxxzzzzz",
   EventTypes: [ 'Payment.Success', 'Payment.Unidentified' ],
 }
 
