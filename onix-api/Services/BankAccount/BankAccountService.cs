@@ -607,6 +607,7 @@ namespace Its.Onix.Api.Services
                 AccountCategory = "PayIn",
                 AccountLevel = "Global",
             };
+            repository!.SetCustomOrgId("global");
             var globalBankAccounts = await repository.GetAllBankAccounts(param);
 
             var combinedBankAccounts = merchantBankAccounts
