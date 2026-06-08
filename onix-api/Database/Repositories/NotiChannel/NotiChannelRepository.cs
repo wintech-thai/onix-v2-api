@@ -151,6 +151,10 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.Description = notiChannel.Description;
                 existing.Tags = notiChannel.Tags;
                 existing.DiscordWebhookUrl = notiChannel.DiscordWebhookUrl;
+                existing.TelegramWebhookUrl = notiChannel.TelegramWebhookUrl;
+                existing.TelegramChatId = notiChannel.TelegramChatId;
+                existing.MessageTemplate = notiChannel.MessageTemplate;
+                existing.EventsMatched = notiChannel.EventsMatched;
 
                 await context.SaveChangesAsync();
             }
