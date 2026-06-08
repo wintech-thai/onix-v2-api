@@ -34,7 +34,8 @@ namespace Its.Onix.Api.Controllers
                 return Ok(new { Status = "Error", Description = "No merchant found for this org" });
             }
 
-            var merchantId = merchants[0].Id!.ToString();
+            var merchantId = merchants[0].Id!.ToString()!;
+
             var result = await _bankAccountSvc.GetPayInBankAccountsWithGlobalForMerchant(orgId, merchantId);
             return Ok(result);
         }
