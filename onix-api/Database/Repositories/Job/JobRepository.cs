@@ -24,11 +24,34 @@ namespace Its.Onix.Api.Database.Repositories
             return item;
         }
 
+        private ExpressionStarter<MJob> IsOrgMatchPredicate(Guid? pmrId)
+        {
+            var pd = PredicateBuilder.New<MJob>(true);
+            if (orgId != "global")
+            {
+                //ต้องเอา orgId มา where ด้วย
+                var orgPd = PredicateBuilder.New<MJob>(true);
+                orgPd = orgPd.And(p => p.OrgId!.Equals(orgId));
+                pd = pd.And(orgPd);
+            }
+
+            if (pmrId != null)
+            {
+                //ต้องมีการเอา Id ของ payment ไปเช็คด้วย เพื่อดึงเฉพาะตัวนั้น ๆ ออกมา
+                var pmrPd = PredicateBuilder.New<MJob>(true);
+                pmrPd = pmrPd.And(p => p.Id!.Equals(pmrId));
+                pd = pd.And(pmrPd);
+            }
+
+            return pd;
+        }
+
         private ExpressionStarter<MJob> JobPredicate(VMJob param)
         {
-            var pd = PredicateBuilder.New<MJob>();
+            //var pd = PredicateBuilder.New<MJob>();
+            //pd = pd.And(p => p.OrgId!.Equals(orgId));
 
-            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            var pd = IsOrgMatchPredicate(null);
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
@@ -54,6 +77,33 @@ namespace Its.Onix.Api.Database.Repositories
                 templatePd = templatePd.Or(p => p.ScanItemTemplateId!.Equals(param.ScanItemTemplateId));
 
                 pd = pd.And(templatePd);
+            }
+
+            if ((param.EventTypeSet != null) && param.EventTypeSet.Any())
+            {
+                var eventTypePd = PredicateBuilder.New<MJob>();
+                eventTypePd = eventTypePd.Or(p => param.EventTypeSet.Contains(p.Type!));
+
+                pd = pd.And(eventTypePd);
+            }
+
+
+            // FromDate
+            if (param.FromDate.HasValue)
+            {
+                var fromDatePd = PredicateBuilder.New<MJob>();
+                fromDatePd = fromDatePd.Or(p => p.CreatedDate >= param.FromDate.Value);
+
+                pd = pd.And(fromDatePd);
+            }
+
+            // ToDate
+            if (param.ToDate.HasValue)
+            {
+                var toDatePd = PredicateBuilder.New<MJob>();
+                toDatePd = toDatePd.Or(p => p.CreatedDate <= param.ToDate.Value);
+
+                pd = pd.And(toDatePd);
             }
 
             return pd;
@@ -98,7 +148,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(itemId);
 
-            var u = context!.Jobs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
+            var u = context!.Jobs!.Where(IsOrgMatchPredicate(id)).FirstOrDefault();
             return u!;
         }
 
