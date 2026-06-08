@@ -64,6 +64,22 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("org/global/action/GetNotiEvents")]
+        public IActionResult GetNotiEvents([FromBody] VMJob request)
+        {
+            var result = svc.GetNotiEvents("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetNotiEventCount")]
+        public IActionResult GetNotiEventCount([FromBody] VMJob request)
+        {
+            var result = svc.GetNotiEventCount("global", request);
+            return Ok(result);
+        }
+
         [HttpGet]
         [Route("org/global/action/GetEventTypes")]
         public IActionResult GetEventTypes()

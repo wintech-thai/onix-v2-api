@@ -12,6 +12,9 @@ namespace Its.Onix.Api.Services
         public Task<List<MNotiChannel>> GetNotiChannels(string orgId, VMNotiChannel param);
         public Task<int> GetNotiChannelCount(string orgId, VMNotiChannel param);
 
+        public IEnumerable<MJob> GetNotiEvents(string orgId, VMJob param);
+        public int GetNotiEventCount(string orgId, VMJob param);
+
         public List<NameValue> GetEventTypes(string orgId);
         public List<NameValue> GetChannelTypes(string orgId);
         

@@ -9,11 +9,13 @@ namespace Its.Onix.Api.Services
     public class NotiChannelService : BaseService, INotiChannelService
     {
         private readonly INotiChannelRepository? repository = null;
+        private readonly IJobService _jobService;
 
 
-        public NotiChannelService(INotiChannelRepository repo) : base()
+        public NotiChannelService(INotiChannelRepository repo, IJobService jobService) : base()
         {
             repository = repo;
+            _jobService = jobService;
         }
 
         public List<NameValue> GetEventTypes(string orgId)
@@ -264,6 +266,32 @@ namespace Its.Onix.Api.Services
 
             r.NotiChannel = result;
             return r;
+        }
+
+        private IEnumerable<string> GetEventTypeSet()
+        {
+            var types = GetEventTypes("global");
+
+            var eventTypeSet = new List<string>();
+            types.ForEach(t => eventTypeSet.Add(t.Name!));
+
+            return eventTypeSet;
+        }
+
+        public IEnumerable<MJob> GetNotiEvents(string orgId, VMJob param)
+        {
+            param.EventTypeSet = GetEventTypeSet();
+
+            var result = _jobService.GetJobs(orgId, param);
+            return result;
+        }
+
+        public int GetNotiEventCount(string orgId, VMJob param)
+        {
+            param.EventTypeSet = GetEventTypeSet();
+
+            var result = _jobService.GetJobCount(orgId, param);
+            return result;
         }
     }
 }
