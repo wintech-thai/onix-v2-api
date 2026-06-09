@@ -127,8 +127,8 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/{orgId}/action/SubmitPaymentRequest/{merchantId}")]
-        public async Task<IActionResult> SubmitPaymentRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
+        [Route("org/{orgId}/action/SubmitPayInRequest/{merchantId}")]
+        public async Task<IActionResult> SubmitPayInRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
         {
             var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
             if (mcVm.Status != "OK")

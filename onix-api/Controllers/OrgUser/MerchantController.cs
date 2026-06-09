@@ -96,7 +96,7 @@ namespace Its.Onix.Api.Controllers
 
             var mc = mvMerchant.Merchant!;
             var merchantOrgId = mc.OrgId;
-            var url = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPaymentRequest/{merchantId}";
+            var url = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayInRequest/{merchantId}";
 
             var result = new MVEndPoint()
             {
