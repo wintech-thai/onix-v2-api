@@ -604,7 +604,7 @@ namespace Its.Onix.Api.Services
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
                 TxAmountDecimal = bankAccountDeductAmt,
 
-                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
+                Tags = $"TransferRequestId=[{existing.Id.ToString()}]",
             };
             var pointVm = await _pointService!.DeductPoint("global", pointTx2);
             if (pointVm.Status != "OK")
