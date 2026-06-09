@@ -21,7 +21,7 @@ apiUrl = "api/PaymentRequest/org/#{orgId}/action/SubmitPayOutRequest/#{merchantI
 param =  {
   RefId: "PAYOUT-0001922-#{hhmmss}",
   QrProvider: "PP",
-  RequestedAmount: 100,
+  RequestedAmount: 400,
 
   BankCode: "TMB",
   BankAccountNo: "909440293998",
