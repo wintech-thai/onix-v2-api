@@ -42,6 +42,8 @@ namespace Its.Onix.Api.Database.Repositories
                 Currency = x.pr.Currency,
                 BankCode = x.pr.BankCode,
                 BankAccountNo = x.pr.BankAccountNo,
+                PromptPayId = x.pr.PromptPayId,
+                AccountType = x.pr.AccountType,
                 BankAccountName = x.pr.BankAccountName,
                 RequestedAmount = x.pr.RequestedAmount,
                 Tags = x.pr.Tags,
@@ -77,6 +79,13 @@ namespace Its.Onix.Api.Database.Repositories
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
                 QrCode = x.pr.QrCode,
                 RejectReason = x.pr.RejectReason,
+
+                IsPayInBankAccountOverride = x.pr.IsPayInBankAccountOverride,
+                PayinBankCodeOverride = x.pr.PayinBankCodeOverride,
+                PayinBankAccountNoOverride = x.pr.PayinBankAccountNoOverride,
+                PayinBankAccountNameOverride = x.pr.PayinBankAccountNameOverride,
+                PayinPromptPayIdOverride = x.pr.PayinPromptPayIdOverride,
+                PayinAccountTypeOverride = x.pr.PayinAccountTypeOverride,
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
@@ -257,6 +266,11 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.PayinBankAccountNo!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PayinBankAccountName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PayinPromptPayId!.Contains(param.FullTextSearch));
+
+                fullTextPd = fullTextPd.Or(p => p.PayinBankCodeOverride!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinBankAccountNoOverride!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinBankAccountNameOverride!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayinPromptPayIdOverride!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

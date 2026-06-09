@@ -71,6 +71,13 @@ namespace Its.Onix.Api.Models
         [Column("selected_payin_bank_account_id")]
         public string? SelectedPayInBankAccountId { get; set; } //Hidden field ใช้ระบุ PayIn bank account ID เข้ามาให้เอง
 
+        [Column("promptpay_id")]
+        public string? PromptPayId { get; set; } //PromptPay ID สำหรับการชำระเงินผ่าน PromptPay
+
+        [Column("account_type")]
+        public string? AccountType { get; set; } //Native หรือ PromptPay
+
+
 
         [Column("payin_bank_id")]
         public string? PayinBankAccountId { get; set; } //Foreign key ไปยัง BankAccounts table
@@ -95,6 +102,25 @@ namespace Its.Onix.Api.Models
         
         [Column("pay_in_fee_pct")]
         public double? PayInFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมรับเข้า
+
+
+        [Column("is_payin_bank_account_override")]
+        public bool IsPayInBankAccountOverride { get; set; }
+
+        [Column("payin_bank_code_override")]
+        public string? PayinBankCodeOverride { get; set; }
+
+        [Column("payin_bank_account_no_override")]
+        public string? PayinBankAccountNoOverride { get; set; }
+
+        [Column("payin_bank_account_name_override")]
+        public string? PayinBankAccountNameOverride { get; set; } 
+
+        [Column("payin_promptpay_id_override")]
+        public string? PayinPromptPayIdOverride { get; set; } 
+
+        [Column("payin_account_type_override")]
+        public string? PayinAccountTypeOverride { get; set; }
 
 
         //PayOut fields - บัญชีที่เงินออกไปจ่ายให้ลูกค้า
@@ -199,6 +225,7 @@ namespace Its.Onix.Api.Models
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             ProcessingSteps = [];
+            IsPayInBankAccountOverride = false;
         }
     }
 }

@@ -17,7 +17,7 @@ merchantId = "cfd098d5-ed0b-4acd-a10e-9fbb9e3d42c0"
 hhmmss = Time.now.strftime("%H%M%S")
 
 ### Get Payment Requests
-apiUrl = "api/PaymentRequest/org/#{orgId}/action/SubmitPaymentRequest/#{merchantId}"
+apiUrl = "api/PaymentRequest/org/#{orgId}/action/SubmitPayInRequest/#{merchantId}"
 param =  {
   RefId: "XA-MSB-0001922-#{hhmmss}",
   RefId1: "INVOICE-0011223",
@@ -37,7 +37,7 @@ param =  {
 
 token = File.read(keyFile)
 
-ENV['API_KEY'] = ENV['PAYOUT_REQUEST_API_KEY'] # ถ้าใช้ API KEY ก็เซ็ตเป็นค่าเดิมที่อ่านมาจากไฟล์
+ENV['API_KEY'] = ENV['PAYIN_REQUEST_API_KEY'] # ถ้าใช้ API KEY ก็เซ็ตเป็นค่าเดิมที่อ่านมาจากไฟล์
 #ENV['ACCESS_TOKEN'] = nil
 
 puts("===== Submit Payment Request =====")

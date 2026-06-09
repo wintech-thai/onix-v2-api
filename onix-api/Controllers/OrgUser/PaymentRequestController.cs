@@ -153,6 +153,8 @@ namespace Its.Onix.Api.Controllers
             request.MerchantId2 = Guid.Parse(merchantId);
             var result = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc);
 
+            result.PaymentResponse!.QrCodeImage = "";
+
             return Ok(result);
         }
 
@@ -172,15 +174,15 @@ namespace Its.Onix.Api.Controllers
             var baVm = new MVBankAccount() { Status = "OK", BankAccount = null };
             if (string.IsNullOrEmpty(bankAccountId))
             {
-                //TODO : merchant จะส่ง bank account no, name ใหม่มา override เอง โดยจะไม่ใช้ PayinBankAccountId
+                //merchant จะส่ง bank account no, name ใหม่มา override เอง โดยจะไม่ใช้ PayinBankAccountId
                 baVm.BankAccount = new MBankAccount()
                 {
                     Id = null, //กรณีที่ไม่ระบุ PayinBankAccountId มา จะใช้ข้อมูลบัญชีที่ส่งมาใน request แทน โดยจะไม่เชื่อมโยงกับ BankAccount จริงๆ ในระบบ
-                    BankCode = request.PayinBankCode!,
-                    AccountNumber = request.PayinBankAccountNo!,
-                    AccountName = request.PayinBankAccountName!,
-                    PromptPayId = request.PayinPromptPayId!,
-                    AccountType = request.PayinAccountType!, //Native หรือ PromptPay
+                    BankCode = request.BankCode!,
+                    AccountNumber = request.BankAccountNo!,
+                    AccountName = request.BankAccountName!,
+                    PromptPayId = request.PromptPayId!,
+                    AccountType = request.AccountType!, //Native หรือ PromptPay
                 };
             }
             else
