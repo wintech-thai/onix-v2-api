@@ -703,13 +703,30 @@ namespace Its.Onix.Api.Services
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayOut";
 
-            //ต่อให้เป็น PayOut เราก็จะใช้ฟีลด์ที่ขึ้นต้นด้วย PayinXXX
-            paymentRequest.PayinBankAccountName = bankAccount.AccountName;
-            paymentRequest.PayinBankAccountNo = bankAccount.AccountNumber;
-            paymentRequest.PayinBankCode = bankAccount.BankCode;
-            paymentRequest.PayinPromptPayId = bankAccount.PromptPayId;
-            paymentRequest.PayinAccountType = bankAccount.AccountType;
-            paymentRequest.PayinAccountLevel = bankAccount.AccountLevel;
+            var bankAccountId = bankAccount.Id.ToString();
+            if (!string.IsNullOrEmpty(bankAccountId))
+            {
+                paymentRequest.IsPayInBankAccountOverride = false;
+
+                //ต่อให้เป็น PayOut เราก็จะใช้ฟีลด์ที่ขึ้นต้นด้วย PayinXXX
+                paymentRequest.PayinBankAccountName = bankAccount.AccountName;
+                paymentRequest.PayinBankAccountNo = bankAccount.AccountNumber;
+                paymentRequest.PayinBankCode = bankAccount.BankCode;
+                paymentRequest.PayinPromptPayId = bankAccount.PromptPayId;
+                paymentRequest.PayinAccountType = bankAccount.AccountType;
+                paymentRequest.PayinAccountLevel = bankAccount.AccountLevel;
+            }
+            else
+            {
+                //ส่งเข้ามาจาก merchant เอง
+                paymentRequest.IsPayInBankAccountOverride = true;
+                paymentRequest.PayinBankAccountNameOverride = bankAccount.AccountName;
+                paymentRequest.PayinBankAccountNoOverride = bankAccount.AccountNumber;
+                paymentRequest.PayinBankCodeOverride = bankAccount.BankCode;
+                paymentRequest.PayinPromptPayIdOverride = bankAccount.PromptPayId;
+                paymentRequest.PayinAccountTypeOverride = bankAccount.AccountType;
+            }
+
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
             paymentRequest.PayoutFeePct = merchant.PayinFeePct;

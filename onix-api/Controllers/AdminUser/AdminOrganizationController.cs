@@ -50,6 +50,25 @@ namespace Its.Onix.Api.Controllers
             return Ok(apiKey);
         }
 
+
+        [HttpPost]
+        [Route("org/global/action/CreatePayOutRequestApiKey/{orgId}")]
+        public IActionResult CreatePayOutRequestApiKey(string orgId)
+        {
+            var uuid = Guid.NewGuid();
+
+            var request = new MApiKey()
+            {
+                KeyType = "PayOut",
+                KeyName = $"PayOutRequest:{uuid}",
+                KeyDescription = "Auto generated key, DO NOT delete!!!",
+                Roles = [ "PAYOUT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+            };
+
+            var apiKey = _apiKeySvc.AddApiKey(orgId, request);
+            return Ok(apiKey);
+        }
+
         [HttpGet]
         [Route("org/global/action/GetPaymentRequestApiKeys/{orgId}")]
         public IActionResult GetPaymentRequestApiKeys(string orgId)
@@ -57,6 +76,20 @@ namespace Its.Onix.Api.Controllers
             var request = new VMApiKey()
             {
                 KeyType = "PaymentRequest", 
+            };
+
+            var keys = _apiKeySvc.GetApiKeys(orgId, request);
+
+            return Ok(keys);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetPayOutRequestApiKeys/{orgId}")]
+        public IActionResult GetPayOutRequestApiKeys(string orgId)
+        {
+            var request = new VMApiKey()
+            {
+                KeyType = "PayOut", 
             };
 
             var keys = _apiKeySvc.GetApiKeys(orgId, request);

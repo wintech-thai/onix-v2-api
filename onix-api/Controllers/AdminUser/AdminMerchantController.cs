@@ -66,7 +66,34 @@ namespace Its.Onix.Api.Controllers
             var mc = mvMerchant.Merchant!;
 
             var merchantOrgId = mc.OrgId;
-            var url = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPaymentRequest/{merchantId}";
+            var url = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayInRequest/{merchantId}";
+
+            var result = new MVEndPoint()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentRequestUrl = url,
+            };
+
+            return Ok(result);
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetMerchantPayOutRequestEndpoint/{merchantId}")]
+        public async Task<IActionResult> GetMerchantPayOutRequestEndpoint(string merchantId)
+        {
+            var mvMerchant = await svc.GetMerchantById("notused", merchantId);
+            if (mvMerchant.Status != "OK")
+            {
+                return Ok(mvMerchant);
+            }
+
+            var mc = mvMerchant.Merchant!;
+
+            var merchantOrgId = mc.OrgId;
+            var url = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayOutRequest/{merchantId}";
 
             var result = new MVEndPoint()
             {
