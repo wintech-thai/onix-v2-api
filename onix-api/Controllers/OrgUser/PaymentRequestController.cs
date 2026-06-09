@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.ModelsViews;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -120,6 +121,81 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> DeletePayOutRequestById(string orgId, string paymentRequestId)
         {
             var result = await _paymentRequestSvc.DeletePayOutRequestById(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/SubmitPaymentRequest/{merchantId}")]
+        public async Task<IActionResult> SubmitPaymentRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
+        {
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return Ok(mcVm);
+            }
+
+            var mc = mcVm.Merchant;
+            if (mc == null)
+            {
+                return Ok(mcVm);
+            }
+
+            if (string.IsNullOrEmpty(mc.OrgId))
+            {
+                mcVm.Status = "ERROR_ORG_ID_EMPTY";
+                mcVm.Description = "Organization ID is null or empty";
+                return Ok(mcVm);
+            }
+
+            request.MerchantId = merchantId;
+            request.MerchantId2 = Guid.Parse(merchantId);
+            var result = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/SubmitPayOutRequest/{merchantId}")]
+        public async Task<IActionResult> SubmitPayOutRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
+        {
+            //เอาไว้ให้ merchant เป็นคนเรียกเพื่อของ pay-out
+            var merchantVm = await _merchantSvc.GetMerchantById(orgId, merchantId);
+            if (merchantVm.Status != "OK" || merchantVm.Merchant == null)
+                return Ok(merchantVm);
+
+            var merchant = merchantVm.Merchant;
+
+            var bankAccountId = request.PayinBankAccountId!;
+            var baVm = new MVBankAccount() { Status = "OK", BankAccount = null };
+            if (string.IsNullOrEmpty(bankAccountId))
+            {
+                //TODO : merchant จะส่ง bank account no, name ใหม่มา override เอง โดยจะไม่ใช้ PayinBankAccountId
+                baVm.BankAccount = new MBankAccount()
+                {
+                    Id = null, //กรณีที่ไม่ระบุ PayinBankAccountId มา จะใช้ข้อมูลบัญชีที่ส่งมาใน request แทน โดยจะไม่เชื่อมโยงกับ BankAccount จริงๆ ในระบบ
+                    BankCode = request.PayinBankCode!,
+                    AccountNumber = request.PayinBankAccountNo!,
+                    AccountName = request.PayinBankAccountName!,
+                    PromptPayId = request.PayinPromptPayId!,
+                    AccountType = request.PayinAccountType!, //Native หรือ PromptPay
+                };
+            }
+            else
+            {
+                baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+                if (baVm.Status != "OK" || baVm.BankAccount == null)
+                return Ok(baVm);
+            }
+
+            request.MerchantId = merchant.Id!.ToString();
+            request.MerchantId2 = merchant.Id ?? Guid.Empty;
+            request.Direction = "PayOut";
+            request.Currency = "THB";
+
+            var result = await _paymentRequestSvc.AddPaymentRequestPayOut(orgId, request, merchant, baVm.BankAccount);
             return Ok(result);
         }
     }

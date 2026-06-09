@@ -172,6 +172,7 @@ public class DataSeeder
     private void SeedDefaultRoles3()
     {
         AddRole("PAYMENT_REQUEST", "PaymentRequest:SubmitPayInRequest", "ORGANIZATION", "For merchant to submit payment request");
+        AddRole("PAYOUT_REQUEST", "PaymentRequest:SubmitPayOutRequest", "ORGANIZATION", "For merchant to submit pay-out request");
         context.SaveChanges();
     }
 
