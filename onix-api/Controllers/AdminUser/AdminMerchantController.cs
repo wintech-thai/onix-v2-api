@@ -81,8 +81,8 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/global/action/GetMerchantPayOutEndpoint/{merchantId}")]
-        public async Task<IActionResult> GetMerchantPayOutEndpoint(string merchantId)
+        [Route("org/global/action/GetMerchantPayOutRequestEndpoint/{merchantId}")]
+        public async Task<IActionResult> GetMerchantPayOutRequestEndpoint(string merchantId)
         {
             var mvMerchant = await svc.GetMerchantById("notused", merchantId);
             if (mvMerchant.Status != "OK")
