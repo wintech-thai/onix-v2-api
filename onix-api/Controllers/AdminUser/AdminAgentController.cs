@@ -157,14 +157,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        private static List<string> GetMetaData(JsonElement body)
+        private static List<string> GetMetaData(Dictionary<string, object> body)
         {
             return [];
         }
 
         [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
-        public async Task<IActionResult> NotifyHeartbeat(string agentId, [FromBody] JsonElement body)
+        public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
         {
             var eventJson = "{}"; //JsonSerializer.Serialize(body);
             var metaData = string.Join(",", GetMetaData(body));
@@ -184,7 +184,7 @@ namespace Its.Onix.Api.Controllers
 
         [HttpPost]
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
-        public async Task<IActionResult> NotifyLineMessage(string agentId, [FromBody] JsonElement body)
+        public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
         {
             var eventJson = "{}"; //body.GetRawText(); //JsonSerializer.Serialize(body);
             var metaData = string.Join(",", GetMetaData(body));
