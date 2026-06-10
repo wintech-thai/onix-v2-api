@@ -327,6 +327,8 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetAgentEvents(param);
 
+            result.ForEach( p => p.RawData = "");
+
             return result;
         }
 
@@ -365,7 +367,16 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var jsonStr = result.RawData;
+            if (string.IsNullOrEmpty(jsonStr))
+            {
+                jsonStr = "{}";
+            }
+
+            result.RawDataObj = JsonDocument.Parse(jsonStr).RootElement.Clone();;
+
             r.AgentEvent = result;
+            r.AgentEvent.RawData = "";
 
             return r;
         }

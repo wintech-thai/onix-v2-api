@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using IndexAttribute = Microsoft.EntityFrameworkCore.IndexAttribute;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Models
 {
@@ -39,6 +40,10 @@ namespace Its.Onix.Api.Models
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
+
+
+        [NotMapped]
+        public JsonElement RawDataObj { get; set; }
 
         public MAgentEvent()
         {
