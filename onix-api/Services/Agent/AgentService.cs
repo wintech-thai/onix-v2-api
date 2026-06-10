@@ -116,6 +116,41 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVAgent> AddAgentSimple(string orgId, MAgent agent)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVAgent()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+
+            if (string.IsNullOrEmpty(agent.Code))
+            {
+                r.Status = "CODE_MISSING";
+                r.Description = $"Agent code is missing!!!";
+
+                return r;
+            }
+
+            var isExist = await repository!.IsAgentCodeExist(agent.Code);
+            if (isExist)
+            {
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Agent code [{agent.Code}] already exist!!!";
+
+                return r;
+            }
+
+            agent.ApiKeyId = "NOTUSED";
+            var result = await repository!.AddAgent(agent);
+            r.Agent = result;
+
+            return r;
+        }
+
         public async Task<MVAgent> DeleteAgentById(string orgId, string agentId)
         {
             repository!.SetCustomOrgId(orgId);
