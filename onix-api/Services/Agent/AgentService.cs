@@ -304,5 +304,70 @@ namespace Its.Onix.Api.Services
 
             return agentObj;
         }
+
+        //AgentEvent
+        public async Task<MVAgentEvent> AddAgentEvent(string orgId, MAgentEvent evt)
+        {
+            var r = new MVAgentEvent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.AddAgentEvent(evt);
+
+            r.AgentEvent = result;
+
+            return r;
+        }
+
+        public async Task<List<MAgentEvent>> GetAgentEvents(string orgId, VMAgentEvent param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetAgentEvents(param);
+
+            return result;
+        }
+
+        public async Task<int> GetAgentEventCount(string orgId, VMAgentEvent param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetAgentEventCount(param);
+
+            return result;
+        }
+
+        public async Task<MVAgentEvent> GetAgentEventById(string orgId, string agentEventId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVAgentEvent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(agentEventId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Agent event ID [{agentEventId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.GetAgentEventById(agentEventId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent event ID [{agentEventId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.AgentEvent = result;
+
+            return r;
+        }
     }
 }

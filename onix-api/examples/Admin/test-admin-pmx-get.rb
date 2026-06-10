@@ -19,6 +19,7 @@ param =  {
   FullTextSearch: "",
   Direction: "", #"PayIn",
   Status: "",
+  Limit: 2,
 }
 
 token = File.read(keyFile)

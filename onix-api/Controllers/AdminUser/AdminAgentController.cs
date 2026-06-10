@@ -140,10 +140,45 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/GetAgentEvents/{agentId}")]
+        public async Task<IActionResult> GetAgentEvents(string agentId, [FromBody] VMAgentEvent request)
+        {
+            request.AgentId = agentId;
+            var result = await svc.GetAgentEvents("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetAgentEventCount/{agentId}")]
+        public async Task<IActionResult> GetAgentEventCount(string agentId, [FromBody] VMAgentEvent request)
+        {
+            request.AgentId = agentId;
+            var result = await svc.GetAgentEventCount("global", request);
+            return Ok(result);
+        }
+
+        private static List<string> GetMetaData(JsonElement body)
+        {
+            return [];
+        }
+
+        [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
         public async Task<IActionResult> NotifyHeartbeat(string agentId, [FromBody] JsonElement body)
         {
-            var result = await svc.AddAgentStat("global", agentId, body);
+            var eventJson = JsonSerializer.Serialize(body);
+            var metaData = string.Join(",", GetMetaData(body));
+
+            var evt = new MAgentEvent()
+            {
+                AgentId = agentId,
+                EventType = "Heartbeat",
+                RawData = eventJson,
+                Channel = "APP",
+                Tags = metaData,
+            };
+
+            var result = await svc.AddAgentEvent("global", evt);
             return Ok(result);
         }
 
@@ -151,7 +186,20 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, [FromBody] JsonElement body)
         {
-            var result = await svc.AddAgentStat("global", agentId, body);
+            var eventJson = JsonSerializer.Serialize(body);
+            var metaData = string.Join(",", GetMetaData(body));
+            var channel = ""; //TODO : Added logic to get channel here
+
+            var evt = new MAgentEvent()
+            {
+                AgentId = agentId,
+                EventType = "PaymentTx",
+                RawData = eventJson,
+                Tags = metaData,
+                Channel = channel,
+            };
+
+            var result = await svc.AddAgentEvent("global", evt);
             return Ok(result);
         }
     }
