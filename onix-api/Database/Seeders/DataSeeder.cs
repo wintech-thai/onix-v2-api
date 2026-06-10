@@ -173,12 +173,15 @@ public class DataSeeder
     {
         AddRole("PAYMENT_REQUEST", "PaymentRequest:SubmitPayInRequest", "ORGANIZATION", "For merchant to submit payment request");
         AddRole("PAYOUT_REQUEST", "PaymentRequest:SubmitPayOutRequest", "ORGANIZATION", "For merchant to submit pay-out request");
+        
         context.SaveChanges();
     }
 
     private void SeedDefaultRoles4()
     {
         AddRole("PAYMENT_TX_LINE", "AdminPaymentTx:SubmitLinePaymentTxNotification", "ADMIN", "For LINE agent to submit payment transaction notification");
+        AddRole("AGENT_CONNECT", "AdminAgent:Notify.+", "ADMIN", "Agent notification");
+
         context.SaveChanges();
     }
 
