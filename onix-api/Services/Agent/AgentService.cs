@@ -144,7 +144,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            agent.ApiKeyId = "NOTUSED";
+            agent.ApiKeyId = "";
             var result = await repository!.AddAgent(agent);
             r.Agent = result;
 
@@ -181,7 +181,7 @@ namespace Its.Onix.Api.Services
 
             //Delete API key ด้วย
             var apiKeyId = currentAgent.Agent.ApiKeyId;
-            if (!string.IsNullOrEmpty(apiKeyId))
+            if (!string.IsNullOrEmpty(apiKeyId) && (apiKeyId != "NOTUSED"))
             {
                 var k = _apiKeyRepo.DeleteApiKeyById(apiKeyId);
 
