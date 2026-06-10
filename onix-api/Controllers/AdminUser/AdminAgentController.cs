@@ -92,7 +92,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/AddAgent")]
         public async Task<IActionResult> AddAgent([FromBody] MAgent request)
         {
-            var result = await svc.AddAgent("global", request);
+            var result = await svc.AddAgentSimple("global", request);
             return Ok(result);
         }
 
