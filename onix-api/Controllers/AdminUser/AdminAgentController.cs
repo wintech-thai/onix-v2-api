@@ -39,8 +39,8 @@ namespace Its.Onix.Api.Controllers
             var mc = mvAgent.Agent!;
 
             var agentOrgId = mc.OrgId;
-            var url1 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/PaymentRequest/org/{agentOrgId}/action/NotifyHeartbeat/{agentId}";
-            var url2 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/PaymentRequest/org/{agentOrgId}/action/NotifyPaymentTx/{agentId}";
+            var url1 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/{agentOrgId}/action/NotifyHeartbeat/{agentId}";
+            var url2 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/{agentOrgId}/action/NotifyLineMessage/{agentId}";
 
             var result = new MVEndPoint()
             {
@@ -148,8 +148,8 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
-        [Route("org/global/action/NotifyPaymentTx/{agentId}")]
-        public async Task<IActionResult> NotifyPaymentTx(string agentId, [FromBody] JsonElement body)
+        [Route("org/global/action/NotifyLineMessage/{agentId}")]
+        public async Task<IActionResult> NotifyLineMessage(string agentId, [FromBody] JsonElement body)
         {
             var result = await svc.AddAgentStat("global", agentId, body);
             return Ok(result);
