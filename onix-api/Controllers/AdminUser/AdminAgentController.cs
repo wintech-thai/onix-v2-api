@@ -166,7 +166,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
         public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
         {
-            var eventJson = "{}"; //JsonSerializer.Serialize(body);
+            var eventJson = JsonSerializer.Serialize(body);
             var metaData = string.Join(",", GetMetaData(body));
 
             var evt = new MAgentEvent()

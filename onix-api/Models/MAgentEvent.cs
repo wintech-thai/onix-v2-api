@@ -43,12 +43,13 @@ namespace Its.Onix.Api.Models
 
 
         [NotMapped]
-        public JsonElement RawDataObj { get; set; }
+        public Dictionary<string, object>? RawDataObj { get; set; }
 
         public MAgentEvent()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
+            RawDataObj = [];
         }
     }
 }

@@ -373,7 +373,7 @@ namespace Its.Onix.Api.Services
                 jsonStr = "{}";
             }
 
-            result.RawDataObj = JsonDocument.Parse(jsonStr).RootElement.Clone();;
+            result.RawDataObj = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonStr);
 
             r.AgentEvent = result;
             r.AgentEvent.RawData = "";
