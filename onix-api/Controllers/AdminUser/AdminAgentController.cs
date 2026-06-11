@@ -186,10 +186,12 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
         {
-            var eventJson = "{}"; //body.GetRawText(); //JsonSerializer.Serialize(body);
+Console.WriteLine("DEBUG1 - NotifyLineMessage");
+            var eventJson = JsonSerializer.Serialize(body);
+Console.WriteLine("DEBUG2 - NotifyLineMessage");
             var metaData = string.Join(",", GetMetaData(body));
             var channel = ""; //TODO : Added logic to get channel here
-
+Console.WriteLine($"DEBUG3 - {eventJson}");
             var evt = new MAgentEvent()
             {
                 AgentId = agentId,
@@ -198,8 +200,9 @@ namespace Its.Onix.Api.Controllers
                 Tags = metaData,
                 Channel = channel,
             };
-
+Console.WriteLine($"DEBUG4 - {metaData}");
             var result = await svc.AddAgentEvent("global", evt);
+Console.WriteLine($"DEBUG5 - {metaData}");
             return Ok(result);
         }
     }
