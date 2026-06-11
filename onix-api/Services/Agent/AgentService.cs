@@ -318,6 +318,7 @@ namespace Its.Onix.Api.Services
             var result = await repository!.AddAgentEvent(evt);
 
             r.AgentEvent = result;
+            r.AgentEvent.RawData = "";
 
             return r;
         }
