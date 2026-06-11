@@ -199,6 +199,23 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(channelPd);
             }
 
+            if (param.FromDate.HasValue)
+            {
+                var fromDatePd = PredicateBuilder.New<MAgentEvent>();
+                fromDatePd = fromDatePd.Or(p => p.CreatedDate >= param.FromDate.Value);
+
+                pd = pd.And(fromDatePd);
+            }
+
+            // ToDate
+            if (param.ToDate.HasValue)
+            {
+                var toDatePd = PredicateBuilder.New<MAgentEvent>();
+                toDatePd = toDatePd.Or(p => p.CreatedDate <= param.ToDate.Value);
+
+                pd = pd.And(toDatePd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MAgentEvent>();

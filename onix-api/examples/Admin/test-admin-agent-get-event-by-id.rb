@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ###
-agentEventId = "573b846e-dff9-48d7-bfc7-705496a28454" 
+agentEventId = "be4af2cf-662e-4fd3-9423-bb02fd4e85a2" 
 apiUrl = "admin-api/AdminAgent/org/global/action/GetAgentEventById/#{agentEventId}"
 
 param = nil
