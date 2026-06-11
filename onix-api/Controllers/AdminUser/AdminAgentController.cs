@@ -139,7 +139,7 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Route("org/global/action/GetAgentEventById/{agentEventId}")]
         public async Task<IActionResult> GetAgentEvents(string agentEventId)
         {
