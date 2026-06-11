@@ -162,7 +162,7 @@ namespace Its.Onix.Api.Database.Repositories
             agentEvent.CreatedDate = DateTime.UtcNow;
 
             await context!.AgentEvents!.AddAsync(agentEvent);
-            await UpdateAgentLastSeenById(agentEvent.AgentId!.ToString());
+            await UpdateAgentLastSeenById(agentEvent.AgentId!);
 
             await context.SaveChangesAsync();
 
