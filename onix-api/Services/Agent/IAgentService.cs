@@ -15,5 +15,10 @@ namespace Its.Onix.Api.Services
         public Task<int> GetAgentCount(string orgId, VMAgent param);
         public Task<MVAgent> UpdateAgentById(string orgId, string agentId, MAgent agent);
         public Task<MVAgent> AddAgentStat(string orgId, string agentId, JsonElement body);
+
+        public Task<int> GetAgentEventCount(string orgId, VMAgentEvent param);
+        public Task<List<MAgentEvent>> GetAgentEvents(string orgId, VMAgentEvent param);
+        public Task<MVAgentEvent> GetAgentEventById(string orgId, string agentEventId);
+        public Task<MVAgentEvent> AddAgentEvent(string orgId, MAgentEvent evt);
     }
 }

@@ -144,7 +144,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            agent.ApiKeyId = "NOTUSED";
+            agent.ApiKeyId = "";
             var result = await repository!.AddAgent(agent);
             r.Agent = result;
 
@@ -181,7 +181,7 @@ namespace Its.Onix.Api.Services
 
             //Delete API key ด้วย
             var apiKeyId = currentAgent.Agent.ApiKeyId;
-            if (!string.IsNullOrEmpty(apiKeyId))
+            if (!string.IsNullOrEmpty(apiKeyId) && (apiKeyId != "NOTUSED"))
             {
                 var k = _apiKeyRepo.DeleteApiKeyById(apiKeyId);
 
@@ -303,6 +303,83 @@ namespace Its.Onix.Api.Services
             PublishMessage(agentStat);
 
             return agentObj;
+        }
+
+        //AgentEvent
+        public async Task<MVAgentEvent> AddAgentEvent(string orgId, MAgentEvent evt)
+        {
+            var r = new MVAgentEvent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.AddAgentEvent(evt);
+
+            r.AgentEvent = result;
+            r.AgentEvent.RawData = "";
+
+            return r;
+        }
+
+        public async Task<List<MAgentEvent>> GetAgentEvents(string orgId, VMAgentEvent param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetAgentEvents(param);
+
+            result.ForEach( p => p.RawData = "");
+
+            return result;
+        }
+
+        public async Task<int> GetAgentEventCount(string orgId, VMAgentEvent param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetAgentEventCount(param);
+
+            return result;
+        }
+
+        public async Task<MVAgentEvent> GetAgentEventById(string orgId, string agentEventId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVAgentEvent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(agentEventId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Agent event ID [{agentEventId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.GetAgentEventById(agentEventId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent event ID [{agentEventId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            var jsonStr = result.RawData;
+            if (string.IsNullOrEmpty(jsonStr))
+            {
+                jsonStr = "{}";
+            }
+
+            result.RawDataObj = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonStr);
+
+            r.AgentEvent = result;
+            r.AgentEvent.RawData = "";
+
+            return r;
         }
     }
 }

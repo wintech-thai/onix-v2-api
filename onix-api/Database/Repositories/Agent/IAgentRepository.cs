@@ -16,5 +16,10 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MAgent> AddAgent(MAgent agent);
         public Task<MAgent?> DeleteAgentById(string agentId);
         public Task<MAgent?> UpdateAgentById(string agentId, MAgent agent);
+
+        public Task<MAgentEvent> AddAgentEvent(MAgentEvent agentEvent);
+        public Task<int> GetAgentEventCount(VMAgentEvent param);
+        public Task<List<MAgentEvent>> GetAgentEvents(VMAgentEvent param);
+        public Task<MAgentEvent?> GetAgentEventById(string agentEventId);
     }
 }

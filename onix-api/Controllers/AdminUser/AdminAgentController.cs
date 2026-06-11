@@ -139,19 +139,78 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetAgentEventById/{agentEventId}")]
+        public async Task<IActionResult> GetAgentEvents(string agentEventId)
+        {
+            var result = await svc.GetAgentEventById("global", agentEventId);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetAgentEvents/{agentId}")]
+        public async Task<IActionResult> GetAgentEvents(string agentId, [FromBody] VMAgentEvent request)
+        {
+            request.AgentId = agentId;
+            var result = await svc.GetAgentEvents("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetAgentEventCount/{agentId}")]
+        public async Task<IActionResult> GetAgentEventCount(string agentId, [FromBody] VMAgentEvent request)
+        {
+            request.AgentId = agentId;
+            var result = await svc.GetAgentEventCount("global", request);
+            return Ok(result);
+        }
+
+        private static List<string> GetMetaData(Dictionary<string, object> body)
+        {
+            return [];
+        }
+
         [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
-        public async Task<IActionResult> NotifyHeartbeat(string agentId, [FromBody] JsonElement body)
+        public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
         {
-            var result = await svc.AddAgentStat("global", agentId, body);
+            var eventJson = JsonSerializer.Serialize(body);
+            var metaData = string.Join(",", GetMetaData(body));
+
+            var evt = new MAgentEvent()
+            {
+                AgentId = agentId,
+                EventType = "Heartbeat",
+                RawData = eventJson,
+                Channel = "APP",
+                Tags = metaData,
+            };
+
+            var result = await svc.AddAgentEvent("global", evt);
             return Ok(result);
         }
 
         [HttpPost]
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
-        public async Task<IActionResult> NotifyLineMessage(string agentId, [FromBody] JsonElement body)
+        public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
         {
-            var result = await svc.AddAgentStat("global", agentId, body);
+//Console.WriteLine("DEBUG1 - NotifyLineMessage");
+            var eventJson = JsonSerializer.Serialize(body);
+//Console.WriteLine("DEBUG2 - NotifyLineMessage");
+            var metaData = string.Join(",", GetMetaData(body));
+            var channel = ""; //TODO : Added logic to get channel here
+//Console.WriteLine($"DEBUG3 - {eventJson}");
+            var evt = new MAgentEvent()
+            {
+                AgentId = agentId,
+                EventType = "PaymentTx",
+                RawData = eventJson,
+                Tags = metaData,
+                Channel = channel,
+            };
+//Console.WriteLine($"DEBUG4 - {metaData}");
+            var result = await svc.AddAgentEvent("global", evt);
+//Console.WriteLine($"DEBUG5 - {metaData}");
             return Ok(result);
         }
     }

@@ -13,14 +13,11 @@ load_env("../.env")
 orgId = ENV['API_ORG']
 keyFile = ".token"
 
-### 
-apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetTransferRequests"
-param =  {
-  FullTextSearch: "",
-  Direction: "", #"PayIn",
-  Status: "",
-  Limit: 2,
-}
+###
+agentEventId = "be4af2cf-662e-4fd3-9423-bb02fd4e85a2" 
+apiUrl = "admin-api/AdminAgent/org/global/action/GetAgentEventById/#{agentEventId}"
+
+param = nil
 
 token = File.read(keyFile)
 
@@ -29,10 +26,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:post, apiUrl, param)
+result = make_request(:get, apiUrl, param)
 puts(result.to_json)
-
-apiUrl = "admin-api/AdminPaymentRequest/org/global/action/GetTransferRequestCount"
-
-result = make_request(:post, apiUrl, param)
-puts(result)

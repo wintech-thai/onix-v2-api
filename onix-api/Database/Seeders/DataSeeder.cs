@@ -197,6 +197,6 @@ public class DataSeeder
         SeedDefaultRoles3();
         SeedDefaultRoles4();
 
-        UpdateScanItemTemplateDefaultIfNull();
+        //UpdateScanItemTemplateDefaultIfNull();
     }
 }
