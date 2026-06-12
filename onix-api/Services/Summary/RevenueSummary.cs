@@ -8,6 +8,8 @@ namespace Its.Onix.Api.Services
         public decimal TotalPayOutAmount { get; set; }
         public decimal TotalPayInFee { get; set; }
         public decimal TotalPayOutFee { get; set; }
+        public int TotalPayInCount { get; set; }
+        public int TotalPayOutCount { get; set; }
         public List<MerchantSummaryData> PayInByMerchant { get; set; }
         public List<MerchantSummaryData> PayOutByMerchant { get; set; }
         public List<DailyRevenueSummaryData> DailyRevenue { get; set; }

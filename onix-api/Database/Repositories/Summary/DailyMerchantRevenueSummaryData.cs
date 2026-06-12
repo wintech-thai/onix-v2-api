@@ -11,6 +11,8 @@ namespace Its.Onix.Api.Models
         public decimal? PayOutAmount { get; set; }
         public decimal? PayInFee { get; set; }
         public decimal? PayOutFee { get; set; }
+        public int? PayInCount { get; set; }
+        public int? PayOutCount { get; set; }
 
         public DailyMerchantRevenueSummaryData()
         {

@@ -206,7 +206,9 @@ namespace Its.Onix.Api.Database.Repositories
                     PayInAmount = g.Where(x => x.Direction == "PayIn").Sum(x => x.TxAmountDecimal),
                     PayOutAmount = g.Where(x => x.Direction == "PayOut").Sum(x => x.TxAmountDecimal),
                     PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
-                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayoutFeeDecimal)
+                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayoutFeeDecimal),
+                    PayInCount = g.Count(x => x.Direction == "PayIn"),
+                    PayOutCount = g.Count(x => x.Direction == "PayOut")
                 })
                 .OrderBy(x => x.Date)
                 .ThenBy(x => x.MerchantCode)
@@ -226,7 +228,8 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     Direction = g.Key,
                     TxAmount = g.Sum(x => x.TxAmountDecimal),
-                    FeeAmount = g.Sum(x => (x.PayInFeeDecimal ?? 0) + (x.PayoutFeeDecimal ?? 0))
+                    FeeAmount = g.Sum(x => (x.PayInFeeDecimal ?? 0) + (x.PayoutFeeDecimal ?? 0)),
+                    TxCount = g.Count()
                 })
                 .ToListAsync();
 
