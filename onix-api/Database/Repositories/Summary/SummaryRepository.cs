@@ -99,6 +99,7 @@ namespace Its.Onix.Api.Database.Repositories
                 select new { pmt, merchant };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MPaymentTransaction
             {
+                OrgId = x.pmt.OrgId,
                 MerchantCode = x.merchant.Code,
                 TxAmountDecimal = x.pmt.TxAmountDecimal,
                 PayInFeeDecimal = x.pmt.PayInFeeDecimal,
