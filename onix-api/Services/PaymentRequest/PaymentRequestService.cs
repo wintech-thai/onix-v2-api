@@ -1085,7 +1085,7 @@ namespace Its.Onix.Api.Services
 
                 Id = pr.Id.ToString(),
                 ReferenceId = pr.RefId,
-                SessionId = Guid.NewGuid().ToString(),
+                SessionId = pr.Id.ToString(),
                 WebsocketPath = "/realtime/payment-tx",
                 Type = pr.Direction,
                 Status = pr.Status,
