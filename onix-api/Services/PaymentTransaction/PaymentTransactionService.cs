@@ -328,7 +328,7 @@ namespace Its.Onix.Api.Services
             if (pmr != null)
             {
                 var sessionId = pmr!.Id.ToString();
-
+                Console.WriteLine($"DEBUG1 - [Notify] for sessionId=[{sessionId}]");
                 await _hub.Clients
                     .Group($"payment:{sessionId}")
                     .SendAsync(
@@ -338,6 +338,8 @@ namespace Its.Onix.Api.Services
                             sessionId,
                             amount = pmr.GeneratedAmount
                         });
+
+                Console.WriteLine($"DEBUG2 - [Notify] for sessionId=[{sessionId}]");
             }
 
             return mvPt;
