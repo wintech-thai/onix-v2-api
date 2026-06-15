@@ -4,6 +4,7 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Its.Onix.Api.Services
 {
@@ -15,6 +16,7 @@ namespace Its.Onix.Api.Services
         private readonly IPointService? _pointService = null;
         private readonly IJobService? _jobService = null;
         private readonly IRedisHelper _redis;
+        private readonly IHubContext<PaymentHub> _hub;
 
         public PaymentTransactionService(
             IPaymentTransactionRepository repo, 
@@ -22,6 +24,7 @@ namespace Its.Onix.Api.Services
             IPointService pointService,
             IBankAccountRepository bankAccountRepo,
             IJobService jobService,
+            IHubContext<PaymentHub> hub,
             IRedisHelper redis) : base()
         {
             repository = repo;
@@ -30,6 +33,7 @@ namespace Its.Onix.Api.Services
             _pointService = pointService;
             _jobService = jobService;
             _redis = redis;
+            _hub = hub;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)
@@ -320,6 +324,21 @@ namespace Its.Onix.Api.Services
             var message = JsonSerializer.Serialize(job);
             _ = await _redis.PublishMessageAsync(stream!, message);
 
+            //Notify กลับไปที่ฝั่ง browser ผ่าน SignalR
+            if (pmr != null)
+            {
+                var sessionId = pmr!.Id.ToString();
+
+                await _hub.Clients
+                    .Group($"payment:{sessionId}")
+                    .SendAsync(
+                        "payment.completed",
+                        new
+                        {
+                            sessionId,
+                            amount = pmr.GeneratedAmount
+                        });
+            }
 
             return mvPt;
         }

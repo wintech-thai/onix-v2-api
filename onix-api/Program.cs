@@ -276,6 +276,7 @@ namespace Its.Onix.Api
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHub<PaymentHub>("/realtime/payment-tx");
             app.Run();
         }
     }

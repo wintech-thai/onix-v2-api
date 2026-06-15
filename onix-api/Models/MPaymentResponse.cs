@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Models
     {
         public string? Id { get; set; } //UUID
         public string? ReferenceId { get; set; } //คำอธิบายการชำระเงิน
+        public string? SessionId { get; set; } //สำหรับให้ websocket ต่อเข้ามาสำหรับ realtime URL
         public string? Type { get; set; } //PayIn
         public string? Status { get; set; } //PayIn
         public double? RequestedAmount { get; set; } //จำนวนเงิน > 0
@@ -15,6 +16,7 @@ namespace Its.Onix.Api.Models
         public string? QrCode { get; set; }
         public string? QrCodeImage { get; set; }
         public string? PaymentUrl { get; set; }
+        public string? WebsocketPath { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ExpireAt { get; set; }
 
