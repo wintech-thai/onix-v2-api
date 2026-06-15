@@ -4,6 +4,7 @@ require 'net/http'
 require 'uri'
 require 'json'
 require './utils'
+require 'faye/websocket'
 
 $stdout.sync = true
 
@@ -43,4 +44,7 @@ ENV['API_KEY'] = ENV['PAYIN_REQUEST_API_KEY'] # ถ้าใช้ API KEY ก�
 
 puts("===== Submit Payment Request =====")
 result = make_request(:post, apiUrl, param)
-puts(result)
+puts(result.to_json)
+
+sessionId = result["sessionId"]
+wsPath    = result["websocketPath"]
