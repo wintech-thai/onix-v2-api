@@ -250,6 +250,7 @@ namespace Its.Onix.Api
 
             builder.Services.AddHttpClient();
             builder.Services.AddHealthChecks();
+            builder.Services.AddSignalR();
 
             var app = builder.Build();
 
