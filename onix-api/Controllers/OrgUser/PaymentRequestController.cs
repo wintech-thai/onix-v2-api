@@ -90,7 +90,7 @@ namespace Its.Onix.Api.Controllers
                     AccountNumber = request.BankAccountNo!,
                     AccountName = request.BankAccountName!,
                     PromptPayId = request.PromptPayId!,
-                    AccountType = request.AccountType!,
+                    AccountType = !string.IsNullOrEmpty(request.PromptPayId) ? "PromptPay" : "Bank",
                 };
             }
             else
