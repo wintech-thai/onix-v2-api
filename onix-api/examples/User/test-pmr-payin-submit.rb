@@ -35,6 +35,7 @@ param =  {
   #SelectedPayInBankAccountId:
 }
 
+
 token = File.read(keyFile)
 
 ENV['API_KEY'] = ENV['PAYIN_REQUEST_API_KEY'] # ถ้าใช้ API KEY ก็เซ็ตเป็นค่าเดิมที่อ่านมาจากไฟล์

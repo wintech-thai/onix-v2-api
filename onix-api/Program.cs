@@ -250,6 +250,7 @@ namespace Its.Onix.Api
 
             builder.Services.AddHttpClient();
             builder.Services.AddHealthChecks();
+            builder.Services.AddSignalR();
 
             var app = builder.Build();
 
@@ -276,6 +277,7 @@ namespace Its.Onix.Api
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
+            app.MapHub<PaymentHub>("/realtime/payment-tx");
             app.Run();
         }
     }

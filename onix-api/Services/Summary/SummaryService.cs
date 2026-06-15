@@ -52,6 +52,8 @@ namespace Its.Onix.Api.Services
             result.TotalPayOutAmount = payOut?.TxAmount ?? 0;
             result.TotalPayInFee = payIn?.FeeAmount ?? 0;
             result.TotalPayOutFee = payOut?.FeeAmount ?? 0;
+            result.TotalPayInCount = (int)(payIn?.TxCount ?? 0);
+            result.TotalPayOutCount = (int)(payOut?.TxCount ?? 0);
 
             result.PayInByMerchant = await _repo.GetMerchantsPayInAmountSummary(param);
             result.PayOutByMerchant = await _repo.GetMerchantsPayOutAmountSummary(param);

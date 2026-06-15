@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Models
         public string? Direction { get; set; }
         public decimal? TxAmount { get; set; }
         public decimal? FeeAmount { get; set; }
+        public int? TxCount { get; set; }
 
         public RevenueSummaryData()
         {

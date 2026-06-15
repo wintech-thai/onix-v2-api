@@ -80,9 +80,25 @@ namespace Its.Onix.Api.Controllers
 
             var merchant = merchantVm.Merchant;
             var bankAccountId = request.PayinBankAccountId!;
-            var baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
-            if (baVm.Status != "OK" || baVm.BankAccount == null)
-                return Ok(baVm);
+            var baVm = new MVBankAccount() { Status = "OK", BankAccount = null };
+            if (string.IsNullOrEmpty(bankAccountId))
+            {
+                baVm.BankAccount = new MBankAccount()
+                {
+                    Id = null,
+                    BankCode = request.BankCode!,
+                    AccountNumber = request.BankAccountNo!,
+                    AccountName = request.BankAccountName!,
+                    PromptPayId = request.PromptPayId!,
+                    AccountType = !string.IsNullOrEmpty(request.PromptPayId) ? "PromptPay" : "Bank",
+                };
+            }
+            else
+            {
+                baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+                if (baVm.Status != "OK" || baVm.BankAccount == null)
+                    return Ok(baVm);
+            }
 
             request.MerchantId = merchant.Id!.ToString();
             request.MerchantId2 = merchant.Id ?? Guid.Empty;
