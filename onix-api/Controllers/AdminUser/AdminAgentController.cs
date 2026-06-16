@@ -209,7 +209,9 @@ namespace Its.Onix.Api.Controllers
 
         private string GetChannel(Dictionary<string, object> body)
         {
-            var sourceLabel = body["sourceLabel"].ToString();
+            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+            var sourceLabel = sourceLabelObj?.ToString();
+
             if (!string.IsNullOrEmpty(sourceLabel))
             {
                 //เฉพาะ LINE จะมี field นี้
