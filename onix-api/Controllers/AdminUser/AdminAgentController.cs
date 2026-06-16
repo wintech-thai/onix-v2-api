@@ -165,11 +165,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        private static List<string> GetMetaData(Dictionary<string, object> body)
-        {
-            return [];
-        }
-
         [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
         public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
@@ -190,16 +185,63 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        private static List<string?> GetMetaData(Dictionary<string, object> body)
+        {
+            var rawData = GetRawData(body);
+            if (rawData == null)
+            {
+                return [];
+            }
+
+            var sourceLabel = rawData["sourceLabel"]?.ToString();
+            var title = rawData["sourceLabel"]?.ToString();
+
+            return [ title, sourceLabel];
+        }
+
+        private static Dictionary<string, object>? GetRawData(Dictionary<string, object> body)
+        {
+            if (body.TryGetValue("rawDataObj", out var rawDataObj))
+            {
+                var paymentObj = rawDataObj as Dictionary<string, object>;
+
+                if (paymentObj != null &&
+                    paymentObj.TryGetValue("rawDataObj", out var innerRawDataObj))
+                {
+                    var notificationObj = innerRawDataObj as Dictionary<string, object>;
+                    return notificationObj;
+                }
+            }
+
+            return null;
+        }
+
+        private string GetChannel(Dictionary<string, object> body)
+        {
+            var rawData = GetRawData(body);
+            if (rawData == null)
+            {
+                return "UNKNOWN_DATA";
+            }
+
+            var sourceLabel = rawData["sourceLabel"].ToString();
+            if (string.IsNullOrEmpty(sourceLabel))
+            {
+                return "UNKNOWN_FIELD";
+            }
+
+            return sourceLabel;
+        }
+
         [HttpPost]
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
         {
-//Console.WriteLine("DEBUG1 - NotifyLineMessage");
             var eventJson = JsonSerializer.Serialize(body);
-//Console.WriteLine("DEBUG2 - NotifyLineMessage");
+
             var metaData = string.Join(",", GetMetaData(body));
-            var channel = ""; //TODO : Added logic to get channel here
-//Console.WriteLine($"DEBUG3 - {eventJson}");
+            var channel = GetChannel(body);
+
             var evt = new MAgentEvent()
             {
                 AgentId = agentId,
@@ -208,9 +250,9 @@ namespace Its.Onix.Api.Controllers
                 Tags = metaData,
                 Channel = channel,
             };
-//Console.WriteLine($"DEBUG4 - {metaData}");
+
             var result = await svc.AddAgentEvent("global", evt);
-//Console.WriteLine($"DEBUG5 - {metaData}");
+
             return Ok(result);
         }
     }
