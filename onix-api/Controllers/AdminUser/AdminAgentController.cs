@@ -187,50 +187,24 @@ namespace Its.Onix.Api.Controllers
 
         private static List<string?> GetMetaData(Dictionary<string, object> body)
         {
-            var rawData = GetRawData(body);
-            if (rawData == null)
-            {
-                return [];
-            }
-
-            var sourceLabel = rawData["sourceLabel"]?.ToString();
-            var title = rawData["sourceLabel"]?.ToString();
+            var title = body["title"].ToString();
+            var sourceLabel = body["sourceLabel"]?.ToString();
 
             return [ title, sourceLabel];
         }
 
-        private static Dictionary<string, object>? GetRawData(Dictionary<string, object> body)
-        {
-            if (body.TryGetValue("rawDataObj", out var rawDataObj))
-            {
-                var paymentObj = rawDataObj as Dictionary<string, object>;
-
-                if (paymentObj != null &&
-                    paymentObj.TryGetValue("rawDataObj", out var innerRawDataObj))
-                {
-                    var notificationObj = innerRawDataObj as Dictionary<string, object>;
-                    return notificationObj;
-                }
-            }
-
-            return null;
-        }
-
         private string GetChannel(Dictionary<string, object> body)
         {
-            var rawData = GetRawData(body);
-            if (rawData == null)
+            var sourceLabel = body["sourceLabel"].ToString();
+            if (!string.IsNullOrEmpty(sourceLabel))
             {
-                return "UNKNOWN_DATA";
+                //เฉพาะ LINE จะมี field นี้
+                return sourceLabel;
             }
 
-            var sourceLabel = rawData["sourceLabel"].ToString();
-            if (string.IsNullOrEmpty(sourceLabel))
-            {
-                return "UNKNOWN_FIELD";
-            }
+            //TODO : Check เพิ่มเติมถ้าเป็น SMS
 
-            return sourceLabel;
+            return "SMS";
         }
 
         [HttpPost]

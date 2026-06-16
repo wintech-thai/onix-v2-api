@@ -12,21 +12,18 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-agentId = 'cdf71ee4-fb16-48dd-987e-6b6db52fb34f' #'00c52e50-15cc-429d-9ec4-ab93afc99057'
+agentId = '198b743a-4579-41ee-853f-a748f6a40825' #'00c52e50-15cc-429d-9ec4-ab93afc99057'
 
 hhmmss = Time.now.strftime("%H%M%S")
 
 ### 
 apiUrl = "admin-api/AdminAgent/org/global/action/NotifyLineMessage/#{agentId}"
 param =  {
-  TestField1: "xxxxx",
-  PaymentAmount: 654.86, #ต้อง match กับ payment request ก่อนหน้าด้วย
-  RemainAmount: 0.00,
-  TxType: "PayIn",
-  SourceBankCode: "KTB",
-  SourceBankAccountNo: "XX-0987",
-  DestinationBankCode: "TMB",
-  DestinationAccountNo: "XX-9032",
+  sourceType: "NOTIFICATION",
+  sourceKey: "jp.naver.line.android",
+  sourceLabel: "LINE",
+  title: "Krungthai Connext",
+  text: "เงินเข้า: 12.66 บาท เข้าบัญชี XX7157 เมื่อ 16/06/6",
 }
 
 token = File.read(keyFile)
