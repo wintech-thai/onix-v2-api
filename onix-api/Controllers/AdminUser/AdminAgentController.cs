@@ -188,10 +188,13 @@ namespace Its.Onix.Api.Controllers
 
         private static List<string?> GetMetaData(Dictionary<string, object> body)
         {
-            var title = body["title"].ToString();
-            var sourceLabel = body["sourceLabel"]?.ToString();
+            body.TryGetValue("title", out var titleObj);
+            body.TryGetValue("sourceLabel", out var sourceLabelObj);
 
-            return [ title, sourceLabel];
+            var title = titleObj?.ToString();
+            var sourceLabel = sourceLabelObj?.ToString();
+
+            return [title, sourceLabel];
         }
 
         private string GetChannel(Dictionary<string, object> body)
