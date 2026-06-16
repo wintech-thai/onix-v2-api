@@ -168,7 +168,7 @@ namespace Its.Onix.Api.Services
             var result = await repository!.AddAgent(agent);
 
             r.Agent = result;
-            r.Agent.BankAccountsSelected = "";
+            //r.Agent.BankAccountsSelected = "";
 
             return r;
         }
@@ -300,7 +300,7 @@ namespace Its.Onix.Api.Services
             }
 
             r.Agent = result;
-            r.Agent.BankAccountsSelected = "";
+            //r.Agent.BankAccountsSelected = "";
 
             return r;
         }
