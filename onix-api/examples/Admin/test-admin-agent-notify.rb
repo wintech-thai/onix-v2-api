@@ -23,7 +23,7 @@ param =  {
   sourceKey: "jp.naver.line.android",
   sourceLabel: "LINE",
   title: "Krungthai Connext",
-  text: "เงินเข้า: 12.66 บาท เข้าบัญชี XX7157 เมื่อ 16/06/6",
+  text: "เงินเข้า: 45.66 บาท เข้าบัญชี XX7157 เมื่อ 16/06/6",
 }
 
 token = File.read(keyFile)
