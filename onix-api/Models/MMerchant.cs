@@ -57,6 +57,10 @@ namespace Its.Onix.Api.Models
         [Column("Status")]
         public string? Status { get; set; } //Active, Pending, Disabled
 
+        [Column("discard_cent")]
+        public bool DiscardCent { get; set; } //หักเศษสตางค์มาเป็น ค่าธรรมเนียม
+
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
