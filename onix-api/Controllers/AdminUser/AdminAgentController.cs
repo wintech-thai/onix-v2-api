@@ -192,10 +192,11 @@ namespace Its.Onix.Api.Controllers
         private static List<string?> GetMetaData(Dictionary<string, object> body)
         {
             var bd = body;
-            if (body.TryGetValue("rawDataObj", out object? value))
+            if (body.TryGetValue("rawDataObj", out object? value) && (value is JsonElement element))
             {
                 //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
-                bd = (Dictionary<string, object>) value;
+                //bd = (Dictionary<string, object>) value;
+                bd = JsonSerializer.Deserialize<Dictionary<string, object>>(element)!;
             }
 
             //Line
@@ -220,10 +221,11 @@ namespace Its.Onix.Api.Controllers
         private string GetChannel(Dictionary<string, object> body)
         {
             var bd = body;
-            if (body.TryGetValue("rawDataObj", out object? value))
+            if (body.TryGetValue("rawDataObj", out object? value) && (value is JsonElement element))
             {
                 //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
-                bd = (Dictionary<string, object>) value;
+                //bd = (Dictionary<string, object>) value;
+                bd = JsonSerializer.Deserialize<Dictionary<string, object>>(element)!;
             }
 
             bd.TryGetValue("sourceLabel", out var sourceLabelObj);
@@ -243,10 +245,11 @@ namespace Its.Onix.Api.Controllers
         private static MPaymentNotiLine? GetPaymentNoti(Dictionary<string, object> body, string channel)
         {
             var bd = body;
-            if (body.TryGetValue("rawDataObj", out object? value))
+            if (body.TryGetValue("rawDataObj", out object? value) && (value is JsonElement element))
             {
                 //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
-                bd = (Dictionary<string, object>) value;
+                //bd = (Dictionary<string, object>) value;
+                bd = JsonSerializer.Deserialize<Dictionary<string, object>>(element)!;
             }
 
             var pmt = new MPaymentNotiLine()
