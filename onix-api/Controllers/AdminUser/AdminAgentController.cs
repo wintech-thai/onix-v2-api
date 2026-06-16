@@ -204,7 +204,10 @@ namespace Its.Onix.Api.Controllers
             var appVersion = appVersionObj?.ToString();
             var model = modelObj?.ToString();
 
-            return [title, sourceLabel, appVersion, model];
+            List<string?> arr = [title, sourceLabel, appVersion, model];
+            arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
+
+            return arr;
         }
 
         private string GetChannel(Dictionary<string, object> body)
@@ -245,6 +248,24 @@ namespace Its.Onix.Api.Controllers
                     var match = Regex.Match(
                         text,
                         @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                    );
+
+                    if (match.Success)
+                    {
+                        var amount = decimal.Parse(match.Groups["amount"].Value);
+                        var account = match.Groups["account"].Value;
+
+                        pmt.PaymentAmount = amount;
+                        pmt.DestinationAccountNo = account;
+                    }
+                }
+                else if ((title == "SCB Connect") && !string.IsNullOrEmpty(text))
+                {
+                    pmt.DestinationBankCode = "SCB";
+
+                    var match = Regex.Match(
+                        text,
+                        @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
                     );
 
                     if (match.Success)
