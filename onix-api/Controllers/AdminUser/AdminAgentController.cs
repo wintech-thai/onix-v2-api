@@ -250,11 +250,12 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
         {
-            var eventJson = JsonSerializer.Serialize(body);
-
             var metaData = string.Join(",", GetMetaData(body));
             var channel = GetChannel(body);
             var pmtLineNoti = GetPaymentNoti(body, channel);
+
+            var eventJson = JsonSerializer.Serialize(body);
+            body.Add("PaymentNoti", pmtLineNoti!);
 
             var evt = new MAgentEvent()
             {
