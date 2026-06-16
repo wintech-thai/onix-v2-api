@@ -252,6 +252,8 @@ namespace Its.Onix.Api.Database.Repositories
                 EventType = x.agent.EventType,
                 Channel = x.agent.Channel,
                 CreatedDate = x.agent.CreatedDate,
+                Status = x.agent.Status,
+                StatusDesc = x.agent.StatusDesc,
             });
         }
 

@@ -6,6 +6,8 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using System.Text.Json;
 using Its.Onix.Api.ModelsViews;
+using System.Text.RegularExpressions;
+using QRCoder;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -165,11 +167,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        private static List<string> GetMetaData(Dictionary<string, object> body)
-        {
-            return [];
-        }
-
         [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
         public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
@@ -184,22 +181,140 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Channel = "APP",
                 Tags = metaData,
+                Status = "OK",
+                StatusDesc = "Success",
             };
 
             var result = await svc.AddAgentEvent("global", evt);
             return Ok(result);
         }
 
+        private static List<string?> GetMetaData(Dictionary<string, object> body)
+        {
+            //Line
+            body.TryGetValue("title", out var titleObj);
+            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+
+            //Heartbeat
+            body.TryGetValue("AppVersion", out var appVersionObj);
+            body.TryGetValue("Model", out var modelObj);
+
+            var title = titleObj?.ToString();
+            var sourceLabel = sourceLabelObj?.ToString();
+            var appVersion = appVersionObj?.ToString();
+            var model = modelObj?.ToString();
+
+            return [title, sourceLabel, appVersion, model];
+        }
+
+        private string GetChannel(Dictionary<string, object> body)
+        {
+            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+            var sourceLabel = sourceLabelObj?.ToString();
+
+            if (!string.IsNullOrEmpty(sourceLabel))
+            {
+                //เฉพาะ LINE จะมี field นี้
+                return sourceLabel;
+            }
+
+            //TODO : Check เพิ่มเติมถ้าเป็น SMS
+
+            return "SMS";
+        }
+
+        private static MPaymentNotiLine? GetPaymentNoti(Dictionary<string, object> body, string channel)
+        {
+            var pmt = new MPaymentNotiLine()
+            {
+                TxType = "PayIn",
+                RemainAmount = 0,
+                SourceBankAccountNo = "",
+                MerchantId = null,
+            };
+
+            if (channel == "LINE")
+            {
+                var title = body["title"].ToString();
+                var text = body["text"].ToString();
+
+                if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
+                {
+                    pmt.DestinationBankCode = "KTB";
+
+                    var match = Regex.Match(
+                        text,
+                        @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                    );
+
+                    if (match.Success)
+                    {
+                        var amount = decimal.Parse(match.Groups["amount"].Value);
+                        var account = match.Groups["account"].Value;
+
+                        pmt.PaymentAmount = amount;
+                        pmt.DestinationAccountNo = account;
+                    }
+                }
+            }
+
+            return pmt;
+        }
+
+        private async Task<MVBankAccount> GetBankAccount(MPaymentNotiLine lineNoti, string agentId)
+        {
+            var r = new MVBankAccount()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var bankCode = lineNoti.DestinationBankCode;
+            var mvAgent = await svc.GetAgentById("global", agentId);
+            var agent = mvAgent.Agent!;
+
+            var bankAccounts = agent.BankAccountsSelectedObj;
+            MBankAccount? selectedBankAccount = null;
+
+            foreach (var ba in bankAccounts)
+            {
+                if (ba.BankCode == bankCode)
+                {
+                    selectedBankAccount = ba;
+                    break;
+                }
+            }
+
+            if (selectedBankAccount == null)
+            {
+                //หาตัว match ไม่เจอที่ ธนาคารเดียวกัน
+                r.Status = "BANK_NOT_FOUND";
+                r.Description = $"Unable to find bank account with bank code [{bankCode}]";
+                return r;
+            }
+
+            r.BankAccount = selectedBankAccount;
+            return r;
+        }
+
         [HttpPost]
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
         {
-//Console.WriteLine("DEBUG1 - NotifyLineMessage");
-            var eventJson = JsonSerializer.Serialize(body);
-//Console.WriteLine("DEBUG2 - NotifyLineMessage");
+            Dictionary<string, object> wrapData = [];
+
             var metaData = string.Join(",", GetMetaData(body));
-            var channel = ""; //TODO : Added logic to get channel here
-//Console.WriteLine($"DEBUG3 - {eventJson}");
+            var channel = GetChannel(body);
+
+            var pmtLineNoti = GetPaymentNoti(body, channel);
+            var mvBa = await GetBankAccount(pmtLineNoti!, agentId);
+
+            wrapData.Add("InputData", body);
+            wrapData.Add("PaymentNoti", pmtLineNoti!);
+            wrapData.Add("BankAccount", mvBa.BankAccount!);
+
+            var eventJson = JsonSerializer.Serialize(wrapData);
+
             var evt = new MAgentEvent()
             {
                 AgentId = agentId,
@@ -207,10 +322,15 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Tags = metaData,
                 Channel = channel,
+                PaymentNoti = pmtLineNoti,
+                BankAccount = mvBa.BankAccount!,
+
+                Status = mvBa.Status,
+                StatusDesc = mvBa.Description,
             };
-//Console.WriteLine($"DEBUG4 - {metaData}");
+
             var result = await svc.AddAgentEvent("global", evt);
-//Console.WriteLine($"DEBUG5 - {metaData}");
+
             return Ok(result);
         }
     }
