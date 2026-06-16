@@ -191,13 +191,20 @@ namespace Its.Onix.Api.Controllers
 
         private static List<string?> GetMetaData(Dictionary<string, object> body)
         {
+            var bd = body;
+            if (body.TryGetValue("rawDataObj", out object? value))
+            {
+                //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
+                bd = (Dictionary<string, object>) value;
+            }
+
             //Line
-            body.TryGetValue("title", out var titleObj);
-            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+            bd.TryGetValue("title", out var titleObj);
+            bd.TryGetValue("sourceLabel", out var sourceLabelObj);
 
             //Heartbeat
-            body.TryGetValue("AppVersion", out var appVersionObj);
-            body.TryGetValue("Model", out var modelObj);
+            bd.TryGetValue("AppVersion", out var appVersionObj);
+            bd.TryGetValue("Model", out var modelObj);
 
             var title = titleObj?.ToString();
             var sourceLabel = sourceLabelObj?.ToString();
@@ -212,7 +219,14 @@ namespace Its.Onix.Api.Controllers
 
         private string GetChannel(Dictionary<string, object> body)
         {
-            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+            var bd = body;
+            if (body.TryGetValue("rawDataObj", out object? value))
+            {
+                //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
+                bd = (Dictionary<string, object>) value;
+            }
+
+            bd.TryGetValue("sourceLabel", out var sourceLabelObj);
             var sourceLabel = sourceLabelObj?.ToString();
 
             if (!string.IsNullOrEmpty(sourceLabel))
@@ -228,6 +242,13 @@ namespace Its.Onix.Api.Controllers
 
         private static MPaymentNotiLine? GetPaymentNoti(Dictionary<string, object> body, string channel)
         {
+            var bd = body;
+            if (body.TryGetValue("rawDataObj", out object? value))
+            {
+                //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
+                bd = (Dictionary<string, object>) value;
+            }
+
             var pmt = new MPaymentNotiLine()
             {
                 TxType = "PayIn",
@@ -238,8 +259,8 @@ namespace Its.Onix.Api.Controllers
 
             if (channel == "LINE")
             {
-                var title = body["title"].ToString();
-                var text = body["text"].ToString();
+                var title = bd["title"].ToString();
+                var text = bd["text"].ToString();
 
                 if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
                 {
