@@ -106,6 +106,15 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(toDatePd);
             }
 
+            // Status
+            if (!string.IsNullOrEmpty(param.Status))
+            {
+                var statusPd = PredicateBuilder.New<MJob>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
+            }
+
             return pd;
         }
 
