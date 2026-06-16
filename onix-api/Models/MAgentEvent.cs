@@ -36,6 +36,12 @@ namespace Its.Onix.Api.Models
         [Column("tags")]
         public string? Tags { get; set; } /* metadata here */
 
+        [Column("status")]
+        public string? Status { get; set; } 
+
+        [Column("status_desc")]
+        public string? StatusDesc { get; set; }
+
 
         //System fields
         [Column("created_date")]

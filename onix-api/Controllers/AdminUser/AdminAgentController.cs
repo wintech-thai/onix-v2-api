@@ -7,6 +7,7 @@ using Its.Onix.Api.ViewsModels;
 using System.Text.Json;
 using Its.Onix.Api.ModelsViews;
 using System.Text.RegularExpressions;
+using QRCoder;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -180,6 +181,8 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Channel = "APP",
                 Tags = metaData,
+                Status = "OK",
+                StatusDesc = "Success",
             };
 
             var result = await svc.AddAgentEvent("global", evt);
@@ -256,6 +259,42 @@ namespace Its.Onix.Api.Controllers
             return pmt;
         }
 
+        private async Task<MVBankAccount> GetBankAccount(MPaymentNotiLine lineNoti, string agentId)
+        {
+            var r = new MVBankAccount()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var bankCode = lineNoti.DestinationBankCode;
+            var mvAgent = await svc.GetAgentById("global", agentId);
+            var agent = mvAgent.Agent!;
+
+            var bankAccounts = agent.BankAccountsSelectedObj;
+            MBankAccount? selectedBankAccount = null;
+
+            foreach (var ba in bankAccounts)
+            {
+                if (ba.BankCode == bankCode)
+                {
+                    selectedBankAccount = ba;
+                    break;
+                }
+            }
+
+            if (selectedBankAccount == null)
+            {
+                //หาตัว match ไม่เจอที่ ธนาคารเดียวกัน
+                r.Status = "BANK_NOT_FOUND";
+                r.Description = $"Unable to find bank account with bank code [{bankCode}]";
+                return r;
+            }
+
+            r.BankAccount = selectedBankAccount;
+            return r;
+        }
+
         [HttpPost]
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
@@ -264,10 +303,13 @@ namespace Its.Onix.Api.Controllers
 
             var metaData = string.Join(",", GetMetaData(body));
             var channel = GetChannel(body);
+
             var pmtLineNoti = GetPaymentNoti(body, channel);
+            var mvBa = await GetBankAccount(pmtLineNoti!, agentId);
 
             wrapData.Add("InputData", body);
             wrapData.Add("PaymentNoti", pmtLineNoti!);
+            wrapData.Add("BankAccount", mvBa.BankAccount!);
 
             var eventJson = JsonSerializer.Serialize(wrapData);
 
@@ -279,6 +321,10 @@ namespace Its.Onix.Api.Controllers
                 Tags = metaData,
                 Channel = channel,
                 PaymentNoti = pmtLineNoti,
+                BankAccount = mvBa.BankAccount!,
+
+                Status = mvBa.Status,
+                StatusDesc = mvBa.Description,
             };
 
             var result = await svc.AddAgentEvent("global", evt);
