@@ -21,6 +21,17 @@ param =  {
   Code: "Test Agent #{hhmmss}",
   Description: "Test agent created at #{hhmmss}",
   Tags: "Test",
+
+  # เอา pay in bank account, เป็น array
+  BankAccountsSelectedObj: [
+    {
+      Id: '198b743a-4579-41ee-853f-a748f6a40825', #BankAccountId
+      BankCode: 'KTB',
+      AccountNumber: '88099309292029',
+      AccountName: 'สืบศักดิ์ มารกุ๊กกู๋',
+      PromptPayId: '0903990990',
+    }
+  ]
 }
 
 token = File.read(keyFile)

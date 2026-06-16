@@ -52,7 +52,24 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var jsonStr = result.BankAccountsSelected;
+            if (string.IsNullOrEmpty(jsonStr))
+            {
+                jsonStr = "[]";
+            }
+
+            var arr = JsonSerializer.Deserialize<List<MBankAccount>>(jsonStr);
+            if (arr != null)
+            {
+                result.BankAccountsSelectedObj = arr;
+            }
+            else
+            {
+                result.BankAccountsSelectedObj = [];
+            }
+
             r.Agent = result;
+            r.Agent.BankAccountsSelected = "";
 
             return r;
         }
@@ -144,9 +161,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //ทำ serialize ก่อน
+            agent.BankAccountsSelected = SerializeBankAccountSelected(agent);
+
             agent.ApiKeyId = "";
             var result = await repository!.AddAgent(agent);
+
             r.Agent = result;
+            r.Agent.BankAccountsSelected = "";
 
             return r;
         }
@@ -212,6 +234,8 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetAgents(param);
 
+            result.ForEach( p => p.BankAccountsSelected = "");
+
             return result;
         }
 
@@ -221,6 +245,18 @@ namespace Its.Onix.Api.Services
             var result = await repository!.GetAgentCount(param);
 
             return result;
+        }
+
+        private string SerializeBankAccountSelected(MAgent agent)
+        {
+            var bankAccounts = agent.BankAccountsSelectedObj;
+            if (bankAccounts == null)
+            {
+                return "[]";
+            }
+
+            var jsonString = JsonSerializer.Serialize(bankAccounts);
+            return jsonString;
         }
 
         public async Task<MVAgent> UpdateAgentById(string orgId, string agentId, MAgent agent)
@@ -251,6 +287,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //ทำ serialize ก่อน
+            agent.BankAccountsSelected = SerializeBankAccountSelected(agent);
+
             var result = await repository!.UpdateAgentById(agentId, agent);
             if (result == null)
             {
@@ -261,6 +300,7 @@ namespace Its.Onix.Api.Services
             }
 
             r.Agent = result;
+            r.Agent.BankAccountsSelected = "";
 
             return r;
         }
@@ -328,7 +368,9 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetAgentEvents(param);
 
-            result.ForEach( p => p.RawData = "");
+            result.ForEach( p => {
+                p.RawData = "";
+            });
 
             return result;
         }

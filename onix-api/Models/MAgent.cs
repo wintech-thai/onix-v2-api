@@ -33,6 +33,10 @@ namespace Its.Onix.Api.Models
         [Column("registration_url")]
         public string? RegistrationUrl { get; set; }
 
+        [Column("bank_accounts_selected")]
+        public string? BankAccountsSelected { get; set; } /* JSON string เก็บเพื่อบอกว่า ผูกกับ bank account ไหน */
+
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
@@ -43,11 +47,15 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? ApiKey { get; set; }
 
+        [NotMapped]
+        public List<MBankAccount> BankAccountsSelectedObj { get; set; }
+
         public MAgent()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             ApiKeyId = "";
+            BankAccountsSelectedObj = [];
         }
     }
 }
