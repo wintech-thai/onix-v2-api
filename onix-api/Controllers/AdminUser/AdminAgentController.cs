@@ -6,6 +6,7 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using System.Text.Json;
 using Its.Onix.Api.ModelsViews;
+using System.Text.RegularExpressions;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -207,6 +208,44 @@ namespace Its.Onix.Api.Controllers
             return "SMS";
         }
 
+        private static MPaymentNotiLine? GetPaymentNoti(Dictionary<string, object> body, string channel)
+        {
+            var pmt = new MPaymentNotiLine()
+            {
+                TxType = "PayIn",
+                RemainAmount = 0,
+                SourceBankAccountNo = "",
+                MerchantId = null,
+            };
+
+            if (channel == "LINE")
+            {
+                var title = body["title"].ToString();
+                var text = body["text"].ToString();
+
+                if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
+                {
+                    pmt.DestinationBankCode = "KTB";
+
+                    var match = Regex.Match(
+                        text,
+                        @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                    );
+
+                    if (match.Success)
+                    {
+                        var amount = decimal.Parse(match.Groups["amount"].Value);
+                        var account = match.Groups["account"].Value;
+
+                        pmt.PaymentAmount = amount;
+                        pmt.DestinationAccountNo = account;
+                    }
+                }
+            }
+
+            return pmt;
+        }
+
         [HttpPost]
         [Route("org/global/action/NotifyLineMessage/{agentId}")]
         public async Task<IActionResult> NotifyLineMessage(string agentId, Dictionary<string, object> body)
@@ -215,6 +254,7 @@ namespace Its.Onix.Api.Controllers
 
             var metaData = string.Join(",", GetMetaData(body));
             var channel = GetChannel(body);
+            var pmtLineNoti = GetPaymentNoti(body, channel);
 
             var evt = new MAgentEvent()
             {
@@ -223,6 +263,7 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Tags = metaData,
                 Channel = channel,
+                PaymentNoti = pmtLineNoti,
             };
 
             var result = await svc.AddAgentEvent("global", evt);

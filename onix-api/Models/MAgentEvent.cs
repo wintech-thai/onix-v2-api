@@ -44,6 +44,13 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public Dictionary<string, object>? RawDataObj { get; set; }
+        
+        [NotMapped]
+        public MBankAccount? BankAccount { get; set; }
+
+        [NotMapped]
+        public MPaymentNotiLine? PaymentNoti { get; set; }
+
 
         public MAgentEvent()
         {
