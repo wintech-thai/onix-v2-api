@@ -18,12 +18,14 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IAgentService svc;
         private readonly IApiKeyService _apiKeySvc;
+        private readonly IPaymentTransactionService _paymentTxSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminAgentController(IAgentService service, IApiKeyService apiKeySvc)
+        public AdminAgentController(IAgentService service, IApiKeyService apiKeySvc, IPaymentTransactionService paymentTxSvc)
         {
             svc = service;
             _apiKeySvc = apiKeySvc;
+            _paymentTxSvc = paymentTxSvc;
         }
 
 
@@ -353,6 +355,7 @@ namespace Its.Onix.Api.Controllers
 
             var pmtLineNoti = GetPaymentNoti(body, channel);
             var mvBa = await GetBankAccount(pmtLineNoti!, agentId);
+            var ba = mvBa.BankAccount;
 
             wrapData.Add("InputData", body);
             wrapData.Add("PaymentNoti", pmtLineNoti!);
@@ -367,13 +370,19 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Tags = metaData,
                 Channel = channel,
-                PaymentNoti = pmtLineNoti,
-                BankAccount = mvBa.BankAccount!,
+                //PaymentNoti = pmtLineNoti,
+                //BankAccount = mvBa.BankAccount!,
 
                 Status = mvBa.Status,
                 StatusDesc = mvBa.Description,
             };
 
+            if (ba != null)
+            {
+                var bankAccountId = ba.Id.ToString()!;
+                await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
+            }
+            
             var result = await svc.AddAgentEvent("global", evt);
 
             return Ok(result);
