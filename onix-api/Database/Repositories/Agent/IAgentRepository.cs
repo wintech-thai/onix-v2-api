@@ -1,4 +1,5 @@
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Database.Repositories
@@ -21,5 +22,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<int> GetAgentEventCount(VMAgentEvent param);
         public Task<List<MAgentEvent>> GetAgentEvents(VMAgentEvent param);
         public Task<MAgentEvent?> GetAgentEventById(string agentEventId);
+        public Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(VMAgentEvent param);
     }
 }

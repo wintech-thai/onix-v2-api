@@ -168,6 +168,15 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/GetAgentEventTimeSeries/{agentId}")]
+        public async Task<IActionResult> GetAgentEventTimeSeries(string agentId, [FromBody] VMAgentEvent request)
+        {
+            request.AgentId = agentId;
+            var result = await svc.GetAgentEventTimeSeries("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
         public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
         {

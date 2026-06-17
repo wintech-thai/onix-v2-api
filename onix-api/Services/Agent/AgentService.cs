@@ -383,6 +383,13 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public async Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(string orgId, VMAgentEvent param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetAgentEventTimeSeries(param);
+            return result;
+        }
+
         public async Task<MVAgentEvent> GetAgentEventById(string orgId, string agentEventId)
         {
             repository!.SetCustomOrgId(orgId);
