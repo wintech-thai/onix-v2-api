@@ -167,8 +167,23 @@ namespace Its.Onix.Api.Services
 
                 if (pr.Status == "Pending")
                 {
+                    var pmrId = pr.Id.ToString()!;
+
+                    //Acquire payment request lock here to prevent race condition
+                    //บางครั้ง มี payment request แล้วมีการ hack โดยยิง line noti เข้ามาซ้ำ ๆ ๆ ทำให้ topup เงินเข้าไปเกิน
+                    using var redPmrLock = await _redis.AcquireRedLockAsync(
+                        $"lock:payment_request:{pmrId}",  // resource
+                        TimeSpan.FromSeconds(2)   // lock expiry
+                    );
+
+                    if (!redPmrLock.IsAcquired)
+                    {
+                        lines.Add($"STEP4 : Warning -> Unalbe to lock payment request ID [{pmrId}], Amount=[{pr.GeneratedAmount}]");
+                        continue;
+                    }
+
                     //หยิบตัวนี้มาใช้เลย
-                    lines.Add($"STEP4 : Success -> Found Satus=[{pr.Status}], BankAccountId=[{pr.PayinBankAccountId}], Amount=[{pr.GeneratedAmount}]");
+                    lines.Add($"STEP5 : Success -> Found Satus=[{pr.Status}], BankAccountId=[{pr.PayinBankAccountId}], Amount=[{pr.GeneratedAmount}]");
 
                     pmr = pr;
                     break;
@@ -280,9 +295,11 @@ namespace Its.Onix.Api.Services
 
             if ((pmr != null) && (mpt != null))
             {
+                var pmrId = pmr.Id.ToString()!;
+
                 //ตรงนี้จะเป็น Identified ได้เสมอ
                 var paymentTxId = mpt.Id.ToString()!;
-                var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmr.Id.ToString()!, paymentTxId);
+                var _ = await _paymentRequestRepo.UpdatePaymentRequestPaidStatusById(pmrId, paymentTxId);
 
                 if (mcWallet != null)
                 {
