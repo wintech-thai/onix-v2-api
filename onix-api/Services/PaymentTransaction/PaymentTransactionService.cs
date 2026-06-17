@@ -130,6 +130,24 @@ namespace Its.Onix.Api.Services
             decimal amt = paymentNotiLine.PaymentAmount ?? 0;
             var amtStr = amt.ToString("F2");
 
+            //Acquire payment request lock here to prevent race condition
+            //บางครั้ง มี payment request แล้วมีการ hack โดยยิง line noti เข้ามาซ้ำ ๆ ๆ ทำให้ topup เงินเข้าไปเกิน
+            using var redPmrLock = await _redis.AcquireRedLockAsync(
+                $"lock:ProcessLinePaymentTxNotification:{bankAccountId}:{amtStr}",  // resource
+                TimeSpan.FromSeconds(2)   // lock expiry
+            );
+
+            if (!redPmrLock.IsAcquired)
+            {
+                var r = new MVPaymentTransaction()
+                {
+                    Status = "ERROR_ACQUIRED_RECORD",
+                    Description = $"Unable to acquire record for bank account ID [{bankAccountId}], amount=[{amtStr}]",
+                };
+
+                return r;
+            }
+
             var prParam = new VMPaymentRequest()
             {
                 //ไม่ต้องระบุ merchantId เพราะว่าเรายังไม่รู้ว่า transaction นี้เป็นของ merchant ไหน
@@ -168,22 +186,8 @@ namespace Its.Onix.Api.Services
                 if (pr.Status == "Pending")
                 {
                     var pmrId = pr.Id.ToString()!;
-
-                    //Acquire payment request lock here to prevent race condition
-                    //บางครั้ง มี payment request แล้วมีการ hack โดยยิง line noti เข้ามาซ้ำ ๆ ๆ ทำให้ topup เงินเข้าไปเกิน
-                    using var redPmrLock = await _redis.AcquireRedLockAsync(
-                        $"lock:payment_request:{pmrId}",  // resource
-                        TimeSpan.FromSeconds(2)   // lock expiry
-                    );
-
-                    if (!redPmrLock.IsAcquired)
-                    {
-                        lines.Add($"STEP4 : Warning -> Unalbe to lock payment request ID [{pmrId}], Amount=[{pr.GeneratedAmount}]");
-                        continue;
-                    }
-
                     //หยิบตัวนี้มาใช้เลย
-                    lines.Add($"STEP5 : Success -> Found Satus=[{pr.Status}], BankAccountId=[{pr.PayinBankAccountId}], Amount=[{pr.GeneratedAmount}]");
+                    lines.Add($"STEP4 : Success -> Found Satus=[{pr.Status}], BankAccountId=[{pr.PayinBankAccountId}], Amount=[{pr.GeneratedAmount}]");
 
                     pmr = pr;
                     break;

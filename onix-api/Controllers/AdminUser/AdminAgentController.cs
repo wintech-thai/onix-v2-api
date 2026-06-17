@@ -380,7 +380,13 @@ namespace Its.Onix.Api.Controllers
             if (ba != null)
             {
                 var bankAccountId = ba.Id.ToString()!;
-                await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
+                var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
+
+                if (mvTx.Status != "OK")
+                {
+                    evt.Status = mvTx.Status;
+                    evt.StatusDesc = mvTx.Description;
+                }
             }
             
             var result = await svc.AddAgentEvent("global", evt);
