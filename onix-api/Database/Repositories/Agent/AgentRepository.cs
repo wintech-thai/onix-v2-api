@@ -1,5 +1,6 @@
 using LinqKit;
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 using System.Data.Entity;
 
@@ -290,6 +291,47 @@ namespace Its.Onix.Api.Database.Repositories
             Guid id = Guid.Parse(agentEventId);
             var u = await GetSelection2().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             return u;
+        }
+
+        public async Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(VMAgentEvent param)
+        {
+            var predicate = AgentEventPredicate(param!);
+            var events = await GetSelection2().AsExpandable()
+                .Where(predicate)
+                .OrderBy(e => e.CreatedDate)
+                .ToListAsync();
+
+            var rangeHours = 24.0;
+            if (param.FromDate.HasValue && param.ToDate.HasValue)
+            {
+                rangeHours = (param.ToDate.Value - param.FromDate.Value).TotalHours;
+            }
+
+            string BucketKey(DateTime dt)
+            {
+                if (rangeHours <= 2)
+                    return dt.ToString("yyyy-MM-ddTHH:mm:00");
+                if (rangeHours <= 48)
+                    return dt.ToString("yyyy-MM-ddTHH:00:00");
+                return dt.ToString("yyyy-MM-ddT00:00:00");
+            }
+
+            var grouped = events
+                .Where(e => e.CreatedDate.HasValue)
+                .GroupBy(e => new {
+                    Time = BucketKey(e.CreatedDate!.Value),
+                    EventType = e.EventType ?? ""
+                })
+                .Select(g => new MVAgentEventTimeSeries
+                {
+                    Time = g.Key.Time,
+                    EventType = g.Key.EventType,
+                    Count = g.Count(),
+                })
+                .OrderBy(x => x.Time)
+                .ToList();
+
+            return grouped;
         }
     }
 }

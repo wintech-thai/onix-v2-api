@@ -368,7 +368,12 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetAgentEvents(param);
 
-            result.ForEach( p => {
+            result.ForEach(p => {
+                if (!string.IsNullOrEmpty(p.RawData))
+                {
+                    try { p.RawDataObj = JsonSerializer.Deserialize<Dictionary<string, object>>(p.RawData); }
+                    catch { p.RawDataObj = []; }
+                }
                 p.RawData = "";
             });
 
@@ -380,6 +385,13 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetAgentEventCount(param);
 
+            return result;
+        }
+
+        public async Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(string orgId, VMAgentEvent param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetAgentEventTimeSeries(param);
             return result;
         }
 

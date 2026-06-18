@@ -18,12 +18,14 @@ namespace Its.Onix.Api.Controllers
     {
         private readonly IAgentService svc;
         private readonly IApiKeyService _apiKeySvc;
+        private readonly IPaymentTransactionService _paymentTxSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminAgentController(IAgentService service, IApiKeyService apiKeySvc)
+        public AdminAgentController(IAgentService service, IApiKeyService apiKeySvc, IPaymentTransactionService paymentTxSvc)
         {
             svc = service;
             _apiKeySvc = apiKeySvc;
+            _paymentTxSvc = paymentTxSvc;
         }
 
 
@@ -168,6 +170,15 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/GetAgentEventTimeSeries/{agentId}")]
+        public async Task<IActionResult> GetAgentEventTimeSeries(string agentId, [FromBody] VMAgentEvent request)
+        {
+            request.AgentId = agentId;
+            var result = await svc.GetAgentEventTimeSeries("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/global/action/NotifyHeartbeat/{agentId}")]
         public async Task<IActionResult> NotifyHeartbeat(string agentId, Dictionary<string, object> body)
         {
@@ -191,25 +202,44 @@ namespace Its.Onix.Api.Controllers
 
         private static List<string?> GetMetaData(Dictionary<string, object> body)
         {
+            var bd = body;
+            if (body.TryGetValue("rawDataObj", out object? value) && (value is JsonElement element))
+            {
+                //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
+                //bd = (Dictionary<string, object>) value;
+                bd = JsonSerializer.Deserialize<Dictionary<string, object>>(element)!;
+            }
+
             //Line
-            body.TryGetValue("title", out var titleObj);
-            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+            bd.TryGetValue("title", out var titleObj);
+            bd.TryGetValue("sourceLabel", out var sourceLabelObj);
 
             //Heartbeat
-            body.TryGetValue("AppVersion", out var appVersionObj);
-            body.TryGetValue("Model", out var modelObj);
+            bd.TryGetValue("AppVersion", out var appVersionObj);
+            bd.TryGetValue("Model", out var modelObj);
 
             var title = titleObj?.ToString();
             var sourceLabel = sourceLabelObj?.ToString();
             var appVersion = appVersionObj?.ToString();
             var model = modelObj?.ToString();
 
-            return [title, sourceLabel, appVersion, model];
+            List<string?> arr = [title, sourceLabel, appVersion, model];
+            arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
+
+            return arr;
         }
 
         private string GetChannel(Dictionary<string, object> body)
         {
-            body.TryGetValue("sourceLabel", out var sourceLabelObj);
+            var bd = body;
+            if (body.TryGetValue("rawDataObj", out object? value) && (value is JsonElement element))
+            {
+                //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
+                //bd = (Dictionary<string, object>) value;
+                bd = JsonSerializer.Deserialize<Dictionary<string, object>>(element)!;
+            }
+
+            bd.TryGetValue("sourceLabel", out var sourceLabelObj);
             var sourceLabel = sourceLabelObj?.ToString();
 
             if (!string.IsNullOrEmpty(sourceLabel))
@@ -225,6 +255,14 @@ namespace Its.Onix.Api.Controllers
 
         private static MPaymentNotiLine? GetPaymentNoti(Dictionary<string, object> body, string channel)
         {
+            var bd = body;
+            if (body.TryGetValue("rawDataObj", out object? value) && (value is JsonElement element))
+            {
+                //ตรงนี้เป็นของเดิม ที่ตัว android app ส่งข้อมูลมาผิดอยู่
+                //bd = (Dictionary<string, object>) value;
+                bd = JsonSerializer.Deserialize<Dictionary<string, object>>(element)!;
+            }
+
             var pmt = new MPaymentNotiLine()
             {
                 TxType = "PayIn",
@@ -235,8 +273,8 @@ namespace Its.Onix.Api.Controllers
 
             if (channel == "LINE")
             {
-                var title = body["title"].ToString();
-                var text = body["text"].ToString();
+                var title = bd["title"].ToString();
+                var text = bd["text"].ToString();
 
                 if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
                 {
@@ -245,6 +283,24 @@ namespace Its.Onix.Api.Controllers
                     var match = Regex.Match(
                         text,
                         @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                    );
+
+                    if (match.Success)
+                    {
+                        var amount = decimal.Parse(match.Groups["amount"].Value);
+                        var account = match.Groups["account"].Value;
+
+                        pmt.PaymentAmount = amount;
+                        pmt.DestinationAccountNo = account;
+                    }
+                }
+                else if ((title == "SCB Connect") && !string.IsNullOrEmpty(text))
+                {
+                    pmt.DestinationBankCode = "SCB";
+
+                    var match = Regex.Match(
+                        text,
+                        @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
                     );
 
                     if (match.Success)
@@ -308,6 +364,7 @@ namespace Its.Onix.Api.Controllers
 
             var pmtLineNoti = GetPaymentNoti(body, channel);
             var mvBa = await GetBankAccount(pmtLineNoti!, agentId);
+            var ba = mvBa.BankAccount;
 
             wrapData.Add("InputData", body);
             wrapData.Add("PaymentNoti", pmtLineNoti!);
@@ -322,13 +379,25 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Tags = metaData,
                 Channel = channel,
-                PaymentNoti = pmtLineNoti,
-                BankAccount = mvBa.BankAccount!,
+                //PaymentNoti = pmtLineNoti,
+                //BankAccount = mvBa.BankAccount!,
 
                 Status = mvBa.Status,
                 StatusDesc = mvBa.Description,
             };
 
+            if (ba != null)
+            {
+                var bankAccountId = ba.Id.ToString()!;
+                var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
+
+                if (mvTx.Status != "OK")
+                {
+                    evt.Status = mvTx.Status;
+                    evt.StatusDesc = mvTx.Description;
+                }
+            }
+            
             var result = await svc.AddAgentEvent("global", evt);
 
             return Ok(result);

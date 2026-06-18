@@ -3,6 +3,7 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
+
 namespace Its.Onix.Api.Services
 {
     public interface IAgentService
@@ -20,5 +21,6 @@ namespace Its.Onix.Api.Services
         public Task<List<MAgentEvent>> GetAgentEvents(string orgId, VMAgentEvent param);
         public Task<MVAgentEvent> GetAgentEventById(string orgId, string agentEventId);
         public Task<MVAgentEvent> AddAgentEvent(string orgId, MAgentEvent evt);
+        public Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(string orgId, VMAgentEvent param);
     }
 }

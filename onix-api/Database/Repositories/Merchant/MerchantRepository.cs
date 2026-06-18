@@ -102,6 +102,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.merchant.Status,
                 Description = x.merchant.Description,
                 CreatedDate = x.merchant.CreatedDate,
+                DiscardCent = x.merchant.DiscardCent,
             });
         }
 
@@ -175,6 +176,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayinMaxAmount = merchant.PayinMaxAmount;
                 existing.PayoutMinAmount = merchant.PayoutMinAmount;
                 existing.PayoutMaxAmount = merchant.PayoutMaxAmount;
+                existing.DiscardCent = merchant.DiscardCent;
             }
 
             await context.SaveChangesAsync();
