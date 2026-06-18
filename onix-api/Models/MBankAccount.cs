@@ -87,6 +87,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public decimal? CurrentWalletBalance { get; set; }
 
+        [NotMapped]
+        public string? SelectedChannel { get; set; } /* LINE or SMS */
+
         public MBankAccount()
         {
             Id = Guid.NewGuid();
