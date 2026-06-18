@@ -226,6 +226,7 @@ namespace Its.Onix.Api.Services
 
                     pt.PayInFee += (double) decimalPart; //เอาเศษสตางค์มาเป็นค่าธรรมเนียม
                     pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee; //คำนวณยอด Total ใหม่, ยอดออกมาควรเป็นจำนวนเต็ม
+                    pt.DiscardCent = true;
                 }
 
                 pt.PayInFeeDecimal = (decimal) pt.PayInFee!;
