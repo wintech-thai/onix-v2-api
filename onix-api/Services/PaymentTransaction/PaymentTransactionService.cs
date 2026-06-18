@@ -216,6 +216,18 @@ namespace Its.Onix.Api.Services
                 pt.PayInFee = (double) Math.Round((decimal) (pt.TxAmount * pmr.PayInFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
                 pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee;
 
+                if (pmr.DiscardCent)
+                {
+                    //ที่ merchant มีการ config ไว้ว่าให้หักเศษสตางค์
+                    //เอาเศษสตางค์มาเป็น commission ด้วย
+
+                    var amount = (decimal) pt.PayInTotalAmount;
+                    var decimalPart = amount - Math.Truncate(amount);
+
+                    pt.PayInFee += (double) decimalPart; //เอาเศษสตางค์มาเป็นค่าธรรมเนียม
+                    pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee; //คำนวณยอด Total ใหม่, ยอดออกมาควรเป็นจำนวนเต็ม
+                }
+
                 pt.PayInFeeDecimal = (decimal) pt.PayInFee!;
                 pt.PayInTotalAmountDecimal = pt.TxAmountDecimal - pt.PayInFeeDecimal;
 
