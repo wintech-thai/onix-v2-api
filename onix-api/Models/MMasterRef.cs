@@ -24,11 +24,14 @@ namespace Its.Onix.Api.Models
         [Column("description")]
         public string? Description { get; set; }
 
+        [Column("definition")]
+        public string? Definition { get; set; }
+
         [Column("tags")]
         public string? Tags { get; set; }
 
         [Column("ref_type")]
-        public int? RefType { get; set; }
+        public int? RefType { get; set; } /* ExpenseType, ShareHolderRatio */
 
         //System fields
         [Column("created_date")]

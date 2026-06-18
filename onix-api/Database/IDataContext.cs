@@ -52,6 +52,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MConfiguration>? Configurations { get; set; }
         public DbSet<MNotiChannel>? NotiChannels { get; set; }
         public DbSet<MAgentEvent>? AgentEvents { get; set; }
+        public DbSet<MFinancialDoc>? FinancialDocs { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
