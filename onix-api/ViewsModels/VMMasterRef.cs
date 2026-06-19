@@ -6,6 +6,6 @@ namespace Its.Onix.Api.ViewsModels
     public class VMMasterRef : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
-        public int? RefType { get; set; }
+        public string? RefType { get; set; }
     }
 }

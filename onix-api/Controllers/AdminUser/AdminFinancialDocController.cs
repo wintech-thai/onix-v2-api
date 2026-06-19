@@ -23,5 +23,73 @@ namespace Its.Onix.Api.Controllers
         {
             svc = service;
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/AddFinancialDoc")]
+        public async Task<IActionResult> AddFinancialDoc([FromBody] MFinancialDoc request)
+        {
+            var result = await svc.AddFinancialDoc("global", request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UpdateFinancialDocById/{financialDocId}")]
+        public async Task<IActionResult> UpdateFinancialDocById(string financialDocId, [FromBody] MFinancialDoc request)
+        {
+            var result = await svc.UpdateFinancialDocById("global", financialDocId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpDelete]
+        [Route("org/global/action/DeleteFinancialDocById/{financialDocId}")]
+        public async Task<IActionResult> DeleteFinancialDocById(string financialDocId)
+        {
+            var result = await svc.DeleteFinancialDocById("global", financialDocId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetFinancialDocById/{financialDocId}")]
+        public async Task<IActionResult> GetFinancialDocById(string financialDocId)
+        {
+            var result = await svc.GetFinancialDocById("global", financialDocId);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetFinancialDocs")]
+        public async Task<IActionResult> GetFinancialDocs([FromBody] VMFinancialDoc request)
+        {
+            if (request.Limit <= 0)
+            {
+                request.Limit = 100;
+            }
+
+            var result = await svc.GetFinancialDocs("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetFinancialDocCount")]
+        public async Task<IActionResult> GetFinancialDocCount([FromBody] VMFinancialDoc request)
+        {
+            var result = await svc.GetFinancialDocCount("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/CalculateRevenue")]
+        public async Task<IActionResult> CalculateRevenue([FromBody] VMSummary request)
+        {
+            var fromDate = request.FromDate ?? DateTime.UtcNow.Date;
+            var toDate = request.ToDate ?? DateTime.UtcNow;
+
+            var result = await svc.CalculateRevenue("global", fromDate, toDate);
+            return Ok(result);
+        }
     }
 }

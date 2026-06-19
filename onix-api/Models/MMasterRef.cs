@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("MasterRefs")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(RefType))]
     public class MMasterRef
     {
         [Key]
@@ -25,13 +26,13 @@ namespace Its.Onix.Api.Models
         public string? Description { get; set; }
 
         [Column("definition")]
-        public string? Definition { get; set; }
+        public string? Definition { get; set; } /* JSON string เก็บข้อมูลที่เป็น array เช่น รายชื่อผู้ถือหุ้น */
 
         [Column("tags")]
         public string? Tags { get; set; }
 
         [Column("ref_type")]
-        public int? RefType { get; set; } /* ExpenseType, ShareHolderRatio */
+        public string? RefType { get; set; } /* ExpenseType, ShareHolderRatio */
 
         //System fields
         [Column("created_date")]
@@ -40,11 +41,16 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
+
+        [NotMapped]
+        public List<Dictionary<string, object>>? DefinitionObj { get; set; }
+
         public MMasterRef()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             UpdatedDate = DateTime.UtcNow;
+            DefinitionObj = [];
         }
     }
 }

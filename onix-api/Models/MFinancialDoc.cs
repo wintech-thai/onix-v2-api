@@ -59,13 +59,13 @@ namespace Its.Onix.Api.Models
 
 
         [NotMapped]
-        public List<MBankAccount> ExpenseItemsArr { get; set; }
+        public List<MFinancialDocItem> ExpenseItemsArr { get; set; }
 
         [NotMapped]
-        public List<MBankAccount> RevenueItemsArr { get; set; }
+        public List<MFinancialDocItem> RevenueItemsArr { get; set; }
 
         [NotMapped]
-        public List<MBankAccount> SharingItemsArr { get; set; }
+        public List<MFinancialDocItem> SharingItemsArr { get; set; }
 
         public MFinancialDoc()
         {
