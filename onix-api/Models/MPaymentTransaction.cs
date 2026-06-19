@@ -132,6 +132,9 @@ namespace Its.Onix.Api.Models
         [Column("job_id")]
         public string? JobId { get; set; }
 
+        [Column("discard_cent")]
+        public bool DiscardCent { get; set; } //หักเศษสตางค์มาเป็น ค่าธรรมเนียม
+
 
         //System fields
         [Column("processing_messages")]
@@ -166,6 +169,7 @@ namespace Its.Onix.Api.Models
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             ProcessingSteps = [];
+            DiscardCent = false;
         }
     }
 }

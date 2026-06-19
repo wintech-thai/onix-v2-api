@@ -115,7 +115,18 @@ namespace Its.Onix.Api.Services
 
             // random ทศนิยม 01-99
             var random = new Random();
-            var decimalPart = random.Next(1, 100);
+
+            // เราไม่ต้องการทศนิยมที่ลงท้ายด้วย 0 เช่น x.10, x.20, ..., x.90 มันทำให้ logic ในการ match payment TX มีปัญหา
+            int decimalPart = 0;
+            for (int i = 0; i < 3; i++)
+            {
+                //มันไม่ควรเกิน 3 ครั้งอยู่แล้วตรงนี้
+                decimalPart = random.Next(1, 100);
+                if (decimalPart % 10 != 0)
+                {
+                    break;
+                }
+            }
 
             // ประกอบกลับเป็นจำนวนใหม่ เช่น 190 + 0.78 = 190.78
             var newAmt = integerPart + (decimalPart / 100.0);

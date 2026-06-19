@@ -42,6 +42,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Direction = x.pt.Direction,
                 TxAmount = x.pt.TxAmount,
                 TxAmountDecimal = x.pt.TxAmountDecimal,
+                DiscardCent = x.pt.DiscardCent,
 
                 PayInFeePct = x.pt.PayInFeePct,
                 PayInFee = x.pt.PayInFee,

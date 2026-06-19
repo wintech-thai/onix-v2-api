@@ -300,7 +300,7 @@ namespace Its.Onix.Api.Controllers
 
                     var match = Regex.Match(
                         text,
-                        @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                        @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9-]+)"
                     );
 
                     if (match.Success)
