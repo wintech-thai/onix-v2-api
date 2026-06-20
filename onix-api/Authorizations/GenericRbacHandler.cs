@@ -110,7 +110,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         return "";
     }
 
-    private string? IsRoleAdminValid(IEnumerable<MRole>? roles, string uri)
+    private string? IsRoleAdminValid(IEnumerable<MRole>? roles, string uri, string customRole, string orgId)
     {
         var uriPattern = @"^\/admin-api\/(.+)\/org\/(.+)\/action\/(.+)$";
         var matches = Regex.Matches(uri, uriPattern, RegexOptions.None, TimeSpan.FromMilliseconds(100));
@@ -133,6 +133,25 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
             return "TEMP";
         }
 
+        //เช็ค custom role ก่อน
+        var parts = customRole.Split(':');
+        var customRoleId = parts[0];
+
+        var cacheKeyPrefix = CacheHelper.CreateCustomRoleCacheLoaderKey(orgId);
+        var cacheKey = $"{cacheKeyPrefix}:{customRoleId}:{group}:{api}";
+
+        if (!string.IsNullOrEmpty(customRoleId))
+        {
+            var t = _redis.GetObjectAsync<bool?>(cacheKey);
+            var isSelected = t.Result;
+
+            if (isSelected == true)
+            {
+                return customRole;
+            }
+        }
+
+        // ถ้าไม่ผ่าน custom role ค่อยไปเช็คใน role ปกติ
         foreach (var role in roles!)
         {
             var patterns = role.RoleDefinition!.Split(',').ToList();
@@ -241,7 +260,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         }
         else if (apiGroup == "admin")
         {
-            roleMatch = IsRoleAdminValid(roles, uri);
+            roleMatch = IsRoleAdminValid(roles, uri, customRoleId, authorizeOrgId);
         }
         else if (apiGroup == "customer")
         {

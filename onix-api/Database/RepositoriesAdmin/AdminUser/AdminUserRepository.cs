@@ -51,6 +51,7 @@ namespace Its.Onix.Api.Database.Repositories
                         UserEmail = u.UserEmail,
                         Tags = au.Tags,
                         UserStatus = au.UserStatus,
+                        CustomRoleId = au.CustomRoleId,
                     })
                 .Where(x => x.UserName!.Equals(userName)).FirstOrDefaultAsync();
 
