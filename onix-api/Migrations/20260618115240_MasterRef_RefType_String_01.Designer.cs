@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260618115240_MasterRef_RefType_String_01")]
+    partial class MasterRef_RefType_String_01
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2196,10 +2199,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Direction")
                         .HasColumnType("text")
                         .HasColumnName("direction");
-
-                    b.Property<bool>("DiscardCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("discard_cent");
 
                     b.Property<string>("FromBankAccountName")
                         .HasColumnType("text")

@@ -214,6 +214,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public double? MerchantMaxPayout { get; set; }
 
+        [NotMapped]
+        public bool DiscardCent { get; set; } //หักเศษสตางค์มาเป็น ค่าธรรมเนียม
+
 
         [NotMapped]
         public MPaymentResponse? ResponseDataObj { get; set; }
@@ -226,6 +229,7 @@ namespace Its.Onix.Api.Models
             CreatedDate = DateTime.UtcNow;
             ProcessingSteps = [];
             IsPayInBankAccountOverride = false;
+            DiscardCent = false;
         }
     }
 }

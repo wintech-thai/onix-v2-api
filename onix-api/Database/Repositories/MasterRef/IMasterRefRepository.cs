@@ -13,5 +13,14 @@ namespace Its.Onix.Api.Database.Repositories
         public MMasterRef? DeleteMasterRefById(string masterRefId);
         public bool IsMasterRefCodeExist(string masterRefName);
         public MMasterRef? UpdateMasterRefById(string masterRefId, MMasterRef masterRef);
+
+        // V2 — async
+        public Task<bool> IsMasterRefCodeExistV2(string code);
+        public Task<MMasterRef> AddMasterRefV2(MMasterRef masterRef);
+        public Task<int> GetMasterRefCountV2(VMMasterRef param);
+        public Task<List<MMasterRef>> GetMasterRefsV2(VMMasterRef param);
+        public Task<MMasterRef?> GetMasterRefByIdV2(string masterRefId);
+        public Task<MMasterRef?> DeleteMasterRefByIdV2(string masterRefId);
+        public Task<MMasterRef?> UpdateMasterRefByIdV2(string masterRefId, MMasterRef masterRef);
     }
 }

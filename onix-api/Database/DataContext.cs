@@ -59,6 +59,7 @@ public class DataContext : DbContext, IDataContext
     public DbSet<MConfiguration>? Configurations { get; set; }
     public DbSet<MNotiChannel>? NotiChannels { get; set; }
     public DbSet<MAgentEvent>? AgentEvents { get; set; }
+    public DbSet<MFinancialDoc>? FinancialDocs { get; set; }
 
 
     //=== Admin tables here =====
@@ -224,5 +225,9 @@ public class DataContext : DbContext, IDataContext
             .HasIndex(t => new { t.OrgId, t.ChannelName }).IsUnique();
 
         modelBuilder.Entity<MAgentEvent>();
+
+        modelBuilder.Entity<MFinancialDoc>()
+            .HasIndex(t => new { t.OrgId, t.DocumentNo }).IsUnique();
+
     }
 }

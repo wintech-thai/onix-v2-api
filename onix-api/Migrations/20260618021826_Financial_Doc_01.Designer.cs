@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260618021826_Financial_Doc_01")]
+    partial class Financial_Doc_01
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1456,10 +1459,6 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
-                    b.Property<string>("Definition")
-                        .HasColumnType("text")
-                        .HasColumnName("definition");
-
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
@@ -1468,8 +1467,8 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
-                    b.Property<string>("RefType")
-                        .HasColumnType("text")
+                    b.Property<int?>("RefType")
+                        .HasColumnType("integer")
                         .HasColumnName("ref_type");
 
                     b.Property<string>("Tags")
@@ -1483,8 +1482,6 @@ namespace onix.api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("OrgId");
-
-                    b.HasIndex("RefType");
 
                     b.HasIndex("OrgId", "Code")
                         .IsUnique();
@@ -2196,10 +2193,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Direction")
                         .HasColumnType("text")
                         .HasColumnName("direction");
-
-                    b.Property<bool>("DiscardCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("discard_cent");
 
                     b.Property<string>("FromBankAccountName")
                         .HasColumnType("text")
