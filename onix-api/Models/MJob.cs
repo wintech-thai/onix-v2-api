@@ -26,6 +26,9 @@ namespace Its.Onix.Api.Models
         [Column("job_message")]
         public string? JobMessage { get; set; }
 
+        [Column("job_message2")]
+        public string? JobMessage2 { get; set; } /* message สำหรับ notification แยกจาก JobMessage ที่ใช้กับ webhook ของ merchant */
+
         [Column("name")]
         public string? Name { get; set; }
 
