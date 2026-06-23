@@ -309,6 +309,7 @@ namespace Its.Onix.Api.Services
             {
                 r.Configuration = ""; // do not return configuration in the event API
                 r.JobMessage = ""; // do not return job message in the event API
+                r.JobMessage2 = ""; // do not return notify job message in the event API
             });
 
             return result;

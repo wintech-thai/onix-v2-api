@@ -406,6 +406,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeeDecimal.ToString() },
                     new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
+                    new NameValue { Name = "PAYIN_BANK_ACCOUNT_NAME", Value = pmt?.PayInBankAccountName },
                     new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeePct.ToString() },
                 ]
             };
