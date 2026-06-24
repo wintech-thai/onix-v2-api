@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260624024514_BankAccount_Config_001")]
+    partial class BankAccount_Config_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1531,10 +1534,6 @@ namespace onix.api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("discard_cent");
 
-                    b.Property<bool>("IncludeGlobalBankAccount")
-                        .HasColumnType("boolean")
-                        .HasColumnName("include_global_bank_account");
-
                     b.Property<string>("Name")
                         .HasColumnType("text")
                         .HasColumnName("name");
@@ -1578,10 +1577,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Tags")
                         .HasColumnType("text")
                         .HasColumnName("tags");
-
-                    b.Property<string>("WhitelistBankAccountNames")
-                        .HasColumnType("text")
-                        .HasColumnName("whitelist_bank_account_names");
 
                     b.HasKey("Id");
 

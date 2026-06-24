@@ -23,5 +23,7 @@ namespace Its.Onix.Api.Services
         public Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string orgId, string merchantId);
         public Task<MVBankAccountMerchant?> SelectMerchant(string orgId, string bankAccountId, string merchantId);
         public Task<MVBankAccountMerchant?> UnSelectMerchant(string orgId,string bankAccountId, string merchantId);
+
+        public Task<MVBankAccount?> UpdateBankAccountConfigById(string orgId, string bankAccountId, MBankAccountConfig bankConfig);
     }
 }
