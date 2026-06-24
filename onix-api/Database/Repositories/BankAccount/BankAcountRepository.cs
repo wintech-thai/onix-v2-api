@@ -386,5 +386,18 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return existing;
         }
+
+        public async Task<MBankAccount?> UpdateBankAccountConfigById(string bankAccountId, string bankConfig)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            var existing = context!.BankAccounts!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
+            if (existing != null)
+            {
+                existing.BankConfig = bankConfig;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }

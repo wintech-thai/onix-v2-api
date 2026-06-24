@@ -83,6 +83,17 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UpdateBankAccountConfigById/{bankAccountId}")]
+        public async Task<IActionResult> UpdateBankAccountConfigById(string bankAccountId, [FromBody] MBankAccountConfig request)
+        {
+            var result = await svc.UpdateBankAccountConfigById("global", bankAccountId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/global/action/DeleteBankAccountById/{bankAccountId}")]
         public async Task<IActionResult> DeleteBankAccountById(string bankAccountId)
