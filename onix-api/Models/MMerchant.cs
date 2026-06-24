@@ -60,6 +60,15 @@ namespace Its.Onix.Api.Models
         [Column("discard_cent")]
         public bool DiscardCent { get; set; } //หักเศษสตางค์มาเป็น ค่าธรรมเนียม
 
+        [Column("include_global_bank_account")]
+        public bool IncludeGlobalBankAccount { get; set; } //true = สามารถใช้ global pay-in bank account ได้ตอนสร้าง QR
+
+        [Column("whitelist_bank_account_names")]
+        public string? WhitelistBankAccountNames { get; set; } //serialize มาจาก List<string> WhitelistBankAccountNamesArr ห้าม return ออกไปตรง ๆ
+
+        [NotMapped]
+        public List<string>? WhitelistBankAccountNamesArr { get; set; } //deserialize มาจาก WhitelistBankAccountNames
+
 
         //System fields
         [Column("created_date")]
@@ -83,6 +92,7 @@ namespace Its.Onix.Api.Models
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             RandomDecimal = true;
+            IncludeGlobalBankAccount = true;
         }
     }
 }

@@ -933,7 +933,7 @@ namespace Its.Onix.Api.Services
 
             paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant);
 
-            var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest);
+            var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest, merchant);
             if (bnkAcct == null)
             {
                 r.Status = "ERROR_NO_PAYIN_ACCOUNT_MATCH";
@@ -971,7 +971,7 @@ namespace Its.Onix.Api.Services
             return pmResponse;
         }
 
-        private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr)
+        private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr, MMerchant merchant)
         {
             var merchantId = pr.MerchantId!;
             List<string> lines = [];
@@ -1037,9 +1037,21 @@ namespace Its.Onix.Api.Services
                     continue;
                 }
 
+                if (!IsBankAccountNameWhitelisted(merchant, bankAccountName, out var whitelistReason))
+                {
+                    lines.Add($"Step03.1 - Skip bank account, name not in merchant whitelist ({whitelistReason}) : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                    continue;
+                }
+
                 //Here - Bank Account Status is "Active"
                 if (bankAccount.AccountLevel == "Global")
                 {
+                    if (!merchant.IncludeGlobalBankAccount)
+                    {
+                        lines.Add($"Step04.0 - Skip global bank account, merchant not allowed to use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                        continue;
+                    }
+
                     lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                     return (bankAccount, lines);
                 }
@@ -1063,6 +1075,36 @@ namespace Its.Onix.Api.Services
 
             //ไม่มี bank account ที่ match
             return (null, lines);
+        }
+
+        //ถ้า merchant ไม่ได้กรอก whitelist ไว้เลย ก็ถือว่าใช้ได้กับทุกชื่อ bank account name
+        //ถ้ากรอกไว้ ชื่อใน whitelist ต้องเป็น substring ของ bank account name ถึงจะถือว่าใช้ได้ (case-insensitive)
+        private static bool IsBankAccountNameWhitelisted(MMerchant merchant, string? bankAccountName, out string reason)
+        {
+            var whitelist = merchant.WhitelistBankAccountNamesArr;
+            if (whitelist == null || whitelist.Count == 0)
+            {
+                reason = "no whitelist configured for merchant, allow any account name";
+                return true;
+            }
+
+            if (string.IsNullOrEmpty(bankAccountName))
+            {
+                reason = "bank account name is empty";
+                return false;
+            }
+
+            foreach (var name in whitelist)
+            {
+                if (!string.IsNullOrEmpty(name) && bankAccountName.Contains(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    reason = $"matched whitelist entry [{name}]";
+                    return true;
+                }
+            }
+
+            reason = "no whitelist entry matched";
+            return false;
         }
 
         private MVPaymentResponse CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct)
