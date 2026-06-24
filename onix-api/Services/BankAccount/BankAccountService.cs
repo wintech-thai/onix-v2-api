@@ -171,7 +171,7 @@ namespace Its.Onix.Api.Services
 
             foreach (var bnk in _banks)
             {
-                if ((bnk.BankCode == bankCode) && (bnk.Type == "Native"))
+                if ((bnk.BankCode == bankCode) && (bnk.Type == "Native") && bankAccount.AccountType == "Native")
                 {
                     return bnk.QrSupportFlag;
                 }
