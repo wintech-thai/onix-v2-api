@@ -227,6 +227,30 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        //Line noti API keys
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetBankAccountPayInTxSCBEndPoint/{bankAccountId}")]
+        public async Task<IActionResult> GetBankAccountPayInTxSCBEndPoint(string bankAccountId)
+        {
+            var mVBankAccount = await svc.GetBankAccountById("global", bankAccountId);
+            if (mVBankAccount.Status != "OK")
+            {
+                return Ok(mVBankAccount);
+            }
+
+            var url = $"https://<PAYMENT-TX-SERVICE>/admin-api/AdminPaymentTx/org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}";
+
+            var result = new MVEndPoint()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentTxNotiUrl = url,
+            };
+
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/CreateLinePaymentTxNotiApiKey/{bankAccountId}")]
         public IActionResult CreatePaymentRequestApiKey(string bankAccountId)
