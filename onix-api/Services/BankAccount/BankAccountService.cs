@@ -579,8 +579,9 @@ namespace Its.Onix.Api.Services
 
         public List<MBank> GetAvailableSupportQrBanks()
         {
+            //PromptPay ใช้สร้าง QR เองได้อยู่แล้ว ส่วนธนาคารแบบ Native ต้องเช็ค QrSupportFlag ว่ารองรับ native QR หรือไม่ (เช่น SCB)
             var banks = _banks
-                .Where(b => b.Type.Equals("PromptPay", StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.Type.Equals("PromptPay", StringComparison.OrdinalIgnoreCase) || b.QrSupportFlag)
                 .ToList();
 
             return banks;
