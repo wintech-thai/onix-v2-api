@@ -32,11 +32,13 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
         [HttpPost]
-        [Route("org/global/action/SubmitKtbPaymentTxNotification/{bankAccountId}")]
-        public IActionResult SubmitKtbPaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiKtb request)
+        [Route("org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}")]
+        public IActionResult SubmitScbPaymentConfirmation(string bankAccountId, [FromBody] Dictionary<string, object> request)
         {
-            //ใส่เป็น place holder ไว้ก่อน สำหรับธนาคาคาร KTB
+            //ใส่เป็น place holder ไว้ก่อน สำหรับธนาคาคาร SCB
+            //ตรงนี้จะต้อง ใช้การ verify signature ด้วย เพราะว่าเราใช้เป็น AllowAnonymous
             return Ok("");
         }
 
