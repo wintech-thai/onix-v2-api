@@ -167,5 +167,10 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public Task<QrGeneratorResult> GenerateAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

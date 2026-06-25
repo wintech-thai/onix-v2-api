@@ -13,17 +13,20 @@ namespace Its.Onix.Api.Services
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
+        private readonly IRedisHelper _redis;
 
         public PaymentRequestService(
             IPaymentRequestRepository repo, 
             IPaymentTransactionRepository paymentTxRepo, 
             IBankAccountRepository bankAcctRepo,
+            IRedisHelper redis,
             IPointService pointService) : base()
         {
             repository = repo;
             _paymentTransactionRepo = paymentTxRepo;
             _bankAccountRepo = bankAcctRepo;
             _pointService = pointService;
+            _redis = redis;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -942,7 +945,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var pmResponse = CreatePaymentResponse(paymentRequest, bnkAcct);
+            var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct);
             if (pmResponse.Status != "OK")
             {
                 return pmResponse;
@@ -1107,7 +1110,7 @@ namespace Its.Onix.Api.Services
             return false;
         }
 
-        private MVPaymentResponse CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct)
+        private async Task<MVPaymentResponse> CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct)
         {
             var mvResponse = new MVPaymentResponse()
             {
@@ -1123,11 +1126,23 @@ namespace Its.Onix.Api.Services
                 qrGenerator = new QrGeneratorPromptPay(pr, bnkAcct);
                 qrResult = qrGenerator.Generate();
             }
+            else if (pr.QrProvider == "SCB")
+            {
+                qrGenerator = new QrGeneratorSCB(pr, bnkAcct, _redis);
+                qrResult = await qrGenerator.GenerateAsync();
+            }
 
             if (qrResult == null)
             {
                 mvResponse.Status = "INVALID_QR_PROVIDER";
                 mvResponse.Description = $"Invalid QR provider [{pr.QrProvider}]";
+                return mvResponse;
+            }
+            else if (qrResult.Status != "OK")
+            {
+                //ส่ง error จริง ๆ ที่เกิดขึ้นเพื่อส่งออกไปด้วย เช่น ปัญหาจากการเรียก API ของธนาคาร
+                mvResponse.Status = qrResult.Status;
+                mvResponse.Description = qrResult.Description;
                 return mvResponse;
             }
 
