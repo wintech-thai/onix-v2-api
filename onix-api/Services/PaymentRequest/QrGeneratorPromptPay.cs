@@ -161,6 +161,8 @@ namespace Its.Onix.Api.Services
 
             var result = new QrGeneratorResult()
             {
+                Status = "OK",
+                Description = "Success",
                 QrPayload = qrBarcodeStr,
                 ImageBytes = imageBytes
             };
