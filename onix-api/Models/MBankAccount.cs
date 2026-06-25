@@ -74,6 +74,10 @@ namespace Its.Onix.Api.Models
         [Column("Status")]
         public string? Status { get; set; } //Active, Pending, Disabled
 
+        [Column("bank_config")]
+        public string? BankConfig { get; set; } //JSON string to represent object
+
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
@@ -90,10 +94,18 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? SelectedChannel { get; set; } /* LINE or SMS */
 
+        [NotMapped]
+        public MBankAccountConfig? BankConfigObj { get; set; }
+
+        [NotMapped]
+        public bool IsNativeQrSupport { get; set; }
+
+
         public MBankAccount()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
+            IsNativeQrSupport = false;
         }
     }
 }

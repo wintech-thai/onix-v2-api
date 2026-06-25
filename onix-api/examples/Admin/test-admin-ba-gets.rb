@@ -13,6 +13,7 @@ load_env("../.env")
 orgId = "global"
 keyFile = ".token"
 
+
 ### 
 apiUrl = "admin-api/AdminBankAccount/org/#{orgId}/action/GetBankAccounts"
 param = {

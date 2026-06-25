@@ -3,6 +3,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
@@ -60,7 +61,7 @@ namespace Its.Onix.Api.Services
                     BankNameTh = "ธนาคารไทยพาณิชย์", 
                     BankNameEng = "Siam Commercial Bank",
                     Type = "Native",
-                    QrSupportFlag = false,  
+                    QrSupportFlag = true,  
                 },
 
                 new ()
@@ -164,6 +165,20 @@ namespace Its.Onix.Api.Services
             ];
         }
 
+        private bool IsNativeQrSupport(MBankAccount bankAccount)
+        {
+            var bankCode = bankAccount.BankCode;
+
+            foreach (var bnk in _banks)
+            {
+                if ((bnk.BankCode == bankCode) && (bnk.Type == "Native") && bankAccount.AccountType == "Native")
+                {
+                    return bnk.QrSupportFlag;
+                }
+            }
+            return false;
+        }
+
         public async Task<MVBankAccount> GetBankAccountById(string orgId, string bankAccountId)
         {
             repository!.SetCustomOrgId(orgId);
@@ -191,6 +206,15 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var bc = result.BankConfig;
+            if (!string.IsNullOrEmpty(bc))
+            {
+                var obj = JsonSerializer.Deserialize<MBankAccountConfig>(bc);
+                result.BankConfigObj = obj;                
+            }
+
+            result.IsNativeQrSupport = IsNativeQrSupport(result);
+
             _pointRepo!.SetCustomOrgId(result.OrgId!); //ตรงนี้จะเป็น global
             var wallet = await _pointRepo!.GetWalletByBankAccountId(bankAccountId);
             if (wallet == null)
@@ -210,6 +234,7 @@ namespace Its.Onix.Api.Services
             }
 
             r.BankAccount = result;
+            r.BankAccount.BankConfig = "";
 
             return r;
         }
@@ -383,6 +408,9 @@ namespace Its.Onix.Api.Services
                 {
                     bankAccount.CurrentWalletBalance = currentWalletBalance;
                 }
+
+                bankAccount.IsNativeQrSupport = IsNativeQrSupport(bankAccount);
+                bankAccount.BankConfig = "";
             }
 
             return bankAccounts;
@@ -471,6 +499,44 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVBankAccount?> UpdateBankAccountConfigById(string orgId, string bankAccountId, MBankAccountConfig bankConfig)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var r = new MVBankAccount()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+
+                return r;
+            }
+
+            var jsonString = "{}";
+            if (bankConfig != null)
+            {
+                jsonString = JsonSerializer.Serialize(bankConfig);
+            }
+
+            var result = await repository!.UpdateBankAccountConfigById(bankAccountId, jsonString);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank Account ID [{bankAccountId}] not found";
+
+                return r;
+            }
+
+            r.BankAccount = result;
+            r.BankAccount.BankConfig = "";
+
+            return r;
+        }
+
         public async Task<MVBankAccount?> UpdateBankAccountStatusById(string orgId, string bankAccountId, string status)
         {
             repository!.SetCustomOrgId(orgId);
@@ -513,8 +579,9 @@ namespace Its.Onix.Api.Services
 
         public List<MBank> GetAvailableSupportQrBanks()
         {
+            //PromptPay ใช้สร้าง QR เองได้อยู่แล้ว ส่วนธนาคารแบบ Native ต้องเช็ค QrSupportFlag ว่ารองรับ native QR หรือไม่ (เช่น SCB)
             var banks = _banks
-                .Where(b => b.Type.Equals("PromptPay", StringComparison.OrdinalIgnoreCase))
+                .Where(b => b.Type.Equals("PromptPay", StringComparison.OrdinalIgnoreCase) || b.QrSupportFlag)
                 .ToList();
 
             return banks;

@@ -83,6 +83,17 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/UpdateBankAccountConfigById/{bankAccountId}")]
+        public async Task<IActionResult> UpdateBankAccountConfigById(string bankAccountId, [FromBody] MBankAccountConfig request)
+        {
+            var result = await svc.UpdateBankAccountConfigById("global", bankAccountId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/global/action/DeleteBankAccountById/{bankAccountId}")]
         public async Task<IActionResult> DeleteBankAccountById(string bankAccountId)
@@ -205,6 +216,30 @@ namespace Its.Onix.Api.Controllers
             }
 
             var url = $"https://<PAYMENT-TX-SERVICE>/admin-api/AdminPaymentTx/org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}";
+
+            var result = new MVEndPoint()
+            {
+                Status = "OK",
+                Description = "Success",
+                PaymentTxNotiUrl = url,
+            };
+
+            return Ok(result);
+        }
+
+        //Line noti API keys
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetBankAccountPayInTxSCBEndPoint/{bankAccountId}")]
+        public async Task<IActionResult> GetBankAccountPayInTxSCBEndPoint(string bankAccountId)
+        {
+            var mVBankAccount = await svc.GetBankAccountById("global", bankAccountId);
+            if (mVBankAccount.Status != "OK")
+            {
+                return Ok(mVBankAccount);
+            }
+
+            var url = $"https://<PAYMENT-TX-SERVICE>/admin-api/AdminPaymentTx/org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}";
 
             var result = new MVEndPoint()
             {

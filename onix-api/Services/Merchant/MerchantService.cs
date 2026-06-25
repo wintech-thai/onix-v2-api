@@ -3,6 +3,7 @@ using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Services
 {
@@ -73,9 +74,26 @@ namespace Its.Onix.Api.Services
                 var _ = await _pointRepo.AddWallet(w);
             }
 
+            DeserializeWhitelistBankAccountNames(result);
+
             r.Merchant = result;
 
             return r;
+        }
+
+        private static void DeserializeWhitelistBankAccountNames(MMerchant merchant)
+        {
+            if (!string.IsNullOrEmpty(merchant.WhitelistBankAccountNames))
+            {
+                try
+                {
+                    merchant.WhitelistBankAccountNamesArr = JsonSerializer.Deserialize<List<string>>(merchant.WhitelistBankAccountNames);
+                }
+                catch { merchant.WhitelistBankAccountNamesArr = null; }
+            }
+
+            //ไม่ควร return ออกมาเป็น JSON string ดิบให้คนเรียกใช้ API เห็น
+            merchant.WhitelistBankAccountNames = "";
         }
 
         public async Task<MVMerchant> AddMerchant(string orgId, MMerchant merchant)
@@ -124,6 +142,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (merchant.WhitelistBankAccountNamesArr != null)
+            {
+                merchant.WhitelistBankAccountNames = JsonSerializer.Serialize(merchant.WhitelistBankAccountNamesArr);
+            }
+
             var result = await repository!.AddMerchant(merchant);
 
             if (result != null)
@@ -148,6 +171,8 @@ namespace Its.Onix.Api.Services
 
                     var _ = await _pointRepo.AddWallet(w);
                 }
+
+                DeserializeWhitelistBankAccountNames(result);
             }
 
             r.Merchant = result;
@@ -282,6 +307,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (merchant.WhitelistBankAccountNamesArr != null)
+            {
+                merchant.WhitelistBankAccountNames = JsonSerializer.Serialize(merchant.WhitelistBankAccountNamesArr);
+            }
+
             var result = await repository!.UpdateMerchantById(merchantId, merchant);
             if (result == null)
             {
@@ -290,6 +320,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            DeserializeWhitelistBankAccountNames(result);
 
             r.Merchant = result;
             return r;

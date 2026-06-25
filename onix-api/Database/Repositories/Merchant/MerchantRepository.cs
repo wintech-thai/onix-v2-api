@@ -103,6 +103,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Description = x.merchant.Description,
                 CreatedDate = x.merchant.CreatedDate,
                 DiscardCent = x.merchant.DiscardCent,
+                IncludeGlobalBankAccount = x.merchant.IncludeGlobalBankAccount,
             });
         }
 
@@ -177,6 +178,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayoutMinAmount = merchant.PayoutMinAmount;
                 existing.PayoutMaxAmount = merchant.PayoutMaxAmount;
                 existing.DiscardCent = merchant.DiscardCent;
+                existing.IncludeGlobalBankAccount = merchant.IncludeGlobalBankAccount;
+                existing.WhitelistBankAccountNames = merchant.WhitelistBankAccountNames;
             }
 
             await context.SaveChangesAsync();
