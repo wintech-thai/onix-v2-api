@@ -246,6 +246,17 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(bankAccountId);
             var u = await GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+
+            //ดึง BankConfig แยกออกมาเฉพาะตรงนี้ (GetSelection() ไม่ใส่ BankConfig ไว้ตั้งใจ เพราะ GetSelection() ถูกใช้ใน list method อื่น ๆ ด้วย
+            //ถ้าใส่ไว้ใน GetSelection() จะทำให้ ApiKey/ApiSecret หลุดออกไปใน list API โดยไม่ตั้งใจ)
+            if (u != null)
+            {
+                u.BankConfig = await context!.BankAccounts!.AsExpandable()
+                    .Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId))
+                    .Select(p => p!.BankConfig)
+                    .FirstOrDefaultAsync();
+            }
+
             return u;
         }
 
