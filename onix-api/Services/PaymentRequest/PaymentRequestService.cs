@@ -9,6 +9,9 @@ namespace Its.Onix.Api.Services
 {
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
+        //ธนาคารที่ support การสร้าง QR payment ตอนนี้ - ถ้าจะเพิ่มธนาคารอื่นในอนาคต แค่เพิ่มเข้า array นี้ (ไม่ต้องแก้ logic เดิม)
+        private static readonly string[] allowedQrProvider = { "PP", "SCB" };
+
         private readonly IPaymentRequestRepository? repository = null;
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
@@ -904,11 +907,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (paymentRequest.QrProvider != "PP") //PromptPay
+            if (!allowedQrProvider.Contains(paymentRequest.QrProvider))
             {
-                //ตอนนี้ support แค่ PromptPay
                 r.Status = "BANK_PROVIDER_NOT_SUPPORT";
-                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only PP is allowed.";
+                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only [{string.Join(", ", allowedQrProvider)}] are allowed.";
 
                 return r;
             }
