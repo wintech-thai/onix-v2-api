@@ -114,7 +114,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
                 new Claim(ClaimTypes.PrimaryGroupSid, m.AdminUser!.CustomRoleId ?? ""),
-                new Claim(ClaimTypes.System, "GLOBAL"),
+                new Claim(ClaimTypes.System, $"OrgType:GLOBAL"),
             ];
 
             return u;

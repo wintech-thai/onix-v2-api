@@ -116,7 +116,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
-                new Claim(ClaimTypes.System, u.OrgType!),
+                new Claim(ClaimTypes.System, $"OrgType:{u.OrgType}"),
             ];
 
             return u;
