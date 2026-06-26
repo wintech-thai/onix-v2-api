@@ -82,17 +82,23 @@ namespace Its.Onix.Api.Services
                     ["ref3"] = ref3,
                 };
 
+                var bodyJson = JsonSerializer.Serialize(body);
                 var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/v1/payment/qrcode/create")
                 {
-                    Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json"),
+                    Content = new StringContent(bodyJson, Encoding.UTF8, "application/json"),
                 };
                 request.Headers.Add("resourceOwnerId", cfg.ApiKey);
                 request.Headers.Add("requestUId", Guid.NewGuid().ToString("N"));
                 request.Headers.Add("authorization", $"{tokenType} {accessToken}");
                 request.Headers.Add("accept-language", "EN");
 
+                //TODO : เอา log ตรงนี้ออกตอนใช้งานจริง เพราะ accessToken/billerId เป็นข้อมูล sensitive - ใส่ไว้ debug ตอนเทส sandbox เท่านั้น
+                Console.WriteLine($"INFO : [QrGeneratorSCB] qrcode/create request body : {bodyJson}");
+
                 var response = await client.SendAsync(request);
                 var responseBody = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"INFO : [QrGeneratorSCB] qrcode/create response [{(int)response.StatusCode}] : {responseBody}");
 
                 using var doc = JsonDocument.Parse(responseBody);
                 var root = doc.RootElement;
@@ -155,6 +161,9 @@ namespace Its.Onix.Api.Services
 
             var response = await client.SendAsync(request);
             var responseBody = await response.Content.ReadAsStringAsync();
+
+            //TODO : เอา log ตรงนี้ออกตอนใช้งานจริง เพราะ responseBody มี accessToken อยู่ด้วย - ใส่ไว้ debug ตอนเทส sandbox เท่านั้น
+            Console.WriteLine($"INFO : [QrGeneratorSCB] oauth/token response [{(int)response.StatusCode}] : {responseBody}");
 
             using var doc = JsonDocument.Parse(responseBody);
             var root = doc.RootElement;
