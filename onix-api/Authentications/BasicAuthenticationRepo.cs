@@ -54,6 +54,7 @@ namespace Its.Onix.Api.Authentications
                 OrgId = m.ApiKey.OrgId,
                 CustomRoleId = m.ApiKey.CustomRoleId,
                 CustomRoleName = m.ApiKey.CustomRoleName,
+                OrgType = m.ApiKey.OrgType,
 
                 Status = m.Status,
                 Description = m.Description,
@@ -67,6 +68,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
+                new Claim(ClaimTypes.System, u.OrgType!),
             ];
 
             return u;

@@ -102,6 +102,7 @@ namespace Its.Onix.Api.Authentications
                 Email = m.User.UserEmail,
                 CustomRoleId = m.OrgUser.CustomRoleId,
                 CustomRoleName = m.OrgUser.CustomRoleName,
+                OrgType = m.OrgUser.OrgType,
 
                 Status = m.Status,
                 Description = m.Description,
@@ -115,6 +116,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
+                new Claim(ClaimTypes.System, u.OrgType!),
             ];
 
             return u;

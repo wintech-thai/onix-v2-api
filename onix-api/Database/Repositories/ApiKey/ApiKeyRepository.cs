@@ -87,7 +87,11 @@ namespace Its.Onix.Api.Database.Repositories
                     on ak.CustomRoleId equals cr.RoleId.ToString() into joinedRole
                 from role in joinedRole.DefaultIfEmpty()
 
-                select new { ak, role };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+                join org in context.Organizations!
+                    on ak.OrgId equals org.OrgCustomId! into organizations
+                from organization in organizations.DefaultIfEmpty()
+
+                select new { ak, role, organization };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MApiKey
             {
                 KeyId = x.ak.KeyId,
@@ -103,6 +107,7 @@ namespace Its.Onix.Api.Database.Repositories
                 CustomRoleId = x.ak.CustomRoleId,
                 CustomRoleName = x.role.RoleName,
                 CustomRoleDesc = x.role.RoleDescription,
+                OrgType = x.organization.OrgType,
             });
         }
 
