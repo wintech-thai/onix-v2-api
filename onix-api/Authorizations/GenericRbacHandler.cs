@@ -239,6 +239,13 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
             return Task.CompletedTask;
         }
 
+        var orgTypeClaim = GetClaim(ClaimTypes.System, context.User.Claims);
+        if (orgTypeClaim == null)
+        {
+            //The authentication failed earlier
+            return Task.CompletedTask;
+        }
+
         var uid = idClaim.Value;
         var role = roleClaim.Value;
         var uri = uriClaim.Value;
@@ -246,6 +253,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         var authorizeOrgId = orgIdClaim.Value;
         var userName = userNameClaim.Value;
         var customRoleId = customRoleClaim.Value;
+        var orgType = orgTypeClaim.Value;
 
         var apiGroup = GetApiGroup(uri);
 
@@ -279,6 +287,7 @@ public class GenericRbacHandler : AuthorizationHandler<GenericRbacRequirement>
         mvcContext!.HttpContext.Items["Temp-Identity-Type"] = method;
         mvcContext!.HttpContext.Items["Temp-Identity-Id"] = uid;
         mvcContext!.HttpContext.Items["Temp-Identity-Name"] = userName;
+        mvcContext!.HttpContext.Items["Temp-Org-Type"] = orgType;
 
         if (apiGroup == "customer")
         {

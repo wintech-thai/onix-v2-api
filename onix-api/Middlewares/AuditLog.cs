@@ -24,12 +24,14 @@ namespace Its.Onix.Api.AuditLogs
         public object? ContextData { get; set; }
         public string LogType { get; set; }
         public string ApplicationType { get; set; }
+        public string OrgType { get; set; }
 
         public AuditLog()
         {
             userInfo = new UserInfo();
             LogType = "AuditLog";
             ApplicationType = "PLEASE-SCAN";
+            OrgType = "GLOBAL";
         }
     }
 }
