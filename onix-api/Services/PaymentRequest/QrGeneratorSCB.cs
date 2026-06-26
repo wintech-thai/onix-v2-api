@@ -32,7 +32,15 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            //GetPayInBankAccount() เรียก repository ตรง ๆ ไม่ผ่าน service layer ที่ทำ deserialize BankConfig -> BankConfigObj ไว้
+            //เลย fallback deserialize เองตรงนี้ ถ้า BankConfigObj ยังไม่ถูกตั้งค่าแต่มี BankConfig (raw string) อยู่
             var cfg = _bankAccount.BankConfigObj;
+            if (cfg == null && !string.IsNullOrEmpty(_bankAccount.BankConfig))
+            {
+                try { cfg = JsonSerializer.Deserialize<MBankAccountConfig>(_bankAccount.BankConfig); }
+                catch { cfg = null; }
+            }
+
             if (cfg == null || string.IsNullOrEmpty(cfg.ApiKey) || string.IsNullOrEmpty(cfg.ApiSecret) || string.IsNullOrEmpty(cfg.BillerId))
             {
                 result.Status = "SCB_CONFIG_MISSING";
