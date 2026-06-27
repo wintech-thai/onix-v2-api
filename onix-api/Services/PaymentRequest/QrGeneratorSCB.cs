@@ -71,6 +71,9 @@ namespace Its.Onix.Api.Services
                 var refValue = _pqymentRequest.RefId ?? Guid.NewGuid().ToString("N");
                 //ref3 = Ref3Prefix + ค่า ตาม format ที่ SCB กำหนด (เช่น "SCB1234") - Ref3Prefix ได้มาจาก Merchant Profile ของ SCB
                 var ref3 = $"{cfg.Ref3Prefix}{refValue}";
+                //Biller ID นี้ตั้ง Supporting Reference เป็น "Two references" ไว้ที่ Merchant Profile ของ SCB ดังนั้น ref2 ต้องมีค่าเสมอ (ไม่ใช่ optional)
+                //ถ้าผู้ใช้ไม่ได้กรอก RefId1 มาจาก form (REF1 ใน QrPaymentModal) ให้ fallback ไปใช้ refValue ซ้ำกัน เพื่อไม่ให้ส่ง ref2 เป็นค่าว่าง
+                var ref2Value = !string.IsNullOrWhiteSpace(_pqymentRequest.RefId1) ? _pqymentRequest.RefId1 : refValue;
 
                 var body = new Dictionary<string, object?>
                 {
@@ -79,6 +82,7 @@ namespace Its.Onix.Api.Services
                     ["ppType"] = "BILLERID",
                     ["ppId"] = cfg.BillerId,
                     ["ref1"] = refValue,
+                    ["ref2"] = ref2Value,
                     ["ref3"] = ref3,
                 };
 
