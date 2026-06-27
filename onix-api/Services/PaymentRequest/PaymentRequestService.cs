@@ -111,7 +111,6 @@ namespace Its.Onix.Api.Services
             
             if (merchant.RandomDecimal == false)
             {
-                //ไม่ต้องปรับอะไรทั้งนั้น
                 return amt;
             }
 
@@ -122,7 +121,6 @@ namespace Its.Onix.Api.Services
             // random ทศนิยม 01-99
             var random = new Random();
 
-            // เราไม่ต้องการทศนิยมที่ลงท้ายด้วย 0 เช่น x.10, x.20, ..., x.90 มันทำให้ logic ในการ match payment TX มีปัญหา
             int decimalPart = 0;
             for (int i = 0; i < 3; i++)
             {
@@ -134,7 +132,6 @@ namespace Its.Onix.Api.Services
                 }
             }
 
-            // ประกอบกลับเป็นจำนวนใหม่ เช่น 190 + 0.78 = 190.78
             var newAmt = integerPart + (decimalPart / 100.0);
 
             return Math.Round(newAmt, 2);
@@ -168,9 +165,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
-            //Update ได้แต่เฉพาะ Payout เท่านั้น
-            //เป็น bank account ที่จะถูกโอนเงินออก
             paymentRequest.PayoutBankAccountName = bankAccount!.AccountName;
             paymentRequest.PayoutBankAccountNo = bankAccount.AccountNumber;
             paymentRequest.PayoutBankCode = bankAccount.BankCode;
@@ -216,9 +210,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
-            //Update ได้แต่เฉพาะ Payout เท่านั้น
-            //เป็น bank account ที่จะถูกโอนเงินออก
             paymentRequest.PayoutBankAccountName = srcBa!.AccountName;
             paymentRequest.PayoutBankAccountNo = srcBa.AccountNumber;
             paymentRequest.PayoutBankCode = srcBa.BankCode;
@@ -998,12 +989,9 @@ namespace Its.Onix.Api.Services
                 return (bankAcct, lines);
             }
 
-            var accountType = "UNKNOWN"; //Native - in the future
-            if (pr.QrProvider == "PP")
-            {
-                accountType = "PromptPay";
-                lines.Add($"Step02 - Get bank account type : accountType -> [{accountType}]");
-            }
+            //QrProvider != "PP" หมายถึงชื่อธนาคารแบบ Native โดยตรง (เช่น "SCB") ใช้ค่านี้ filter ทั้ง AccountType และ BankCode ด้านล่าง
+            var accountType = pr.QrProvider == "PP" ? "PromptPay" : "Native";
+            lines.Add($"Step02 - Get bank account type : accountType -> [{accountType}]");
 
             var param = new VMBankAccount()
             {
@@ -1045,6 +1033,14 @@ namespace Its.Onix.Api.Services
                 if (!IsBankAccountNameWhitelisted(merchant, bankAccountName, out var whitelistReason))
                 {
                     lines.Add($"Step03.1 - Skip bank account, name not in merchant whitelist ({whitelistReason}) : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                    continue;
+                }
+
+                //ถ้า provider ไม่ใช่ "PP" แสดงว่าเจาะจงธนาคารแบบ Native (เช่น "SCB") ต้องเช็ค BankCode ให้ตรงกับ QrProvider ด้วย
+                //ไม่งั้น auto-select อาจไปหยิบ native bank account ของธนาคารอื่นที่ไม่รองรับ QrProvider นี้มาใช้
+                if (pr.QrProvider != "PP" && bankCode != pr.QrProvider)
+                {
+                    lines.Add($"Step03.2 - Skip bank account, bank code not match QrProvider [{pr.QrProvider}] : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                     continue;
                 }
 

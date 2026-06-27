@@ -38,15 +38,15 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}")]
         public IActionResult SubmitScbPaymentConfirmation(string bankAccountId, [FromBody] Dictionary<string, object> request)
         {
-            //TODO : ยังไม่ได้ verify signature เพราะใช้เป็น AllowAnonymous (SCB ยิง webhook เข้ามาตรงนี้)
-            //TODO : ยังไม่ได้ matching กับ payment request เดิม (ดู ref ID จาก SCB แล้วเอาไป query payment request) - รอดูตอนได้ schema จริงจาก SCB ก่อน
-            //ตอนนี้แค่ dump request ออกมาดูก่อนว่า SCB ส่งอะไรมาบ้าง
             var dump = JsonSerializer.Serialize(request);
             Console.WriteLine($"INFO : [SubmitScbPaymentConfirmation] bankAccountId=[{bankAccountId}] : {dump}");
 
-            //TODO : response body ตรงนี้ต้องเช็คกับ doc ของ SCB ว่าต้องการ field อะไรกลับไปบ้าง
-            //ดู https://developer.scb/#/documents/documentation/qr-payment/payment-confirmation.html
-            return Ok(new { resCode = "00", resDesc = "success" });
+            //ถ้าไม่ echo กลับ SCB จะมองว่า merchant ไม่ได้รับ confirmation แล้วยิง webhook ซ้ำสูงสุด 3 ครั้ง
+            var transactionId = request.TryGetValue("transactionId", out var txIdObj) && txIdObj is JsonElement txIdEl
+                ? txIdEl.GetString()
+                : null;
+
+            return Ok(new { resCode = "00", resDesc = "success", transactionId });
         }
 
         [HttpPost]
