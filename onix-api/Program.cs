@@ -118,7 +118,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IScanItemTemplateService, ScanItemTemplateService>();
             builder.Services.AddScoped<IScanItemFolderService, ScanItemFolderService>();
             builder.Services.AddScoped<IJobService, JobService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IAuthService, AuthServiceKeycloak>();
             builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IAuditLogService, AuditLogService>();
             builder.Services.AddScoped<IStatService, StatService>();
