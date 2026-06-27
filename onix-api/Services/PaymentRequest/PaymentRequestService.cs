@@ -1054,7 +1054,7 @@ namespace Its.Onix.Api.Services
                     }
 
                     lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                    return (bankAccount, lines);
+                    return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
                 }
 
                 if (bankAccount.AccountLevel == "Selected")
@@ -1063,7 +1063,7 @@ namespace Its.Onix.Api.Services
                     if (dict.ContainsKey(bankAccountId))
                     {
                         lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                        return (bankAccount, lines);
+                        return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
                     }
                     else
                     {
