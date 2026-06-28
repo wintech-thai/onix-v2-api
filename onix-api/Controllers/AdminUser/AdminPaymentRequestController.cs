@@ -122,6 +122,15 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        //เช็คสถานะ payment กับ SCB ตรง ๆ ผ่าน billpayment/inquiry เผื่อ payment confirmation webhook จาก SCB ไม่มาถึงเรา
+        [HttpGet]
+        [Route("org/global/action/InquireScbPaymentStatus/{paymentRequestId}")]
+        public async Task<IActionResult> InquireScbPaymentStatus(string paymentRequestId)
+        {
+            var result = await svc.InquireScbPaymentStatus("global", paymentRequestId);
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/CreateTransferRequest")]

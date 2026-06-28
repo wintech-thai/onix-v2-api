@@ -92,6 +92,13 @@ namespace Its.Onix.Api.Authentications
                 return null;
             }
 
+            var orgType = m.AdminUser?.OrgType;
+            if (string.IsNullOrEmpty(orgType))
+            {
+                //ณ ตอนนี้จะเป็น GLOBAL เสมอสำหรับ Admin
+                orgType = "GLOBAL";
+            }
+
             var u = new User()
             {
                 UserName = user,
@@ -101,6 +108,7 @@ namespace Its.Onix.Api.Authentications
                 AuthenType = "JWT",
                 OrgId = "global",
                 Email = m.User.UserEmail,
+                OrgType = orgType,
 
                 Status = m.Status,
                 Description = m.Description,
@@ -114,6 +122,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
                 new Claim(ClaimTypes.PrimaryGroupSid, m.AdminUser!.CustomRoleId ?? ""),
+                new Claim(ClaimTypes.System, $"OrgType:{u.OrgType}"),
             ];
 
             return u;

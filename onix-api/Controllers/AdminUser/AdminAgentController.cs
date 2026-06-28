@@ -184,6 +184,7 @@ namespace Its.Onix.Api.Controllers
         {
             var eventJson = JsonSerializer.Serialize(body);
             var metaData = string.Join(",", GetMetaData(body));
+            var errorCnt = GetErrorCount(body);
 
             var evt = new MAgentEvent()
             {
@@ -192,6 +193,7 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Channel = "APP",
                 Tags = metaData,
+                ErrorCount = errorCnt,
                 Status = "OK",
                 StatusDesc = "Success",
             };
@@ -227,6 +229,29 @@ namespace Its.Onix.Api.Controllers
             arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
 
             return arr;
+        }
+
+
+        private static int GetErrorCount(Dictionary<string, object> body)
+        {
+            var bd = body;
+
+            //Heartbeat
+            if (!bd.TryGetValue("crashes", out var errorObjArr) || errorObjArr == null)
+            {
+                return 0;
+            }
+
+            var errorCnt = errorObjArr switch
+            {
+                List<object> arr => arr.Count,
+                object[] arr => arr.Length,
+                JsonElement json when json.ValueKind == JsonValueKind.Array
+                    => json.GetArrayLength(),
+                _ => 0
+            };
+
+            return errorCnt;
         }
 
         private string GetChannel(Dictionary<string, object> body)
@@ -379,6 +404,7 @@ namespace Its.Onix.Api.Controllers
                 RawData = eventJson,
                 Tags = metaData,
                 Channel = channel,
+                ErrorCount = 0,
                 //PaymentNoti = pmtLineNoti,
                 //BankAccount = mvBa.BankAccount!,
 

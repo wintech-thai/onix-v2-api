@@ -118,6 +118,7 @@ namespace Its.Onix.Api.AuditLogs
                 CustomDesc = statusDesc,
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
                 ApplicationType = appType,
+                OrgType = GetValue(context, "Temp-Org-Type", "")!,
 
                 userInfo = new UserInfo()
                 {

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
@@ -37,9 +38,16 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}")]
         public IActionResult SubmitScbPaymentConfirmation(string bankAccountId, [FromBody] Dictionary<string, object> request)
         {
-            //ใส่เป็น place holder ไว้ก่อน สำหรับธนาคาคาร SCB
-            //ตรงนี้จะต้อง ใช้การ verify signature ด้วย เพราะว่าเราใช้เป็น AllowAnonymous
-            return Ok("");
+            //TODO : เอา api secret มา verify digital signature ด้วยเพื่อมั่นใจว่าส่งมาจาก SCB จริง ๆ
+            var dump = JsonSerializer.Serialize(request);
+            Console.WriteLine($"INFO : [SubmitScbPaymentConfirmation] bankAccountId=[{bankAccountId}] : {dump}");
+
+            //ถ้าไม่ echo กลับ SCB จะมองว่า merchant ไม่ได้รับ confirmation แล้วยิง webhook ซ้ำสูงสุด 3 ครั้ง
+            var transactionId = request.TryGetValue("transactionId", out var txIdObj) && txIdObj is JsonElement txIdEl
+                ? txIdEl.GetString()
+                : null;
+
+            return Ok(new { resCode = "00", resDesc = "success", transactionId });
         }
 
         [HttpPost]

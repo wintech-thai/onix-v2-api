@@ -61,6 +61,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? CustomRoleDesc { get; set; }
 
+        [NotMapped]
+        public string? OrgType { get; set; }
+
 
         public MAdminUser()
         {

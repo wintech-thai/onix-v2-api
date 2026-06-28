@@ -19,6 +19,7 @@ namespace Its.Onix.Api.Authentications
         public string? OrgId {get; set;}
         public string? Email {get; set;}
         public IEnumerable<Claim>? Claims { get; set; }
+        public string? OrgType {get; set;}
 
         public User()
         {

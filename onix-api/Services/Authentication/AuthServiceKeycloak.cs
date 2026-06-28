@@ -15,7 +15,7 @@ namespace Its.Onix.Api.Services
         public string Email { get; set; } = string.Empty;
     }
 
-    public class AuthService : BaseService, IAuthService
+    public class AuthServiceKeycloak : BaseService, IAuthService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly string tokenEndpoint = "";
@@ -31,7 +31,7 @@ namespace Its.Onix.Api.Services
         private IJwtSigner signer = new JwtSigner();
 
 
-        public AuthService(IHttpClientFactory httpClientFactory) : base()
+        public AuthServiceKeycloak(IHttpClientFactory httpClientFactory) : base()
         {
             _httpClientFactory = httpClientFactory;
 

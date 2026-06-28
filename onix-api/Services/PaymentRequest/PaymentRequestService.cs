@@ -9,6 +9,9 @@ namespace Its.Onix.Api.Services
 {
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
+        //ธนาคารที่ support การสร้าง QR payment ตอนนี้ - ถ้าจะเพิ่มธนาคารอื่นในอนาคต แค่เพิ่มเข้า array นี้ (ไม่ต้องแก้ logic เดิม)
+        private static readonly string[] allowedQrProvider = { "PP", "SCB" };
+
         private readonly IPaymentRequestRepository? repository = null;
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
@@ -98,6 +101,71 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        //เช็คสถานะ payment กับ SCB ตรง ๆ แทนรอ webhook
+        public async Task<MVScbInquiryResult> InquireScbPaymentStatus(string orgId, string paymentRequestId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVScbInquiryResult()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+
+                return r;
+            }
+
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+
+                return r;
+            }
+
+            if (pr.QrProvider != "SCB")
+            {
+                r.Status = "BANK_PROVIDER_NOT_SUPPORT";
+                r.Description = $"Payment Request [{paymentRequestId}] is not a SCB payment (QrProvider=[{pr.QrProvider}])";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(pr.PayinBankAccountId))
+            {
+                r.Status = "ERROR_NO_PAYIN_ACCOUNT";
+                r.Description = $"Payment Request [{paymentRequestId}] has no pay-in bank account assigned";
+
+                return r;
+            }
+
+            var bankAccount = await _bankAccountRepo!.GetBankAccountById(pr.PayinBankAccountId);
+            if (bankAccount == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank account [{pr.PayinBankAccountId}] not found";
+
+                return r;
+            }
+
+            var transactionDate = (pr.CreatedDate ?? DateTime.UtcNow).ToString("yyyy-MM-dd");
+            var qrGenerator = new QrGeneratorSCB(pr, bankAccount, _redis);
+            var inquiryResult = await qrGenerator.InquireAsync(transactionDate);
+
+            r.Status = inquiryResult.Status;
+            r.Description = inquiryResult.Description;
+            r.RawResponse = inquiryResult.RawResponse;
+
+            return r;
+        }
+
         private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant)
         {
             var amt = paymentRequest.RequestedAmount;
@@ -108,7 +176,6 @@ namespace Its.Onix.Api.Services
             
             if (merchant.RandomDecimal == false)
             {
-                //ไม่ต้องปรับอะไรทั้งนั้น
                 return amt;
             }
 
@@ -119,7 +186,6 @@ namespace Its.Onix.Api.Services
             // random ทศนิยม 01-99
             var random = new Random();
 
-            // เราไม่ต้องการทศนิยมที่ลงท้ายด้วย 0 เช่น x.10, x.20, ..., x.90 มันทำให้ logic ในการ match payment TX มีปัญหา
             int decimalPart = 0;
             for (int i = 0; i < 3; i++)
             {
@@ -131,7 +197,6 @@ namespace Its.Onix.Api.Services
                 }
             }
 
-            // ประกอบกลับเป็นจำนวนใหม่ เช่น 190 + 0.78 = 190.78
             var newAmt = integerPart + (decimalPart / 100.0);
 
             return Math.Round(newAmt, 2);
@@ -165,9 +230,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
-            //Update ได้แต่เฉพาะ Payout เท่านั้น
-            //เป็น bank account ที่จะถูกโอนเงินออก
             paymentRequest.PayoutBankAccountName = bankAccount!.AccountName;
             paymentRequest.PayoutBankAccountNo = bankAccount.AccountNumber;
             paymentRequest.PayoutBankCode = bankAccount.BankCode;
@@ -213,9 +275,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //bankAccountId จะเป็น bank account ID ของฝั่งที่เงินจะออก ซึ่งคือ bank account ของ pool กลาง (ใน DB จะเป็น BankAccount.Direction = "PayIn")
-            //Update ได้แต่เฉพาะ Payout เท่านั้น
-            //เป็น bank account ที่จะถูกโอนเงินออก
             paymentRequest.PayoutBankAccountName = srcBa!.AccountName;
             paymentRequest.PayoutBankAccountNo = srcBa.AccountNumber;
             paymentRequest.PayoutBankCode = srcBa.BankCode;
@@ -879,6 +938,15 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            if (string.IsNullOrEmpty(paymentRequest.RefId1))
+            {
+                r.Status = "REF_ID1_MISSING";
+                r.Description = $"Ref ID1 is missing!!!";
+
+                return r;
+            }
+
+            paymentRequest.RefId = paymentRequest.RefId1; /* RefId ไม่ใช้แล้วแต่ก็ set ให้ท่ากับ RefId1 ไปเลย แล้วยังคงความป็น unique อยู่นะ */
             if (string.IsNullOrEmpty(paymentRequest.RefId))
             {
                 r.Status = "REF_ID_MISSING";
@@ -891,7 +959,7 @@ namespace Its.Onix.Api.Services
             if (isRefIdExist)
             {
                 r.Status = "REF_ID_DUPLICATE";
-                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
+                r.Description = $"Ref ID1 [{paymentRequest.RefId}] is duplicate!!!";
 
                 return r;
             }
@@ -904,11 +972,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (paymentRequest.QrProvider != "PP") //PromptPay
+            if (!allowedQrProvider.Contains(paymentRequest.QrProvider))
             {
-                //ตอนนี้ support แค่ PromptPay
                 r.Status = "BANK_PROVIDER_NOT_SUPPORT";
-                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only PP is allowed.";
+                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only [{string.Join(", ", allowedQrProvider)}] are allowed.";
 
                 return r;
             }
@@ -996,12 +1063,9 @@ namespace Its.Onix.Api.Services
                 return (bankAcct, lines);
             }
 
-            var accountType = "UNKNOWN"; //Native - in the future
-            if (pr.QrProvider == "PP")
-            {
-                accountType = "PromptPay";
-                lines.Add($"Step02 - Get bank account type : accountType -> [{accountType}]");
-            }
+            //QrProvider != "PP" หมายถึงชื่อธนาคารแบบ Native โดยตรง (เช่น "SCB") ใช้ค่านี้ filter ทั้ง AccountType และ BankCode ด้านล่าง
+            var accountType = pr.QrProvider == "PP" ? "PromptPay" : "Native";
+            lines.Add($"Step02 - Get bank account type : accountType -> [{accountType}]");
 
             var param = new VMBankAccount()
             {
@@ -1046,6 +1110,14 @@ namespace Its.Onix.Api.Services
                     continue;
                 }
 
+                //ถ้า provider ไม่ใช่ "PP" แสดงว่าเจาะจงธนาคารแบบ Native (เช่น "SCB") ต้องเช็ค BankCode ให้ตรงกับ QrProvider ด้วย
+                //ไม่งั้น auto-select อาจไปหยิบ native bank account ของธนาคารอื่นที่ไม่รองรับ QrProvider นี้มาใช้
+                if (pr.QrProvider != "PP" && bankCode != pr.QrProvider)
+                {
+                    lines.Add($"Step03.2 - Skip bank account, bank code not match QrProvider [{pr.QrProvider}] : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                    continue;
+                }
+
                 //Here - Bank Account Status is "Active"
                 if (bankAccount.AccountLevel == "Global")
                 {
@@ -1056,7 +1128,7 @@ namespace Its.Onix.Api.Services
                     }
 
                     lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                    return (bankAccount, lines);
+                    return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
                 }
 
                 if (bankAccount.AccountLevel == "Selected")
@@ -1065,7 +1137,7 @@ namespace Its.Onix.Api.Services
                     if (dict.ContainsKey(bankAccountId))
                     {
                         lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                        return (bankAccount, lines);
+                        return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
                     }
                     else
                     {

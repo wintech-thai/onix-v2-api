@@ -44,6 +44,13 @@ namespace Its.Onix.Api.Authentications
                 return null;
             }
 
+            var orgType = m.ApiKey.OrgType;
+            if (string.IsNullOrEmpty(orgType))
+            {
+                //เป็น API ของ global org
+                orgType = "GLOBAL";
+            }
+
             var u = new User()
             {
                 UserName = user,
@@ -54,6 +61,7 @@ namespace Its.Onix.Api.Authentications
                 OrgId = m.ApiKey.OrgId,
                 CustomRoleId = m.ApiKey.CustomRoleId,
                 CustomRoleName = m.ApiKey.CustomRoleName,
+                OrgType = orgType,
 
                 Status = m.Status,
                 Description = m.Description,
@@ -67,6 +75,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.AuthenticationMethod, u.AuthenType!),
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
+                new Claim(ClaimTypes.System, $"OrgType:{u.OrgType}"),
             ];
 
             return u;

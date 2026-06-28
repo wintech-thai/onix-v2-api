@@ -132,11 +132,15 @@ namespace Its.Onix.Api.Database.Repositories
                     on ou.UserId equals usr.UserId.ToString() into joinedUser
                 from user in joinedUser.DefaultIfEmpty()
 
+                join org in context.Organizations!
+                    on ou.OrgCustomId equals org.OrgCustomId! into organizations
+                from organization in organizations.DefaultIfEmpty()
+
                 join cr in context.CustomRoles!
                     on ou.CustomRoleId equals cr.RoleId.ToString() into joinedRole
                 from role in joinedRole.DefaultIfEmpty()
 
-                select new { ou, user, role };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
+                select new { ou, user, role, organization };  // <-- ให้ query ตรงนี้ยังเป็น IQueryable
             return query.Select(x => new MOrganizationUser
             {
                 OrgUserId = x.ou.OrgUserId,
@@ -155,6 +159,7 @@ namespace Its.Onix.Api.Database.Repositories
                 CustomRoleId = x.ou.CustomRoleId,
                 CustomRoleName = x.role.RoleName,
                 CustomRoleDesc = x.role.RoleDescription,
+                OrgType = x.organization.OrgType,
             });
         }
 

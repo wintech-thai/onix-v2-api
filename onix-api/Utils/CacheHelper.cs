@@ -11,6 +11,14 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateBankApiTokenKey(string orgId, string apiName)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+
+            var key = $"BankApiToken:{environment}:{orgId}:{apiName}";
+            return key;
+        }
+
         public static string CreateLoginSessionKey(string userName)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";

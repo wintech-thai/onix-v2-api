@@ -42,6 +42,8 @@ namespace Its.Onix.Api.Models
         [Column("status_desc")]
         public string? StatusDesc { get; set; }
 
+        [Column("error_count")]
+        public int? ErrorCount { get; set; } 
 
         //System fields
         [Column("created_date")]
@@ -57,6 +59,7 @@ namespace Its.Onix.Api.Models
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             RawDataObj = [];
+            ErrorCount = 0;
         }
     }
 }

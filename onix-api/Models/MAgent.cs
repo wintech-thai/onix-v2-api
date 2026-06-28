@@ -44,6 +44,10 @@ namespace Its.Onix.Api.Models
         [Column("last_seen_date")]
         public DateTime? LastSeenDate { get; set; }
 
+        [Column("last_error_seen_date")]
+        public DateTime? LastSeenErrorDate { get; set; }
+
+
         [NotMapped]
         public string? ApiKey { get; set; }
 
