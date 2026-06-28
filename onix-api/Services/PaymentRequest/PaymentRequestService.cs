@@ -101,8 +101,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        //เช็คสถานะ payment กับ SCB เองโดยตรงผ่าน billpayment/inquiry แทนการรอ payment confirmation webhook
-        //ใช้ตอน webhook จาก SCB ไม่มาถึงเรา (ดู note ใน QrGeneratorSCB.InquireAsync())
+        //เช็คสถานะ payment กับ SCB ตรง ๆ แทนรอ webhook
         public async Task<MVScbInquiryResult> InquireScbPaymentStatus(string orgId, string paymentRequestId)
         {
             repository!.SetCustomOrgId(orgId);

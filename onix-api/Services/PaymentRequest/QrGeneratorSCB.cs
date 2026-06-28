@@ -67,12 +67,13 @@ namespace Its.Onix.Api.Services
             {
                 using var client = new HttpClient();
 
-                //ref1 ใช้ RefId ตัวเดียวกันกับที่สร้าง payment request ไว้ เพื่อให้เอาไป matching ตอน SCB ยิง payment confirmation webhook กลับมาได้
+                //ref1 ใช้ matching ตอน webhook กลับมา
                 var refValue = _pqymentRequest.RefId ?? Guid.NewGuid().ToString("N");
-                //ref3 = Ref3Prefix + ค่า ตาม format ที่ SCB กำหนด (เช่น "SCB1234") - Ref3Prefix ได้มาจาก Merchant Profile ของ SCB
-                var ref3 = $"{cfg.Ref3Prefix}{refValue}";
-                //Biller ID นี้ตั้ง Supporting Reference เป็น "Two references" ไว้ที่ Merchant Profile ของ SCB ดังนั้น ref2 ต้องมีค่าเสมอ (ไม่ใช่ optional)
-                var ref2Value = !string.IsNullOrWhiteSpace(_pqymentRequest.RefId1) ? _pqymentRequest.RefId1 : refValue;
+                //ref2 ต้องมีค่าเสมอ (Biller ตั้ง Two references ไว้)
+                var ref2Value = !string.IsNullOrWhiteSpace(_pqymentRequest.RefId2) ? _pqymentRequest.RefId2 : refValue;
+                //ref3 ต้องขึ้นต้นด้วย Ref3Prefix เสมอ
+                var ref3Suffix = !string.IsNullOrWhiteSpace(_pqymentRequest.RefId3) ? _pqymentRequest.RefId3 : refValue;
+                var ref3 = $"{cfg.Ref3Prefix}{ref3Suffix}";
 
                 var body = new Dictionary<string, object?>
                 {
@@ -130,9 +131,7 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        //ดึง JWT token จาก Redis ถ้ายังไม่ expire, ถ้าไม่มีหรือ expire แล้วก็ขอใหม่จาก SCB /v1/oauth/token แล้วเก็บกลับเข้า Redis
-        //เก็บ cache แยกตาม org + bank account เพื่อให้ request อื่น ๆ ที่เรียกบัญชีเดียวกันแชร์ token ร่วมกันได้ ไม่ต้อง authen ซ้ำจนติด rate limit
-        //ใส่ ApiKey เข้าไปใน cache key ด้วย เพื่อกัน case ที่มีคนแก้ ApiKey/ApiSecret/BillerId ของ bank account ตัวเดิม (ID เดิม) แล้วระบบ
+        //ดึง JWT token จาก Redis ถ้ายังไม่ expire ไม่งั้นขอใหม่จาก SCB แล้วเก็บกลับเข้า cache
         private async Task<(string accessToken, string tokenType)> GetAccessTokenAsync(string baseUrl, MBankAccountConfig cfg)
         {
             var cacheKey = $"{CacheHelper.CreateBankApiTokenKey(_bankAccount.OrgId ?? "global", "SCBToken")}:{_bankAccount.Id}:{cfg.ApiKey}";
@@ -200,9 +199,7 @@ namespace Its.Onix.Api.Services
             throw new NotImplementedException();
         }
 
-        //ใช้เช็คสถานะ payment เองโดยไม่ต้องพึ่ง payment confirmation webhook จาก SCB
-        //อ้างอิงจาก https://developer.scb/#/documents/api-reference-index/qr-payments/get-billpayment-inquiry.html - "Recommended use case is when
-        //customer has informed partner that they have been paid successfully, but partner did not receive payment confirmation from SCB"
+        //เช็คสถานะ payment เองแทนรอ webhook
         public async Task<ScbInquiryResult> InquireAsync(string transactionDate)
         {
             var result = new ScbInquiryResult()
@@ -245,7 +242,7 @@ namespace Its.Onix.Api.Services
                 using var client = new HttpClient();
 
                 var refValue = _pqymentRequest.RefId ?? "";
-                //eventCode "00300100" = Thai QR (ตรงกับ QR30/BILLERID ที่เราใช้ตอนสร้าง QR)
+                //00300100 = Thai QR
                 var query = $"eventCode=00300100&transactionDate={Uri.EscapeDataString(transactionDate)}&billerId={Uri.EscapeDataString(cfg.BillerId)}&reference1={Uri.EscapeDataString(refValue)}";
                 var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/v1/payment/billpayment/inquiry?{query}");
                 request.Headers.Add("resourceOwnerId", cfg.ApiKey);
