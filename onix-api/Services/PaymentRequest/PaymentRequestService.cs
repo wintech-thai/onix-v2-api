@@ -956,6 +956,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (string.IsNullOrEmpty(paymentRequest.RefId1))
+            {
+                r.Status = "REF_ID1_MISSING";
+                r.Description = $"Ref ID1 is missing!!!";
+
+                return r;
+            }
+
             if (paymentRequest.Currency != "THB")
             {
                 r.Status = "CURRENCY_NOT_SUPPORT";
