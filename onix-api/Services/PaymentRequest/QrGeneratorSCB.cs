@@ -72,7 +72,6 @@ namespace Its.Onix.Api.Services
                 //ref3 = Ref3Prefix + ค่า ตาม format ที่ SCB กำหนด (เช่น "SCB1234") - Ref3Prefix ได้มาจาก Merchant Profile ของ SCB
                 var ref3 = $"{cfg.Ref3Prefix}{refValue}";
                 //Biller ID นี้ตั้ง Supporting Reference เป็น "Two references" ไว้ที่ Merchant Profile ของ SCB ดังนั้น ref2 ต้องมีค่าเสมอ (ไม่ใช่ optional)
-                //ถ้าผู้ใช้ไม่ได้กรอก RefId1 มาจาก form (REF1 ใน QrPaymentModal) ให้ fallback ไปใช้ refValue ซ้ำกัน เพื่อไม่ให้ส่ง ref2 เป็นค่าว่าง
                 var ref2Value = !string.IsNullOrWhiteSpace(_pqymentRequest.RefId1) ? _pqymentRequest.RefId1 : refValue;
 
                 var body = new Dictionary<string, object?>
@@ -133,9 +132,10 @@ namespace Its.Onix.Api.Services
 
         //ดึง JWT token จาก Redis ถ้ายังไม่ expire, ถ้าไม่มีหรือ expire แล้วก็ขอใหม่จาก SCB /v1/oauth/token แล้วเก็บกลับเข้า Redis
         //เก็บ cache แยกตาม org + bank account เพื่อให้ request อื่น ๆ ที่เรียกบัญชีเดียวกันแชร์ token ร่วมกันได้ ไม่ต้อง authen ซ้ำจนติด rate limit
+        //ใส่ ApiKey เข้าไปใน cache key ด้วย เพื่อกัน case ที่มีคนแก้ ApiKey/ApiSecret/BillerId ของ bank account ตัวเดิม (ID เดิม) แล้วระบบ
         private async Task<(string accessToken, string tokenType)> GetAccessTokenAsync(string baseUrl, MBankAccountConfig cfg)
         {
-            var cacheKey = $"{CacheHelper.CreateBankApiTokenKey(_bankAccount.OrgId ?? "global", "SCBToken")}:{_bankAccount.Id}";
+            var cacheKey = $"{CacheHelper.CreateBankApiTokenKey(_bankAccount.OrgId ?? "global", "SCBToken")}:{_bankAccount.Id}:{cfg.ApiKey}";
 
             var cached = await _redis.GetObjectAsync<ScbTokenCache>(cacheKey);
             var nowEpoch = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
@@ -146,9 +146,6 @@ namespace Its.Onix.Api.Services
 
             using var client = new HttpClient();
 
-            //ใช้ client credentials แบบ applicationKey/applicationSecret (ไม่ใช่ authorization_code flow เพราะเราไม่ได้เข้าถึงข้อมูลเฉพาะของ user)
-            //ตาม schema ของ SCB เคสนี้จะไม่ได้ refreshToken กลับมา (refreshToken คืนค่าเฉพาะ authorization_code grant เท่านั้น)
-            //ดังนั้นเวลา token หมดอายุ ให้ขอ token ใหม่จาก /v1/oauth/token ตรงนี้ซ้ำเลย ไม่ต้องเรียก /v1/oauth/token/refresh
             var body = new
             {
                 applicationKey = cfg.ApiKey,
