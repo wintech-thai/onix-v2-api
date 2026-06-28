@@ -939,6 +939,15 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            if (string.IsNullOrEmpty(paymentRequest.RefId1))
+            {
+                r.Status = "REF_ID1_MISSING";
+                r.Description = $"Ref ID1 is missing!!!";
+
+                return r;
+            }
+
+            paymentRequest.RefId = paymentRequest.RefId1; /* RefId ไม่ใช้แล้วแต่ก็ set ให้ท่ากับ RefId1 ไปเลย แล้วยังคงความป็น unique อยู่นะ */
             if (string.IsNullOrEmpty(paymentRequest.RefId))
             {
                 r.Status = "REF_ID_MISSING";
@@ -951,15 +960,7 @@ namespace Its.Onix.Api.Services
             if (isRefIdExist)
             {
                 r.Status = "REF_ID_DUPLICATE";
-                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
-
-                return r;
-            }
-
-            if (string.IsNullOrEmpty(paymentRequest.RefId1))
-            {
-                r.Status = "REF_ID1_MISSING";
-                r.Description = $"Ref ID1 is missing!!!";
+                r.Description = $"Ref ID1 [{paymentRequest.RefId}] is duplicate!!!";
 
                 return r;
             }
