@@ -38,6 +38,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}")]
         public IActionResult SubmitScbPaymentConfirmation(string bankAccountId, [FromBody] Dictionary<string, object> request)
         {
+            //TODO : เอา api secret มา verify digital signature ด้วยเพื่อมั่นใจว่าส่งมาจาก SCB จริง ๆ
             var dump = JsonSerializer.Serialize(request);
             Console.WriteLine($"INFO : [SubmitScbPaymentConfirmation] bankAccountId=[{bankAccountId}] : {dump}");
 
