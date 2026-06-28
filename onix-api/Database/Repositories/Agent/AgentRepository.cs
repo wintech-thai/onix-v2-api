@@ -146,13 +146,26 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
-        private async Task<MAgent?> UpdateAgentLastSeenById(string agentId)
+        private async Task<MAgent?> UpdateAgentLastSeenById(string agentId, int? errorCcount)
         {
+            if (errorCcount == null)
+            {
+                errorCcount = 0;
+            }
+
             Guid id = Guid.Parse(agentId);
             var existing = await context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.LastSeenDate = DateTime.UtcNow;
+                if (errorCcount > 0)
+                {
+                    existing.LastSeenErrorDate = existing.LastSeenDate;
+                }
+                else
+                {
+                    existing.LastSeenErrorDate = null;
+                }
             }
 
             await context.SaveChangesAsync();
@@ -165,7 +178,7 @@ namespace Its.Onix.Api.Database.Repositories
             agentEvent.CreatedDate = DateTime.UtcNow;
 
             await context!.AgentEvents!.AddAsync(agentEvent);
-            await UpdateAgentLastSeenById(agentEvent.AgentId!);
+            await UpdateAgentLastSeenById(agentEvent.AgentId!, agentEvent.ErrorCount);
 
             await context.SaveChangesAsync();
 
