@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Database.Repositories
                 RefId = x.pr.RefId,
                 RefId1 = x.pr.RefId1,
                 RefId2 = x.pr.RefId2,
+                RefId3 = x.pr.RefId3,
                 Description = x.pr.Description,
                 CustomerEmail = x.pr.CustomerEmail,
                 CustomerPhone = x.pr.CustomerPhone,

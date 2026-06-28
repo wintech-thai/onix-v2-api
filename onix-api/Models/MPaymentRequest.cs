@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(RefId))]
     [Index(nameof(RefId1))]
     [Index(nameof(RefId2))]
+    [Index(nameof(RefId3))]
     [Index(nameof(Direction))]
     [Index(nameof(Status))]
     [Index(nameof(BankAccountNo))]
@@ -40,6 +41,10 @@ namespace Its.Onix.Api.Models
 
         [Column("ref_id2")]
         public string? RefId2 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+        [Column("ref_id3")]
+        public string? RefId3 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
 
         [Column("description")]
         public string? Description { get; set; } //คำอธิบายการชำระเงิน
