@@ -202,6 +202,80 @@ namespace Its.Onix.Api.Services
         {
             throw new NotImplementedException();
         }
+
+        //ใช้เช็คสถานะ payment เองโดยไม่ต้องพึ่ง payment confirmation webhook จาก SCB
+        //อ้างอิงจาก https://developer.scb/#/documents/api-reference-index/qr-payments/get-billpayment-inquiry.html - "Recommended use case is when
+        //customer has informed partner that they have been paid successfully, but partner did not receive payment confirmation from SCB"
+        public async Task<ScbInquiryResult> InquireAsync(string transactionDate)
+        {
+            var result = new ScbInquiryResult()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var cfg = _bankAccount.BankConfigObj;
+            if (cfg == null && !string.IsNullOrEmpty(_bankAccount.BankConfig))
+            {
+                try { cfg = JsonSerializer.Deserialize<MBankAccountConfig>(_bankAccount.BankConfig); }
+                catch { cfg = null; }
+            }
+
+            if (cfg == null || string.IsNullOrEmpty(cfg.ApiKey) || string.IsNullOrEmpty(cfg.ApiSecret) || string.IsNullOrEmpty(cfg.BillerId))
+            {
+                result.Status = "SCB_CONFIG_MISSING";
+                result.Description = $"Bank account [{_bankAccount.Id}] is missing SCB API config (ApiKey / ApiSecret / BillerId) - กรอกที่หน้า Bank API Config ก่อน";
+                return result;
+            }
+
+            var baseUrl = cfg.IsSandbox ? SandboxBaseUrl : ProductionBaseUrl;
+
+            string accessToken;
+            string tokenType;
+            try
+            {
+                (accessToken, tokenType) = await GetAccessTokenAsync(baseUrl, cfg);
+            }
+            catch (Exception ex)
+            {
+                result.Status = "SCB_AUTH_FAILED";
+                result.Description = $"Failed to get SCB access token: {ex.Message}";
+                return result;
+            }
+
+            try
+            {
+                using var client = new HttpClient();
+
+                var refValue = _pqymentRequest.RefId ?? "";
+                //eventCode "00300100" = Thai QR (ตรงกับ QR30/BILLERID ที่เราใช้ตอนสร้าง QR)
+                var query = $"eventCode=00300100&transactionDate={Uri.EscapeDataString(transactionDate)}&billerId={Uri.EscapeDataString(cfg.BillerId)}&reference1={Uri.EscapeDataString(refValue)}";
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/v1/payment/billpayment/inquiry?{query}");
+                request.Headers.Add("resourceOwnerId", cfg.ApiKey);
+                request.Headers.Add("requestUId", Guid.NewGuid().ToString("N"));
+                request.Headers.Add("authorization", $"{tokenType} {accessToken}");
+                request.Headers.Add("accept-language", "EN");
+
+                var response = await client.SendAsync(request);
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"INFO : [QrGeneratorSCB] billpayment/inquiry response [{(int)response.StatusCode}] : {responseBody}");
+
+                result.RawResponse = responseBody;
+                if (!response.IsSuccessStatusCode)
+                {
+                    result.Status = "SCB_API_ERROR";
+                    result.Description = $"SCB billpayment/inquiry failed [{(int)response.StatusCode}]";
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Status = "SCB_API_ERROR";
+                result.Description = $"Failed to call SCB billpayment/inquiry : {ex.Message}";
+            }
+
+            return result;
+        }
     }
 
     internal class ScbTokenCache

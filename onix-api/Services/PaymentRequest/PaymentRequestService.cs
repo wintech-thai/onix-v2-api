@@ -101,6 +101,72 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        //เช็คสถานะ payment กับ SCB เองโดยตรงผ่าน billpayment/inquiry แทนการรอ payment confirmation webhook
+        //ใช้ตอน webhook จาก SCB ไม่มาถึงเรา (ดู note ใน QrGeneratorSCB.InquireAsync())
+        public async Task<MVScbInquiryResult> InquireScbPaymentStatus(string orgId, string paymentRequestId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _bankAccountRepo!.SetCustomOrgId("global");
+
+            var r = new MVScbInquiryResult()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+
+                return r;
+            }
+
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+
+                return r;
+            }
+
+            if (pr.QrProvider != "SCB")
+            {
+                r.Status = "BANK_PROVIDER_NOT_SUPPORT";
+                r.Description = $"Payment Request [{paymentRequestId}] is not a SCB payment (QrProvider=[{pr.QrProvider}])";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(pr.PayinBankAccountId))
+            {
+                r.Status = "ERROR_NO_PAYIN_ACCOUNT";
+                r.Description = $"Payment Request [{paymentRequestId}] has no pay-in bank account assigned";
+
+                return r;
+            }
+
+            var bankAccount = await _bankAccountRepo!.GetBankAccountById(pr.PayinBankAccountId);
+            if (bankAccount == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank account [{pr.PayinBankAccountId}] not found";
+
+                return r;
+            }
+
+            var transactionDate = (pr.CreatedDate ?? DateTime.UtcNow).ToString("yyyy-MM-dd");
+            var qrGenerator = new QrGeneratorSCB(pr, bankAccount, _redis);
+            var inquiryResult = await qrGenerator.InquireAsync(transactionDate);
+
+            r.Status = inquiryResult.Status;
+            r.Description = inquiryResult.Description;
+            r.RawResponse = inquiryResult.RawResponse;
+
+            return r;
+        }
+
         private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant)
         {
             var amt = paymentRequest.RequestedAmount;
