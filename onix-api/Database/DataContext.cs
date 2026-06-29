@@ -1,11 +1,13 @@
 namespace Its.Onix.Api.Database;
 
 using Its.Onix.Api.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics.CodeAnalysis;
 
 [ExcludeFromCodeCoverage]
-public class DataContext : DbContext, IDataContext
+public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>, IDataContext
 {
     protected readonly IConfiguration Configuration;
 
@@ -16,8 +18,8 @@ public class DataContext : DbContext, IDataContext
 
     public DbSet<MOrganization>? Organizations { get; set; }
     public DbSet<MApiKey>? ApiKeys { get; set; }
-    public DbSet<MRole>? Roles { get; set; }
-    public DbSet<MUser>? Users { get; set; }
+    public new DbSet<MRole>? Roles { get; set; }
+    public new DbSet<MUser>? Users { get; set; }
     public DbSet<MOrganizationUser>? OrganizationUsers { get; set; }
     public DbSet<MSystemVariable>? SystemVariables { get; set; }
     public DbSet<MMasterRef>? MasterRefs { get; set; }
@@ -67,6 +69,8 @@ public class DataContext : DbContext, IDataContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+        
         //Admin users tables here
         modelBuilder.Entity<MAdminUser>();
 
@@ -229,5 +233,10 @@ public class DataContext : DbContext, IDataContext
         modelBuilder.Entity<MFinancialDoc>()
             .HasIndex(t => new { t.OrgId, t.DocumentNo }).IsUnique();
 
+        modelBuilder.Entity<IdentityUser>()
+            .ToTable("AspNetUsers");
+
+        modelBuilder.Entity<IdentityRole>()
+            .ToTable("AspNetRoles");
     }
 }

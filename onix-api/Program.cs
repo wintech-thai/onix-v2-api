@@ -17,6 +17,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.ResponseCompression;
 using Minio;
+using Microsoft.AspNetCore.Identity;
 
 namespace Its.Onix.Api
 {
@@ -253,6 +254,11 @@ namespace Its.Onix.Api
             builder.Services.AddHttpClient();
             builder.Services.AddHealthChecks();
             builder.Services.AddSignalR();
+
+            builder.Services
+                .AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<DataContext>()
+                .AddDefaultTokenProviders();
 
             var app = builder.Build();
 
