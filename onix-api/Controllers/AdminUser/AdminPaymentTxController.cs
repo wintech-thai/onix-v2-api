@@ -28,7 +28,9 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
         public async Task<IActionResult> SubmitLinePaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiLine request)
         {
+            request.OriginalData.Add("sourceApi", "AdminPaymentTxController.SubmitLinePaymentTxNotification");
             var result = await svc.ProcessLinePaymentTxNotification("global", bankAccountId, request);
+
             return Ok(result);
         }
 
@@ -47,7 +49,7 @@ Console.WriteLine($"DEBUG A - amount = [{amount}]");
             {
                 TxType = "PayIn",
                 RefId1 = billPaymentRef1.ToString(),
-                PaymentAmount = (decimal) 0.00,
+                PaymentAmount = (decimal) amount,
                 OriginalData = bd,
             };
 
@@ -64,7 +66,7 @@ Console.WriteLine($"DEBUG A - amount = [{amount}]");
             var dump = JsonSerializer.Serialize(request);
             Console.WriteLine($"INFO : [SubmitScbPaymentConfirmation] bankAccountId=[{bankAccountId}] : {dump}");
 
-            var pmtNoti = GetPaymentNotiObj(request, "SubmitScbPaymentConfirmation");
+            var pmtNoti = GetPaymentNotiObj(request, "AdminPaymentTxController.SubmitScbPaymentConfirmation");
             var _ = await svc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtNoti);
 
             //ถ้าไม่ echo กลับ SCB จะมองว่า merchant ไม่ได้รับ confirmation แล้วยิง webhook ซ้ำสูงสุด 3 ครั้ง
