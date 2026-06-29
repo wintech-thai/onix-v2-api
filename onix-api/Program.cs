@@ -255,10 +255,10 @@ namespace Its.Onix.Api
             builder.Services.AddHealthChecks();
             builder.Services.AddSignalR();
 
-            builder.Services
-                .AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<DataContext>()
-                .AddDefaultTokenProviders();
+            //builder.Services
+            //    .AddIdentity<IdentityUser, IdentityRole>()
+            //    .AddEntityFrameworkStores<DataContext>()
+            //    .AddDefaultTokenProviders();
 
             var app = builder.Build();
 
