@@ -35,7 +35,8 @@ namespace Its.Onix.Api.Controllers
         private static MPaymentNotiLine GetPaymentNotiObj(Dictionary<string, object> bd)
         {
             bd.TryGetValue("amount", out var amount);
-            amount ??= 0.00;
+            amount ??= (decimal) 0.00;
+Console.WriteLine($"DEBUG A - amount = [{amount}]");
 
             bd.TryGetValue("billPaymentRef1", out var billPaymentRef1);
             billPaymentRef1 ??= "";
@@ -44,7 +45,7 @@ namespace Its.Onix.Api.Controllers
             {
                 TxType = "PayIn",
                 RefId1 = billPaymentRef1.ToString(),
-                PaymentAmount = (decimal?) amount,
+                PaymentAmount = (decimal) 0.00,
                 OriginalData = bd,
             };
 
