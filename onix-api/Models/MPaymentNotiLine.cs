@@ -15,11 +15,15 @@ namespace Its.Onix.Api.Models
         public string? DestinationAccountNo { get; set; } //XX9148 - จะ mask data แล้วแสดง 4 ตัวหลัง
         public string? MerchantId { get; set; }
 
+        public string? RefId1 { get; set; }
+        public Dictionary<string, object> OriginalData { get; set; }
+
         public DateTime? TxDate { get; set; }
 
         public MPaymentNotiLine()
         {
             TxDate = DateTime.UtcNow;
+            OriginalData = [];
         }
     }
 }

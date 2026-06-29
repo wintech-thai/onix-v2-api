@@ -178,6 +178,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(amountStrPd);
             }
 
+            if ((param.RefId1 != null) && (param.RefId1 != ""))
+            {
+                var refId1Pd = PredicateBuilder.New<MPaymentRequest>();
+                refId1Pd = refId1Pd.Or(p => p.RefId1!.Equals(param.RefId1));
+
+                pd = pd.And(refId1Pd);
+            }
+
             if ((param.BankAccountId != null) && (param.BankAccountId != ""))
             {
                 var bankAccountIdPd = PredicateBuilder.New<MPaymentRequest>();
