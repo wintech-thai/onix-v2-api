@@ -32,8 +32,10 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        private static MPaymentNotiLine GetPaymentNotiObj(Dictionary<string, object> bd)
+        private static MPaymentNotiLine GetPaymentNotiObj(Dictionary<string, object> bd, string sourceApi)
         {
+            bd.Add("sourceApi", sourceApi);
+
             bd.TryGetValue("amount", out var amount);
             amount ??= (decimal) 0.00;
 Console.WriteLine($"DEBUG A - amount = [{amount}]");
@@ -62,7 +64,7 @@ Console.WriteLine($"DEBUG A - amount = [{amount}]");
             var dump = JsonSerializer.Serialize(request);
             Console.WriteLine($"INFO : [SubmitScbPaymentConfirmation] bankAccountId=[{bankAccountId}] : {dump}");
 
-            var pmtNoti = GetPaymentNotiObj(request);
+            var pmtNoti = GetPaymentNotiObj(request, "SubmitScbPaymentConfirmation");
             var _ = await svc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtNoti);
 
             //ถ้าไม่ echo กลับ SCB จะมองว่า merchant ไม่ได้รับ confirmation แล้วยิง webhook ซ้ำสูงสุด 3 ครั้ง
