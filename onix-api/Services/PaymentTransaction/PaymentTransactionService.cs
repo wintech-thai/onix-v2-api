@@ -154,10 +154,13 @@ namespace Its.Onix.Api.Services
                 MerchantId = paymentNotiLine.MerchantId, //ตรงนี้อาจจะมี merchantId มาด้วยจาก Line ก็ได้ เผื่อเอาไว้ใช้ match ได้ง่ายขึ้นหน่อย
                 BankAccountId = bankAccountId,
                 Status = "Pending",
+                RefId1 = paymentNotiLine.RefId1,
                 
                 GeneratedAmountStr = amtStr, //เอาเลขเศษสตางค์ไป match ด้วย
                 FromDate = DateTime.UtcNow.AddHours(-1),
             };
+
+            paymentNotiLine.PaymentRequestQuery = prParam;
 
             var paymentRequests = await GetPaymentRequestsForPaymentTx("global", prParam);
             var matchCount = paymentRequests.Count;

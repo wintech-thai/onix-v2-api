@@ -294,7 +294,10 @@ namespace Its.Onix.Api.Controllers
                 RemainAmount = 0,
                 SourceBankAccountNo = "",
                 MerchantId = null,
+                OriginalData = body,
             };
+
+            pmt.OriginalData.Add("sourceApi", "AdminAgentController.NotifyLineMessage");
 
             if (channel == "LINE")
             {

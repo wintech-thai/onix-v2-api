@@ -28,19 +28,50 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
         public async Task<IActionResult> SubmitLinePaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiLine request)
         {
+            request.OriginalData.Add("sourceApi", "AdminPaymentTxController.SubmitLinePaymentTxNotification");
             var result = await svc.ProcessLinePaymentTxNotification("global", bankAccountId, request);
+
             return Ok(result);
+        }
+
+        private static MPaymentNotiLine GetPaymentNotiObj(Dictionary<string, object> bd, string sourceApi)
+        {
+            bd.Add("sourceApi", sourceApi);
+
+            bd.TryGetValue("amount", out var amountStr);
+            amountStr ??= "0.00";
+//Console.WriteLine($"DEBUG A - amount = [{amountStr}]");
+
+            decimal amount = decimal.TryParse(amountStr?.ToString(), out var result)
+                ? result
+                : 0.00m;
+
+            bd.TryGetValue("billPaymentRef1", out var billPaymentRef1);
+            billPaymentRef1 ??= "";
+
+            var pmt = new MPaymentNotiLine()
+            {
+                TxType = "PayIn",
+                RefId1 = billPaymentRef1.ToString(),
+                PaymentAmount = amount,
+                OriginalData = bd,
+            };
+
+            return pmt; 
         }
 
         [ExcludeFromCodeCoverage]
         [AllowAnonymous]
         [HttpPost]
         [Route("org/global/action/SubmitScbPaymentConfirmation/{bankAccountId}")]
-        public IActionResult SubmitScbPaymentConfirmation(string bankAccountId, [FromBody] Dictionary<string, object> request)
+        public async Task<IActionResult> SubmitScbPaymentConfirmation(string bankAccountId, [FromBody] Dictionary<string, object> request)
         {
             //TODO : เอา api secret มา verify digital signature ด้วยเพื่อมั่นใจว่าส่งมาจาก SCB จริง ๆ
             var dump = JsonSerializer.Serialize(request);
             Console.WriteLine($"INFO : [SubmitScbPaymentConfirmation] bankAccountId=[{bankAccountId}] : {dump}");
+
+            var pmtNoti = GetPaymentNotiObj(request, "AdminPaymentTxController.SubmitScbPaymentConfirmation");
+            var _ = await svc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtNoti);
 
             //ถ้าไม่ echo กลับ SCB จะมองว่า merchant ไม่ได้รับ confirmation แล้วยิง webhook ซ้ำสูงสุด 3 ครั้ง
             var transactionId = request.TryGetValue("transactionId", out var txIdObj) && txIdObj is JsonElement txIdEl
