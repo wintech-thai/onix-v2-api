@@ -11,17 +11,17 @@ $stdout.sync = true
 load_env("../.env")
 
 # SCB bank account ID
-bankAccountId = '2dc03b05-d67a-4976-87a6-ccebcc0c3c55'
+bankAccountId = '215cd2ab-602a-43f1-8770-80a4fc51adb3'
 
 # ต้องตรงกับ payment request ที่สร้าง QR ไว้
-refId1 = '20260627165838'
+refId1 = '20260629141412'
 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/SubmitScbPaymentConfirmation/#{bankAccountId}"
 
 # field จำลองตามที่ SCB ส่งมาจริง
 param = {
   transactionId: "SIMULATE-#{Time.now.strftime('%Y%m%d%H%M%S')}",
-  amount: "4.72",
+  amount: "234.87",
   transactionDateandTime: Time.now.strftime('%Y-%m-%dT%H:%M:%S.000+07:00'),
   currencyCode: "THB",
   transactionType: "Bill Payment",

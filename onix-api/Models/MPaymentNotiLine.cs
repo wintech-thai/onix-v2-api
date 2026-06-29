@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Models
 {
@@ -17,6 +18,7 @@ namespace Its.Onix.Api.Models
 
         public string? RefId1 { get; set; }
         public Dictionary<string, object> OriginalData { get; set; }
+        public VMPaymentRequest PaymentRequestQuery { get; set; }
 
         public DateTime? TxDate { get; set; }
 
@@ -24,6 +26,7 @@ namespace Its.Onix.Api.Models
         {
             TxDate = DateTime.UtcNow;
             OriginalData = [];
+            PaymentRequestQuery = new();
         }
     }
 }

@@ -160,6 +160,8 @@ namespace Its.Onix.Api.Services
                 FromDate = DateTime.UtcNow.AddHours(-1),
             };
 
+            paymentNotiLine.PaymentRequestQuery = prParam;
+
             var paymentRequests = await GetPaymentRequestsForPaymentTx("global", prParam);
             var matchCount = paymentRequests.Count;
 
