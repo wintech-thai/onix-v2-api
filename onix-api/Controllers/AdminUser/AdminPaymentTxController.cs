@@ -38,9 +38,13 @@ namespace Its.Onix.Api.Controllers
         {
             bd.Add("sourceApi", sourceApi);
 
-            bd.TryGetValue("amount", out var amount);
-            amount ??= (decimal) 0.00;
-Console.WriteLine($"DEBUG A - amount = [{amount}]");
+            bd.TryGetValue("amount", out var amountStr);
+            amountStr ??= "0.00";
+//Console.WriteLine($"DEBUG A - amount = [{amountStr}]");
+
+            decimal amount = decimal.TryParse(amountStr?.ToString(), out var result)
+                ? result
+                : 0.00m;
 
             bd.TryGetValue("billPaymentRef1", out var billPaymentRef1);
             billPaymentRef1 ??= "";
@@ -49,7 +53,7 @@ Console.WriteLine($"DEBUG A - amount = [{amount}]");
             {
                 TxType = "PayIn",
                 RefId1 = billPaymentRef1.ToString(),
-                PaymentAmount = (decimal) amount,
+                PaymentAmount = amount,
                 OriginalData = bd,
             };
 
