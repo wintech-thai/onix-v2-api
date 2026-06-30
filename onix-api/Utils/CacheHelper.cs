@@ -87,6 +87,21 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateJwtSignKey()
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"JwtSignKey:{environment}:CreateJwtSignKey";
+            return key;
+        }
+
+        public static string CreateRefreshTokenKey(string uid)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"RefreshToken:{environment}:{uid}";
+            return key;
+        }
+
+
         public static string CreatePointTriggerCustRegisterKey(string orgId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";

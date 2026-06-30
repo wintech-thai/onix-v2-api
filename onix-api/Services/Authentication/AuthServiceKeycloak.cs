@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Its.Onix.Api.Authentications;
 using Its.Onix.Api.Models;
 using Microsoft.IdentityModel.Tokens;
 
@@ -288,6 +289,18 @@ namespace Its.Onix.Api.Services
             result.UserId = user?.Id;
 
             return result;
+        }
+
+        public async Task<UserToken> LoginV2(UserLogin userLogin)
+        {
+            await Task.CompletedTask;
+            return new UserToken();
+        }
+
+        public async Task<UserToken> RefreshTokenV2(string token)
+        {
+            await Task.CompletedTask;
+            return new UserToken();
         }
 
         public SecurityToken ValidateAccessToken(string accessToken, JwtSecurityTokenHandler tokenHandler)

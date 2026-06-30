@@ -17,6 +17,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.ResponseCompression;
 using Minio;
+using Microsoft.AspNetCore.Identity;
 
 namespace Its.Onix.Api
 {
@@ -118,7 +119,18 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IScanItemTemplateService, ScanItemTemplateService>();
             builder.Services.AddScoped<IScanItemFolderService, ScanItemFolderService>();
             builder.Services.AddScoped<IJobService, JobService>();
-            builder.Services.AddScoped<IAuthService, AuthServiceKeycloak>();
+
+            var nativeIdpFlag = Environment.GetEnvironmentVariable("IS_NATIVE_IDP");
+            if (nativeIdpFlag == "true")
+            {
+                builder.Services.AddScoped<IAuthService, AuthServiceNative>();
+            }
+            else
+            {
+                //ไม่ได้กำหนด ก็จะใช้ Keycloak แบบเดิมเพื่อให้ backword compatible
+                builder.Services.AddScoped<IAuthService, AuthServiceKeycloak>();    
+            }
+
             builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IAuditLogService, AuditLogService>();
             builder.Services.AddScoped<IStatService, StatService>();
@@ -253,6 +265,10 @@ namespace Its.Onix.Api
             builder.Services.AddHttpClient();
             builder.Services.AddHealthChecks();
             builder.Services.AddSignalR();
+
+            builder.Services
+                .AddIdentityCore<IdentityUser>()
+                .AddEntityFrameworkStores<DataContext>();
 
             var app = builder.Build();
 
