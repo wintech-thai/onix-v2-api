@@ -95,7 +95,11 @@ namespace Its.Onix.Api.Authentications
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
+            var claims = authResult.UserAuthen.Claims;
+            var orgTypeClaim = claims?.FirstOrDefault(x => x.Type == ClaimTypes.System);
+
             Context.Request.Headers.Append("AuthenScheme", Scheme.Name);
+            Context.Request.Headers.Append("CustomOrgType", orgTypeClaim?.Value);
 
             return AuthenticateResult.Success(ticket);
         }
