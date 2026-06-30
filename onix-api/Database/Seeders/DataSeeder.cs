@@ -4,16 +4,28 @@ using Serilog;
 using System.Diagnostics.CodeAnalysis;
 using PasswordGenerator;
 using Its.Onix.Api.Models;
+using Microsoft.AspNetCore.Identity;
+using Its.Onix.Api.Database.Repositories;
 
 [ExcludeFromCodeCoverage]
 public class DataSeeder
 {
     private readonly DataContext context;
     private readonly Password pwd = new Password(32);
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly IAdminUserRepository _adminUserRepo;
+    private readonly IUserRepository _userRepo;
 
-    public DataSeeder(DataContext ctx)
+    public DataSeeder(
+        DataContext ctx, 
+        UserManager<IdentityUser> userManager,
+        IAdminUserRepository adminUserRepo,
+        IUserRepository userRepo)
     {
         context = ctx;
+        _userManager = userManager;
+        _userRepo = userRepo;
+        _adminUserRepo = adminUserRepo;
     }
 
     private void SeedDefaultOrganization()
@@ -198,5 +210,80 @@ public class DataSeeder
         SeedDefaultRoles4();
 
         //UpdateScanItemTemplateDefaultIfNull();
+    }
+
+    public void MigrateUsers()
+    {
+        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+
+        var users = context.Users!.ToList();
+        foreach (var u in users)
+        {
+            //ใช้สำหรับ migrate user จาก KeycloakIDP มายัง NativeIDP
+            Console.WriteLine($"MigrateUsers : Checking for user [{u.UserName}]...");
+            var t1 = _userManager.FindByNameAsync(u.UserName!);
+
+            var user = t1.Result;
+            if (user == null)
+            {
+                user = new IdentityUser
+                {
+                    UserName = u.UserName,
+                    Email = u.UserEmail,
+                };
+
+                var initialPassword = new string(Enumerable.Range(0, 12)
+                    .Select(_ => chars[Random.Shared.Next(chars.Length)])
+                    .ToArray());
+
+                var t2 = _userManager.CreateAsync(user, initialPassword);
+                var result = t2.Result;
+
+                Console.WriteLine($"MigrateUsers : Added [{u.UserName}] [{initialPassword}] [{result.Succeeded}]");
+            }
+        }
+
+        if (users.Count <= 0)
+        {
+            //ระบบตอน fresh installed เลยก็จะสร้าง initial admin ให้
+            var u = new MUser()
+            {
+                UserName = "admin",
+                UserEmail = "admin@abc.local",
+                Name = "Admin",
+                LastName = "Administrator",
+                IsOrgInitialUser = "YES",
+            };
+
+            var addedUser = _userRepo.AddUser(u);
+
+            var au = new MAdminUser()
+            {
+                UserId = addedUser.UserId.ToString(),
+                UserName = u.UserName,
+                UserEmail = u.UserEmail,
+                TmpUserEmail = u.UserEmail,
+                RolesList = "OWNER",
+                UserStatus = "Active",
+            };
+
+            var t1 = _adminUserRepo.AddUser(au);
+            var _ = t1.Result;
+
+            var idpUser = new IdentityUser
+            {
+                UserName = u.UserName,
+                Email = u.UserEmail,
+            };
+
+            var initialPassword = new string(Enumerable.Range(0, 12)
+                .Select(_ => chars[Random.Shared.Next(chars.Length)])
+                .ToArray());
+
+            var t2 = _userManager.CreateAsync(idpUser, initialPassword);
+            var result = t2.Result;
+
+            Console.WriteLine($"##### MigrateUsers : Added [{u.UserName}] [{initialPassword}] [{result.Succeeded}]");
+        }
     }
 }

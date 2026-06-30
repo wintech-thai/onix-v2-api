@@ -279,6 +279,11 @@ namespace Its.Onix.Api
 
                 var service = scope.ServiceProvider.GetRequiredService<DataSeeder>();
                 service.Seed();
+
+                if (nativeIdpFlag == "true")
+                {
+                    service.MigrateUsers();
+                }
             }
 
             // Configure the HTTP request pipeline.
