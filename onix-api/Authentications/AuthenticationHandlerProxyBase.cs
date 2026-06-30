@@ -99,7 +99,7 @@ namespace Its.Onix.Api.Authentications
             var orgTypeClaim = claims?.FirstOrDefault(x => x.Type == ClaimTypes.System);
 
             Context.Request.Headers.Append("AuthenScheme", Scheme.Name);
-            Context.Request.Headers.Append("CustomOrgType", orgTypeClaim?.Value);
+            Context.Response.Headers.Append("CustomOrgType", orgTypeClaim?.Value);
 
             return AuthenticateResult.Success(ticket);
         }
