@@ -101,7 +101,7 @@ namespace Its.Onix.Api.Authentications
             var claims = authResult.UserAuthen.Claims;
             var orgTypeClaim = claims?.FirstOrDefault(x => x.Type == ClaimTypes.System);
             Context.Response.Headers.Append("CustomOrgType", orgTypeClaim?.Value);
-Console.WriteLine($"DEBUG-AUTH -> [{claims?.Count()}], [{orgTypeClaim?.Value}]");
+Console.WriteLine($"DEBUG-AUTH -> [{claims?.Count()}], [{orgTypeClaim?.Value}], [{path}]");
 
             return AuthenticateResult.Success(ticket);
         }
