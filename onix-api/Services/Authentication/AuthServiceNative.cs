@@ -87,7 +87,11 @@ namespace Its.Onix.Api.Services
         {
             var claims = new List<Claim>
             {
-                new(ClaimTypes.Name, user.UserName!),
+                new("preferred_username", user.UserName ?? ""),
+                new("name", user.UserName ?? ""),
+                new("given_name", user.UserName ?? ""),
+                new("family_name", user.UserName ?? ""),
+                new("email", user.Email ?? ""),
                 new("sub", user.Id)
             };
 

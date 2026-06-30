@@ -29,6 +29,9 @@ refreshToken = result["token"]["refresh_token"]
 
 File.write(keyFile, token)
 
+puts(refreshToken)
+puts("======")
+
 puts(token)
 puts("======")
 # ตรงนี้เป็นตัวอย่างให้ดูเรื่องการ refresh token โดยที่จริงแล้ว token มันจะหมดอายุใน 15 นาที เราก็ต้อง refresh token เพื่อเอา token ใหม่มาใช้ต่อไปเรื่อยๆ
