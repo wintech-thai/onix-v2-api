@@ -27,7 +27,9 @@ namespace Its.Onix.Api.Authentications
             IBearerAuthenticationAdminRepo brAuthAdminRepo,
             IBearerAuthenticationCustomerRepo brAuthCustomerRepo,
             IAuthService authService,
-            ISystemClock clock) : base(options, logger, encoder, clock)
+            IRedisHelper redis,
+            IOrganizationService orgSvc,
+            ISystemClock clock) : base(options, logger, encoder, clock, redis, orgSvc)
         {
             basicAuthenRepo = bsAuthRepo;
             bearerAuthRepo = brAuthRepo;

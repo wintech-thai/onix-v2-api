@@ -101,7 +101,7 @@ namespace Its.Onix.Api.AuditLogs
             var latencyMs = stopwatch.ElapsedMilliseconds;
 
             var orgType = "";
-            if (context.Response.Headers.TryGetValue("CustomOrgType", out var headerOrgType))
+            if (context.Response.Headers.TryGetValue("Meta-Custom-OrgType", out var headerOrgType))
             {
                 orgType = headerOrgType!;
             }

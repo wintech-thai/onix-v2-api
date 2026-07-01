@@ -5,6 +5,8 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.Services;
+using Its.Onix.Api.Models;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -13,13 +15,20 @@ namespace Its.Onix.Api.Authentications
         protected abstract AuthenResult? AuthenticateBasic(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
         protected abstract AuthenResult? AuthenticateBearer(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
 
+        private readonly IRedisHelper _redis;
+        private IOrganizationService _orgSvc;
+
         [Obsolete]
         protected AuthenticationHandlerProxyBase(
             IOptionsMonitor<AuthenticationSchemeOptions> options, 
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock) : base(options, logger, encoder, clock)
+            ISystemClock clock,
+            IRedisHelper redis,
+            IOrganizationService orgSvc) : base(options, logger, encoder, clock)
         {
+            _redis = redis;
+            _orgSvc = orgSvc;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -33,6 +42,8 @@ namespace Its.Onix.Api.Authentications
 
                 return AuthenticateResult.Success(tck);
             }
+
+            PopulateMetadataHeader(Request);
 
             if (!Request.Headers.TryGetValue("Authorization", out var authData))
             {
@@ -97,13 +108,49 @@ namespace Its.Onix.Api.Authentications
 
             Context.Request.Headers.Append("AuthenScheme", Scheme.Name);
             
-
-            var claims = authResult.UserAuthen.Claims;
-            var orgTypeClaim = claims?.FirstOrDefault(x => x.Type == ClaimTypes.System);
-            Context.Response.Headers.Append("CustomOrgType", orgTypeClaim?.Value);
-Console.WriteLine($"DEBUG-AUTH -> [{claims?.Count()}], [{orgTypeClaim?.Value}], [{path}]");
-
             return AuthenticateResult.Success(ticket);
+        }
+
+        private void PopulateMetadataHeader(HttpRequest req)
+        {
+            var pc = ServiceUtils.GetPathComponent(req);
+
+            string? orgType;
+            if (pc.OrgId == "global")
+            {
+                orgType = "GLOBAL";
+            }
+            else
+            {
+                var cacheKey = CacheHelper.CreateOrgMetaDataKey(pc.OrgId);
+                var cacheOrg = _redis.GetObjectAsync<MOrganization>(cacheKey).Result;
+                if (cacheOrg == null)
+                {
+                    Log.Debug($"[PopulateMetadataHeader] --> Cache not found for key [{cacheKey}], get from DB!!!");
+
+                    //ไม่เจอใน cache ให้ไปดึงมาจาก DB
+                    var org = _orgSvc.GetOrganization(pc.OrgId).Result;
+                    if (org == null)
+                    {
+                        Log.Debug($"[PopulateMetadataHeader] --> Org not found [{pc.OrgId}] from DB!!!");
+
+                        org = new MOrganization()
+                        {
+                            OrgCustomId = "xxxxxx",
+                            OrgType = "UNKNOWN2",
+                        };
+                    }
+
+                    var t1 = _redis.SetObjectAsync(cacheKey, org, TimeSpan.FromMinutes(60));
+                    t1.Wait();
+
+                    cacheOrg = org;
+                }
+
+                orgType = cacheOrg.OrgType;
+            }
+
+            Context.Response.Headers.Append("Meta-Custom-OrgType", $"OrgType:{orgType}");
         }
     }
 }

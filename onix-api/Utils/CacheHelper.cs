@@ -101,6 +101,12 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateOrgMetaDataKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"OrgMetaData:{environment}:{orgId}";
+            return key;
+        }
 
         public static string CreatePointTriggerCustRegisterKey(string orgId)
         {
