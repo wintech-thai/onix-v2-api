@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.Database.Repositories;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -27,7 +28,9 @@ namespace Its.Onix.Api.Authentications
             IBearerAuthenticationAdminRepo brAuthAdminRepo,
             IBearerAuthenticationCustomerRepo brAuthCustomerRepo,
             IAuthService authService,
-            ISystemClock clock) : base(options, logger, encoder, clock)
+            IRedisHelper redis,
+            IOrganizationRepository orgRepo,
+            ISystemClock clock) : base(options, logger, encoder, clock, redis, orgRepo)
         {
             basicAuthenRepo = bsAuthRepo;
             bearerAuthRepo = brAuthRepo;

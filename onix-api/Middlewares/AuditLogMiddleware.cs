@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Its.Onix.Api.Utils;
+using onix.api.Migrations;
 using Serilog;
 
 
@@ -99,6 +100,12 @@ namespace Its.Onix.Api.AuditLogs
 
             var latencyMs = stopwatch.ElapsedMilliseconds;
 
+            var orgType = "";
+            if (context.Response.Headers.TryGetValue("Meta-Custom-OrgType", out var headerOrgType))
+            {
+                orgType = headerOrgType!;
+            }
+
             // === Build log JSON ===
             var logObject = new AuditLog()
             {
@@ -118,7 +125,7 @@ namespace Its.Onix.Api.AuditLogs
                 CustomDesc = statusDesc,
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
                 ApplicationType = appType,
-                OrgType = GetValue(context, "Temp-Org-Type", "")!,
+                OrgType = orgType,
 
                 userInfo = new UserInfo()
                 {

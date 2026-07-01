@@ -5,6 +5,9 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.Services;
+using Its.Onix.Api.Models;
+using Its.Onix.Api.Database.Repositories;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -13,13 +16,20 @@ namespace Its.Onix.Api.Authentications
         protected abstract AuthenResult? AuthenticateBasic(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
         protected abstract AuthenResult? AuthenticateBearer(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
 
+        private readonly IRedisHelper _redis;
+        private readonly IOrganizationRepository _orgRepo;
+
         [Obsolete]
         protected AuthenticationHandlerProxyBase(
             IOptionsMonitor<AuthenticationSchemeOptions> options, 
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock) : base(options, logger, encoder, clock)
+            ISystemClock clock,
+            IRedisHelper redis,
+            IOrganizationRepository orgRepo) : base(options, logger, encoder, clock)
         {
+            _redis = redis;
+            _orgRepo = orgRepo;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -33,6 +43,8 @@ namespace Its.Onix.Api.Authentications
 
                 return AuthenticateResult.Success(tck);
             }
+
+            PopulateMetadataHeader(Request);
 
             if (!Request.Headers.TryGetValue("Authorization", out var authData))
             {
@@ -96,8 +108,51 @@ namespace Its.Onix.Api.Authentications
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
             Context.Request.Headers.Append("AuthenScheme", Scheme.Name);
-
+            
             return AuthenticateResult.Success(ticket);
+        }
+
+        private void PopulateMetadataHeader(HttpRequest req)
+        {
+            var pc = ServiceUtils.GetPathComponent(req);
+
+            string? orgType;
+            if (pc.OrgId == "global")
+            {
+                orgType = "GLOBAL";
+            }
+            else
+            {
+                var cacheKey = CacheHelper.CreateOrgMetaDataKey(pc.OrgId);
+                var cacheOrg = _redis.GetObjectAsync<MOrganization>(cacheKey).Result;
+                if (cacheOrg == null)
+                {
+                    Console.WriteLine($"[PopulateMetadataHeader] --> Cache not found for key [{cacheKey}], get from DB!!!");
+
+                    //ไม่เจอใน cache ให้ไปดึงมาจาก DB
+                    _orgRepo.SetCustomOrgId(pc.OrgId);
+                    var org = _orgRepo.GetOrganization().Result;
+                    if (org == null)
+                    {
+                        Console.WriteLine($"[PopulateMetadataHeader] --> Org not found [{pc.OrgId}] from DB!!!");
+
+                        org = new MOrganization()
+                        {
+                            OrgCustomId = "xxxxxx",
+                            OrgType = "UNKNOWN2",
+                        };
+                    }
+
+                    var t1 = _redis.SetObjectAsync(cacheKey, org, TimeSpan.FromMinutes(60));
+                    t1.Wait();
+
+                    cacheOrg = org;
+                }
+
+                orgType = cacheOrg.OrgType;
+            }
+
+            Context.Response.Headers.Append("Meta-Custom-OrgType", $"OrgType:{orgType}");
         }
     }
 }
