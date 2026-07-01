@@ -127,14 +127,14 @@ namespace Its.Onix.Api.Authentications
                 var cacheOrg = _redis.GetObjectAsync<MOrganization>(cacheKey).Result;
                 if (cacheOrg == null)
                 {
-                    Log.Debug($"[PopulateMetadataHeader] --> Cache not found for key [{cacheKey}], get from DB!!!");
+                    Console.WriteLine($"[PopulateMetadataHeader] --> Cache not found for key [{cacheKey}], get from DB!!!");
 
                     //ไม่เจอใน cache ให้ไปดึงมาจาก DB
                     _orgRepo.SetCustomOrgId(pc.OrgId);
                     var org = _orgRepo.GetOrganization().Result;
                     if (org == null)
                     {
-                        Log.Debug($"[PopulateMetadataHeader] --> Org not found [{pc.OrgId}] from DB!!!");
+                        Console.WriteLine($"[PopulateMetadataHeader] --> Org not found [{pc.OrgId}] from DB!!!");
 
                         org = new MOrganization()
                         {
