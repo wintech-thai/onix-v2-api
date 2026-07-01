@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Its.Onix.Api.Utils;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
+using Its.Onix.Api.Database.Repositories;
 
 namespace Its.Onix.Api.Authentications
 {
@@ -16,7 +17,7 @@ namespace Its.Onix.Api.Authentications
         protected abstract AuthenResult? AuthenticateBearer(PathComponent pc, byte[]? jwtBytes, HttpRequest request);
 
         private readonly IRedisHelper _redis;
-        private IOrganizationService _orgSvc;
+        private readonly IOrganizationRepository _orgRepo;
 
         [Obsolete]
         protected AuthenticationHandlerProxyBase(
@@ -25,10 +26,10 @@ namespace Its.Onix.Api.Authentications
             UrlEncoder encoder,
             ISystemClock clock,
             IRedisHelper redis,
-            IOrganizationService orgSvc) : base(options, logger, encoder, clock)
+            IOrganizationRepository orgRepo) : base(options, logger, encoder, clock)
         {
             _redis = redis;
-            _orgSvc = orgSvc;
+            _orgRepo = orgRepo;
         }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -129,7 +130,8 @@ namespace Its.Onix.Api.Authentications
                     Log.Debug($"[PopulateMetadataHeader] --> Cache not found for key [{cacheKey}], get from DB!!!");
 
                     //ไม่เจอใน cache ให้ไปดึงมาจาก DB
-                    var org = _orgSvc.GetOrganization(pc.OrgId).Result;
+                    _orgRepo.SetCustomOrgId(pc.OrgId);
+                    var org = _orgRepo.GetOrganization().Result;
                     if (org == null)
                     {
                         Log.Debug($"[PopulateMetadataHeader] --> Org not found [{pc.OrgId}] from DB!!!");
