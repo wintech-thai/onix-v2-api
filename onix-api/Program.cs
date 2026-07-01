@@ -268,7 +268,8 @@ namespace Its.Onix.Api
 
             builder.Services
                 .AddIdentityCore<IdentityUser>()
-                .AddEntityFrameworkStores<DataContext>();
+                .AddEntityFrameworkStores<DataContext>()
+                .AddDefaultTokenProviders();
 
             var app = builder.Build();
 
