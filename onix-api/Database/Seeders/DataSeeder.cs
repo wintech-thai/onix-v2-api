@@ -6,6 +6,7 @@ using PasswordGenerator;
 using Its.Onix.Api.Models;
 using Microsoft.AspNetCore.Identity;
 using Its.Onix.Api.Database.Repositories;
+using Its.Onix.Api.Utils;
 
 [ExcludeFromCodeCoverage]
 public class DataSeeder
@@ -214,8 +215,6 @@ public class DataSeeder
 
     public void MigrateUsers()
     {
-        var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-
         var users = context.Users!.ToList();
         foreach (var u in users)
         {
@@ -232,14 +231,11 @@ public class DataSeeder
                     Email = u.UserEmail,
                 };
 
-                var initialPassword = new string(Enumerable.Range(0, 12)
-                    .Select(_ => chars[Random.Shared.Next(chars.Length)])
-                    .ToArray());
-
+                var initialPassword = ServiceUtils.GeneratePassword();
                 var t2 = _userManager.CreateAsync(user, initialPassword);
                 var result = t2.Result;
 
-                Console.WriteLine($"MigrateUsers : Added [{u.UserName}] [{initialPassword}] [{result.Succeeded}]");
+                Console.WriteLine($"MigrateUsers : Added [{u.UserName}] [{initialPassword}] [{result.Succeeded}] [{result.Errors.FirstOrDefault()?.Description}]");
             }
         }
 
@@ -276,10 +272,7 @@ public class DataSeeder
                 Email = u.UserEmail,
             };
 
-            var initialPassword = new string(Enumerable.Range(0, 12)
-                .Select(_ => chars[Random.Shared.Next(chars.Length)])
-                .ToArray());
-
+            var initialPassword = ServiceUtils.GeneratePassword();
             var t2 = _userManager.CreateAsync(idpUser, initialPassword);
             var result = t2.Result;
 
