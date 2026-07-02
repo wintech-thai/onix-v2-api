@@ -396,9 +396,9 @@ namespace Its.Onix.Api.Services
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
-                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
+                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
 
                     new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
                     new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
