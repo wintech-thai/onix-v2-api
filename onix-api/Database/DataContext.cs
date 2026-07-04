@@ -64,6 +64,9 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MFinancialDoc>? FinancialDocs { get; set; }
 
 
+    public DbSet<MCaseManagement>? CaseManagements { get; set; }
+    public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }
+
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
 
@@ -229,6 +232,11 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
             .HasIndex(t => new { t.OrgId, t.ChannelName }).IsUnique();
 
         modelBuilder.Entity<MAgentEvent>();
+
+        modelBuilder.Entity<MCaseManagement>()
+            .HasIndex(t => new { t.OrgId, t.Ref }).IsUnique();
+
+        modelBuilder.Entity<MCaseManagementComment>();
 
         modelBuilder.Entity<MFinancialDoc>()
             .HasIndex(t => new { t.OrgId, t.DocumentNo }).IsUnique();
