@@ -1,7 +1,7 @@
 using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
-using Microsoft.EntityFrameworkCore;
+using System.Data.Entity;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Its.Onix.Api.Database.Repositories
