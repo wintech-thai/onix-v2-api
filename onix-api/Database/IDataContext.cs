@@ -54,6 +54,9 @@ namespace Its.Onix.Api.Database
         public DbSet<MAgentEvent>? AgentEvents { get; set; }
         public DbSet<MFinancialDoc>? FinancialDocs { get; set; }
 
+        public DbSet<MCaseManagement>? CaseManagements { get; set; }
+        public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }
+
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
     }

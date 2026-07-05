@@ -155,6 +155,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
             builder.Services.AddScoped<INotiChannelService, NotiChannelService>();
             builder.Services.AddScoped<IFinancialDocService, FinancialDocService>();
+            builder.Services.AddScoped<ICaseManagementService, CaseManagementService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -203,6 +204,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IConfigurationRepository, ConfigurationRepository>();
             builder.Services.AddScoped<INotiChannelRepository, NotiChannelRepository>();
             builder.Services.AddScoped<IFinancialDocRepository, FinancialDocRepository>();
+            builder.Services.AddScoped<ICaseManagementRepository, CaseManagementRepository>();
 
 
             builder.Services.AddAuthentication("BasicOrBearer")
