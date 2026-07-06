@@ -43,7 +43,9 @@ namespace Its.Onix.Api.Services
         public async Task<List<MCaseManagement>> GetCases(string orgId, VMCaseManagement param)
         {
             repository.SetCustomOrgId(orgId);
-            return await repository.GetCases(param);
+            var result = await repository.GetCases(param);
+            result.ForEach(p => p.Description = "");
+            return result;
         }
 
         public async Task<int> GetCaseCount(string orgId, VMCaseManagement param)
@@ -115,7 +117,9 @@ namespace Its.Onix.Api.Services
 
         public async Task<List<MCaseManagement>> GetAllCases(VMCaseManagement param)
         {
-            return await repository.GetCases(param);
+            var result = await repository.GetCases(param);
+            result.ForEach(p => p.Description = "");
+            return result;
         }
 
         public async Task<int> GetAllCaseCount(VMCaseManagement param)
