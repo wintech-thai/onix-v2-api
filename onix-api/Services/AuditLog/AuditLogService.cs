@@ -36,5 +36,25 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public MAuditLog GetAllAuditLogById(string auditLogId)
+        {
+            return repository!.GetAllAuditLogById(auditLogId);
+        }
+
+        public IEnumerable<MAuditLog> GetAllAuditLogs(VMAuditLog param)
+        {
+            return repository!.GetAllAuditLogs(param);
+        }
+
+        public int GetAllAuditLogCount(VMAuditLog param)
+        {
+            return repository!.GetAllAuditLogCount(param);
+        }
+
+        public VMAuditLogAggregations GetAllAuditLogAggregations(VMAuditLog param)
+        {
+            return repository!.GetAllAuditLogAggregations(param);
+        }
     }
 }
