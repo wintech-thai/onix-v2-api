@@ -13,48 +13,42 @@ namespace Its.Onix.Api.Services
             repository = repo;
         }
 
-        public MAuditLog GetAuditLogById(string orgId, string auditLogId)
+        public async Task<MAuditLog> GetAuditLogById(string orgId, string auditLogId)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetAuditLogById(auditLogId);
-
-            return result;
+            return await repository!.GetAuditLogById(auditLogId);
         }
 
-        public IEnumerable<MAuditLog> GetAuditLogs(string orgId, VMAuditLog param)
+        public async Task<IEnumerable<MAuditLog>> GetAuditLogs(string orgId, VMAuditLog param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetAuditLogs(param);
-
-            return result;
+            return await repository!.GetAuditLogs(param);
         }
 
-        public int GetAuditLogCount(string orgId, VMAuditLog param)
+        public async Task<int> GetAuditLogCount(string orgId, VMAuditLog param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetAuditLogCount(param);
-
-            return result;
+            return await repository!.GetAuditLogCount(param);
         }
 
-        public MAuditLog GetAllAuditLogById(string auditLogId)
+        public async Task<MAuditLog> GetAllAuditLogById(string auditLogId)
         {
-            return repository!.GetAllAuditLogById(auditLogId);
+            return await repository!.GetAllAuditLogById(auditLogId);
         }
 
-        public IEnumerable<MAuditLog> GetAllAuditLogs(VMAuditLog param)
+        public async Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param)
         {
-            return repository!.GetAllAuditLogs(param);
+            return await repository!.GetAllAuditLogs(param);
         }
 
-        public int GetAllAuditLogCount(VMAuditLog param)
+        public async Task<int> GetAllAuditLogCount(VMAuditLog param)
         {
-            return repository!.GetAllAuditLogCount(param);
+            return await repository!.GetAllAuditLogCount(param);
         }
 
-        public VMAuditLogAggregations GetAllAuditLogAggregations(VMAuditLog param)
+        public async Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param)
         {
-            return repository!.GetAllAuditLogAggregations(param);
+            return await repository!.GetAllAuditLogAggregations(param);
         }
     }
 }

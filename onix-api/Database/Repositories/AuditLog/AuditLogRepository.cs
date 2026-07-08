@@ -1,4 +1,5 @@
 using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 
@@ -41,7 +42,6 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
-        // Admin predicate - no orgId filter, supports OrgIds list + date range
         private ExpressionStarter<MAuditLog> AllAuditLogPredicate(VMAuditLog param)
         {
             var pd = PredicateBuilder.New<MAuditLog>(true);
@@ -74,69 +74,69 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
-        // ── Org-scoped (merchant) ──────────────────────────────────────────────
+        // ── Org-scoped (merchant) ─────────────────────────────────────────────
 
-        public int GetAuditLogCount(VMAuditLog param)
+        public async Task<int> GetAuditLogCount(VMAuditLog param)
         {
-            return context!.AuditLogs!.Where(AuditLogPredicate(param)).Count();
+            return await context!.AuditLogs!.Where(AuditLogPredicate(param)).CountAsync();
         }
 
-        public IEnumerable<MAuditLog> GetAuditLogs(VMAuditLog param)
+        public async Task<IEnumerable<MAuditLog>> GetAuditLogs(VMAuditLog param)
         {
             var offset = param.Offset > 0 ? param.Offset - 1 : 0;
             var limit = param.Limit > 0 ? param.Limit : 100;
 
-            return context!.AuditLogs!
+            return await context!.AuditLogs!
                 .Where(AuditLogPredicate(param))
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
-                .ToList();
+                .ToListAsync();
         }
 
-        public MAuditLog GetAuditLogById(string auditLogId)
+        public async Task<MAuditLog> GetAuditLogById(string auditLogId)
         {
             var id = Guid.Parse(auditLogId);
-            return context!.AuditLogs!
+            return (await context!.AuditLogs!
                 .Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId))
-                .FirstOrDefault()!;
+                .FirstOrDefaultAsync())!;
         }
 
         // ── Admin (all orgs) ──────────────────────────────────────────────────
 
-        public int GetAllAuditLogCount(VMAuditLog param)
+        public async Task<int> GetAllAuditLogCount(VMAuditLog param)
         {
-            return context!.AuditLogs!.Where(AllAuditLogPredicate(param)).Count();
+            return await context!.AuditLogs!.Where(AllAuditLogPredicate(param)).CountAsync();
         }
 
-        public IEnumerable<MAuditLog> GetAllAuditLogs(VMAuditLog param)
+        public async Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param)
         {
             var offset = param.Offset > 0 ? param.Offset - 1 : 0;
             var limit = param.Limit > 0 ? param.Limit : 100;
 
-            return context!.AuditLogs!
+            return await context!.AuditLogs!
                 .Where(AllAuditLogPredicate(param))
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
-                .ToList();
+                .ToListAsync();
         }
 
-        public MAuditLog GetAllAuditLogById(string auditLogId)
+        public async Task<MAuditLog> GetAllAuditLogById(string auditLogId)
         {
             var id = Guid.Parse(auditLogId);
-            return context!.AuditLogs!
+            return (await context!.AuditLogs!
                 .Where(p => p!.Id!.Equals(id))
-                .FirstOrDefault()!;
+                .FirstOrDefaultAsync())!;
         }
 
-        public VMAuditLogAggregations GetAllAuditLogAggregations(VMAuditLog param)
+        public async Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param)
         {
             var pd = AllAuditLogPredicate(param);
             var q = context!.AuditLogs!.Where(pd);
 
             // Timeline: group by hour
-            var timelineRaw = q
+            var timelineRaw = await q
                 .GroupBy(e => new
                 {
                     e.CreatedDate!.Value.Year,
@@ -147,7 +147,7 @@ namespace Its.Onix.Api.Database.Repositories
                 .Select(g => new { g.Key, Count = g.Count() })
                 .OrderBy(x => x.Key.Year).ThenBy(x => x.Key.Month)
                     .ThenBy(x => x.Key.Day).ThenBy(x => x.Key.Hour)
-                .ToList();
+                .ToListAsync();
 
             var timeline = timelineRaw.Select(b =>
             {
@@ -161,57 +161,57 @@ namespace Its.Onix.Api.Database.Repositories
             }).ToList();
 
             // Top-N by API name
-            var byApi = q
+            var byApi = (await q
                 .Where(e => e.ApiName != null && e.ApiName != "")
                 .GroupBy(e => e.ApiName)
                 .Select(g => new { Key = g.Key!, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(10)
-                .ToList()
+                .ToListAsync())
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
             // Top-N by user
-            var byUser = q
+            var byUser = (await q
                 .Where(e => e.UserName != null && e.UserName != "")
                 .GroupBy(e => e.UserName)
                 .Select(g => new { Key = g.Key!, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(10)
-                .ToList()
+                .ToListAsync())
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
             // Top-N by IP
-            var byIp = q
+            var byIp = (await q
                 .Where(e => e.ClientIp != null && e.ClientIp != "")
                 .GroupBy(e => e.ClientIp)
                 .Select(g => new { Key = g.Key!, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(10)
-                .ToList()
+                .ToListAsync())
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
             // Top-N by status code
-            var byStatus = q
+            var byStatus = (await q
                 .Where(e => e.StatusCode.HasValue)
                 .GroupBy(e => e.StatusCode)
                 .Select(g => new { Key = g.Key!.Value, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(10)
-                .ToList()
+                .ToListAsync())
                 .Select(x => new VMAggBucket { Key = x.Key.ToString(), DocCount = x.Count })
                 .ToList();
 
             // Bruteforce: 401 by IP
-            var bruteforce = q
+            var bruteforce = (await q
                 .Where(e => e.StatusCode == 401 && e.ClientIp != null && e.ClientIp != "")
                 .GroupBy(e => e.ClientIp)
                 .Select(g => new { Key = g.Key!, Count = g.Count() })
                 .OrderByDescending(x => x.Count)
                 .Take(10)
-                .ToList()
+                .ToListAsync())
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 

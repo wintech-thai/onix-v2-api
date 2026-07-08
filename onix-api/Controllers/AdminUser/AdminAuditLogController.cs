@@ -21,37 +21,41 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/global/action/GetAuditLogById/{auditLogId}")]
-        public IActionResult GetAuditLogById(string auditLogId)
+        public async Task<IActionResult> GetAuditLogById(string auditLogId)
         {
-            var log = svc.GetAllAuditLogById(auditLogId);
+            var log = await svc.GetAllAuditLogById(auditLogId);
             if (log == null) return NotFound();
             return Ok(MapToEsFormat(log));
         }
 
         [HttpPost]
         [Route("org/global/action/GetAuditLogCount")]
-        public IActionResult GetAuditLogCount([FromBody] VMAuditLog param)
+        public async Task<IActionResult> GetAuditLogCount([FromBody] VMAuditLog param)
         {
-            var count = svc.GetAllAuditLogCount(param);
+            var count = await svc.GetAllAuditLogCount(param);
             return Ok(count);
         }
 
-        // Main query endpoint — returns documents + aggregations in ES-compatible format
         [HttpPost]
         [Route("org/global/action/QueryAuditLogs")]
-        public IActionResult QueryAuditLogs([FromBody] VMAuditLog param)
+        public async Task<IActionResult> QueryAuditLogs([FromBody] VMAuditLog param)
         {
             if (param.Limit <= 0) param.Limit = 100;
 
+            var countTask = svc.GetAllAuditLogCount(param);
+            var aggTask = svc.GetAllAuditLogAggregations(param);
+
+            await Task.WhenAll(countTask, aggTask);
+
             var result = new VMAuditLogQueryResult
             {
-                Total = svc.GetAllAuditLogCount(param),
-                Aggregations = svc.GetAllAuditLogAggregations(param),
+                Total = await countTask,
+                Aggregations = await aggTask,
             };
 
             if (param.ReturnDocs)
             {
-                var logs = svc.GetAllAuditLogs(param);
+                var logs = await svc.GetAllAuditLogs(param);
                 result.Data = logs.Select(MapToEsFormat).ToList();
             }
 
