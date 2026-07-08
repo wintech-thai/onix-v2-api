@@ -14,71 +14,216 @@ namespace Its.Onix.Api.Database.Repositories
         private ExpressionStarter<MAuditLog> AuditLogPredicate(VMAuditLog param)
         {
             var pd = PredicateBuilder.New<MAuditLog>();
-
             pd = pd.And(p => p.OrgId!.Equals(orgId));
 
-            if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
-            {
-                var fullTextPd = PredicateBuilder.New<MAuditLog>();
-                fullTextPd = fullTextPd.Or(p => p.ClientIp!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Role!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.UserAgent!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.CustomDesc!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.CustomStatus!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.HttpMethod!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Host!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Path!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.QueryString!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.IdentityType!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.UserName!.Contains(param.FullTextSearch));
+            if (param.fromDate.HasValue)
+                pd = pd.And(p => p.CreatedDate >= param.fromDate);
+            if (param.toDate.HasValue)
+                pd = pd.And(p => p.CreatedDate <= param.toDate);
 
-                pd = pd.And(fullTextPd);
+            if (!string.IsNullOrEmpty(param.FullTextSearch))
+            {
+                var fts = PredicateBuilder.New<MAuditLog>();
+                fts = fts.Or(p => p.ClientIp!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Role!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.UserAgent!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.CustomDesc!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.CustomStatus!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.HttpMethod!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Host!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Path!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.QueryString!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.IdentityType!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.UserName!.Contains(param.FullTextSearch));
+                pd = pd.And(fts);
             }
 
             return pd;
         }
 
+        // Admin predicate - no orgId filter, supports OrgIds list + date range
+        private ExpressionStarter<MAuditLog> AllAuditLogPredicate(VMAuditLog param)
+        {
+            var pd = PredicateBuilder.New<MAuditLog>(true);
+
+            if (param.OrgIds != null && param.OrgIds.Count > 0)
+                pd = pd.And(p => param.OrgIds.Contains(p.OrgId!));
+
+            if (param.fromDate.HasValue)
+                pd = pd.And(p => p.CreatedDate >= param.fromDate);
+            if (param.toDate.HasValue)
+                pd = pd.And(p => p.CreatedDate <= param.toDate);
+
+            if (!string.IsNullOrEmpty(param.FullTextSearch))
+            {
+                var fts = PredicateBuilder.New<MAuditLog>();
+                fts = fts.Or(p => p.ClientIp!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Role!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.UserAgent!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.CustomDesc!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.CustomStatus!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.HttpMethod!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Host!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Path!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.QueryString!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.IdentityType!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.UserName!.Contains(param.FullTextSearch));
+                pd = pd.And(fts);
+            }
+
+            return pd;
+        }
+
+        // ── Org-scoped (merchant) ──────────────────────────────────────────────
+
         public int GetAuditLogCount(VMAuditLog param)
         {
-            var predicate = AuditLogPredicate(param);
-            var cnt = context!.AuditLogs!.Where(predicate).Count();
-
-            return cnt;
+            return context!.AuditLogs!.Where(AuditLogPredicate(param)).Count();
         }
 
         public IEnumerable<MAuditLog> GetAuditLogs(VMAuditLog param)
         {
-            var limit = 0;
-            var offset = 0;
+            var offset = param.Offset > 0 ? param.Offset - 1 : 0;
+            var limit = param.Limit > 0 ? param.Limit : 100;
 
-            //Param will never be null
-            if (param.Offset > 0)
-            {
-                //Convert to zero base
-                offset = param.Offset-1;
-            }
-
-            if (param.Limit > 0)
-            {
-                limit = param.Limit;
-            }
-
-            var predicate = AuditLogPredicate(param!);
-            var arr = context!.AuditLogs!.Where(predicate)
+            return context!.AuditLogs!
+                .Where(AuditLogPredicate(param))
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
                 .ToList();
-
-            return arr;
         }
 
         public MAuditLog GetAuditLogById(string auditLogId)
         {
-            Guid id = Guid.Parse(auditLogId);
+            var id = Guid.Parse(auditLogId);
+            return context!.AuditLogs!
+                .Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId))
+                .FirstOrDefault()!;
+        }
 
-            var u = context!.AuditLogs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
-            return u!;
+        // ── Admin (all orgs) ──────────────────────────────────────────────────
+
+        public int GetAllAuditLogCount(VMAuditLog param)
+        {
+            return context!.AuditLogs!.Where(AllAuditLogPredicate(param)).Count();
+        }
+
+        public IEnumerable<MAuditLog> GetAllAuditLogs(VMAuditLog param)
+        {
+            var offset = param.Offset > 0 ? param.Offset - 1 : 0;
+            var limit = param.Limit > 0 ? param.Limit : 100;
+
+            return context!.AuditLogs!
+                .Where(AllAuditLogPredicate(param))
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToList();
+        }
+
+        public MAuditLog GetAllAuditLogById(string auditLogId)
+        {
+            var id = Guid.Parse(auditLogId);
+            return context!.AuditLogs!
+                .Where(p => p!.Id!.Equals(id))
+                .FirstOrDefault()!;
+        }
+
+        public VMAuditLogAggregations GetAllAuditLogAggregations(VMAuditLog param)
+        {
+            var pd = AllAuditLogPredicate(param);
+            var q = context!.AuditLogs!.Where(pd);
+
+            // Timeline: group by hour
+            var timelineRaw = q
+                .GroupBy(e => new
+                {
+                    e.CreatedDate!.Value.Year,
+                    e.CreatedDate.Value.Month,
+                    e.CreatedDate.Value.Day,
+                    e.CreatedDate.Value.Hour,
+                })
+                .Select(g => new { g.Key, Count = g.Count() })
+                .OrderBy(x => x.Key.Year).ThenBy(x => x.Key.Month)
+                    .ThenBy(x => x.Key.Day).ThenBy(x => x.Key.Hour)
+                .ToList();
+
+            var timeline = timelineRaw.Select(b =>
+            {
+                var dt = new DateTime(b.Key.Year, b.Key.Month, b.Key.Day, b.Key.Hour, 0, 0, DateTimeKind.Utc);
+                return new VMAggBucket
+                {
+                    Key = new DateTimeOffset(dt).ToUnixTimeMilliseconds(),
+                    KeyAsString = dt.ToString("O"),
+                    DocCount = b.Count,
+                };
+            }).ToList();
+
+            // Top-N by API name
+            var byApi = q
+                .Where(e => e.ApiName != null && e.ApiName != "")
+                .GroupBy(e => e.ApiName)
+                .Select(g => new { Key = g.Key!, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToList()
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            // Top-N by user
+            var byUser = q
+                .Where(e => e.UserName != null && e.UserName != "")
+                .GroupBy(e => e.UserName)
+                .Select(g => new { Key = g.Key!, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToList()
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            // Top-N by IP
+            var byIp = q
+                .Where(e => e.ClientIp != null && e.ClientIp != "")
+                .GroupBy(e => e.ClientIp)
+                .Select(g => new { Key = g.Key!, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToList()
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            // Top-N by status code
+            var byStatus = q
+                .Where(e => e.StatusCode.HasValue)
+                .GroupBy(e => e.StatusCode)
+                .Select(g => new { Key = g.Key!.Value, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToList()
+                .Select(x => new VMAggBucket { Key = x.Key.ToString(), DocCount = x.Count })
+                .ToList();
+
+            // Bruteforce: 401 by IP
+            var bruteforce = q
+                .Where(e => e.StatusCode == 401 && e.ClientIp != null && e.ClientIp != "")
+                .GroupBy(e => e.ClientIp)
+                .Select(g => new { Key = g.Key!, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(10)
+                .ToList()
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            return new VMAuditLogAggregations
+            {
+                Timeline = new VMAggBuckets { Buckets = timeline },
+                ByApi = new VMAggBuckets { Buckets = byApi },
+                ByUser = new VMAggBuckets { Buckets = byUser },
+                ByIp = new VMAggBuckets { Buckets = byIp },
+                ByStatus = new VMAggBuckets { Buckets = byStatus },
+                Bruteforce = new VMBruteforceAgg { ByIp = new VMAggBuckets { Buckets = bruteforce } },
+            };
         }
     }
 }

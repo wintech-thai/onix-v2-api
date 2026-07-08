@@ -87,6 +87,8 @@ namespace Its.Onix.Api.Models
         [Column("pin")]
         public string? Pin { get; set; }
 
+        [Column("raw_data", TypeName = "text")]
+        public string? RawData { get; set; }
 
         //System fields
         [Column("created_date")]

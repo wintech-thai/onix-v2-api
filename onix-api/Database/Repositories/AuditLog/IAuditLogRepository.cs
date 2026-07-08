@@ -9,5 +9,9 @@ namespace Its.Onix.Api.Database.Repositories
         public int GetAuditLogCount(VMAuditLog param);
         public IEnumerable<MAuditLog> GetAuditLogs(VMAuditLog param);
         public MAuditLog GetAuditLogById(string logId);
+        public int GetAllAuditLogCount(VMAuditLog param);
+        public IEnumerable<MAuditLog> GetAllAuditLogs(VMAuditLog param);
+        public MAuditLog GetAllAuditLogById(string logId);
+        public VMAuditLogAggregations GetAllAuditLogAggregations(VMAuditLog param);
     }
 }
