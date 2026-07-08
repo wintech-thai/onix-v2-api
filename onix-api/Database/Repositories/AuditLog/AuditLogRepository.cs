@@ -17,10 +17,10 @@ namespace Its.Onix.Api.Database.Repositories
             var pd = PredicateBuilder.New<MAuditLog>();
             pd = pd.And(p => p.OrgId!.Equals(orgId));
 
-            if (param.fromDate.HasValue)
-                pd = pd.And(p => p.CreatedDate >= param.fromDate);
-            if (param.toDate.HasValue)
-                pd = pd.And(p => p.CreatedDate <= param.toDate);
+            if (param.FromDate.HasValue)
+                pd = pd.And(p => p.CreatedDate >= param.FromDate);
+            if (param.ToDate.HasValue)
+                pd = pd.And(p => p.CreatedDate <= param.ToDate);
 
             if (!string.IsNullOrEmpty(param.FullTextSearch))
             {
@@ -49,10 +49,10 @@ namespace Its.Onix.Api.Database.Repositories
             if (param.OrgIds != null && param.OrgIds.Count > 0)
                 pd = pd.And(p => param.OrgIds.Contains(p.OrgId!));
 
-            if (param.fromDate.HasValue)
-                pd = pd.And(p => p.CreatedDate >= param.fromDate);
-            if (param.toDate.HasValue)
-                pd = pd.And(p => p.CreatedDate <= param.toDate);
+            if (param.FromDate.HasValue)
+                pd = pd.And(p => p.CreatedDate >= param.FromDate);
+            if (param.ToDate.HasValue)
+                pd = pd.And(p => p.CreatedDate <= param.ToDate);
 
             if (!string.IsNullOrEmpty(param.FullTextSearch))
             {

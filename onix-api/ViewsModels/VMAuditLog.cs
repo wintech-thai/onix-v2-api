@@ -6,8 +6,6 @@ namespace Its.Onix.Api.ViewsModels
     public class VMAuditLog : VMQueryBase
     {
         public string? FullTextSearch { get; set; }
-        public DateTime? fromDate { get; set; }
-        public DateTime? toDate { get; set; }
         public List<string>? OrgIds { get; set; }
         public string? Interval { get; set; }
         public bool ReturnDocs { get; set; } = true;
