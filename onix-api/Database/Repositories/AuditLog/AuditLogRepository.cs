@@ -133,85 +133,68 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param)
         {
             var pd = AllAuditLogPredicate(param);
-            var q = context!.AuditLogs!.Where(pd);
 
-            // Timeline: group by hour
-            var timelineRaw = await q
-                .GroupBy(e => new
+            var items = await context!.AuditLogs!
+                .Where(pd)
+                .Select(e => new
                 {
-                    e.CreatedDate!.Value.Year,
-                    e.CreatedDate.Value.Month,
-                    e.CreatedDate.Value.Day,
-                    e.CreatedDate.Value.Hour,
+                    e.CreatedDate,
+                    e.ApiName,
+                    e.UserName,
+                    e.ClientIp,
+                    e.StatusCode,
                 })
-                .Select(g => new { g.Key, Count = g.Count() })
-                .OrderBy(x => x.Key.Year).ThenBy(x => x.Key.Month)
-                    .ThenBy(x => x.Key.Day).ThenBy(x => x.Key.Hour)
                 .ToListAsync();
 
-            var timeline = timelineRaw.Select(b =>
-            {
-                var dt = new DateTime(b.Key.Year, b.Key.Month, b.Key.Day, b.Key.Hour, 0, 0, DateTimeKind.Utc);
-                return new VMAggBucket
+            var timeline = items
+                .Where(e => e.CreatedDate.HasValue)
+                .GroupBy(e => new DateTime(e.CreatedDate!.Value.Year, e.CreatedDate.Value.Month, e.CreatedDate.Value.Day, e.CreatedDate.Value.Hour, 0, 0, DateTimeKind.Utc))
+                .OrderBy(g => g.Key)
+                .Select(g => new VMAggBucket
                 {
-                    Key = new DateTimeOffset(dt).ToUnixTimeMilliseconds(),
-                    KeyAsString = dt.ToString("O"),
-                    DocCount = b.Count,
-                };
-            }).ToList();
+                    Key = new DateTimeOffset(g.Key).ToUnixTimeMilliseconds(),
+                    KeyAsString = g.Key.ToString("O"),
+                    DocCount = g.Count(),
+                })
+                .ToList();
 
-            // Top-N by API name
-            var byApi = (await q
-                .Where(e => e.ApiName != null && e.ApiName != "")
-                .GroupBy(e => e.ApiName)
-                .Select(g => new { Key = g.Key!, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(10)
-                .ToListAsync())
+            var byApi = items
+                .Where(e => !string.IsNullOrEmpty(e.ApiName))
+                .GroupBy(e => e.ApiName!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
-            // Top-N by user
-            var byUser = (await q
-                .Where(e => e.UserName != null && e.UserName != "")
-                .GroupBy(e => e.UserName)
-                .Select(g => new { Key = g.Key!, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(10)
-                .ToListAsync())
+            var byUser = items
+                .Where(e => !string.IsNullOrEmpty(e.UserName))
+                .GroupBy(e => e.UserName!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
-            // Top-N by IP
-            var byIp = (await q
-                .Where(e => e.ClientIp != null && e.ClientIp != "")
-                .GroupBy(e => e.ClientIp)
-                .Select(g => new { Key = g.Key!, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(10)
-                .ToListAsync())
+            var byIp = items
+                .Where(e => !string.IsNullOrEmpty(e.ClientIp))
+                .GroupBy(e => e.ClientIp!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
-            // Top-N by status code
-            var byStatus = (await q
+            var byStatus = items
                 .Where(e => e.StatusCode.HasValue)
-                .GroupBy(e => e.StatusCode)
-                .Select(g => new { Key = g.Key!.Value, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(10)
-                .ToListAsync())
+                .GroupBy(e => e.StatusCode!.Value)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
                 .Select(x => new VMAggBucket { Key = x.Key.ToString(), DocCount = x.Count })
                 .ToList();
 
-            // Bruteforce: 401 by IP
-            var bruteforce = (await q
-                .Where(e => e.StatusCode == 401 && e.ClientIp != null && e.ClientIp != "")
-                .GroupBy(e => e.ClientIp)
-                .Select(g => new { Key = g.Key!, Count = g.Count() })
-                .OrderByDescending(x => x.Count)
-                .Take(10)
-                .ToListAsync())
+            var bruteforce = items
+                .Where(e => e.StatusCode == 401 && !string.IsNullOrEmpty(e.ClientIp))
+                .GroupBy(e => e.ClientIp!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
                 .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
                 .ToList();
 
