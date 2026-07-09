@@ -78,7 +78,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<int> GetAuditLogCount(VMAuditLog param)
         {
-            return await context!.AuditLogs!.Where(AuditLogPredicate(param)).CountAsync();
+            return await context!.AuditLogs!.AsExpandable().Where(AuditLogPredicate(param)).CountAsync();
         }
 
         public async Task<IEnumerable<MAuditLog>> GetAuditLogs(VMAuditLog param)
@@ -87,6 +87,7 @@ namespace Its.Onix.Api.Database.Repositories
             var limit = param.Limit > 0 ? param.Limit : 100;
 
             return await context!.AuditLogs!
+                .AsExpandable()
                 .Where(AuditLogPredicate(param))
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
@@ -106,7 +107,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<int> GetAllAuditLogCount(VMAuditLog param)
         {
-            return await context!.AuditLogs!.Where(AllAuditLogPredicate(param)).CountAsync();
+            return await context!.AuditLogs!.AsExpandable().Where(AllAuditLogPredicate(param)).CountAsync();
         }
 
         public async Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param)
@@ -115,6 +116,7 @@ namespace Its.Onix.Api.Database.Repositories
             var limit = param.Limit > 0 ? param.Limit : 100;
 
             return await context!.AuditLogs!
+                .AsExpandable()
                 .Where(AllAuditLogPredicate(param))
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
@@ -135,6 +137,7 @@ namespace Its.Onix.Api.Database.Repositories
             var pd = AllAuditLogPredicate(param);
 
             var items = await context!.AuditLogs!
+                .AsExpandable()
                 .Where(pd)
                 .Select(e => new
                 {
