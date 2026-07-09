@@ -66,5 +66,9 @@ namespace Its.Onix.Api.ViewsModels
 
         [JsonPropertyName("doc_count")]
         public int DocCount { get; set; }
+
+        [JsonPropertyName("group_by_api")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public VMAggBuckets? GroupByApi { get; set; }
     }
 }

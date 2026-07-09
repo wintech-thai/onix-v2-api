@@ -132,6 +132,25 @@ namespace Its.Onix.Api.Database.Repositories
                 .FirstOrDefaultAsync())!;
         }
 
+        private static DateTime TruncateToInterval(DateTime dt, string? interval)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(interval ?? "1h", @"(\d+)([smhd])");
+            if (!match.Success)
+                return new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 0, 0, DateTimeKind.Utc);
+
+            var val = int.Parse(match.Groups[1].Value);
+            var unit = match.Groups[2].Value;
+
+            return unit switch
+            {
+                "s" => new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, (dt.Second / val) * val, DateTimeKind.Utc),
+                "m" => new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, (dt.Minute / val) * val, 0, DateTimeKind.Utc),
+                "h" => new DateTime(dt.Year, dt.Month, dt.Day, (dt.Hour / val) * val, 0, 0, DateTimeKind.Utc),
+                "d" => new DateTime(dt.Year, dt.Month, dt.Day, 0, 0, 0, DateTimeKind.Utc),
+                _ => new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, 0, 0, DateTimeKind.Utc),
+            };
+        }
+
         public async Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param)
         {
             var pd = AllAuditLogPredicate(param);
@@ -151,13 +170,24 @@ namespace Its.Onix.Api.Database.Repositories
 
             var timeline = items
                 .Where(e => e.CreatedDate.HasValue)
-                .GroupBy(e => new DateTime(e.CreatedDate!.Value.Year, e.CreatedDate.Value.Month, e.CreatedDate.Value.Day, e.CreatedDate.Value.Hour, 0, 0, DateTimeKind.Utc))
+                .GroupBy(e => TruncateToInterval(e.CreatedDate!.Value, param.Interval))
                 .OrderBy(g => g.Key)
                 .Select(g => new VMAggBucket
                 {
                     Key = new DateTimeOffset(g.Key).ToUnixTimeMilliseconds(),
                     KeyAsString = g.Key.ToString("O"),
                     DocCount = g.Count(),
+                    GroupByApi = new VMAggBuckets
+                    {
+                        Buckets = g
+                            .Where(e => !string.IsNullOrEmpty(e.ApiName))
+                            .GroupBy(e => e.ApiName!)
+                            .Select(ag => new { Key = ag.Key, Count = ag.Count() })
+                            .OrderByDescending(x => x.Count)
+                            .Take(10)
+                            .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                            .ToList(),
+                    },
                 })
                 .ToList();
 
