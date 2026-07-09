@@ -71,6 +71,15 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(fts);
             }
 
+            if (!string.IsNullOrEmpty(param.FilterApi))
+                pd = pd.And(p => p.ApiName!.Equals(param.FilterApi));
+            if (!string.IsNullOrEmpty(param.FilterUser))
+                pd = pd.And(p => p.UserName!.Equals(param.FilterUser));
+            if (!string.IsNullOrEmpty(param.FilterIp))
+                pd = pd.And(p => p.ClientIp!.Equals(param.FilterIp));
+            if (param.FilterStatus.HasValue)
+                pd = pd.And(p => p.StatusCode == param.FilterStatus);
+
             return pd;
         }
 
@@ -179,14 +188,22 @@ namespace Its.Onix.Api.Database.Repositories
                     DocCount = g.Count(),
                     GroupByApi = new VMAggBuckets
                     {
-                        Buckets = g
-                            .Where(e => !string.IsNullOrEmpty(e.ApiName))
-                            .GroupBy(e => e.ApiName!)
-                            .Select(ag => new { Key = ag.Key, Count = ag.Count() })
-                            .OrderByDescending(x => x.Count)
-                            .Take(10)
-                            .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
-                            .ToList(),
+                        Buckets = (param.GroupBy?.ToLower() switch
+                        {
+                            "user" => g.Where(e => !string.IsNullOrEmpty(e.UserName))
+                                       .GroupBy(e => e.UserName!),
+                            "ip"   => g.Where(e => !string.IsNullOrEmpty(e.ClientIp))
+                                       .GroupBy(e => e.ClientIp!),
+                            "status" => g.Where(e => e.StatusCode.HasValue)
+                                         .GroupBy(e => e.StatusCode!.Value.ToString()),
+                            _      => g.Where(e => !string.IsNullOrEmpty(e.ApiName))
+                                       .GroupBy(e => e.ApiName!),
+                        })
+                        .Select(ag => new { Key = ag.Key, Count = ag.Count() })
+                        .OrderByDescending(x => x.Count)
+                        .Take(10)
+                        .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                        .ToList(),
                     },
                 })
                 .ToList();

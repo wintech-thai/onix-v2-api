@@ -10,5 +10,10 @@ namespace Its.Onix.Api.ViewsModels
         public string? Interval { get; set; }
         public bool ReturnDocs { get; set; } = true;
         public string? ApplicationType { get; set; }
+        public string? GroupBy { get; set; }
+        public string? FilterApi { get; set; }
+        public string? FilterUser { get; set; }
+        public string? FilterIp { get; set; }
+        public int? FilterStatus { get; set; }
     }
 }
