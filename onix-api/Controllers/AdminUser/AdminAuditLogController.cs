@@ -42,15 +42,13 @@ namespace Its.Onix.Api.Controllers
         {
             if (param.Limit <= 0) param.Limit = 100;
 
-            var countTask = svc.GetAllAuditLogCount(param);
-            var aggTask = svc.GetAllAuditLogAggregations(param);
-
-            await Task.WhenAll(countTask, aggTask);
+            var total = await svc.GetAllAuditLogCount(param);
+            var agg = await svc.GetAllAuditLogAggregations(param);
 
             var result = new VMAuditLogQueryResult
             {
-                Total = await countTask,
-                Aggregations = await aggTask,
+                Total = total,
+                Aggregations = agg,
             };
 
             if (param.ReturnDocs)

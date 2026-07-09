@@ -1,5 +1,5 @@
 using LinqKit;
-using Microsoft.EntityFrameworkCore;
+using System.Data.Entity;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 
