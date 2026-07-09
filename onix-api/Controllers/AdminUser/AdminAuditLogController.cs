@@ -21,37 +21,39 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/global/action/GetAuditLogById/{auditLogId}")]
-        public IActionResult GetAuditLogById(string auditLogId)
+        public async Task<IActionResult> GetAuditLogById(string auditLogId)
         {
-            var log = svc.GetAllAuditLogById(auditLogId);
+            var log = await svc.GetAllAuditLogById(auditLogId);
             if (log == null) return NotFound();
             return Ok(MapToEsFormat(log));
         }
 
         [HttpPost]
         [Route("org/global/action/GetAuditLogCount")]
-        public IActionResult GetAuditLogCount([FromBody] VMAuditLog param)
+        public async Task<IActionResult> GetAuditLogCount([FromBody] VMAuditLog param)
         {
-            var count = svc.GetAllAuditLogCount(param);
+            var count = await svc.GetAllAuditLogCount(param);
             return Ok(count);
         }
 
-        // Main query endpoint — returns documents + aggregations in ES-compatible format
         [HttpPost]
         [Route("org/global/action/QueryAuditLogs")]
-        public IActionResult QueryAuditLogs([FromBody] VMAuditLog param)
+        public async Task<IActionResult> QueryAuditLogs([FromBody] VMAuditLog param)
         {
             if (param.Limit <= 0) param.Limit = 100;
 
+            var total = await svc.GetAllAuditLogCount(param);
+            var agg = await svc.GetAllAuditLogAggregations(param);
+
             var result = new VMAuditLogQueryResult
             {
-                Total = svc.GetAllAuditLogCount(param),
-                Aggregations = svc.GetAllAuditLogAggregations(param),
+                Total = total,
+                Aggregations = agg,
             };
 
             if (param.ReturnDocs)
             {
-                var logs = svc.GetAllAuditLogs(param);
+                var logs = await svc.GetAllAuditLogs(param);
                 result.Data = logs.Select(MapToEsFormat).ToList();
             }
 
@@ -99,6 +101,15 @@ namespace Its.Onix.Api.Controllers
                 ["_id"] = log.Id?.ToString(),
                 ["id"] = log.Id?.ToString(),
                 ["@timestamp"] = log.CreatedDate?.ToString("O"),
+                ["user_name"] = log.UserName,
+                ["id_type"] = log.IdentityType,
+                ["role"] = log.Role,
+                ["action"] = log.ApiName,
+                ["path"] = log.Path,
+                ["resource"] = log.ControllerName,
+                ["status_code"] = log.StatusCode,
+                ["client_ip"] = log.ClientIp,
+                ["geoip"] = new Dictionary<string, object?>(),
                 ["raw_data"] = log.RawData,
                 ["data"] = data,
             };

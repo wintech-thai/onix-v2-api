@@ -5,12 +5,13 @@ namespace Its.Onix.Api.Services
 {
     public interface IAuditLogService
     {
-        public MAuditLog GetAuditLogById(string orgId, string auditLogId);
-        public IEnumerable<MAuditLog> GetAuditLogs(string orgId, VMAuditLog param);
-        public int GetAuditLogCount(string orgId, VMAuditLog param);
-        public MAuditLog GetAllAuditLogById(string auditLogId);
-        public IEnumerable<MAuditLog> GetAllAuditLogs(VMAuditLog param);
-        public int GetAllAuditLogCount(VMAuditLog param);
-        public VMAuditLogAggregations GetAllAuditLogAggregations(VMAuditLog param);
+        public Task<MAuditLog> GetAuditLogById(string orgId, string auditLogId);
+        public Task<IEnumerable<MAuditLog>> GetAuditLogs(string orgId, VMAuditLog param);
+        public Task<int> GetAuditLogCount(string orgId, VMAuditLog param);
+        public Task<VMAuditLogAggregations> GetAuditLogAggregations(string orgId, VMAuditLog param);
+        public Task<MAuditLog> GetAllAuditLogById(string auditLogId);
+        public Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param);
+        public Task<int> GetAllAuditLogCount(VMAuditLog param);
+        public Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param);
     }
 }
