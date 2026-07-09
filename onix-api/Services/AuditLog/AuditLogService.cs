@@ -31,6 +31,12 @@ namespace Its.Onix.Api.Services
             return await repository!.GetAuditLogCount(param);
         }
 
+        public async Task<VMAuditLogAggregations> GetAuditLogAggregations(string orgId, VMAuditLog param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetAuditLogAggregations(param);
+        }
+
         public async Task<MAuditLog> GetAllAuditLogById(string auditLogId)
         {
             return await repository!.GetAllAuditLogById(auditLogId);

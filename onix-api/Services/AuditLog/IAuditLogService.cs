@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Services
         public Task<MAuditLog> GetAuditLogById(string orgId, string auditLogId);
         public Task<IEnumerable<MAuditLog>> GetAuditLogs(string orgId, VMAuditLog param);
         public Task<int> GetAuditLogCount(string orgId, VMAuditLog param);
+        public Task<VMAuditLogAggregations> GetAuditLogAggregations(string orgId, VMAuditLog param);
         public Task<MAuditLog> GetAllAuditLogById(string auditLogId);
         public Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param);
         public Task<int> GetAllAuditLogCount(VMAuditLog param);

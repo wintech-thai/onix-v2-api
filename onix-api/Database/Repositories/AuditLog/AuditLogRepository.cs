@@ -112,6 +112,105 @@ namespace Its.Onix.Api.Database.Repositories
                 .FirstOrDefaultAsync())!;
         }
 
+        public async Task<VMAuditLogAggregations> GetAuditLogAggregations(VMAuditLog param)
+        {
+            var pd = AuditLogPredicate(param);
+
+            var items = await context!.AuditLogs!
+                .AsExpandable()
+                .Where(pd)
+                .Select(e => new
+                {
+                    e.CreatedDate,
+                    e.ApiName,
+                    e.UserName,
+                    e.ClientIp,
+                    e.StatusCode,
+                })
+                .ToListAsync();
+
+            var timeline = items
+                .Where(e => e.CreatedDate.HasValue)
+                .GroupBy(e => TruncateToInterval(e.CreatedDate!.Value, param.Interval))
+                .OrderBy(g => g.Key)
+                .Select(g => new VMAggBucket
+                {
+                    Key = new DateTimeOffset(g.Key).ToUnixTimeMilliseconds(),
+                    KeyAsString = g.Key.ToString("O"),
+                    DocCount = g.Count(),
+                    GroupByApi = new VMAggBuckets
+                    {
+                        Buckets = (param.GroupBy?.ToLower() switch
+                        {
+                            "user" => g.Where(e => !string.IsNullOrEmpty(e.UserName))
+                                       .GroupBy(e => e.UserName!),
+                            "ip"   => g.Where(e => !string.IsNullOrEmpty(e.ClientIp))
+                                       .GroupBy(e => e.ClientIp!),
+                            "status" => g.Where(e => e.StatusCode.HasValue)
+                                         .GroupBy(e => e.StatusCode!.Value.ToString()),
+                            _      => g.Where(e => !string.IsNullOrEmpty(e.ApiName))
+                                       .GroupBy(e => e.ApiName!),
+                        })
+                        .Select(ag => new { Key = ag.Key, Count = ag.Count() })
+                        .OrderByDescending(x => x.Count)
+                        .Take(10)
+                        .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                        .ToList(),
+                    },
+                })
+                .ToList();
+
+            var byApi = items
+                .Where(e => !string.IsNullOrEmpty(e.ApiName))
+                .GroupBy(e => e.ApiName!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            var byUser = items
+                .Where(e => !string.IsNullOrEmpty(e.UserName))
+                .GroupBy(e => e.UserName!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            var byIp = items
+                .Where(e => !string.IsNullOrEmpty(e.ClientIp))
+                .GroupBy(e => e.ClientIp!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            var byStatus = items
+                .Where(e => e.StatusCode.HasValue)
+                .GroupBy(e => e.StatusCode!.Value)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
+                .Select(x => new VMAggBucket { Key = x.Key.ToString(), DocCount = x.Count })
+                .ToList();
+
+            var bruteforce = items
+                .Where(e => e.StatusCode == 401 && !string.IsNullOrEmpty(e.ClientIp))
+                .GroupBy(e => e.ClientIp!)
+                .Select(g => new { Key = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count).Take(10)
+                .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                .ToList();
+
+            return new VMAuditLogAggregations
+            {
+                Timeline = new VMAggBuckets { Buckets = timeline },
+                ByApi = new VMAggBuckets { Buckets = byApi },
+                ByUser = new VMAggBuckets { Buckets = byUser },
+                ByIp = new VMAggBuckets { Buckets = byIp },
+                ByStatus = new VMAggBuckets { Buckets = byStatus },
+                Bruteforce = new VMBruteforceAgg { ByIp = new VMAggBuckets { Buckets = bruteforce } },
+            };
+        }
+
         // ── Admin (all orgs) ──────────────────────────────────────────────────
 
         public async Task<int> GetAllAuditLogCount(VMAuditLog param)
