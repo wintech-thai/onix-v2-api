@@ -239,7 +239,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
         {
-            var query = context!.FinancialDocItemExpenses!.AsQueryable();
+            var query = context!.FinancialDocItemExpenses!.AsExpandable();
 
             if (orgId != "global")
                 query = query.Where(x => x.OrgId == orgId);
