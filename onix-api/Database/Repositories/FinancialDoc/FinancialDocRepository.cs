@@ -19,12 +19,20 @@ namespace Its.Onix.Api.Database.Repositories
             return exists;
         }
 
-        public async Task<MFinancialDoc> AddFinancialDoc(MFinancialDoc financialDoc)
+        public async Task<MFinancialDoc> AddFinancialDoc(MFinancialDoc financialDoc, List<MFinancialDocItemExpense> expenseItems)
         {
             financialDoc.OrgId = orgId;
             financialDoc.CreatedDate = DateTime.UtcNow;
 
             await context!.FinancialDocs!.AddAsync(financialDoc);
+
+            foreach (var item in expenseItems)
+            {
+                item.FinancialDocId = financialDoc.Id!.Value;
+                item.OrgId = orgId;
+                await context.FinancialDocItemExpenses!.AddAsync(item);
+            }
+
             await context.SaveChangesAsync();
 
             return financialDoc;
@@ -37,7 +45,7 @@ namespace Its.Onix.Api.Database.Repositories
             return u;
         }
 
-        public async Task<MFinancialDoc?> UpdateFinancialDocById(string financialDocId, MFinancialDoc financialDoc)
+        public async Task<MFinancialDoc?> UpdateFinancialDocById(string financialDocId, MFinancialDoc financialDoc, List<MFinancialDocItemExpense> expenseItems)
         {
             Guid id = Guid.Parse(financialDocId);
             var existing = await context!.FinancialDocs!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
@@ -56,6 +64,17 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.TotalExpense = financialDoc.TotalExpense;
                 existing.ProfitLoss = financialDoc.ProfitLoss;
 
+                // Delete old expense items then insert new ones
+                var oldItems = context.FinancialDocItemExpenses!.Where(e => e.FinancialDocId == id);
+                context.FinancialDocItemExpenses!.RemoveRange(oldItems);
+
+                foreach (var item in expenseItems)
+                {
+                    item.FinancialDocId = id;
+                    item.OrgId = orgId;
+                    await context.FinancialDocItemExpenses!.AddAsync(item);
+                }
+
                 await context.SaveChangesAsync();
             }
 
@@ -69,6 +88,9 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (existing != null)
             {
+                var expenseItems = context.FinancialDocItemExpenses!.Where(e => e.FinancialDocId == id);
+                context.FinancialDocItemExpenses!.RemoveRange(expenseItems);
+
                 context.FinancialDocs!.Remove(existing);
                 await context.SaveChangesAsync();
             }

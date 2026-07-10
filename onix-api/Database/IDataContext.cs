@@ -53,6 +53,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MNotiChannel>? NotiChannels { get; set; }
         public DbSet<MAgentEvent>? AgentEvents { get; set; }
         public DbSet<MFinancialDoc>? FinancialDocs { get; set; }
+        public DbSet<MFinancialDocItemExpense>? FinancialDocItemExpenses { get; set; }
 
         public DbSet<MCaseManagement>? CaseManagements { get; set; }
         public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }

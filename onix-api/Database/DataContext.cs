@@ -62,6 +62,7 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MNotiChannel>? NotiChannels { get; set; }
     public DbSet<MAgentEvent>? AgentEvents { get; set; }
     public DbSet<MFinancialDoc>? FinancialDocs { get; set; }
+    public DbSet<MFinancialDocItemExpense>? FinancialDocItemExpenses { get; set; }
 
 
     public DbSet<MCaseManagement>? CaseManagements { get; set; }
@@ -240,6 +241,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
         modelBuilder.Entity<MFinancialDoc>()
             .HasIndex(t => new { t.OrgId, t.DocumentNo }).IsUnique();
+
+        modelBuilder.Entity<MFinancialDocItemExpense>();
 
         modelBuilder.Entity<IdentityUser>()
             .ToTable("AspNetUsers");
