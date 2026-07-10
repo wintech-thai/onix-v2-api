@@ -236,5 +236,60 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result;
         }
+
+        private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
+        {
+            var query = context!.FinancialDocItemExpenses!.AsQueryable();
+
+            if (orgId != "global")
+                query = query.Where(x => x.OrgId == orgId);
+
+            if (param.FromDate.HasValue)
+                query = query.Where(x => x.ExpenseDate >= param.FromDate.Value);
+            if (param.ToDate.HasValue)
+                query = query.Where(x => x.ExpenseDate <= param.ToDate.Value);
+
+            return query;
+        }
+
+        public async Task<decimal> GetExpenseTotalAmount(VMSummary param)
+        {
+            return await GetExpenseBaseQuery(param).SumAsync(x => x.Amount ?? 0);
+        }
+
+        public async Task<int> GetExpenseTotalCount(VMSummary param)
+        {
+            return await GetExpenseBaseQuery(param).CountAsync();
+        }
+
+        public async Task<List<DailyExpenseSummaryData>> GetDailyExpenseSummary(VMSummary param)
+        {
+            return await GetExpenseBaseQuery(param)
+                .Where(x => x.ExpenseDate != null)
+                .GroupBy(x => x.ExpenseDate!.Value.Date)
+                .Select(g => new DailyExpenseSummaryData
+                {
+                    Date = g.Key,
+                    Amount = g.Sum(x => x.Amount ?? 0),
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Date)
+                .ToListAsync();
+        }
+
+        public async Task<List<ExpenseByCategoryData>> GetExpenseByCategorySummary(VMSummary param)
+        {
+            return await GetExpenseBaseQuery(param)
+                .GroupBy(x => new { x.ExpenseCode, x.ExpenseDesc })
+                .Select(g => new ExpenseByCategoryData
+                {
+                    Code = g.Key.ExpenseCode,
+                    Desc = g.Key.ExpenseDesc,
+                    Amount = g.Sum(x => x.Amount ?? 0),
+                    Count = g.Count()
+                })
+                .OrderByDescending(x => x.Amount)
+                .ToListAsync();
+        }
     }
 }

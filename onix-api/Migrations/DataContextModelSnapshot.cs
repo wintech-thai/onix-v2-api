@@ -1182,6 +1182,50 @@ namespace onix.api.Migrations
                     b.ToTable("FinancialDocs");
                 });
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MFinancialDocItemExpense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("ExpenseCode")
+                        .HasColumnType("text")
+                        .HasColumnName("expense_code");
+
+                    b.Property<DateTime?>("ExpenseDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expense_date");
+
+                    b.Property<string>("ExpenseDesc")
+                        .HasColumnType("text")
+                        .HasColumnName("expense_desc");
+
+                    b.Property<Guid>("FinancialDocId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("financial_doc_id");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FinancialDocId");
+
+                    b.HasIndex("OrgId");
+
+                    b.ToTable("financial_doc_item_expenses");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MItem", b =>
                 {
                     b.Property<Guid?>("Id")
