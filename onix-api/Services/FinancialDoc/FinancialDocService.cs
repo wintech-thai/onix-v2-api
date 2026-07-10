@@ -71,12 +71,15 @@ namespace Its.Onix.Api.Services
             doc.ProfitLoss = totalRevenue - totalExpense;
         }
 
+        private static DateTime AsUtc(DateTime dt) =>
+            DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
         private static List<MFinancialDocItemExpense> BuildExpenseItems(List<MFinancialDocItem>? items, DateTime fromDate)
         {
             if (items == null) return [];
             return items.Select(item => new MFinancialDocItemExpense
             {
-                ExpenseDate = item.ExpenseDate ?? fromDate,
+                ExpenseDate = AsUtc(item.ExpenseDate ?? fromDate),
                 ExpenseCode = item.Code,
                 ExpenseDesc = item.Label,
                 Amount = item.Amount,
