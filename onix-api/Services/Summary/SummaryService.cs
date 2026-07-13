@@ -62,5 +62,18 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public async Task<ExpenseSummary> GetExpenseSummary(string orgId, VMSummary param)
+        {
+            _repo.SetCustomOrgId(orgId);
+
+            var result = new ExpenseSummary();
+            result.TotalAmount = await _repo.GetExpenseTotalAmount(param);
+            result.TotalCount = await _repo.GetExpenseTotalCount(param);
+            result.DailyExpense = await _repo.GetDailyExpenseSummary(param);
+            result.ExpenseByCategory = await _repo.GetExpenseByCategorySummary(param);
+
+            return result;
+        }
     }
 }

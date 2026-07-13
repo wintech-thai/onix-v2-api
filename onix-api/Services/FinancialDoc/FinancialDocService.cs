@@ -71,6 +71,21 @@ namespace Its.Onix.Api.Services
             doc.ProfitLoss = totalRevenue - totalExpense;
         }
 
+        private static DateTime AsUtc(DateTime dt) =>
+            DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
+        private static List<MFinancialDocItemExpense> BuildExpenseItems(List<MFinancialDocItem>? items, DateTime fromDate)
+        {
+            if (items == null) return [];
+            return items.Select(item => new MFinancialDocItemExpense
+            {
+                ExpenseDate = AsUtc(item.ExpenseDate ?? fromDate),
+                ExpenseCode = item.Code,
+                ExpenseDesc = item.Label,
+                Amount = item.Amount,
+            }).ToList();
+        }
+
         private static string GenerateDocumentNo()
         {
             var now = DateTime.UtcNow;
@@ -143,7 +158,8 @@ namespace Its.Onix.Api.Services
 
             RecalculateTotals(financialDoc);
 
-            var result = await repository!.AddFinancialDoc(financialDoc);
+            var expenseItems = BuildExpenseItems(financialDoc.ExpenseItemsArr, financialDoc.FromDate);
+            var result = await repository!.AddFinancialDoc(financialDoc, expenseItems);
             ClearDefinitionFields(result);
 
             r.FinancialDoc = result;
@@ -175,7 +191,8 @@ namespace Its.Onix.Api.Services
 
             RecalculateTotals(financialDoc);
 
-            var result = await repository!.UpdateFinancialDocById(docId, financialDoc);
+            var expenseItems = BuildExpenseItems(financialDoc.ExpenseItemsArr, financialDoc.FromDate);
+            var result = await repository!.UpdateFinancialDocById(docId, financialDoc, expenseItems);
             if (result == null)
             {
                 r.Status = "NOTFOUND";

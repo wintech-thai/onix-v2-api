@@ -9,5 +9,6 @@ namespace Its.Onix.Api.Models
         public string? Label { get; set; } /* แสดงผลคำอธิบาย */
         public decimal? Amount { get; set; } /* จำนวนเงิน expense / revenue / commission */
         public decimal? Percent { get; set; } /* ใช้กับ sharing item เท่านั้น */
+        public DateTime? ExpenseDate { get; set; } /* วันที่ของ expense item (เฉพาะ expense items) */
     }
 }
