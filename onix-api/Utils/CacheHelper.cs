@@ -115,6 +115,24 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateMerchantDailyTxKey(string orgId, string merchantId)
+        {
+            var yyyymmdd = DateTime.Now.ToString("yyyyMMdd");
+            
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"MerchantDailyTx:{environment}:{orgId}:{yyyymmdd}:{merchantId}";
+            return key;
+        }
+
+        public static string CreatePayInBankAccountDailyTxKey(string orgId, string bankAccountId)
+        {
+            var yyyymmdd = DateTime.Now.ToString("yyyyMMdd");
+            
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"PayInBankAccountDailyTx:{environment}:{orgId}:{yyyymmdd}:{bankAccountId}";
+            return key;
+        }
+
         public static string CreateScanItemActionKey(string orgId)
         {
             //TODO : Use environment as key component

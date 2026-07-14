@@ -927,6 +927,25 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private async Task<MTxBalance> GetMerchantCurrentDailyTxBalance(string orgId, MMerchant merchant)
+        {
+            var merchantId = merchant.Id.ToString()!;
+
+            var cacheKey = CacheHelper.CreateMerchantDailyTxKey(orgId, merchantId);
+            var cacheValue = await _redis!.GetObjectAsync<MTxBalance>(cacheKey);
+
+            if (cacheValue == null)
+            {
+                cacheValue = new MTxBalance()
+                {
+                    TxAmount = 0,
+                    TxCount = 0,
+                };
+            }
+
+            return cacheValue;
+        }
+
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
@@ -986,6 +1005,30 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Request amount [{paymentRequest.RequestedAmount}] must be greater than 0.00";
 
                 return r;
+            }
+
+            var currentDailyTxBalance = await GetMerchantCurrentDailyTxBalance("global", merchant);
+
+            var txAmountLimit = merchant.PayinDailyTxAmountLimit;
+            if (txAmountLimit > 0)
+            {
+                //จะทำการ check ถ้า set ค่า txAmountLimit ไว้มากกว่า 0
+                if ((currentDailyTxBalance.TxAmount + (decimal) paymentRequest.RequestedAmount!) > txAmountLimit)
+                {
+                    r.Status = "ERROR_DAILY_AMOUNT_EXCEEDED";
+                    r.Description = $"Merchant daily transaction amount exceeded, CurrentDailyTxAmount=[{currentDailyTxBalance.TxAmount}], RequestedAmount=[{paymentRequest.RequestedAmount}], MaxDailyAmount=[{txAmountLimit}]";
+                }
+            }
+
+            var txCountLimit = merchant.PayinDailyTxCountLimit;
+            if (txCountLimit > 0)
+            {
+                //จะทำการ check ถ้า set ค่า txCountLimit ไว้มากกว่า 0
+                if ((currentDailyTxBalance.TxCount + 1) > txCountLimit)
+                {
+                    r.Status = "ERROR_DAILY_COUNT_EXCEEDED";
+                    r.Description = $"Merchant daily transaction count exceeded, CurrentDailyTxCount=[{currentDailyTxBalance.TxCount}], MaxDailyCount=[{txCountLimit}]";
+                }
             }
 
             //Validate ว่า amount เกิน range ของ merchant มั้ย
@@ -1136,6 +1179,8 @@ namespace Its.Onix.Api.Services
                     //ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
                     if (dict.ContainsKey(bankAccountId))
                     {
+                        //TODO : ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+
                         lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                         return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
                     }

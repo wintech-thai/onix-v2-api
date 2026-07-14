@@ -117,6 +117,47 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        private async Task UpdateDailyTxBalance(MPaymentTransaction pt)
+        {
+            var orgId = "global"; //ให้ตรงกับ GetMerchantCurrentDailyTxBalance() ใน PaymentRequestService.cs
+            var merchantId = pt.MerchantId;
+            var bankAccountId = pt.PayInBankAccountId;
+            var txAmount = pt.TxAmountDecimal ?? 0;
+
+            var merchantCacheKey = CacheHelper.CreateMerchantDailyTxKey(orgId, merchantId!);
+            var bankAccountCacheKey = CacheHelper.CreatePayInBankAccountDailyTxKey(orgId, bankAccountId!);
+
+            if (merchantId != null)
+            {
+                //สามารถ match merchant ได้ ให้เก็บ Daily Tx Balance ของ merchant ไว้ด้วย
+                var currentMerchantDailyTxBalance = await _redis.GetObjectAsync<MTxBalance>(merchantCacheKey);
+                if (currentMerchantDailyTxBalance == null)
+                {
+                    currentMerchantDailyTxBalance = new MTxBalance();
+                }
+
+                currentMerchantDailyTxBalance.TxCount += 1;
+                currentMerchantDailyTxBalance.TxAmount += txAmount;
+
+                await _redis.SetObjectAsync(merchantCacheKey, currentMerchantDailyTxBalance, TimeSpan.FromDays(1.1));
+            }
+
+            if (bankAccountId != null)
+            {
+                //สามารถ match bank account ได้ ให้เก็บ Daily Tx Balance ของ bank account ไว้ด้วย
+                var currentBankAccountDailyTxBalance = await _redis.GetObjectAsync<MTxBalance>(bankAccountCacheKey);
+                if (currentBankAccountDailyTxBalance == null)
+                {
+                    currentBankAccountDailyTxBalance = new MTxBalance();
+                }
+
+                currentBankAccountDailyTxBalance.TxCount += 1;
+                currentBankAccountDailyTxBalance.TxAmount += txAmount;
+
+                await _redis.SetObjectAsync(bankAccountCacheKey, currentBankAccountDailyTxBalance, TimeSpan.FromDays(1.1));
+            }
+        }
+
         public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
             string orgId, 
             string bankAccountId, 
@@ -294,6 +335,9 @@ namespace Its.Onix.Api.Services
 
             pt.RawInput = JsonSerializer.Serialize(paymentNotiLine); //"{}";
             pt.ProcessingMessages = JsonSerializer.Serialize(lines);
+
+            //เก็บ Daily Tx Balance ของ merchant และ bank account ไว้ด้วย เพื่อเอาไว้ใช้ตรวจสอบ limit ต่อวัน
+            await UpdateDailyTxBalance(pt);
 
             //สร้าง job ตรงนี้ พร้อมส่ง jobId ให้กับ Payment Tx เผื่อเอาไว้ใช้ดู log การ process ในแต่ละ step ได้ง่ายขึ้น
             var jobType = "Payment.Failed";
