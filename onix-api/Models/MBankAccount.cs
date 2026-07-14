@@ -100,6 +100,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public bool IsNativeQrSupport { get; set; }
 
+        [NotMapped]
+        public decimal? CurrentPayinDailyTxAmount { get; set; }
+
 
         public MBankAccount()
         {
