@@ -163,13 +163,16 @@ namespace Its.Onix.Api.Services
             if (bankAccount != null)
             {
                 //Check logic ว่ายอด daily balance เกิน limit, ถ้าเกินให้สร้าง job แจ้งเตือนให้ admin ของ merchant ทราบ
+                var threshold = 0.95;
                 double dailyTxAmountLimit = bankAccount.DailyQuota ?? 0;
+                var thresholdAmount = (double) dailyTxAmountLimit * threshold;
+
                 if (dailyTxAmountLimit > 0)
                 {
-                    if (currentDailyTxAmount > dailyTxAmountLimit)
+                    if (currentDailyTxAmount > thresholdAmount)
                     {
                         var jobType = "Payment.DailyTxAmountLimitExceeded";
-                        await CreatePaymentExceededLimitJob(orgId, jobType, bankAccount, currentDailyTxAmount);
+                        await CreatePaymentExceededLimitJob(orgId, jobType, bankAccount, currentDailyTxAmount, threshold); //ให้มี threshold นิดหน่อยเพื่อป้องกันการสร้าง job ซ้ำ ๆ
                     }
                 }
             }
@@ -483,8 +486,15 @@ namespace Its.Onix.Api.Services
             return newJob;
         }
 
-        private async Task<MJob> CreatePaymentExceededLimitJob(string orgId, string jobType, MBankAccount bankAccount, double currentDailyTxAmount)
+        private async Task<MJob> CreatePaymentExceededLimitJob(
+            string orgId, string jobType, 
+            MBankAccount bankAccount, 
+            double currentDailyTxAmount,
+            double threshold)
         {
+            double dailyTxAmountLimit = bankAccount.DailyQuota ?? 0;
+            var thresholdAmount = (double) dailyTxAmountLimit * threshold;
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -497,6 +507,8 @@ namespace Its.Onix.Api.Services
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "CURRENT_DAILY_TX_AMOUNT", Value = currentDailyTxAmount.ToString() },
+                    new NameValue { Name = "THRESHOLD_RATIO", Value = threshold.ToString() },
+                    new NameValue { Name = "THRESHOLD_AMOUNT", Value = thresholdAmount.ToString() },
 
                     new NameValue { Name = "BANK_ACCOUNT_ID", Value = bankAccount?.Id.ToString() },
                     new NameValue { Name = "BANK_ACCOUNT_NAME", Value = bankAccount?.AccountName },

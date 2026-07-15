@@ -1103,6 +1103,8 @@ namespace Its.Onix.Api.Services
                 lines.Add($"Step01 - User specified bank account ID : SelectedPayInBankAccountId -> [{pr.SelectedPayInBankAccountId}]");
                 //มีการระบุ Bank Account ID เข้ามาเองโดย user
                 var bankAcct = await _bankAccountRepo!.GetBankAccountById(pr.SelectedPayInBankAccountId);
+
+                //ไม่ต้องเข็ค daily limit ตรงนี้ เพราะถือว่า user ระบุเข้ามาเองแล้ว
                 return (bankAcct, lines);
             }
 
@@ -1169,6 +1171,8 @@ namespace Its.Onix.Api.Services
                         lines.Add($"Step04.0 - Skip global bank account, merchant not allowed to use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                         continue;
                     }
+
+                    //TODO : ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
 
                     lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
                     return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
