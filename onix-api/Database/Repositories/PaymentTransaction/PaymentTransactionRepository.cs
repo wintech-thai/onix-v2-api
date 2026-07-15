@@ -226,5 +226,30 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return existing;
         }
+
+        public async Task<MPaymentTransaction?> ApprovePaymentTransactionById(string paymentTransactionId, MPaymentTransaction paymentTransaction)
+        {
+            Guid id = Guid.Parse(paymentTransactionId);
+            var existing = await context!.PaymentTransactions!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
+                existing.Tags = paymentTransaction.Tags;
+                existing.Status = "Approved";
+
+                existing.MerchantId = paymentTransaction.MerchantId;
+                existing.Currency = paymentTransaction.Currency;
+                existing.PayInFeePct = paymentTransaction.PayInFeePct;
+                existing.PayInFee = paymentTransaction.PayInFee;
+                existing.PayInFeeDecimal = paymentTransaction.PayInFeeDecimal;
+                existing.PayInTotalAmount = paymentTransaction.PayInTotalAmount;
+                existing.PayInTotalAmountDecimal = paymentTransaction.PayInTotalAmountDecimal;
+                existing.DiscardCent = paymentTransaction.DiscardCent;
+                existing.PaymentRequestId = paymentTransaction.PaymentRequestId;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }

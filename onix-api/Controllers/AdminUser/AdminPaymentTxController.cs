@@ -25,6 +25,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/ApproveUnidentifiedPaymentTx/{paymentTransactionId}/{merchantId}")] 
+        public async Task<IActionResult> ApproveUnidentifiedPaymentTx(string paymentTransactionId, string merchantId)
+        {
+            var result = await svc.ApproveUnidentifiedPaymentTx("global", paymentTransactionId, merchantId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/SubmitLinePaymentTxNotification/{bankAccountId}")] 
         public async Task<IActionResult> SubmitLinePaymentTxNotification(string bankAccountId, [FromBody] MPaymentNotiLine request)
         {
