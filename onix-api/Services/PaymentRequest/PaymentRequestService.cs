@@ -1172,10 +1172,17 @@ namespace Its.Onix.Api.Services
                         continue;
                     }
 
-                    //TODO : ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+                    //ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+                    var ba1 = await _bankAccountRepo!.GetBankAccountById(bankAccountId);
+                    var mvBa1 = await IsDailyBalanceExceeded(ba1!);
+                    if (mvBa1.Status == "YES")
+                    {
+                        lines.Add($"Step04.1 - Skip global bank account, daily balance exceeded ({mvBa1.Description}) : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                        continue;
+                    }
 
                     lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                    return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
+                    return (ba1, lines);
                 }
 
                 if (bankAccount.AccountLevel == "Selected")
@@ -1183,10 +1190,17 @@ namespace Its.Onix.Api.Services
                     //ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
                     if (dict.ContainsKey(bankAccountId))
                     {
-                        //TODO : ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+                        //ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+                        var ba2 = await _bankAccountRepo!.GetBankAccountById(bankAccountId);
+                        var mvBa2 = await IsDailyBalanceExceeded(ba2!);
+                        if (mvBa2.Status == "YES")
+                        {
+                            lines.Add($"Step05.0 - Skip selected bank account, daily balance exceeded ({mvBa2.Description}) : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                            continue;
+                        }
 
                         lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                        return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
+                        return (ba2, lines);
                     }
                     else
                     {
@@ -1199,6 +1213,45 @@ namespace Its.Onix.Api.Services
 
             //ไม่มี bank account ที่ match
             return (null, lines);
+        }
+
+        private async Task<MVBankAccount> IsDailyBalanceExceeded(MBankAccount ba)
+        {
+            var result = new MVBankAccount()
+            {
+                Status = "NO",
+                Description = "Success",
+            };
+            
+            var dailyLimit = ba.DailyQuota;
+            if (dailyLimit <= 0)
+            {
+                //ไม่มีการตั้งค่า daily limit เลยถือว่าไม่เกิน limit
+                result.Status = "NO";
+                result.Description = "No daily limit configured for bank account";
+                return result;
+            }
+
+            //ให้เอา bankAccountId ไป lookup ใน Redis ว่ามี daily balance ของ bank account นี้เท่าไหร่แล้ว ถ้าเกิน limit ก็ return false
+            var cacheKey = CacheHelper.CreatePayInBankAccountDailyTxKey("global", ba.Id.ToString()!);
+            var cacheValue = await _redis!.GetObjectAsync<MTxBalance>(cacheKey);
+
+            if (cacheValue == null)
+            {
+                result.Status = "NO";
+                result.Description = "No daily balance found for bank account";
+                return result;
+            }
+
+            //ตรงนี้ ยังไม่ต้องเอายอดเงินที่จะโอนมารวมกับ cacheValue.TxAmount
+            if ((double) cacheValue.TxAmount >= dailyLimit)
+            {
+                result.Status = "YES";
+                result.Description = $"Daily balance [{cacheValue.TxAmount}] exceeded, limit [{dailyLimit}]";
+                return result;
+            }
+
+            return result;
         }
 
         //ถ้า merchant ไม่ได้กรอก whitelist ไว้เลย ก็ถือว่าใช้ได้กับทุกชื่อ bank account name
