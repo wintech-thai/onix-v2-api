@@ -117,12 +117,13 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        private async Task UpdateDailyTxBalance(MPaymentTransaction pt)
+        private async Task UpdateDailyTxBalance(MPaymentTransaction pt, MBankAccount? bankAccount)
         {
             var orgId = "global"; //ให้ตรงกับ GetMerchantCurrentDailyTxBalance() ใน PaymentRequestService.cs
             var merchantId = pt.MerchantId;
             var bankAccountId = pt.PayInBankAccountId;
             var txAmount = pt.TxAmountDecimal ?? 0;
+            double currentDailyTxAmount = 0;
 
             var merchantCacheKey = CacheHelper.CreateMerchantDailyTxKey(orgId, merchantId!);
             var bankAccountCacheKey = CacheHelper.CreatePayInBankAccountDailyTxKey(orgId, bankAccountId!);
@@ -154,7 +155,23 @@ namespace Its.Onix.Api.Services
                 currentBankAccountDailyTxBalance.TxCount += 1;
                 currentBankAccountDailyTxBalance.TxAmount += txAmount;
 
+                currentDailyTxAmount = (double) currentBankAccountDailyTxBalance.TxAmount;
+
                 await _redis.SetObjectAsync(bankAccountCacheKey, currentBankAccountDailyTxBalance, TimeSpan.FromDays(1.1));
+            }
+
+            if (bankAccount != null)
+            {
+                //Check logic ว่ายอด daily balance เกิน limit, ถ้าเกินให้สร้าง job แจ้งเตือนให้ admin ของ merchant ทราบ
+                double dailyTxAmountLimit = bankAccount.DailyQuota ?? 0;
+                if (dailyTxAmountLimit > 0)
+                {
+                    if (currentDailyTxAmount > dailyTxAmountLimit)
+                    {
+                        var jobType = "Payment.DailyTxAmountLimitExceeded";
+                        await CreatePaymentExceededLimitJob(orgId, jobType, bankAccount, currentDailyTxAmount);
+                    }
+                }
             }
         }
 
@@ -250,6 +267,8 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
+            MBankAccount? bankAccount = null;
+
             if (pmr != null)
             {
                 repository!.SetCustomOrgId(pmr.OrgId!); //ตรงนี้เป็น orgId ของ Merchant
@@ -289,8 +308,8 @@ namespace Its.Onix.Api.Services
             else
             {
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
-                var ba = await _bankAccountRepo.GetBankAccountById(bankAccountId);
-                if (ba == null)
+                bankAccount = await _bankAccountRepo.GetBankAccountById(bankAccountId);
+                if (bankAccount == null)
                 {
                     lines.Add($"STEP7 : Info -> Unable to found bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
                 }
@@ -299,9 +318,9 @@ namespace Its.Onix.Api.Services
                     lines.Add($"STEP8 : Info -> Only able to identify bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
 
                     pt.PayInBankAccountId = bankAccountId;
-                    pt.PayInBankCode = ba.BankCode;
-                    pt.PayInBankAccountNo = ba.AccountNumber;
-                    pt.PayInBankAccountName = ba.AccountName;
+                    pt.PayInBankCode = bankAccount.BankCode;
+                    pt.PayInBankAccountNo = bankAccount.AccountNumber;
+                    pt.PayInBankAccountName = bankAccount.AccountName;
                 }
             }
 
@@ -337,7 +356,7 @@ namespace Its.Onix.Api.Services
             pt.ProcessingMessages = JsonSerializer.Serialize(lines);
 
             //เก็บ Daily Tx Balance ของ merchant และ bank account ไว้ด้วย เพื่อเอาไว้ใช้ตรวจสอบ limit ต่อวัน
-            await UpdateDailyTxBalance(pt);
+            await UpdateDailyTxBalance(pt, bankAccount);
 
             //สร้าง job ตรงนี้ พร้อมส่ง jobId ให้กับ Payment Tx เผื่อเอาไว้ใช้ดู log การ process ในแต่ละ step ได้ง่ายขึ้น
             var jobType = "Payment.Failed";
@@ -465,6 +484,40 @@ namespace Its.Onix.Api.Services
             return newJob;
         }
 
+        private async Task<MJob> CreatePaymentExceededLimitJob(string orgId, string jobType, MBankAccount bankAccount, double currentDailyTxAmount)
+        {
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "PaymentTransaction.CreatePaymentExceededLimitJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "CURRENT_DAILY_TX_AMOUNT", Value = currentDailyTxAmount.ToString() },
+
+                    new NameValue { Name = "BANK_ACCOUNT_ID", Value = bankAccount?.Id.ToString() },
+                    new NameValue { Name = "BANK_ACCOUNT_NAME", Value = bankAccount?.AccountName },
+                    new NameValue { Name = "BANK_ACCOUNT_NO", Value = bankAccount?.AccountNumber },
+                    new NameValue { Name = "BANK_ACCOUNT_DAILY_QUOTA", Value = bankAccount?.DailyQuota.ToString() },
+                    new NameValue { Name = "BANK_CODE", Value = bankAccount?.BankCode },
+                ]
+            };
+
+            //trigger job ให้ทำงานทันที
+            var result = _jobService!.AddJob(orgId, job, false); 
+            var newJob = result?.Job!;
+
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(job);
+            _ = await _redis.PublishMessageAsync(stream!, message);
+
+            return newJob;
+        }
 
         public async Task<List<MPaymentTransaction>> GetPaymentTransactions(string orgId, VMPaymentTransaction param)
         {
