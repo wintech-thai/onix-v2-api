@@ -267,7 +267,7 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
-            MBankAccount? bankAccount = null;
+            var bankAccount = await _bankAccountRepo.GetBankAccountById(bankAccountId);
 
             if (pmr != null)
             {
@@ -308,10 +308,9 @@ namespace Its.Onix.Api.Services
             else
             {
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
-                bankAccount = await _bankAccountRepo.GetBankAccountById(bankAccountId);
                 if (bankAccount == null)
                 {
-                    lines.Add($"STEP7 : Info -> Unable to found bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
+                    lines.Add($"STEP7 : Info -> Unable to find bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
                 }
                 else
                 {
