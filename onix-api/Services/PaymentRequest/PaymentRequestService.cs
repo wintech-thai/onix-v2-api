@@ -1052,6 +1052,26 @@ namespace Its.Onix.Api.Services
                 r.Status = "ERROR_NO_PAYIN_ACCOUNT_MATCH";
                 r.Description = $"No pay-in bank account match!!!";
 
+                paymentRequest.ResponseData = "{}";
+
+                var errorMessages = JsonSerializer.Serialize(lines);
+                paymentRequest.ProcessingMessages = errorMessages;
+
+                //Logic สำหรับการสร้าง QR payment ตรงนี้
+                paymentRequest.Status = "Rejected";
+                paymentRequest.Direction = "PayIn";
+                paymentRequest.PayinBankAccountName = "";
+                paymentRequest.PayinBankAccountNo = "";
+                paymentRequest.PayinBankCode = "";
+                paymentRequest.PayinPromptPayId = "";
+                paymentRequest.PayinAccountType = "";
+                paymentRequest.PayinAccountLevel = "";
+                paymentRequest.PayInFeePct = 0;
+                paymentRequest.PayinBankAccountId = "";
+
+                //ให้สร้างเอาไว้หน่อย เพื่อให้มี record ไว้ดูย้อนหลัง
+                _ = await repository!.AddPaymentRequest(paymentRequest);
+
                 return r;
             }
 
