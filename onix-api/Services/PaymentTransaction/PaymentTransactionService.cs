@@ -184,6 +184,8 @@ namespace Its.Onix.Api.Services
         public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
+            _bankAccountRepo!.SetCustomOrgId(orgId);
+
             var r = new MVPaymentTransaction()
             {
                 Status = "OK",
@@ -213,15 +215,42 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Check ว่า merchant ที่เลือกนั้นสามารถ match กับ bank account ของ payment tx ได้หรือไม่ ถ้าไม่ match ให้ return error กลับไป
-            //TODO : ให้ดูด้วยว่า merchant นั้นใช้ global bank account ได้ด้วยหรือไม่ ถ้าไม่ได้ก็ return error กลับไป
-            // ดู GetMerchantsForBankAccount() จาก BankAccountService.cs
-
             var mc = merchant.Merchant!;
             var merchantOrgId = mc.OrgId!;
 
+            var ba = await _bankAccountRepo.GetBankAccountById(pmt.PayInBankAccountId!);
+            if (ba == null)
+            {
+                r.Status = "ERROR_BANK_ACCOUNT_NOT_FOUND";
+                r.Description = $"Bank Account ID [{pmt.PayInBankAccountId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (ba.AccountLevel == "Global")
+            {
+                if (mc.IncludeGlobalBankAccount != true)
+                {
+                    //ให้ดูด้วยว่า merchant นั้นใช้ global bank account ได้ด้วยหรือไม่ ถ้าไม่ได้ก็ return error กลับไป
+                    r.Status = "ERROR_MERCHANT_NOT_ALLOW_GLOBAL_BANK_ACCOUNT";
+                    r.Description = $"Merchant ID [{merchantId}] is not allowed to use Global Bank Account, Bank Account ID=[{ba.Id}]";
+
+                    return r;
+                }
+            }
+            else
+            {
+                //อยู่ใน list ของ merchant หรือไม่ ถ้าไม่อยู่ก็ return error กลับไป
+                var merchantAllow = await _bankAccountRepo.GetMerchantsForBankAccount(pmt.PayInBankAccountId!);
+                if (!merchantAllow.Any(x => x.MerchantId == merchantId))
+                {
+                    r.Status = "ERROR_MERCHANT_NOT_ALLOW_BANK_ACCOUNT";
+                    r.Description = $"Merchant ID [{merchantId}] is not allowed to use Bank Account ID=[{ba.Id}]";
+                    return r;
+                }
+            }
+
             pmt.OrgId = merchantOrgId; //เปลี่ยนเป็นของ merchant ที่เลือก จากของเดิมที่เป็น global เพราะ เป็น Unidentified Payment Tx
-Console.WriteLine($"DEBUG1 - ApproveUnidentifiedPaymentTx() - [{paymentTransactionId}] --> [{pmt.OrgId}]");
             pmt.Status = "Approved";
             pmt.MerchantId = mc.Id.ToString();
             pmt.Currency = "THB"; //ให้เป็น THB ไปก่อนเพราะว่า merchant มี wallet เดียว
