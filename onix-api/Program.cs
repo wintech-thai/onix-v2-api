@@ -66,6 +66,12 @@ namespace Its.Onix.Api
                 {
                     return GoogleCredential.FromFile(googleSecretPath).CreateScoped("https://www.googleapis.com/auth/cloud-platform");
                 });
+
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
+            }
+            else
+            {
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsDummy>();
             }
 
             builder.Services.AddSingleton(sp =>
@@ -94,7 +100,6 @@ namespace Its.Onix.Api
                 return clientBuilder.Build();
             });
 
-            builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
             builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
             builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
 
