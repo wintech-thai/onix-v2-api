@@ -396,6 +396,7 @@ namespace Its.Onix.Api.Database.Repositories
             var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
             if (existing != null)
             {
+                existing.OrgId = paymentRequest.OrgId;
                 existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
                 existing.PayoutBankCode = paymentRequest.PayoutBankCode;
                 existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;

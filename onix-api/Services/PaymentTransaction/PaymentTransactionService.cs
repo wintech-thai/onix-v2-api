@@ -212,9 +212,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : Check ว่า merchant ที่เลือกนั้นสามารถ match กับ bank account ของ payment tx ได้หรือไม่ ถ้าไม่ match ให้ return error กลับไป
+            //TODO : ให้ดูด้วยว่า merchant นั้นใช้ global bank account ได้ด้วยหรือไม่ ถ้าไม่ได้ก็ return error กลับไป
+            // ดู GetMerchantsForBankAccount() จาก BankAccountService.cs
+
             var mc = merchant.Merchant!;
             var merchantOrgId = mc.OrgId!;
 
+            pmt.OrgId = merchantOrgId; //เปลี่ยนเป็นของ merchant ที่เลือก จากของเดิมที่เป็น global เพราะ เป็น Unidentified Payment Tx
             pmt.Status = "Approved";
             pmt.MerchantId = mc.Id.ToString();
             pmt.Currency = "THB"; //ให้เป็น THB ไปก่อนเพราะว่า merchant มี wallet เดียว
@@ -500,6 +505,7 @@ namespace Its.Onix.Api.Services
             //เก็บ Daily Tx Balance ของ merchant และ bank account ไว้ด้วย เพื่อเอาไว้ใช้ตรวจสอบ limit ต่อวัน
             await UpdateDailyTxBalance(pt, bankAccount);
 
+
             //สร้าง job ตรงนี้ พร้อมส่ง jobId ให้กับ Payment Tx เผื่อเอาไว้ใช้ดู log การ process ในแต่ละ step ได้ง่ายขึ้น
             var jobType = "Payment.Unidentified";
             if (pt.Status == "Identified")
@@ -510,7 +516,9 @@ namespace Its.Onix.Api.Services
             pt.JobId = job?.Id.ToString();
 
 
+            //=== Create Payment Tx
             var mpt = await repository!.AddPaymentTransaction(pt);
+
             var mvPt = new MVPaymentTransaction()
             {
                 Status = "OK",
