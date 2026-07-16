@@ -221,6 +221,7 @@ namespace Its.Onix.Api.Services
             var merchantOrgId = mc.OrgId!;
 
             pmt.OrgId = merchantOrgId; //เปลี่ยนเป็นของ merchant ที่เลือก จากของเดิมที่เป็น global เพราะ เป็น Unidentified Payment Tx
+Console.WriteLine($"DEBUG1 - ApproveUnidentifiedPaymentTx() - [{paymentTransactionId}] --> [{pmt.OrgId}]");
             pmt.Status = "Approved";
             pmt.MerchantId = mc.Id.ToString();
             pmt.Currency = "THB"; //ให้เป็น THB ไปก่อนเพราะว่า merchant มี wallet เดียว
