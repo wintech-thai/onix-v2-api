@@ -66,16 +66,21 @@ namespace Its.Onix.Api.Models
         [Column("whitelist_bank_account_names")]
         public string? WhitelistBankAccountNames { get; set; } //serialize มาจาก List<string> WhitelistBankAccountNamesArr ห้าม return ออกไปตรง ๆ
 
-        [NotMapped]
-        public List<string>? WhitelistBankAccountNamesArr { get; set; } //deserialize มาจาก WhitelistBankAccountNames
-
-
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 
         [Column("random_decimal")]
-        public bool? RandomDecimal { get; set; } //Active, Pending, Disabled
+        public bool? RandomDecimal { get; set; }
+
+        [Column("payin_daily_tx_amount_limit")]
+        public decimal? PayinDailyTxAmountLimit { get; set; }
+
+        [Column("payin_daily_tx_count_limit")]
+        public decimal? PayinDailyTxCountLimit { get; set; }
+
+        [NotMapped]
+        public List<string>? WhitelistBankAccountNamesArr { get; set; } //deserialize มาจาก WhitelistBankAccountNames
 
         [NotMapped]
         public int? PayInBankAccountCount { get; set; }
@@ -86,6 +91,11 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public decimal? CurrentBalance { get; set; }
 
+        [NotMapped]
+        public decimal? CurrentPayinDailyTxAmount { get; set; }
+
+        [NotMapped]
+        public decimal? CurrentPayinDailyTxCount { get; set; }
 
         public MMerchant()
         {

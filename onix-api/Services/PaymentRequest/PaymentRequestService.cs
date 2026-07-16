@@ -927,6 +927,25 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private async Task<MTxBalance> GetMerchantCurrentDailyTxBalance(string orgId, MMerchant merchant)
+        {
+            var merchantId = merchant.Id.ToString()!;
+
+            var cacheKey = CacheHelper.CreateMerchantDailyTxKey(orgId, merchantId);
+            var cacheValue = await _redis!.GetObjectAsync<MTxBalance>(cacheKey);
+
+            if (cacheValue == null)
+            {
+                cacheValue = new MTxBalance()
+                {
+                    TxAmount = 0,
+                    TxCount = 0,
+                };
+            }
+
+            return cacheValue;
+        }
+
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
@@ -988,6 +1007,30 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            var currentDailyTxBalance = await GetMerchantCurrentDailyTxBalance("global", merchant);
+
+            var txAmountLimit = merchant.PayinDailyTxAmountLimit;
+            if (txAmountLimit > 0)
+            {
+                //จะทำการ check ถ้า set ค่า txAmountLimit ไว้มากกว่า 0
+                if ((currentDailyTxBalance.TxAmount + (decimal) paymentRequest.RequestedAmount!) > txAmountLimit)
+                {
+                    r.Status = "ERROR_DAILY_AMOUNT_EXCEEDED";
+                    r.Description = $"Merchant daily transaction amount exceeded, CurrentDailyTxAmount=[{currentDailyTxBalance.TxAmount}], RequestedAmount=[{paymentRequest.RequestedAmount}], MaxDailyAmount=[{txAmountLimit}]";
+                }
+            }
+
+            var txCountLimit = merchant.PayinDailyTxCountLimit;
+            if (txCountLimit > 0)
+            {
+                //จะทำการ check ถ้า set ค่า txCountLimit ไว้มากกว่า 0
+                if ((currentDailyTxBalance.TxCount + 1) > txCountLimit)
+                {
+                    r.Status = "ERROR_DAILY_COUNT_EXCEEDED";
+                    r.Description = $"Merchant daily transaction count exceeded, CurrentDailyTxCount=[{currentDailyTxBalance.TxCount}], MaxDailyCount=[{txCountLimit}]";
+                }
+            }
+
             //Validate ว่า amount เกิน range ของ merchant มั้ย
             var minAmt = merchant.PayinMinAmount;
             var maxAmt = merchant.PayinMaxAmount;
@@ -1008,6 +1051,26 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "ERROR_NO_PAYIN_ACCOUNT_MATCH";
                 r.Description = $"No pay-in bank account match!!!";
+
+                paymentRequest.ResponseData = "{}";
+
+                var errorMessages = JsonSerializer.Serialize(lines);
+                paymentRequest.ProcessingMessages = errorMessages;
+
+                //Logic สำหรับการสร้าง QR payment ตรงนี้
+                paymentRequest.Status = "Rejected";
+                paymentRequest.Direction = "PayIn";
+                paymentRequest.PayinBankAccountName = "";
+                paymentRequest.PayinBankAccountNo = "";
+                paymentRequest.PayinBankCode = "";
+                paymentRequest.PayinPromptPayId = "";
+                paymentRequest.PayinAccountType = "";
+                paymentRequest.PayinAccountLevel = "";
+                paymentRequest.PayInFeePct = 0;
+                paymentRequest.PayinBankAccountId = "";
+
+                //ให้สร้างเอาไว้หน่อย เพื่อให้มี record ไว้ดูย้อนหลัง
+                _ = await repository!.AddPaymentRequest(paymentRequest);
 
                 return r;
             }
@@ -1060,6 +1123,8 @@ namespace Its.Onix.Api.Services
                 lines.Add($"Step01 - User specified bank account ID : SelectedPayInBankAccountId -> [{pr.SelectedPayInBankAccountId}]");
                 //มีการระบุ Bank Account ID เข้ามาเองโดย user
                 var bankAcct = await _bankAccountRepo!.GetBankAccountById(pr.SelectedPayInBankAccountId);
+
+                //ไม่ต้องเข็ค daily limit ตรงนี้ เพราะถือว่า user ระบุเข้ามาเองแล้ว
                 return (bankAcct, lines);
             }
 
@@ -1127,8 +1192,17 @@ namespace Its.Onix.Api.Services
                         continue;
                     }
 
+                    //ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+                    var ba1 = await _bankAccountRepo!.GetBankAccountById(bankAccountId);
+                    var mvBa1 = await IsDailyBalanceExceeded(ba1!);
+                    if (mvBa1.Status == "YES")
+                    {
+                        lines.Add($"Step04.1 - Skip global bank account, daily balance exceeded ({mvBa1.Description}) : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                        continue;
+                    }
+
                     lines.Add($"Step04 - Use global bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                    return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
+                    return (ba1, lines);
                 }
 
                 if (bankAccount.AccountLevel == "Selected")
@@ -1136,8 +1210,17 @@ namespace Its.Onix.Api.Services
                     //ต้องดูว่า merchant นั้นได้ผูกกับ bank นี้ไว้หรือไม่
                     if (dict.ContainsKey(bankAccountId))
                     {
+                        //ให้เช็คต่อว่ายอด daily balance ของ bank account นี้เกิน limit หรือยัง ถ้าเกินก็ skip ไป
+                        var ba2 = await _bankAccountRepo!.GetBankAccountById(bankAccountId);
+                        var mvBa2 = await IsDailyBalanceExceeded(ba2!);
+                        if (mvBa2.Status == "YES")
+                        {
+                            lines.Add($"Step05.0 - Skip selected bank account, daily balance exceeded ({mvBa2.Description}) : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
+                            continue;
+                        }
+
                         lines.Add($"Step05.1 - Use selected bank account : Account -> [{bankCode} - {bankAccountName}] [bankAccountNo] [{promptPayId}]");
-                        return (await _bankAccountRepo!.GetBankAccountById(bankAccountId), lines);
+                        return (ba2, lines);
                     }
                     else
                     {
@@ -1150,6 +1233,45 @@ namespace Its.Onix.Api.Services
 
             //ไม่มี bank account ที่ match
             return (null, lines);
+        }
+
+        private async Task<MVBankAccount> IsDailyBalanceExceeded(MBankAccount ba)
+        {
+            var result = new MVBankAccount()
+            {
+                Status = "NO",
+                Description = "Success",
+            };
+            
+            var dailyLimit = ba.DailyQuota;
+            if (dailyLimit <= 0)
+            {
+                //ไม่มีการตั้งค่า daily limit เลยถือว่าไม่เกิน limit
+                result.Status = "NO";
+                result.Description = "No daily limit configured for bank account";
+                return result;
+            }
+
+            //ให้เอา bankAccountId ไป lookup ใน Redis ว่ามี daily balance ของ bank account นี้เท่าไหร่แล้ว ถ้าเกิน limit ก็ return false
+            var cacheKey = CacheHelper.CreatePayInBankAccountDailyTxKey("global", ba.Id.ToString()!);
+            var cacheValue = await _redis!.GetObjectAsync<MTxBalance>(cacheKey);
+
+            if (cacheValue == null)
+            {
+                result.Status = "NO";
+                result.Description = "No daily balance found for bank account";
+                return result;
+            }
+
+            //ตรงนี้ ยังไม่ต้องเอายอดเงินที่จะโอนมารวมกับ cacheValue.TxAmount
+            if ((double) cacheValue.TxAmount >= dailyLimit)
+            {
+                result.Status = "YES";
+                result.Description = $"Daily balance [{cacheValue.TxAmount}] exceeded, limit [{dailyLimit}]";
+                return result;
+            }
+
+            return result;
         }
 
         //ถ้า merchant ไม่ได้กรอก whitelist ไว้เลย ก็ถือว่าใช้ได้กับทุกชื่อ bank account name

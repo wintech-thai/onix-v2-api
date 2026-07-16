@@ -12,11 +12,13 @@ namespace Its.Onix.Api.Services
         private readonly IBankAccountRepository? repository = null;
         private readonly IPointRepository? _pointRepo = null;
         private readonly List<MBank> _banks;
+        private readonly IRedisHelper _redis;
 
-        public BankAccountService(IBankAccountRepository repo, IPointRepository pointRepo) : base()
+        public BankAccountService(IBankAccountRepository repo, IPointRepository pointRepo, IRedisHelper redis) : base()
         {
             repository = repo;
             _pointRepo = pointRepo;
+            _redis = redis;
 
             _banks = [
                 new() 
@@ -179,6 +181,24 @@ namespace Its.Onix.Api.Services
             return false;
         }
 
+        private async Task<MTxBalance> GetBankAccountCurrentDailyTxBalance(string orgId, string bankAccountId)
+        {
+            var r = new MTxBalance()
+            {
+                TxCount = 0,
+                TxAmount = 0
+            };
+
+            var key = CacheHelper.CreatePayInBankAccountDailyTxKey(orgId, bankAccountId);
+            var cacheValue = await _redis.GetObjectAsync<MTxBalance>(key);
+            if (cacheValue != null)
+            {
+                r = cacheValue;
+            }
+
+            return r;
+        }
+
         public async Task<MVBankAccount> GetBankAccountById(string orgId, string bankAccountId)
         {
             repository!.SetCustomOrgId(orgId);
@@ -213,6 +233,10 @@ namespace Its.Onix.Api.Services
                 result.BankConfigObj = obj;                
             }
 
+            // ดึงข้อมูลจาก cache
+            var currentDailyTxBalance = await GetBankAccountCurrentDailyTxBalance("global", bankAccountId);
+            result.CurrentPayinDailyTxAmount = currentDailyTxBalance.TxAmount;
+            
             result.IsNativeQrSupport = IsNativeQrSupport(result);
 
             _pointRepo!.SetCustomOrgId(result.OrgId!); //ตรงนี้จะเป็น global

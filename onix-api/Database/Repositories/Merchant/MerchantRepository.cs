@@ -104,6 +104,8 @@ namespace Its.Onix.Api.Database.Repositories
                 CreatedDate = x.merchant.CreatedDate,
                 DiscardCent = x.merchant.DiscardCent,
                 IncludeGlobalBankAccount = x.merchant.IncludeGlobalBankAccount,
+                PayinDailyTxAmountLimit = x.merchant.PayinDailyTxAmountLimit,
+                PayinDailyTxCountLimit = x.merchant.PayinDailyTxCountLimit,
             });
         }
 
@@ -180,6 +182,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.DiscardCent = merchant.DiscardCent;
                 existing.IncludeGlobalBankAccount = merchant.IncludeGlobalBankAccount;
                 existing.WhitelistBankAccountNames = merchant.WhitelistBankAccountNames;
+                existing.PayinDailyTxAmountLimit = merchant.PayinDailyTxAmountLimit;
+                existing.PayinDailyTxCountLimit = merchant.PayinDailyTxCountLimit;
             }
 
             await context.SaveChangesAsync();

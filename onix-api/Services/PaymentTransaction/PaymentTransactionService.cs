@@ -15,6 +15,7 @@ namespace Its.Onix.Api.Services
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
         private readonly IJobService? _jobService = null;
+        private readonly IMerchantService? _merchantService = null;
         private readonly IRedisHelper _redis;
         private readonly IHubContext<PaymentHub> _hub;
 
@@ -24,6 +25,7 @@ namespace Its.Onix.Api.Services
             IPointService pointService,
             IBankAccountRepository bankAccountRepo,
             IJobService jobService,
+            IMerchantService merchantService,
             IHubContext<PaymentHub> hub,
             IRedisHelper redis) : base()
         {
@@ -34,6 +36,7 @@ namespace Its.Onix.Api.Services
             _jobService = jobService;
             _redis = redis;
             _hub = hub;
+            _merchantService = merchantService;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)
@@ -115,6 +118,273 @@ namespace Its.Onix.Api.Services
             var result = await _paymentRequestRepo.GetPaymentRequestsForPaymentTx(param);
 
             return result;
+        }
+
+        private async Task UpdateDailyTxBalance(MPaymentTransaction pt, MBankAccount? bankAccount)
+        {
+            var orgId = "global"; //ให้ตรงกับ GetMerchantCurrentDailyTxBalance() ใน PaymentRequestService.cs
+            var merchantId = pt.MerchantId;
+            var bankAccountId = pt.PayInBankAccountId;
+            var txAmount = pt.TxAmountDecimal ?? 0;
+            double currentDailyTxAmount = 0;
+
+            var merchantCacheKey = CacheHelper.CreateMerchantDailyTxKey(orgId, merchantId!);
+            var bankAccountCacheKey = CacheHelper.CreatePayInBankAccountDailyTxKey(orgId, bankAccountId!);
+
+            if (merchantId != null)
+            {
+                //สามารถ match merchant ได้ ให้เก็บ Daily Tx Balance ของ merchant ไว้ด้วย
+                var currentMerchantDailyTxBalance = await _redis.GetObjectAsync<MTxBalance>(merchantCacheKey);
+                if (currentMerchantDailyTxBalance == null)
+                {
+                    currentMerchantDailyTxBalance = new MTxBalance();
+                }
+
+                currentMerchantDailyTxBalance.TxCount += 1;
+                currentMerchantDailyTxBalance.TxAmount += txAmount;
+
+                await _redis.SetObjectAsync(merchantCacheKey, currentMerchantDailyTxBalance, TimeSpan.FromDays(1.1));
+            }
+
+            if (bankAccountId != null)
+            {
+                //สามารถ match bank account ได้ ให้เก็บ Daily Tx Balance ของ bank account ไว้ด้วย
+                var currentBankAccountDailyTxBalance = await _redis.GetObjectAsync<MTxBalance>(bankAccountCacheKey);
+                if (currentBankAccountDailyTxBalance == null)
+                {
+                    currentBankAccountDailyTxBalance = new MTxBalance();
+                }
+
+                currentBankAccountDailyTxBalance.TxCount += 1;
+                currentBankAccountDailyTxBalance.TxAmount += txAmount;
+
+                currentDailyTxAmount = (double) currentBankAccountDailyTxBalance.TxAmount;
+
+                await _redis.SetObjectAsync(bankAccountCacheKey, currentBankAccountDailyTxBalance, TimeSpan.FromDays(1.1));
+            }
+
+            if (bankAccount != null)
+            {
+                //Check logic ว่ายอด daily balance เกิน limit, ถ้าเกินให้สร้าง job แจ้งเตือนให้ admin ของ merchant ทราบ
+                var threshold = 0.95;
+                double dailyTxAmountLimit = bankAccount.DailyQuota ?? 0;
+                var thresholdAmount = (double) dailyTxAmountLimit * threshold;
+
+                if (dailyTxAmountLimit > 0)
+                {
+                    if (currentDailyTxAmount > thresholdAmount)
+                    {
+                        var jobType = "Payment.DailyTxAmountLimitExceeded";
+                        await CreatePaymentExceededLimitJob(orgId, jobType, bankAccount, pt, currentDailyTxAmount, threshold); //ให้มี threshold นิดหน่อยเพื่อป้องกันการสร้าง job ซ้ำ ๆ
+                    }
+                }
+            }
+        }
+
+        public async Task<MVPaymentTransaction> RejectUnidentifiedPaymentTx(string orgId, string paymentTransactionId, MPaymentTransaction pmt)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var existingPmt = await GetPaymentTransactionById(orgId, paymentTransactionId);
+            if (existingPmt.Status != "OK")
+            {
+                return existingPmt;
+            }
+
+            var pmt1 = existingPmt.PaymentTransaction!;
+            if (pmt1.Status != "UnIdentified")
+            {
+                r.Status = "ERROR_PAYMENT_TX_NOT_UNIDENTIFIED";
+                r.Description = $"Payment Tx ID [{paymentTransactionId}] is not UnIdentified, current status=[{pmt.Status}]";
+
+                return r;
+            }
+
+            pmt.Status = "Rejected";
+
+            var pmt2 = await repository!.RejectPaymentTransactionById(paymentTransactionId, pmt);
+
+            r.PaymentTransaction = pmt2;
+            return r;
+        }
+
+        public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _bankAccountRepo!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var paymentTx = await GetPaymentTransactionById(orgId, paymentTransactionId);
+            if (paymentTx.Status != "OK")
+            {
+                return paymentTx;
+            }
+
+            var pmt = paymentTx.PaymentTransaction!;
+            if (pmt.Status != "UnIdentified")
+            {
+                r.Status = "ERROR_PAYMENT_TX_NOT_UNIDENTIFIED";
+                r.Description = $"Payment Tx ID [{paymentTransactionId}] is not UnIdentified, current status=[{pmt.Status}]";
+
+                return r;
+            }
+
+            var merchant = await _merchantService!.GetMerchantById(orgId, merchantId);
+            if (merchant.Status != "OK")
+            {
+                r.Status = merchant.Status;
+                r.Description = merchant.Description;
+                return r;
+            }
+
+            var mc = merchant.Merchant!;
+            var merchantOrgId = mc.OrgId!;
+
+            var ba = await _bankAccountRepo.GetBankAccountById(pmt.PayInBankAccountId!);
+            if (ba == null)
+            {
+                r.Status = "ERROR_BANK_ACCOUNT_NOT_FOUND";
+                r.Description = $"Bank Account ID [{pmt.PayInBankAccountId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            if (ba.AccountLevel == "Global")
+            {
+                if (mc.IncludeGlobalBankAccount != true)
+                {
+                    //ให้ดูด้วยว่า merchant นั้นใช้ global bank account ได้ด้วยหรือไม่ ถ้าไม่ได้ก็ return error กลับไป
+                    r.Status = "ERROR_MERCHANT_NOT_ALLOW_GLOBAL_BANK_ACCOUNT";
+                    r.Description = $"Merchant ID [{merchantId}] is not allowed to use Global Bank Account, Bank Account ID=[{ba.Id}]";
+
+                    return r;
+                }
+            }
+            else
+            {
+                //อยู่ใน list ของ merchant หรือไม่ ถ้าไม่อยู่ก็ return error กลับไป
+                var merchantAllow = await _bankAccountRepo.GetMerchantsForBankAccount(pmt.PayInBankAccountId!);
+                if (!merchantAllow.Any(x => x.MerchantId == merchantId))
+                {
+                    r.Status = "ERROR_MERCHANT_NOT_ALLOW_BANK_ACCOUNT";
+                    r.Description = $"Merchant ID [{merchantId}] is not allowed to use Bank Account ID=[{ba.Id}]";
+                    return r;
+                }
+            }
+
+            pmt.OrgId = merchantOrgId; //เปลี่ยนเป็นของ merchant ที่เลือก จากของเดิมที่เป็น global เพราะ เป็น Unidentified Payment Tx
+            pmt.Status = "Approved";
+            pmt.MerchantId = mc.Id.ToString();
+            pmt.Currency = "THB"; //ให้เป็น THB ไปก่อนเพราะว่า merchant มี wallet เดียว
+            pmt.PayInFeePct = mc.PayinFeePct;
+            pmt.PayInFee = (double) Math.Round((decimal) (pmt.TxAmount! * mc.PayinFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
+            pmt.PayInTotalAmount = pmt.TxAmount - pmt.PayInFee;
+
+            if (mc.DiscardCent)
+            {
+                //ที่ merchant มีการ config ไว้ว่าให้หักเศษสตางค์
+                //เอาเศษสตางค์มาเป็น commission ด้วย
+
+                var amount = (decimal) pmt.PayInTotalAmount!;
+                var decimalPart = amount - Math.Truncate(amount);
+
+                pmt.PayInFee += (double) decimalPart; //เอาเศษสตางค์มาเป็นค่าธรรมเนียม
+                pmt.PayInTotalAmount = pmt.TxAmount - pmt.PayInFee; //คำนวณยอด Total ใหม่, ยอดออกมาควรเป็นจำนวนเต็ม
+                pmt.DiscardCent = true;
+            }
+
+            pmt.PayInFeeDecimal = (decimal) pmt.PayInFee!;
+            pmt.PayInTotalAmountDecimal = pmt.TxAmountDecimal - pmt.PayInFeeDecimal;
+            pmt.PaymentRequestId = null; //เป็น Unidentified Payment Tx ที่ถูก Approve ให้เป็นของ merchant โดยตรง ไม่ได้ match กับ Payment Request ใด ๆ
+
+
+            //UPdate cache - daily tx balance ของ merchant แต่ของ bank account ได้อัพเดตไปก่อนหน้าแล้วตอนที่สร้าง Payment Tx
+            //เก็บ Daily Tx Balance ของ merchant และ bank account ไว้ด้วย เพื่อเอาไว้ใช้ตรวจสอบ limit ต่อวัน
+            var oldBankAccountId = pmt.PayInBankAccountId;
+            pmt.PayInBankAccountId = null; //ไม่ต้องอัพเดต daily tx balance ของ bank account อีกครั้งเพราะว่าอัพเดตไปแล้วตอนที่สร้าง Payment
+            await UpdateDailyTxBalance(pmt, null);
+            pmt.PayInBankAccountId = oldBankAccountId;
+
+
+            //==== Update Payment Tx
+            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
+            paymentTx.PaymentTransaction = mpt;
+
+
+            //=== Update merchant & bank account wallet
+            var mcWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
+            if (mcWallet!.Status == "OK")
+            {
+                var wallet = mcWallet.Wallet;
+                var pointTx = new MPointTx()
+                {
+                    WalletId = wallet!.Id.ToString(),
+
+                    TxAmount =  (long)Math.Floor((decimal) pmt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                    //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
+                    TxAmountDecimal = pmt.PayInTotalAmountDecimal,
+
+                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                };
+
+                await _pointService!.AddPoint(merchantOrgId, pointTx);
+            }
+
+            var baWallet = await _pointService!.GetWalletByBankAccountId(orgId, pmt.PayInBankAccountId!);
+            if (baWallet!.Status == "OK")
+            {
+                var wallet = baWallet.Wallet;
+                var pointTx = new MPointTx()
+                {
+                    WalletId = wallet!.Id.ToString(),
+
+                    TxAmount = 1, //นับจำนวนครั้งของ transaction เผื่อเอาไว้ใช้ check limit จำนวนครั้งต่อวัน
+                    //TxAmountDecimal ตรงนี้จะเป็นค่าที่ยังไม่หัก fee เพื่อนำไปเป็นยอดที่เข้า wallet
+                    TxAmountDecimal = pmt.TxAmountDecimal,
+
+                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                };
+
+                await _pointService!.AddPoint(orgId, pointTx);
+            }
+
+            //=== Trigger job
+            var pmr = new MPaymentRequest()
+            {
+                Id = Guid.NewGuid(),
+                RefId1 = pmt.Id.ToString(),
+                RefId2 = "",
+                RefId3 = "",
+
+                MerchantId = mc.Id.ToString(),
+                MerchantCode = mc.Code,
+                MerchantName = mc.Name,
+
+                RequestedAmount = pmt.TxAmount,
+                GeneratedAmount = pmt.TxAmount,
+            };
+
+            var jobType = "Payment.Success";
+            var job = CreatePaymentSuccessJob(mc.OrgId!, jobType, pmt, pmr!);
+            pmt.JobId = job?.Id.ToString();
+
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(job);
+            _ = await _redis.PublishMessageAsync(stream!, message);
+
+            return paymentTx;
         }
 
         public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
@@ -209,6 +479,8 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
+            var bankAccount = await _bankAccountRepo.GetBankAccountById(bankAccountId);
+
             if (pmr != null)
             {
                 repository!.SetCustomOrgId(pmr.OrgId!); //ตรงนี้เป็น orgId ของ Merchant
@@ -248,19 +520,18 @@ namespace Its.Onix.Api.Services
             else
             {
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
-                var ba = await _bankAccountRepo.GetBankAccountById(bankAccountId);
-                if (ba == null)
+                if (bankAccount == null)
                 {
-                    lines.Add($"STEP7 : Info -> Unable to found bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
+                    lines.Add($"STEP7 : Info -> Unable to find bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
                 }
                 else
                 {
                     lines.Add($"STEP8 : Info -> Only able to identify bank account, BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");                    
 
                     pt.PayInBankAccountId = bankAccountId;
-                    pt.PayInBankCode = ba.BankCode;
-                    pt.PayInBankAccountNo = ba.AccountNumber;
-                    pt.PayInBankAccountName = ba.AccountName;
+                    pt.PayInBankCode = bankAccount.BankCode;
+                    pt.PayInBankAccountNo = bankAccount.AccountNumber;
+                    pt.PayInBankAccountName = bankAccount.AccountName;
                 }
             }
 
@@ -295,8 +566,12 @@ namespace Its.Onix.Api.Services
             pt.RawInput = JsonSerializer.Serialize(paymentNotiLine); //"{}";
             pt.ProcessingMessages = JsonSerializer.Serialize(lines);
 
+            //เก็บ Daily Tx Balance ของ merchant และ bank account ไว้ด้วย เพื่อเอาไว้ใช้ตรวจสอบ limit ต่อวัน
+            await UpdateDailyTxBalance(pt, bankAccount);
+
+
             //สร้าง job ตรงนี้ พร้อมส่ง jobId ให้กับ Payment Tx เผื่อเอาไว้ใช้ดู log การ process ในแต่ละ step ได้ง่ายขึ้น
-            var jobType = "Payment.Failed";
+            var jobType = "Payment.Unidentified";
             if (pt.Status == "Identified")
             {
                 jobType = "Payment.Success";
@@ -305,7 +580,9 @@ namespace Its.Onix.Api.Services
             pt.JobId = job?.Id.ToString();
 
 
+            //=== Create Payment Tx
             var mpt = await repository!.AddPaymentTransaction(pt);
+
             var mvPt = new MVPaymentTransaction()
             {
                 Status = "OK",
@@ -395,6 +672,7 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
@@ -421,6 +699,51 @@ namespace Its.Onix.Api.Services
             return newJob;
         }
 
+        private async Task<MJob> CreatePaymentExceededLimitJob(
+            string orgId, string jobType, 
+            MBankAccount bankAccount, 
+            MPaymentTransaction pmt,
+            double currentDailyTxAmount,
+            double threshold)
+        {
+            double dailyTxAmountLimit = bankAccount.DailyQuota ?? 0;
+            var thresholdAmount = (double) dailyTxAmountLimit * threshold;
+
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "PaymentTransaction.CreatePaymentExceededLimitJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
+                    new NameValue { Name = "CURRENT_DAILY_TX_AMOUNT", Value = currentDailyTxAmount.ToString() },
+                    new NameValue { Name = "THRESHOLD_RATIO", Value = threshold.ToString() },
+                    new NameValue { Name = "THRESHOLD_AMOUNT", Value = thresholdAmount.ToString() },
+
+                    new NameValue { Name = "BANK_ACCOUNT_ID", Value = bankAccount?.Id.ToString() },
+                    new NameValue { Name = "BANK_ACCOUNT_NAME", Value = bankAccount?.AccountName },
+                    new NameValue { Name = "BANK_ACCOUNT_NO", Value = bankAccount?.AccountNumber },
+                    new NameValue { Name = "BANK_ACCOUNT_DAILY_QUOTA", Value = bankAccount?.DailyQuota.ToString() },
+                    new NameValue { Name = "BANK_CODE", Value = bankAccount?.BankCode },
+                ]
+            };
+
+            //trigger job ให้ทำงานทันที
+            var result = _jobService!.AddJob(orgId, job, false); 
+            var newJob = result?.Job!;
+
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(job);
+            _ = await _redis.PublishMessageAsync(stream!, message);
+
+            return newJob;
+        }
 
         public async Task<List<MPaymentTransaction>> GetPaymentTransactions(string orgId, VMPaymentTransaction param)
         {

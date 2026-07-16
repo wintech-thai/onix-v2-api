@@ -13,20 +13,38 @@ namespace Its.Onix.Api.Services
         private readonly IOrganizationRepository? _orgRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointRepository? _pointRepo = null;
-        //private readonly IRedisHelper _redis;
+        private readonly IRedisHelper _redis;
 
         public MerchantService(IMerchantRepository repo,
             IApiKeyRepository apiKeyRepo,
             IBankAccountRepository bankAccountRepo,
             IPointRepository pointRepo,
-            //IRedisHelper redis,
+            IRedisHelper redis,
             IOrganizationRepository orgRepo) : base()
         {
             repository = repo;
             _orgRepo = orgRepo;
-           // _redis = redis;
-           _pointRepo = pointRepo;
-           _bankAccountRepo = bankAccountRepo;
+            _redis = redis;
+            _pointRepo = pointRepo;
+            _bankAccountRepo = bankAccountRepo;
+        }
+
+        private async Task<MTxBalance> GetMerchantCurrentDailyTxBalance(string orgId, string merchantId)
+        {
+            var r = new MTxBalance()
+            {
+                TxCount = 0,
+                TxAmount = 0
+            };
+
+            var key = CacheHelper.CreateMerchantDailyTxKey(orgId, merchantId);
+            var cacheValue = await _redis.GetObjectAsync<MTxBalance>(key);
+            if (cacheValue != null)
+            {
+                r = cacheValue;
+            }
+
+            return r;
         }
 
         public async Task<MVMerchant> GetMerchantById(string orgId, string merchantId)
@@ -55,6 +73,11 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            // ดึงข้อมูลจาก cache
+            var currentDailyTxBalance = await GetMerchantCurrentDailyTxBalance("global", merchantId);
+            result.CurrentPayinDailyTxCount = currentDailyTxBalance.TxCount;
+            result.CurrentPayinDailyTxAmount = currentDailyTxBalance.TxAmount;
 
             _pointRepo!.SetCustomOrgId(result.OrgId!); //เอา OrgId ของ merchant มาใช้ได้เลย
             var wallet = await _pointRepo!.GetWalletByMerchantId(merchantId);
