@@ -183,6 +183,7 @@ namespace Its.Onix.Api.Services
 
         public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId)
         {
+            repository!.SetCustomOrgId(orgId);
             var r = new MVPaymentTransaction()
             {
                 Status = "OK",
