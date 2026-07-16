@@ -234,6 +234,7 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
+                existing.OrgId = paymentTransaction.OrgId;
                 existing.Tags = paymentTransaction.Tags;
                 existing.Status = "Approved";
 
