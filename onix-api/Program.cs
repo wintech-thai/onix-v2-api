@@ -47,15 +47,21 @@ namespace Its.Onix.Api
                 sp => ConnectionMultiplexer.Connect(redisHostStr));
             builder.Services.AddScoped<RedisHelper>();
 
-            builder.Services.AddSingleton(sp =>
-            {
-                // ถ้าใช้ service account json
-                var storageClient = StorageClient.Create(
-                    GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
-                );
 
-                return storageClient;
-            });
+            var googleSecretPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+            if (!string.IsNullOrEmpty(googleSecretPath))
+            {
+                //ตรงนี้จะมีใช้อยู่โดย Please-Scan
+                builder.Services.AddSingleton(sp =>
+                {
+                    // ถ้าใช้ service account json
+                    var storageClient = StorageClient.Create(
+                        GoogleCredential.FromFile(googleSecretPath)
+                    );
+
+                    return storageClient;
+                });
+            }
 
             builder.Services.AddSingleton(sp =>
             {
