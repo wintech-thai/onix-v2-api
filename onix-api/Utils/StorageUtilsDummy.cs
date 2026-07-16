@@ -1,11 +1,9 @@
-using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Storage.V1;
 
 namespace Its.Onix.Api.Utils
 {
     public class StorageUtilsDummy : IStorageUtils
     {
-        public StorageUtilsDummy(GoogleCredential credential, StorageClient storageClient)
+        public StorageUtilsDummy()
         {
         }
 

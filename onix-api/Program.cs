@@ -49,7 +49,11 @@ namespace Its.Onix.Api
 
 
             var googleSecretPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
-            if (!string.IsNullOrEmpty(googleSecretPath))
+            if (string.IsNullOrEmpty(googleSecretPath))
+            {
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsDummy>();
+            }
+            else
             {
                 //ตรงนี้จะมีใช้อยู่โดย Please-Scan
                 builder.Services.AddSingleton(sp =>
@@ -67,11 +71,7 @@ namespace Its.Onix.Api
                     return GoogleCredential.FromFile(googleSecretPath).CreateScoped("https://www.googleapis.com/auth/cloud-platform");
                 });
 
-                builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
-            }
-            else
-            {
-                builder.Services.AddSingleton<IStorageUtils, StorageUtilsDummy>();
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();                
             }
 
             builder.Services.AddSingleton(sp =>
