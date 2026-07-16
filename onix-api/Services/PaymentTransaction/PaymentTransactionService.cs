@@ -181,6 +181,39 @@ namespace Its.Onix.Api.Services
             }
         }
 
+        public async Task<MVPaymentTransaction> RejectUnidentifiedPaymentTx(string orgId, string paymentTransactionId, MPaymentTransaction pmt)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var existingPmt = await GetPaymentTransactionById(orgId, paymentTransactionId);
+            if (existingPmt.Status != "OK")
+            {
+                return existingPmt;
+            }
+
+            var pmt1 = existingPmt.PaymentTransaction!;
+            if (pmt1.Status != "UnIdentified")
+            {
+                r.Status = "ERROR_PAYMENT_TX_NOT_UNIDENTIFIED";
+                r.Description = $"Payment Tx ID [{paymentTransactionId}] is not UnIdentified, current status=[{pmt.Status}]";
+
+                return r;
+            }
+
+            pmt.Status = "Rejected";
+
+            var pmt2 = await repository!.RejectPaymentTransactionById(paymentTransactionId, pmt);
+
+            r.PaymentTransaction = pmt2;
+            return r;
+        }
+
         public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
