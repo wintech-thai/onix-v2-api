@@ -61,6 +61,11 @@ namespace Its.Onix.Api
 
                     return storageClient;
                 });
+
+                builder.Services.AddSingleton(sp =>
+                {
+                    return GoogleCredential.FromFile(googleSecretPath).CreateScoped("https://www.googleapis.com/auth/cloud-platform");
+                });
             }
 
             builder.Services.AddSingleton(sp =>
@@ -89,12 +94,6 @@ namespace Its.Onix.Api
                 return clientBuilder.Build();
             });
 
-
-            builder.Services.AddSingleton(sp =>
-            {
-                return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
-                                    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
-            });
             builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
             builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
             builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
