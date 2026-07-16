@@ -12,12 +12,12 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmtId = '9409a351-8c24-4f02-8943-448fd67829e2'
+pmtId = 'dee1c27d-fd42-4734-aea6-52f14845fdcc'
 
 ### 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/RejectUnidentifiedPaymentTx/#{pmtId}"
 param = {
-  StatusReason : "Testing to reject",
+  StatusReason: "Testing to reject",
 }
 
 token = File.read(keyFile)

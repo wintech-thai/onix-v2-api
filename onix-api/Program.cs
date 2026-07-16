@@ -47,15 +47,32 @@ namespace Its.Onix.Api
                 sp => ConnectionMultiplexer.Connect(redisHostStr));
             builder.Services.AddScoped<RedisHelper>();
 
-            builder.Services.AddSingleton(sp =>
-            {
-                // ถ้าใช้ service account json
-                var storageClient = StorageClient.Create(
-                    GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
-                );
 
-                return storageClient;
-            });
+            var googleSecretPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+            if (string.IsNullOrEmpty(googleSecretPath))
+            {
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsDummy>();
+            }
+            else
+            {
+                //ตรงนี้จะมีใช้อยู่โดย Please-Scan
+                builder.Services.AddSingleton(sp =>
+                {
+                    // ถ้าใช้ service account json
+                    var storageClient = StorageClient.Create(
+                        GoogleCredential.FromFile(googleSecretPath)
+                    );
+
+                    return storageClient;
+                });
+
+                builder.Services.AddSingleton(sp =>
+                {
+                    return GoogleCredential.FromFile(googleSecretPath).CreateScoped("https://www.googleapis.com/auth/cloud-platform");
+                });
+
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();                
+            }
 
             builder.Services.AddSingleton(sp =>
             {
@@ -83,13 +100,6 @@ namespace Its.Onix.Api
                 return clientBuilder.Build();
             });
 
-
-            builder.Services.AddSingleton(sp =>
-            {
-                return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
-                                    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
-            });
-            builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
             builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
             builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
 
