@@ -47,19 +47,41 @@ namespace Its.Onix.Api
                 sp => ConnectionMultiplexer.Connect(redisHostStr));
             builder.Services.AddScoped<RedisHelper>();
 
+
+            var googleSecretPath = Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS");
+            if (string.IsNullOrEmpty(googleSecretPath))
+            {
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsDummy>();
+            }
+            else
+            {
+                //ตรงนี้จะมีใช้อยู่โดย Please-Scan
+                builder.Services.AddSingleton(sp =>
+                {
+                    // ถ้าใช้ service account json
+                    var storageClient = StorageClient.Create(
+                        GoogleCredential.FromFile(googleSecretPath)
+                    );
+
+                    return storageClient;
+                });
+
+                builder.Services.AddSingleton(sp =>
+                {
+                    return GoogleCredential.FromFile(googleSecretPath).CreateScoped("https://www.googleapis.com/auth/cloud-platform");
+                });
+
+                builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();                
+            }
+
             builder.Services.AddSingleton(sp =>
             {
-                // ถ้าใช้ service account json
-                var storageClient = StorageClient.Create(
-                    GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
-                );
-
-                return storageClient;
-            });
-
-            builder.Services.AddSingleton(sp =>
-            {
-                var minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+                //เอาไว้สำหรับเวลาไปติดตั้งแต่ละเครื่องสามาร customize MINIO_ENDPOINT_CUSTOM ได้เอง
+                var minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT_CUSTOM");
+                if (string.IsNullOrEmpty(minIoEndpoint))
+                {
+                    minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+                }
                 var minIoAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"); //User
                 var minIoSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"); //Password
 
@@ -83,13 +105,6 @@ namespace Its.Onix.Api
                 return clientBuilder.Build();
             });
 
-
-            builder.Services.AddSingleton(sp =>
-            {
-                return GoogleCredential.FromFile(Environment.GetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS"))
-                                    .CreateScoped("https://www.googleapis.com/auth/cloud-platform");
-            });
-            builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();
             builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
             builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
 

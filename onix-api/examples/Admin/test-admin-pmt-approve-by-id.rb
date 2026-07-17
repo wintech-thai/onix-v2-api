@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmtId = '8c0383a2-7926-4c95-b87e-4a748eb60231'
+pmtId = '9409a351-8c24-4f02-8943-448fd67829e2'
 merchantId = 'eab2eae2-ab83-4d49-bff6-a30226663d09'
 
 ### 
