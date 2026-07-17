@@ -76,7 +76,12 @@ namespace Its.Onix.Api
 
             builder.Services.AddSingleton(sp =>
             {
-                var minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+                //เอาไว้สำหรับเวลาไปติดตั้งแต่ละเครื่องสามาร customize MINIO_ENDPOINT_CUSTOM ได้เอง
+                var minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT_CUSTOM");
+                if (string.IsNullOrEmpty(minIoEndpoint))
+                {
+                    minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+                }
                 var minIoAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"); //User
                 var minIoSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"); //Password
 
