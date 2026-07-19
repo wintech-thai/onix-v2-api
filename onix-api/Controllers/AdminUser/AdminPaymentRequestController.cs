@@ -15,19 +15,16 @@ namespace Its.Onix.Api.Controllers
         private readonly IPaymentRequestService svc;
         private readonly IMerchantService _merchantSvc;
         private readonly IBankAccountService _bankAccountSvc;
-        private readonly IPaymentTransactionService _paymentTxSvc;
 
         [ExcludeFromCodeCoverage]
         public AdminPaymentRequestController(
             IPaymentRequestService service, 
             IMerchantService merchantService,
-            IPaymentTransactionService paymentTransactionService,
             IBankAccountService bankAccountService)
         {
             svc = service;
             _merchantSvc = merchantService;
             _bankAccountSvc = bankAccountService;
-            _paymentTxSvc = paymentTransactionService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -333,19 +330,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/ApprovePendingPayInRequestById/{paymentRequestId}")]
-        public async Task<IActionResult> ApprovePendingPayInRequestById(string paymentRequestId)
-        {
-            var result = Task.CompletedTask; 
-            return Ok(result);
-        }
-
-        [ExcludeFromCodeCoverage]
-        [HttpPost]
         [Route("org/global/action/RejectPendingPayInRequestById/{paymentRequestId}")]
         public async Task<IActionResult> RejectPendingPayInRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
         {
-            var result = Task.CompletedTask; 
+            var result = await svc.RejectPendingPayInRequestById("global", paymentRequestId, request);
             return Ok(result);
         }
     }

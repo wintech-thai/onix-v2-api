@@ -167,6 +167,10 @@ namespace Its.Onix.Api.Models
         [Column("status")]
         public string? Status { get; set; } //Pending - ยังไม่มีการจ่ายเงินเข้ามา, Paid - มีการจ่ายเงินเข้ามาแล้ว
 
+        [Column("status_reason")]
+        public string? StatusReason { get; set; }
+
+
         [Column("direction")]
         public string? Direction { get; set; } //PayIn, PayOut
 

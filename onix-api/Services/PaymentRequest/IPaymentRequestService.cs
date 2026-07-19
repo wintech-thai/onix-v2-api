@@ -28,5 +28,6 @@ namespace Its.Onix.Api.Services
         public Task<MVPaymentRequest> DeletePayOutRequestById(string orgId, string paymentRequestId);
 
         public Task<MVScbInquiryResult> InquireScbPaymentStatus(string orgId, string paymentRequestId);
+        public Task<MVPaymentRequest> RejectPendingPayInRequestById(string orgId, string paymentRequestId, MPaymentRequest pmr);
     }
 }

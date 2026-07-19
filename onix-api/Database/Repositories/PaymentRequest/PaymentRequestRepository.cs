@@ -456,5 +456,20 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<MPaymentRequest?> RejectPaymentRequestById(string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
+                existing.Status = "Rejected";
+                existing.StatusReason = paymentRequest.StatusReason;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }

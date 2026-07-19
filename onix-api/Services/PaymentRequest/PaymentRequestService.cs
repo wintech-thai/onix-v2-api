@@ -1458,5 +1458,40 @@ namespace Its.Onix.Api.Services
             await repository!.DeletePayOutRequestById(paymentRequestId);
             return r;
         }
+
+
+        public async Task<MVPaymentRequest> RejectPendingPayInRequestById(string orgId, string paymentRequestId, MPaymentRequest pmr)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentRequest()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var existingPmr = await GetPaymentRequestById(orgId, paymentRequestId);
+            if (existingPmr.Status != "OK")
+            {
+                return existingPmr;
+            }
+
+            var pmt1 = existingPmr.PaymentRequest!;
+            if (pmt1.Status != "Pending")
+            {
+                r.Status = "ERROR_PAYMENT_REQUEST_NOT_PENDING";
+                r.Description = $"Payment Request ID [{paymentRequestId}] is not Pending, current status=[{pmr.Status}]";
+
+                return r;
+            }
+
+            pmr.Status = "Rejected";
+
+            var pmt2 = await repository!.RejectPaymentRequestById(paymentRequestId, pmr);
+
+            r.PaymentRequest = pmt2;
+            return r;
+        }
+
     }
 }
