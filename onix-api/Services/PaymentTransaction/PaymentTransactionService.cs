@@ -682,6 +682,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
                     new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
 
+                    new NameValue { Name = "TX_AMOUNT", Value = pmt?.TxAmountDecimal.ToString() },
                     new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
                     new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeeDecimal.ToString() },
