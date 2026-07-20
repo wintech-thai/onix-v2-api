@@ -1018,7 +1018,7 @@ namespace Its.Onix.Api.Services
                     r.Status = "ERROR_DAILY_AMOUNT_EXCEEDED";
                     r.Description = $"Merchant daily transaction amount exceeded, CurrentDailyTxAmount=[{currentDailyTxBalance.TxAmount}], RequestedAmount=[{paymentRequest.RequestedAmount}], MaxDailyAmount=[{txAmountLimit}]";
                     
-                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, []);
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ r.Description ]);
                     return r;
                 }
             }
@@ -1032,7 +1032,7 @@ namespace Its.Onix.Api.Services
                     r.Status = "ERROR_DAILY_COUNT_EXCEEDED";
                     r.Description = $"Merchant daily transaction count exceeded, CurrentDailyTxCount=[{currentDailyTxBalance.TxCount}], MaxDailyCount=[{txCountLimit}]";
                     
-                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, []);
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ r.Description ]);
                     return r;
                 }
             }
@@ -1047,7 +1047,7 @@ namespace Its.Onix.Api.Services
                 r.Status = "ERROR_VALUE_NOT_IN_RANGE";
                 r.Description = $"Amount [{requestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
 
-                var _ = await AddRejectedPaymentRequest(paymentRequest, r, []);
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ r.Description ]);
                 return r;
             }
 
