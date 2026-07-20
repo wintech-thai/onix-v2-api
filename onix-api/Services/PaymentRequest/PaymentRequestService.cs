@@ -1017,6 +1017,7 @@ namespace Its.Onix.Api.Services
                 {
                     r.Status = "ERROR_DAILY_AMOUNT_EXCEEDED";
                     r.Description = $"Merchant daily transaction amount exceeded, CurrentDailyTxAmount=[{currentDailyTxBalance.TxAmount}], RequestedAmount=[{paymentRequest.RequestedAmount}], MaxDailyAmount=[{txAmountLimit}]";
+                    return r;
                 }
             }
 
@@ -1028,6 +1029,7 @@ namespace Its.Onix.Api.Services
                 {
                     r.Status = "ERROR_DAILY_COUNT_EXCEEDED";
                     r.Description = $"Merchant daily transaction count exceeded, CurrentDailyTxCount=[{currentDailyTxBalance.TxCount}], MaxDailyCount=[{txCountLimit}]";
+                    return r;
                 }
             }
 
