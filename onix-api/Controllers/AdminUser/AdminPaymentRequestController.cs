@@ -327,5 +327,14 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.ApprovePaymentRequestTransfer("global", paymentRequestId, request);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/RejectPendingPayInRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> RejectPendingPayInRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var result = await svc.RejectPendingPayInRequestById("global", paymentRequestId, request);
+            return Ok(result);
+        }
     }
 }

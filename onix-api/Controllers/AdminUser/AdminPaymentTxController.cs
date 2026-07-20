@@ -164,5 +164,14 @@ namespace Its.Onix.Api.Controllers
 
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/CreatePaymentTxByPayInRequestId/{paymentRequestId}")]
+        public async Task<IActionResult> CreatePaymentTxByPayInRequestId(string paymentRequestId)
+        {
+            var result = await svc.CreatePaymentTxByPayInRequestId("global", paymentRequestId);
+            return Ok(result);
+        }
     }
 }
