@@ -57,7 +57,6 @@ namespace Its.Onix.Api.Services
             {
                 jsonStr = "[]";
             }
-
             var arr = JsonSerializer.Deserialize<List<MBankAccount>>(jsonStr);
             if (arr != null)
             {
@@ -68,8 +67,26 @@ namespace Its.Onix.Api.Services
                 result.BankAccountsSelectedObj = [];
             }
 
+
+            var jsonStrCfg = result.AgentConfig;
+            if (string.IsNullOrEmpty(jsonStrCfg))
+            {
+                jsonStrCfg = "{}";
+            }
+            var configObj = JsonSerializer.Deserialize<MAgentConfig>(jsonStrCfg);
+            if (arr != null)
+            {
+                result.AgentConfigObj = configObj;
+            }
+            else
+            {
+                result.AgentConfigObj = null;
+            }
+
+
             r.Agent = result;
             r.Agent.BankAccountsSelected = "";
+            r.Agent.AgentConfig = "";
 
             return r;
         }

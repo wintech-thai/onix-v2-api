@@ -84,6 +84,7 @@ namespace Its.Onix.Api.Database.Repositories
                 CreatedDate = x.agent.CreatedDate,
                 LastSeenDate = x.agent.LastSeenDate,
                 BankAccountsSelected = x.agent.BankAccountsSelected,
+                AgentConfig = x.agent.AgentConfig,
             });
         }
 
@@ -148,6 +149,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.Description = agent.Description;
                 existing.Tags = agent.Tags;
                 existing.BankAccountsSelected = agent.BankAccountsSelected;
+                existing.AgentConfig = agent.AgentConfig;
             }
 
             await context.SaveChangesAsync();
