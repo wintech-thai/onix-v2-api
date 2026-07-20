@@ -49,6 +49,7 @@ namespace Its.Onix.Api.Database.Repositories
                 RequestedAmount = x.pr.RequestedAmount,
                 Tags = x.pr.Tags,
                 Status = x.pr.Status,
+                StatusReason = x.pr.StatusReason,
                 Direction = x.pr.Direction,
                 MerchantId = x.pr.MerchantId,
                 MerchantId2 = x.pr.MerchantId2,
