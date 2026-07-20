@@ -828,6 +828,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (pmr.Status != "Pending")
+            {
+                r.Status = "ERROR_INVALID_STATUS";
+                r.Description = $"Payment request status must be 'Pending' but it is [{pmr.Status}]";
+
+                return r;
+            }
+
             var bankAccountId = pmr.PayinBankAccountId!;
             if (bankAccountId == null)
             {
