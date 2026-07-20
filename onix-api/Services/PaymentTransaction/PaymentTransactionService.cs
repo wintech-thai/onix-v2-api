@@ -807,5 +807,53 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            _paymentRequestRepo!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var pmr = await _paymentRequestRepo.GetPaymentRequestById(paymentRequestId);
+            if (pmr == null)
+            {
+                r.Status = "ERROR_PAYMENT_REQUEST_UNKNOWN";
+                r.Description = $"Unable to find payment request with ID=[{paymentRequestId}]";
+
+                return r;
+            }
+
+            var bankAccountId = pmr.PayinBankAccountId!;
+            if (bankAccountId == null)
+            {
+                r.Status = "ERROR_BANK_ACCOUNT_UNKNOWN";
+                r.Description = $"Missing bank account ID [{bankAccountId}]";
+
+                return r;
+            }
+
+            var paymentNotiLine = new MPaymentNotiLine()
+            {
+                PaymentAmount = (decimal) pmr.GeneratedAmount!,
+                MerchantId = pmr.MerchantId,
+                RefId1 = pmr.RefId1,
+            };
+
+            var pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine);
+            if (pmtVm.Status != "OK")
+            {
+                return pmtVm;
+            }
+
+            //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
+            var _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
+
+            return pmtVm;
+        }
     }
 }

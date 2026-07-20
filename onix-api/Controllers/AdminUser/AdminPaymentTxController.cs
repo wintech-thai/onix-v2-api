@@ -167,10 +167,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/CreatePaymentTxByPayInRequestById/{paymentRequestId}")]
-        public async Task<IActionResult> CreatePaymentTxByPayInRequestById(string paymentRequestId)
+        [Route("org/global/action/CreatePaymentTxByPayInRequestId/{paymentRequestId}")]
+        public async Task<IActionResult> CreatePaymentTxByPayInRequestId(string paymentRequestId)
         {
-            var result = Task.CompletedTask; 
+            var result = await svc.CreatePaymentTxByPayInRequestId("global", paymentRequestId);
             return Ok(result);
         }
     }

@@ -471,5 +471,19 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return existing;
         }
+
+        public async Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
+                existing.Status = "Approved";
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }
