@@ -103,6 +103,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(fullTextPd);
             }
 
+            if ((param.AgentType != "") && (param.AgentType != null))
+            {
+                var agentTypePd = PredicateBuilder.New<MAgent>();
+                agentTypePd = agentTypePd.Or(p => p.AgentType!.Equals(param.AgentType));
+
+                pd = pd.And(agentTypePd);
+            }
+
             return pd;
         }
 

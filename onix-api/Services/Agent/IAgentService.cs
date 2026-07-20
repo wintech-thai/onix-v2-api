@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Services
         public Task<MVAgent> GetAgentById(string orgId, string agentId);
         public Task<MVAgent> AddAgent(string orgId, MAgent agent);
         public Task<MVAgent> AddAgentSimple(string orgId, MAgent agent);
+        public Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent);
         public Task<MVAgent> DeleteAgentById(string orgId, string agentId);
         public Task<List<MAgent>> GetAgents(string orgId, VMAgent param);
         public Task<int> GetAgentCount(string orgId, VMAgent param);

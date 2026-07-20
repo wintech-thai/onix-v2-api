@@ -90,6 +90,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(keys);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/AddLineApiAgent")]
+        public async Task<IActionResult> AddLineApiAgent([FromBody] MAgent request)
+        {
+            var result = await svc.AddLineApiAgent("global", request);
+            return Ok(result);
+        }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]

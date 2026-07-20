@@ -165,10 +165,56 @@ namespace Its.Onix.Api.Services
             agent.BankAccountsSelected = SerializeBankAccountSelected(agent);
 
             agent.ApiKeyId = "";
+            agent.AgentType = "Android App";
             var result = await repository!.AddAgent(agent);
 
             r.Agent = result;
             r.Agent.BankAccountsSelected = "";
+
+            return r;
+        }
+
+        public async Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVAgent()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (string.IsNullOrEmpty(agent.Code))
+            {
+                r.Status = "CODE_MISSING";
+                r.Description = $"Agent code is missing!!!";
+
+                return r;
+            }
+
+            var isExist = await repository!.IsAgentCodeExist(agent.Code);
+            if (isExist)
+            {
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Agent code [{agent.Code}] already exist!!!";
+
+                return r;
+            }
+
+            //ทำ serialize ก่อน
+            agent.BankAccountsSelected = SerializeBankAccountSelected(agent);
+            agent.AgentConfig = SerializeAgentConfig(agent);
+
+            agent.ApiKeyId = "";
+            agent.AgentType = "Line API";
+            var result = await repository!.AddAgent(agent);
+
+
+            //TODO : สร้าง job ไปยัง Redis
+
+            r.Agent = result;
+            r.Agent.BankAccountsSelected = "";
+            r.Agent.AgentConfig = "";
 
             return r;
         }
@@ -225,6 +271,10 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+
+            //TODO : สร้าง job ไปยัง Redis, ถ้าเป็น Line API agent
+
+
             r.Agent = m;
             return r;
         }
@@ -259,6 +309,19 @@ namespace Its.Onix.Api.Services
             return jsonString;
         }
 
+
+        private string SerializeAgentConfig(MAgent agent)
+        {
+            var cfg = agent.AgentConfig;
+            if (string.IsNullOrEmpty(cfg))
+            {
+                return "{}";
+            }
+
+            var jsonString = JsonSerializer.Serialize(cfg);
+            return jsonString;
+        }
+
         public async Task<MVAgent> UpdateAgentById(string orgId, string agentId, MAgent agent)
         {
             repository!.SetCustomOrgId(orgId);
@@ -289,6 +352,7 @@ namespace Its.Onix.Api.Services
 
             //ทำ serialize ก่อน
             agent.BankAccountsSelected = SerializeBankAccountSelected(agent);
+            agent.AgentConfig = SerializeAgentConfig(agent);
 
             var result = await repository!.UpdateAgentById(agentId, agent);
             if (result == null)
@@ -299,8 +363,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO : สร้าง job ไปยัง Redis, ถ้าเป็น Line API agent
+
             r.Agent = result;
             r.Agent.BankAccountsSelected = "";
+            r.Agent.AgentConfig = "";
 
             return r;
         }
