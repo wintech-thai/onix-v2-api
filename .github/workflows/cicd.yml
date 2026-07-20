@@ -129,7 +129,7 @@ jobs:
         webhook-type: incoming-webhook
         payload: |
           text: |
-            🚀 text: "Start deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
+            🚀 "Start deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
 
     # Auto deploy
     - name: Deploy1
@@ -226,4 +226,4 @@ jobs:
         webhook-type: incoming-webhook
         payload: |
           text: |
-            🚀 text: "Done deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
+            🚀 "Done deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
