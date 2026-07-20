@@ -329,8 +329,8 @@ namespace Its.Onix.Api.Services
 
         private string SerializeAgentConfig(MAgent agent)
         {
-            var cfg = agent.AgentConfig;
-            if (string.IsNullOrEmpty(cfg))
+            var cfg = agent.AgentConfigObj;
+            if (cfg == null)
             {
                 return "{}";
             }
