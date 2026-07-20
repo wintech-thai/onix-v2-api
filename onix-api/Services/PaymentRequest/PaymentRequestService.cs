@@ -1017,6 +1017,8 @@ namespace Its.Onix.Api.Services
                 {
                     r.Status = "ERROR_DAILY_AMOUNT_EXCEEDED";
                     r.Description = $"Merchant daily transaction amount exceeded, CurrentDailyTxAmount=[{currentDailyTxBalance.TxAmount}], RequestedAmount=[{paymentRequest.RequestedAmount}], MaxDailyAmount=[{txAmountLimit}]";
+                    
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, []);
                     return r;
                 }
             }
@@ -1029,6 +1031,8 @@ namespace Its.Onix.Api.Services
                 {
                     r.Status = "ERROR_DAILY_COUNT_EXCEEDED";
                     r.Description = $"Merchant daily transaction count exceeded, CurrentDailyTxCount=[{currentDailyTxBalance.TxCount}], MaxDailyCount=[{txCountLimit}]";
+                    
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, []);
                     return r;
                 }
             }
@@ -1043,6 +1047,7 @@ namespace Its.Onix.Api.Services
                 r.Status = "ERROR_VALUE_NOT_IN_RANGE";
                 r.Description = $"Amount [{requestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
 
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, []);
                 return r;
             }
 
@@ -1054,26 +1059,7 @@ namespace Its.Onix.Api.Services
                 r.Status = "ERROR_NO_PAYIN_ACCOUNT_MATCH";
                 r.Description = $"No pay-in bank account match!!!";
 
-                paymentRequest.ResponseData = "{}";
-
-                var errorMessages = JsonSerializer.Serialize(lines);
-                paymentRequest.ProcessingMessages = errorMessages;
-
-                //Logic สำหรับการสร้าง QR payment ตรงนี้
-                paymentRequest.Status = "Rejected";
-                paymentRequest.Direction = "PayIn";
-                paymentRequest.PayinBankAccountName = "";
-                paymentRequest.PayinBankAccountNo = "";
-                paymentRequest.PayinBankCode = "";
-                paymentRequest.PayinPromptPayId = "";
-                paymentRequest.PayinAccountType = "";
-                paymentRequest.PayinAccountLevel = "";
-                paymentRequest.PayInFeePct = 0;
-                paymentRequest.PayinBankAccountId = "";
-
-                //ให้สร้างเอาไว้หน่อย เพื่อให้มี record ไว้ดูย้อนหลัง
-                _ = await repository!.AddPaymentRequest(paymentRequest);
-
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, lines);
                 return r;
             }
 
@@ -1104,6 +1090,31 @@ namespace Its.Onix.Api.Services
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
             return pmResponse;
+        }
+
+        private async Task<MVPaymentResponse> AddRejectedPaymentRequest(MPaymentRequest paymentRequest, MVPaymentResponse r, List<string> lines)
+        {
+            paymentRequest.ResponseData = "{}";
+
+            var errorMessages = JsonSerializer.Serialize(lines);
+            paymentRequest.ProcessingMessages = errorMessages;
+
+            paymentRequest.Status = "Rejected";
+            paymentRequest.StatusReason = r.Description;
+            paymentRequest.Direction = "PayIn";
+            paymentRequest.PayinBankAccountName = "";
+            paymentRequest.PayinBankAccountNo = "";
+            paymentRequest.PayinBankCode = "";
+            paymentRequest.PayinPromptPayId = "";
+            paymentRequest.PayinAccountType = "";
+            paymentRequest.PayinAccountLevel = "";
+            paymentRequest.PayInFeePct = 0;
+            paymentRequest.PayinBankAccountId = "";
+
+            //ให้สร้างเอาไว้หน่อย เพื่อให้มี record ไว้ดูย้อนหลัง
+            _ = await repository!.AddPaymentRequest(paymentRequest);
+
+            return r;
         }
 
         private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr, MMerchant merchant)
