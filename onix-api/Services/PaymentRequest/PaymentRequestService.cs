@@ -1111,6 +1111,12 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayInFeePct = 0;
             paymentRequest.PayinBankAccountId = "";
 
+            if (paymentRequest.GeneratedAmount == null)
+            {
+                //เป็นเคสที่ยังไม่มีการคำนวณยอดที่จะให้แสกนเข้ามาแต่ว่าเจอ error ซะก่อน
+                paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
+            }
+
             //ให้สร้างเอาไว้หน่อย เพื่อให้มี record ไว้ดูย้อนหลัง
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
