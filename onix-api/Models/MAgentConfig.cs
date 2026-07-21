@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
 
         public MAgentConfig()
         {
+            AgentImageTag = "v0.0.1";
         }
     }
 }
