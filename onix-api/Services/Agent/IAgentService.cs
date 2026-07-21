@@ -12,7 +12,7 @@ namespace Its.Onix.Api.Services
         public Task<MVAgent> GetAgentById(string orgId, string agentId);
         public Task<MVAgent> AddAgent(string orgId, MAgent agent);
         public Task<MVAgent> AddAgentSimple(string orgId, MAgent agent);
-        public Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent);
+        
         public Task<MVAgent> DeleteAgentById(string orgId, string agentId);
         public Task<List<MAgent>> GetAgents(string orgId, VMAgent param);
         public Task<int> GetAgentCount(string orgId, VMAgent param);
@@ -24,5 +24,8 @@ namespace Its.Onix.Api.Services
         public Task<MVAgentEvent> GetAgentEventById(string orgId, string agentEventId);
         public Task<MVAgentEvent> AddAgentEvent(string orgId, MAgentEvent evt);
         public Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(string orgId, VMAgentEvent param);
+
+        public Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent);
+        public Task<MVAgent> RestartLineApiAgentById(string orgId, string agentId);
     }
 }

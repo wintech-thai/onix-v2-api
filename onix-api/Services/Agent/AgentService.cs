@@ -252,6 +252,37 @@ namespace Its.Onix.Api.Services
             return;
         }
 
+        public async Task<MVAgent> RestartLineApiAgentById(string orgId, string agentId)
+        {
+            var r = new MVAgent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(agentId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Agent ID [{agentId}] format is invalid";
+
+                return r;
+            }
+
+            var currentAgent = await GetAgentById(orgId, agentId);
+            if (currentAgent.Agent == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent ID [{agentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //สร้าง job ไปยัง Redis
+            await AddJob(orgId, "Agent.Restart", currentAgent.Agent);
+
+            return r;
+        }
+
         public async Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent)
         {
             repository!.SetCustomOrgId(orgId);
