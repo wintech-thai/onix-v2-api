@@ -27,5 +27,6 @@ namespace Its.Onix.Api.Services
 
         public Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent);
         public Task<MVAgent> RestartLineApiAgentById(string orgId, string agentId);
+        public Task<MVAgent> ReloadLineApiAgentById(string orgId, string agentId);
     }
 }

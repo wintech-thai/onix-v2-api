@@ -106,6 +106,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/ReloadLineApiAgentById/{agentId}")]
+        public async Task<IActionResult> ReloadLineApiAgentById(string agentId)
+        {
+            var result = await svc.ReloadLineApiAgentById("global", agentId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/AddAgent")]
         public async Task<IActionResult> AddAgent([FromBody] MAgent request)
         {
