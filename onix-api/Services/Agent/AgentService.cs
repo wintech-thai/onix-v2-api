@@ -237,7 +237,6 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "HEARTBEAT_ENDPOINT", Value = url1 },
                     new NameValue { Name = "NOTIFICATION_ENDPOINT", Value = url2 },
                     new NameValue { Name = "AGENT_IMAGE_TAG", Value = agentConfigObj?.AgentImageTag },
-                    new NameValue { Name = "AGENT_IMAGE_REPO", Value = agentConfigObj?.AgentImageRepo },
                 ]
             };
 
