@@ -284,7 +284,7 @@ namespace Its.Onix.Api.Services
             agent.AgentConfig = SerializeAgentConfig(agent);
 
             agent.ApiKeyId = "";
-            agent.AgentType = "Line API";
+            agent.AgentType = "Line Api";
             var result = await repository!.AddAgent(agent);
 
 
