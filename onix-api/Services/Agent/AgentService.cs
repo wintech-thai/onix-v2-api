@@ -231,6 +231,7 @@ namespace Its.Onix.Api.Services
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "AGENT_ID", Value = agent?.Id.ToString() },
+                    new NameValue { Name = "AGENT_CODE", Value = agent?.Code },
                     new NameValue { Name = "LINE_USERNAME", Value = agentConfigObj?.UserName },
                     new NameValue { Name = "ENDPOINT_API_KEY", Value = agentConfigObj?.ApiKey },
                     new NameValue { Name = "HEARTBEAT_ENDPOINT", Value = url1 },
