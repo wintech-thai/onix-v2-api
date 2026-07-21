@@ -36,6 +36,12 @@ namespace Its.Onix.Api.Models
         [Column("bank_accounts_selected")]
         public string? BankAccountsSelected { get; set; } /* JSON string เก็บเพื่อบอกว่า ผูกกับ bank account ไหน */
 
+        [Column("agent_type")]
+        public string? AgentType { get; set; } /* Line Api, Android App, Sensor */
+
+        [Column("agent_config")]
+        public string? AgentConfig { get; set; } /* JSON string เก็บเพื่อบอกว่ามี config อะไรบ้าง */
+
 
         //System fields
         [Column("created_date")]
@@ -53,6 +59,13 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public List<MBankAccount> BankAccountsSelectedObj { get; set; }
+
+        [NotMapped]
+        public MAgentConfig? AgentConfigObj { get; set; }
+
+        [NotMapped]
+        public string? AgentVersion { get; set; }
+
 
         public MAgent()
         {

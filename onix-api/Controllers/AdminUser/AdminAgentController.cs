@@ -40,11 +40,7 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mvAgent);
             }
 
-            var mc = mvAgent.Agent!;
-
-            var agentOrgId = mc.OrgId;
-            var url1 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/{agentOrgId}/action/NotifyHeartbeat/{agentId}";
-            var url2 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/{agentOrgId}/action/NotifyLineMessage/{agentId}";
+            var (url1, url2) = svc.GetAgentEndpoints(agentId);
 
             var result = new MVEndPoint()
             {
@@ -90,6 +86,23 @@ namespace Its.Onix.Api.Controllers
             return Ok(keys);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/AddLineApiAgent")]
+        public async Task<IActionResult> AddLineApiAgent([FromBody] MAgent request)
+        {
+            var result = await svc.AddLineApiAgent("global", request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/RestartLineApiAgentById/{agentId}")]
+        public async Task<IActionResult> RestartLineApiAgentById(string agentId)
+        {
+            var result = await svc.RestartLineApiAgentById("global", agentId);
+            return Ok(result);
+        }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]

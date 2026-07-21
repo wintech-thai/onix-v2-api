@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(OrgId))]
     [Index(nameof(Type))]
     [Index(nameof(Status))]
+    [Index(nameof(RefId))]
     public class MJob
     {
         [Key]
@@ -71,6 +72,10 @@ namespace Its.Onix.Api.Models
 
         [Column("scanitem_template_id")]
         public string? ScanItemTemplateId { get; set; } /* เป็น job ของ scan item template ตัวไหน */
+
+        [Column("ref_id")]
+        public string? RefId { get; set; } /* เป็น key ref ของอะไรก็ได้ */
+
 
         [NotMapped]
         public List<NameValue> Parameters { get; set; }

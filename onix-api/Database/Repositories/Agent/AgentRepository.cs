@@ -80,10 +80,12 @@ namespace Its.Onix.Api.Database.Repositories
                 Code = x.agent.Code,
                 Description = x.agent.Description,
                 Tags = x.agent.Tags,
+                AgentType = x.agent.AgentType,
                 ApiKeyId = x.agent.ApiKeyId,
                 CreatedDate = x.agent.CreatedDate,
                 LastSeenDate = x.agent.LastSeenDate,
                 BankAccountsSelected = x.agent.BankAccountsSelected,
+                AgentConfig = x.agent.AgentConfig,
             });
         }
 
@@ -101,6 +103,14 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
+            }
+
+            if ((param.AgentType != "") && (param.AgentType != null))
+            {
+                var agentTypePd = PredicateBuilder.New<MAgent>();
+                agentTypePd = agentTypePd.Or(p => p.AgentType!.Equals(param.AgentType));
+
+                pd = pd.And(agentTypePd);
             }
 
             return pd;
@@ -140,6 +150,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.Description = agent.Description;
                 existing.Tags = agent.Tags;
                 existing.BankAccountsSelected = agent.BankAccountsSelected;
+                existing.AgentConfig = agent.AgentConfig;
             }
 
             await context.SaveChangesAsync();
