@@ -37,7 +37,7 @@ namespace Its.Onix.Api.Models
         public string? BankAccountsSelected { get; set; } /* JSON string เก็บเพื่อบอกว่า ผูกกับ bank account ไหน */
 
         [Column("agent_type")]
-        public string? AgentType { get; set; } /* LineApi, AndroidApp, Sensor */
+        public string? AgentType { get; set; } /* Line Api, Android App, Sensor */
 
         [Column("agent_config")]
         public string? AgentConfig { get; set; } /* JSON string เก็บเพื่อบอกว่ามี config อะไรบ้าง */
@@ -62,6 +62,10 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public MAgentConfig? AgentConfigObj { get; set; }
+
+        [NotMapped]
+        public string? AgentVersion { get; set; }
+
 
         public MAgent()
         {

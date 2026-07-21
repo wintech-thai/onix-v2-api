@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Services
 {
     public interface IAgentService
     {
+        public (string, string) GetAgentEndpoints(string agentId);
         public Task<MVAgent> GetAgentById(string orgId, string agentId);
         public Task<MVAgent> AddAgent(string orgId, MAgent agent);
         public Task<MVAgent> AddAgentSimple(string orgId, MAgent agent);

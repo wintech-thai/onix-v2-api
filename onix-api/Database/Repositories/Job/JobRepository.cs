@@ -115,6 +115,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(statusPd);
             }
 
+            if (!string.IsNullOrEmpty(param.RefId))
+            {
+                var refIdPd = PredicateBuilder.New<MJob>();
+                refIdPd = refIdPd.Or(p => p.RefId!.Equals(param.RefId));
+
+                pd = pd.And(refIdPd);
+            }
+
             return pd;
         }
 

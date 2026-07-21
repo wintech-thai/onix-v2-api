@@ -13,16 +13,19 @@ namespace Its.Onix.Api.Services
         private readonly IApiKeyRepository? _apiKeyRepo = null;
         private readonly IOrganizationRepository? _orgRepo = null;
         private readonly IRedisHelper _redis;
+        private readonly IJobService _jobSvc;
 
         public AgentService(IAgentRepository repo, 
             IApiKeyRepository apiKeyRepo,
             IRedisHelper redis,
+            IJobService jobService,
             IOrganizationRepository orgRepo) : base()
         {
             repository = repo;
             _apiKeyRepo = apiKeyRepo;
             _orgRepo = orgRepo;
             _redis = redis;
+            _jobSvc = jobService;
         }
 
         public async Task<MVAgent> GetAgentById(string orgId, string agentId)
@@ -191,6 +194,64 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public (string, string) GetAgentEndpoints(string agentId)
+        {
+            var url1 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/global/action/NotifyHeartbeat/{agentId}";
+            var url2 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/global/action/NotifyLineMessage/{agentId}";
+
+            return (url1, url2);
+        }
+
+        private async Task AddJob(string orgId, string jobType, MAgent agent)
+        {
+            var agentType = agent.AgentType;
+            if (agentType != "Line Api")
+            {
+                return;
+            }
+
+            MAgentConfig? agentConfigObj = null;
+            if (!string.IsNullOrEmpty(agent.AgentConfig))
+            {
+                agentConfigObj = JsonSerializer.Deserialize<MAgentConfig>(agent.AgentConfig);
+            }
+
+            var (url1, url2) = GetAgentEndpoints(agent?.Id.ToString()!);
+
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "AgentService.AddJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+                RefId = agent!.Id.ToString(),
+
+                Parameters =
+                [
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "AGENT_ID", Value = agent?.Id.ToString() },
+                    new NameValue { Name = "LINE_USERNAME", Value = agentConfigObj?.UserName },
+                    new NameValue { Name = "LINE_API_KEY", Value = agentConfigObj?.ApiKey },
+                    new NameValue { Name = "HEARTBEAT_ENDPOINT", Value = url1 },
+                    new NameValue { Name = "NOTIFICATION_ENDPOINT", Value = url2 },
+                    new NameValue { Name = "AGENT_IMAGE_TAG", Value = agentConfigObj?.AgentImageTag },
+                    new NameValue { Name = "AGENT_IMAGE_REPO", Value = agentConfigObj?.AgentImageRepo },
+                ]
+            };
+
+            var result = _jobSvc!.AddJob(orgId, job, false); 
+            var _ = result?.Job!;
+
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(job);
+
+            await _redis.PublishMessageAsync(stream!, message);
+
+            return;
+        }
+
         public async Task<MVAgent> AddLineApiAgent(string orgId, MAgent agent)
         {
             repository!.SetCustomOrgId(orgId);
@@ -227,7 +288,8 @@ namespace Its.Onix.Api.Services
             var result = await repository!.AddAgent(agent);
 
 
-            //TODO : สร้าง job ไปยัง Redis
+            //สร้าง job ไปยัง Redis
+            await AddJob(orgId, "Agent.Create", result);
 
             r.Agent = result;
             r.Agent.BankAccountsSelected = "";
@@ -288,8 +350,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-
-            //TODO : สร้าง job ไปยัง Redis, ถ้าเป็น Line API agent
+            //สร้าง job ไปยัง Redis
+            await AddJob(orgId, "Agent.Delete", m);
 
 
             r.Agent = m;
@@ -380,7 +442,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : สร้าง job ไปยัง Redis, ถ้าเป็น Line API agent
+            //สร้าง job ไปยัง Redis
+            await AddJob(orgId, "Agent.Update", result);
 
             r.Agent = result;
             r.Agent.BankAccountsSelected = "";

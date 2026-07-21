@@ -40,11 +40,7 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mvAgent);
             }
 
-            var mc = mvAgent.Agent!;
-
-            var agentOrgId = mc.OrgId;
-            var url1 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/{agentOrgId}/action/NotifyHeartbeat/{agentId}";
-            var url2 = $"https://<PAYMENT-REQUEST-SERVICE>/admin-api/AdminAgent/org/{agentOrgId}/action/NotifyLineMessage/{agentId}";
+            var (url1, url2) = svc.GetAgentEndpoints(agentId);
 
             var result = new MVEndPoint()
             {
