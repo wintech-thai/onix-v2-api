@@ -113,6 +113,23 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetLineApiAgentStatus/{agentId}")]
+        public IActionResult GetLineApiAgentStatus(string agentId)
+        {
+            var result = new
+            {
+                status = "OK",
+                description = "Success",
+                agentId,
+                podStatus = "Running",
+                ready = "1/1",
+                restarts = 0,
+                age = "10h",
+            };
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/AddAgent")]
