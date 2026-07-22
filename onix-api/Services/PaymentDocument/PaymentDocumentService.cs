@@ -274,6 +274,117 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVPaymentDocument> ApprovePaymentDocumentById_V2(string orgId, string paymentDocumentId, MPaymentDocument paymentDocument)
+        {
+            //อันนี้จะยอมให้ไม่มี Payment Request มาก่อนก็ได้ โดยจะ approve ตัว Payment Transaction ให้อัตโนมัติเลย
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentDocument()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(paymentDocumentId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] format is invalid";
+
+                return r;
+            }
+
+            //เช็คว่า fields ที่จำเป็นต้องถูก populate เข้ามาด้วย ประกอบไปด้วย
+            // MerchantId, RefId, PayInBankAccountId, TxAmount, TxAmountDecimal, Currency
+            if (string.IsNullOrEmpty(paymentDocument.MerchantId) || 
+                string.IsNullOrEmpty(paymentDocument.RefId) || 
+                string.IsNullOrEmpty(paymentDocument.Currency) || 
+                string.IsNullOrEmpty(paymentDocument.PayInBankAccountId) || 
+                paymentDocument.TxAmount == null || 
+                paymentDocument.TxAmountDecimal == null)
+            {
+                r.Status = "ERROR_REQUIRED_FIELDS_MISSING";
+                r.Description = "Required fields missing. Please make sure MerchantId, RefId, Currency, PayInBankAccountId, TxAmount and TxAmountDecimal are provided in request body";
+
+                return r;
+            }
+
+            var existingPd = await repository!.GetPaymentDocumentById(paymentDocumentId);
+            if (existingPd == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            //เช็คว่าต้องเป็น Pending เท่านั้นถึงจะ Approve ได้
+            if (existingPd.Status != "Pending")
+            {
+                r.Status = "ERROR_ONLY_PENDING_PAYMENT_DOCUMENT_CAN_BE_APPROVED";
+                r.Description = $"Only payment document with status 'Pending' can be approved. Current status of this payment document is [{existingPd.Status}]";
+
+                return r;
+            }
+
+            //เช็คว่าไม่เคยมี RefId ไหนที่ถูก Approve มาก่อน
+            var prevApprovedPdWithSameRefId = await repository!.GetApprovedPaymentDocumentByRefId(paymentDocument.RefId!);
+            if (prevApprovedPdWithSameRefId != null)
+            {
+                r.Status = "ERROR_REF_ID_ALREADY_USED_BY_APPROVED_PAYMENT_DOCUMENT";
+                r.Description = $"Ref ID [{paymentDocument.RefId}] is already used by another approved payment document with ID [{prevApprovedPdWithSameRefId.Id}], OrgId=[{prevApprovedPdWithSameRefId.OrgId}]";
+
+                return r;
+            }
+
+            //ให้สร้าง Payment Transaction ขึ้นมาใหม่ด้วย โดยมีข้อมูลบางส่วนมาจาก Payment Document ตัวนี้ และมีการเชื่อมโยงกันผ่าน PaymentDocumentId
+            var bankAccountId = paymentDocument.PayInBankAccountId!;
+            var inputData = new MPaymentNotiLine()
+            {
+                PaymentAmount = paymentDocument.TxAmountDecimal!,
+                MerchantId = paymentDocument.MerchantId!,
+            };
+
+            var mvTxDoc = await _paymentTransactionService!.ProcessLinePaymentTxNotification("global", bankAccountId, inputData);
+            if (mvTxDoc.Status != "OK")
+            {
+                r.Status = mvTxDoc.Status;
+                r.Description = mvTxDoc.Description;
+
+                return r;
+            }
+
+            //เอา PaymentTransactionId ไปใส่ใน PaymentDocument ด้วย เผื่อไว้สำหรับการอ้างอิงในอนาคต
+            var txDoc = mvTxDoc.PaymentTransaction!;
+            if (txDoc.Status == "UnIdentified")
+            {
+                //ไม่มี payment request ที่ match ได้ก็ให้ approve payment transaction ตรงนี้ไปเลย
+                var pmtId = txDoc.Id.ToString()!;
+                var mvTxDoc2 = await _paymentTransactionService!.ApproveUnidentifiedPaymentTx("global", pmtId, paymentDocument.MerchantId!);
+
+                if (mvTxDoc2.Status != "OK")
+                {
+                    r.Status = mvTxDoc2.Status;
+                    r.Description = mvTxDoc2.Description;
+
+                    return r;
+                }
+            }
+
+            //Approve payment document here
+            paymentDocument.PaymentTransactionId = txDoc.Id!.ToString();
+            var result = await repository!.ApprovePaymentDocumentById(paymentDocumentId, paymentDocument);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Doc ID [{paymentDocumentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.PaymentDocument = result;
+            return r;
+        }
+
         public async Task<MVPaymentDocument> ApprovePaymentDocumentById(string orgId, string paymentDocumentId, MPaymentDocument paymentDocument)
         {
             repository!.SetCustomOrgId(orgId);

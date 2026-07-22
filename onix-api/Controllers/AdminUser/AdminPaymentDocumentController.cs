@@ -54,7 +54,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/ApprovePayInDocumentById/{paymentDocId}")]
         public async Task<IActionResult> ApprovePayInDocumentById(string paymentDocId, [FromBody] MPaymentDocument request)
         {
-            var result = await svc.ApprovePaymentDocumentById("global", paymentDocId, request);
+            var result = await svc.ApprovePaymentDocumentById_V2("global", paymentDocId, request);
             return Ok(result);
         }
 
