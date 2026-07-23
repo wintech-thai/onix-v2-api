@@ -127,7 +127,7 @@ namespace Its.Onix.Api.Controllers
                 if (!response.IsSuccessStatusCode)
                     return Ok(new { ok = false, podStatus = "Offline", agentId, raw = body });
 
-                using var doc = JsonDocument.Parse(body);
+                var doc = JsonDocument.Parse(body);
                 var ok = doc.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean();
                 var login = doc.RootElement.TryGetProperty("login", out var loginEl) ? loginEl.GetString() : null;
                 return Ok(new { ok, podStatus = ok ? "Running" : "Offline", login, agentId, raw = body });
@@ -149,8 +149,7 @@ namespace Its.Onix.Api.Controllers
                 http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
                 var response = await http.PostAsync($"{baseUrl}/login/qr", null);
                 var body = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(body);
-                return Ok(doc.RootElement);
+                return Content(body, "application/json");
             }
             catch (Exception ex)
             {
@@ -169,8 +168,7 @@ namespace Its.Onix.Api.Controllers
                 http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
                 var response = await http.GetAsync($"{baseUrl}/login/status");
                 var body = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(body);
-                return Ok(doc.RootElement);
+                return Content(body, "application/json");
             }
             catch (Exception ex)
             {
