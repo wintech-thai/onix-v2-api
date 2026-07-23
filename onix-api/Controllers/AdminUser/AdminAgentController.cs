@@ -115,19 +115,80 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/global/action/GetLineApiAgentStatus/{agentId}")]
-        public IActionResult GetLineApiAgentStatus(string agentId)
+        public async Task<IActionResult> GetLineApiAgentStatus(string agentId)
         {
-            var result = new
+            var baseUrl = GetLineAgentBaseUrl(agentId);
+            try
             {
-                status = "OK",
-                description = "Success",
-                agentId,
-                podStatus = "Running",
-                ready = "1/1",
-                restarts = 0,
-                age = "10h",
-            };
-            return Ok(result);
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
+                var response = await http.GetAsync($"{baseUrl}/health");
+                var body = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                    return Ok(new { ok = false, podStatus = "Offline", agentId, raw = body });
+
+                using var doc = JsonDocument.Parse(body);
+                var ok = doc.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean();
+                var login = doc.RootElement.TryGetProperty("login", out var loginEl) ? loginEl.GetString() : null;
+                return Ok(new { ok, podStatus = ok ? "Running" : "Offline", login, agentId, raw = body });
+            }
+            catch
+            {
+                return Ok(new { ok = false, podStatus = "Offline", agentId, raw = (string?)null });
+            }
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetLineApiAgentLoginQR/{agentId}")]
+        public async Task<IActionResult> GetLineApiAgentLoginQR(string agentId)
+        {
+            var baseUrl = GetLineAgentBaseUrl(agentId);
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
+                var response = await http.PostAsync($"{baseUrl}/login/qr", null);
+                var body = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(body);
+                return Ok(doc.RootElement);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { ok = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetLineApiAgentLoginStatus/{agentId}")]
+        public async Task<IActionResult> GetLineApiAgentLoginStatus(string agentId)
+        {
+            var baseUrl = GetLineAgentBaseUrl(agentId);
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
+                var response = await http.GetAsync($"{baseUrl}/login/status");
+                var body = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(body);
+                return Ok(doc.RootElement);
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { ok = false, error = ex.Message });
+            }
+        }
+
+        private static string GetLineAgentBaseUrl(string agentId)
+        {
+            var clean = agentId.Replace("-", "");
+            var prefix = clean.Length >= 8 ? clean[..8].ToLower() : clean.ToLower();
+            return $"http://line-agent-{prefix}";
+        }
+
+        private static System.Net.Http.Headers.AuthenticationHeaderValue GetLineAgentAuth(string agentId)
+        {
+            var credentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"api:{agentId}"));
+            return new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
         }
 
         [ExcludeFromCodeCoverage]
