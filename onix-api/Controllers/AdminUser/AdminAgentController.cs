@@ -129,7 +129,14 @@ namespace Its.Onix.Api.Controllers
 
                 var doc = JsonDocument.Parse(body);
                 var ok = doc.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean();
-                var login = doc.RootElement.TryGetProperty("login", out var loginEl) ? loginEl.GetString() : null;
+                string? login = null;
+                if (doc.RootElement.TryGetProperty("login", out var loginEl))
+                {
+                    if (loginEl.ValueKind == JsonValueKind.String)
+                        login = loginEl.GetString();
+                    else if (loginEl.ValueKind == JsonValueKind.Object && loginEl.TryGetProperty("state", out var stateEl))
+                        login = stateEl.GetString();
+                }
                 return Ok(new { ok, podStatus = ok ? "Running" : "Offline", login, agentId, raw = body });
             }
             catch
