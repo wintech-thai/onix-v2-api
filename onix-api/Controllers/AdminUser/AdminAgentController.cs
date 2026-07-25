@@ -8,6 +8,7 @@ using System.Text.Json;
 using Its.Onix.Api.ModelsViews;
 using System.Text.RegularExpressions;
 using QRCoder;
+using System.Globalization;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -320,6 +321,7 @@ namespace Its.Onix.Api.Controllers
             //Line
             bd.TryGetValue("title", out var titleObj);
             bd.TryGetValue("sourceLabel", out var sourceLabelObj);
+            bd.TryGetValue("bankTx", out var bankTx);
 
             //Heartbeat
             bd.TryGetValue("AppVersion", out var appVersionObj);
@@ -330,7 +332,18 @@ namespace Its.Onix.Api.Controllers
             var appVersion = appVersionObj?.ToString();
             var model = modelObj?.ToString();
 
-            List<string?> arr = [title, sourceLabel, appVersion, model];
+            var evtType = "";
+            var srcAccName = "";
+            if (bankTx != null)
+            {
+                var bankTxObj = (Dictionary<string, object>) bankTx;
+                evtType = bankTxObj?["eventType"].ToString();
+                srcAccName = bankTxObj?["sourceAccountName"].ToString();
+
+                srcAccName = $"src={srcAccName}";
+            }
+
+            List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName];
             arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
 
             return arr;
@@ -408,51 +421,86 @@ namespace Its.Onix.Api.Controllers
             {
                 var title = bd["title"].ToString();
                 var text = bd["text"].ToString();
+                var bankTxObj = (Dictionary<string, object>) bd["bankTx"];
 
                 if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
                 {
                     pmt.DestinationBankCode = "KTB";
-
-                    var match = Regex.Match(
-                        text,
-                        @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
-                    );
-
-                    if (match.Success)
+                    if (bankTxObj != null)
                     {
-                        var amount = decimal.Parse(match.Groups["amount"].Value);
-                        var account = match.Groups["account"].Value;
+                        //มาจาก notification การโอนเงินผ่านทาง Line API agent
 
-                        pmt.PaymentAmount = amount;
-                        pmt.DestinationAccountNo = account;
+                        var evt = bankTxObj["eventType"].ToString();
+                        if (evt == "tx_in")
+                        {
+                            decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
+                            pmt.PaymentAmount = amt;
+                            pmt.DestinationAccountNo = bankTxObj["destinationAccount"].ToString();
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                     else
                     {
-                        //TODO : check pattern ใหม่สำหรับ Line Api Agent
-                        return null;
+                        var match = Regex.Match(
+                            text,
+                            @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                        );
+
+                        if (match.Success)
+                        {
+                            var amount = decimal.Parse(match.Groups["amount"].Value);
+                            var account = match.Groups["account"].Value;
+
+                            pmt.PaymentAmount = amount;
+                            pmt.DestinationAccountNo = account;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                 }
                 else if ((title == "SCB Connect") && !string.IsNullOrEmpty(text))
                 {
                     pmt.DestinationBankCode = "SCB";
 
-                    var match = Regex.Match(
-                        text,
-                        @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9-]+)"
-                    );
-
-                    if (match.Success)
+                    if (bankTxObj != null)
                     {
-                        var amount = decimal.Parse(match.Groups["amount"].Value);
-                        var account = match.Groups["account"].Value;
-
-                        pmt.PaymentAmount = amount;
-                        pmt.DestinationAccountNo = account;
+                        //มาจาก notification การโอนเงินผ่านทาง Line API agent
+                        var evt = bankTxObj["eventType"].ToString();
+                        if (evt == "tx_in")
+                        {
+                            decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
+                            pmt.PaymentAmount = amt;
+                            pmt.DestinationAccountNo = bankTxObj["destinationAccount"].ToString();
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                     else
                     {
-                        //TODO : check pattern ใหม่สำหรับ Line Api Agent
-                        return null;
+                        var match = Regex.Match(
+                            text,
+                            @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9-]+)"
+                        );
+
+                        if (match.Success)
+                        {
+                            var amount = decimal.Parse(match.Groups["amount"].Value);
+                            var account = match.Groups["account"].Value;
+
+                            pmt.PaymentAmount = amount;
+                            pmt.DestinationAccountNo = account;
+                        }
+                        else
+                        {
+                            return null;
+                        }   
                     }
                 }
             }
