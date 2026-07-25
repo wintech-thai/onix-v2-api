@@ -426,6 +426,11 @@ namespace Its.Onix.Api.Controllers
                         pmt.PaymentAmount = amount;
                         pmt.DestinationAccountNo = account;
                     }
+                    else
+                    {
+                        //TODO : check pattern ใหม่สำหรับ Line Api Agent
+                        return null;
+                    }
                 }
                 else if ((title == "SCB Connect") && !string.IsNullOrEmpty(text))
                 {
@@ -443,6 +448,11 @@ namespace Its.Onix.Api.Controllers
 
                         pmt.PaymentAmount = amount;
                         pmt.DestinationAccountNo = account;
+                    }
+                    else
+                    {
+                        //TODO : check pattern ใหม่สำหรับ Line Api Agent
+                        return null;
                     }
                 }
             }
@@ -520,7 +530,7 @@ namespace Its.Onix.Api.Controllers
                 StatusDesc = mvBa.Description,
             };
 
-            if (ba != null)
+            if ((ba != null) && (pmtLineNoti != null))
             {
                 var bankAccountId = ba.Id.ToString()!;
                 var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
