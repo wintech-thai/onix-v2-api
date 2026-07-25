@@ -122,7 +122,7 @@ namespace Its.Onix.Api.Controllers
             {
                 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
                 http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
-                var response = await http.GetAsync($"{baseUrl}/health");
+                var response = await http.GetAsync($"{baseUrl}/status");
                 var body = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                     return Ok(new { ok = false, podStatus = "Offline", agentId, raw = body });
