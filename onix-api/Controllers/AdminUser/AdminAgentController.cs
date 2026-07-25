@@ -515,6 +515,18 @@ namespace Its.Onix.Api.Controllers
 
             var eventJson = JsonSerializer.Serialize(wrapData);
 
+            List<string> items = [];
+            if (pmtLineNoti == null)
+            {
+                items.Add("UNKNOWN_EVENT");
+            }
+            if (ba == null)
+            {
+                items.Add(mvBa.Status!);
+            }
+
+            string status = string.Join(",", items);
+
             var evt = new MAgentEvent()
             {
                 AgentId = agentId,
@@ -526,8 +538,8 @@ namespace Its.Onix.Api.Controllers
                 //PaymentNoti = pmtLineNoti,
                 //BankAccount = mvBa.BankAccount!,
 
-                Status = mvBa.Status,
-                StatusDesc = mvBa.Description,
+                Status = status,
+                StatusDesc = status,
             };
 
             if ((ba != null) && (pmtLineNoti != null))

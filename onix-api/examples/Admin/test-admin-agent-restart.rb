@@ -14,8 +14,8 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ###
-agentId = "13c162a9-332f-4aa2-8aff-0e008d5aad03" 
-apiUrl = "admin-api/AdminAgent/org/global/action/DeleteAgentById/#{agentId}"
+agentId = "d472aec4-b9f3-4254-ae37-317ced9f4910" 
+apiUrl = "admin-api/AdminAgent/org/global/action/RestartLineApiAgentById/#{agentId}"
 param = nil
 
 token = File.read(keyFile)
@@ -25,5 +25,5 @@ ENV['ACCESS_TOKEN'] = token
 
 #puts("===[#{token}]")
 
-result = make_request(:delete, apiUrl, param)
+result = make_request(:post, apiUrl, param)
 puts(result.to_json)

@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ###
-agentId = "006455ba-beb2-4b90-8471-3d1178dc547c" 
+agentId = "13c162a9-332f-4aa2-8aff-0e008d5aad03" 
 apiUrl = "admin-api/AdminAgent/org/global/action/DeleteAgentById/#{agentId}"
 param = nil
 
@@ -26,4 +26,4 @@ ENV['ACCESS_TOKEN'] = token
 #puts("===[#{token}]")
 
 result = make_request(:delete, apiUrl, param)
-puts(result)
+puts(result.to_json)
