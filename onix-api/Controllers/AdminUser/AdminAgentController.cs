@@ -468,6 +468,13 @@ namespace Its.Onix.Api.Controllers
                 Description = "Success",
             };
 
+            if (lineNoti == null)
+            {
+                r.Status = "BANKCODE_NOT_FOUND";
+                r.Description = $"Unable to find bank code!!!";
+                return r;
+            }
+
             var bankCode = lineNoti.DestinationBankCode;
             var mvAgent = await svc.GetAgentById("global", agentId);
             var agent = mvAgent.Agent!;
