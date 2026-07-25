@@ -524,7 +524,6 @@ namespace Its.Onix.Api.Controllers
             {
                 items.Add(mvBa.Status!);
             }
-
             string status = string.Join(",", items);
 
             var evt = new MAgentEvent()
