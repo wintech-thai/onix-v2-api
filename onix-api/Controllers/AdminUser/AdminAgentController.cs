@@ -334,13 +334,13 @@ namespace Its.Onix.Api.Controllers
 
             var evtType = "";
             var srcAccName = "";
-            if (bankTx != null)
+            if (bankTx is JsonElement bankTxElement)
             {
-                var bankTxObj = (Dictionary<string, object>) bankTx;
-                evtType = bankTxObj?["eventType"].ToString();
-                srcAccName = bankTxObj?["sourceAccountName"].ToString();
+                var bankTxObj = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                    bankTxElement.GetRawText());
 
-                srcAccName = $"src={srcAccName}";
+                evtType = bankTxObj?.GetValueOrDefault("eventType")?.ToString() ?? "";
+                srcAccName = $"src={bankTxObj?.GetValueOrDefault("sourceAccountName")}";
             }
 
             List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName];
@@ -422,10 +422,11 @@ namespace Its.Onix.Api.Controllers
                 var title = bd["title"].ToString();
                 var text = bd["text"].ToString();
 
+                bd.TryGetValue("bankTx", out var bankTx);
                 Dictionary<string, object>? bankTxObj = null;
-                if (bd.TryGetValue("bankTx", out var bankTx) && bankTx is Dictionary<string, object> dict)
+                if (bankTx is JsonElement bankTxElement)
                 {
-                    bankTxObj = dict;
+                    bankTxObj = JsonSerializer.Deserialize<Dictionary<string, object>>(bankTxElement.GetRawText());
                 }
 
                 if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
