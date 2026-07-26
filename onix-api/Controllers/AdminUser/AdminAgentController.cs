@@ -421,7 +421,12 @@ namespace Its.Onix.Api.Controllers
             {
                 var title = bd["title"].ToString();
                 var text = bd["text"].ToString();
-                var bankTxObj = (Dictionary<string, object>) bd["bankTx"];
+
+                Dictionary<string, object>? bankTxObj = null;
+                if (bd.TryGetValue("bankTx", out var bankTx) && bankTx is Dictionary<string, object> dict)
+                {
+                    bankTxObj = dict;
+                }
 
                 if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
                 {
@@ -429,8 +434,7 @@ namespace Its.Onix.Api.Controllers
                     if (bankTxObj != null)
                     {
                         //มาจาก notification การโอนเงินผ่านทาง Line API agent
-
-                        var evt = bankTxObj["eventType"].ToString();
+                        var evt = bankTxObj.TryGetValue("eventType", out var eventType) == true ? eventType?.ToString() : null;
                         if (evt == "tx_in")
                         {
                             decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
