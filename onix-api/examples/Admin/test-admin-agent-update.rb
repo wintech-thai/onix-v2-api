@@ -14,12 +14,12 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 hhmmss = Time.now.strftime("%H%M%S")
-agentId = "198b743a-4579-41ee-853f-a748f6a40825" # เปลี่ยนเป็น API Key ID ที่ต้องการทดสอบ
+agentId = "860ab82b-e33e-4a2c-8d37-42f1e8119f03" # เปลี่ยนเป็น API Key ID ที่ต้องการทดสอบ
 
 ### 
 apiUrl = "admin-api/AdminAgent/org/global/action/UpdateAgentById/#{agentId}"
 param =  {
-  Code: "pjame-test-agent",
+  Code: "pjame-test-agent-xxx",
   Description: "เครื่องเอ๋#1",
   Tags: "เอ๋",
 

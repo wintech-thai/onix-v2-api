@@ -14,7 +14,7 @@ orgId = ENV['API_ORG']
 keyFile = ".token"
 
 ###
-agentId = "d472aec4-b9f3-4254-ae37-317ced9f4910" 
+agentId = "ed50b202-2877-4dc0-810a-c11f0c80690f" 
 apiUrl = "admin-api/AdminAgent/org/global/action/ReloadLineApiAgentById/#{agentId}"
 param = nil
 
