@@ -340,7 +340,11 @@ namespace Its.Onix.Api.Controllers
                     bankTxElement.GetRawText());
 
                 evtType = bankTxObj?.GetValueOrDefault("eventType")?.ToString() ?? "";
-                srcAccName = $"src={bankTxObj?.GetValueOrDefault("sourceAccountName")}";
+                srcAccName = bankTxObj?.GetValueOrDefault("sourceAccountName")?.ToString();
+                if (!string.IsNullOrEmpty(srcAccName))
+                {
+                    srcAccName = $"src={bankTxObj?.GetValueOrDefault("sourceAccountName")}";
+                }
             }
 
             List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName];
@@ -531,7 +535,7 @@ namespace Its.Onix.Api.Controllers
             var bankCode = lineNoti.DestinationBankCode;
             var mvAgent = await svc.GetAgentById("global", agentId);
             var agent = mvAgent.Agent!;
-Console.WriteLine($"DEBUG_1 : agentId=[{agentId}], IsNull=[{agent is null}]");
+//Console.WriteLine($"DEBUG_1 : agentId=[{agentId}], IsNull=[{agent is null}]");
             if (agent == null)
             {
                 r.Status = "UNKNOWN_AGENT_ID";
