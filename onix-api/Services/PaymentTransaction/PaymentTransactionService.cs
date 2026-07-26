@@ -472,10 +472,11 @@ namespace Its.Onix.Api.Services
                 Status = "UnIdentified",
                 Direction = "PayIn",
                 Currency = "THB",
-                TxAmount = (double) paymentNotiLine.PaymentAmount!,
-                TxAmountDecimal = paymentNotiLine.PaymentAmount,
-                FromBankAccountNo = paymentNotiLine.SourceBankAccountNo,
-                FromBankCode = paymentNotiLine.SourceBankCode,
+                //TxAmount = (double) paymentNotiLine?.PaymentAmount!,
+                TxAmount = (double)(paymentNotiLine?.PaymentAmount ?? 0m),
+                TxAmountDecimal = paymentNotiLine?.PaymentAmount,
+                FromBankAccountNo = paymentNotiLine?.SourceBankAccountNo,
+                FromBankCode = paymentNotiLine?.SourceBankCode,
             };
 
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้

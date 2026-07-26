@@ -8,6 +8,7 @@ using System.Text.Json;
 using Its.Onix.Api.ModelsViews;
 using System.Text.RegularExpressions;
 using QRCoder;
+using System.Globalization;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -115,19 +116,85 @@ namespace Its.Onix.Api.Controllers
 
         [HttpGet]
         [Route("org/global/action/GetLineApiAgentStatus/{agentId}")]
-        public IActionResult GetLineApiAgentStatus(string agentId)
+        public async Task<IActionResult> GetLineApiAgentStatus(string agentId)
         {
-            var result = new
+            var baseUrl = GetLineAgentBaseUrl(agentId);
+            try
             {
-                status = "OK",
-                description = "Success",
-                agentId,
-                podStatus = "Running",
-                ready = "1/1",
-                restarts = 0,
-                age = "10h",
-            };
-            return Ok(result);
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
+                var response = await http.GetAsync($"{baseUrl}/status");
+                var body = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
+                    return Ok(new { ok = false, podStatus = "Offline", agentId, raw = body });
+
+                var doc = JsonDocument.Parse(body);
+                var ok = doc.RootElement.TryGetProperty("ok", out var okEl) && okEl.GetBoolean();
+                string? login = null;
+                if (doc.RootElement.TryGetProperty("login", out var loginEl))
+                {
+                    if (loginEl.ValueKind == JsonValueKind.String)
+                        login = loginEl.GetString();
+                    else if (loginEl.ValueKind == JsonValueKind.Object && loginEl.TryGetProperty("state", out var stateEl))
+                        login = stateEl.GetString();
+                }
+                return Ok(new { ok, podStatus = ok ? "Running" : "Offline", login, agentId, raw = body });
+            }
+            catch
+            {
+                return Ok(new { ok = false, podStatus = "Offline", agentId, raw = (string?)null });
+            }
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetLineApiAgentLoginQR/{agentId}")]
+        public async Task<IActionResult> GetLineApiAgentLoginQR(string agentId)
+        {
+            var baseUrl = GetLineAgentBaseUrl(agentId);
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
+                var response = await http.PostAsync($"{baseUrl}/login/qr", null);
+                var body = await response.Content.ReadAsStringAsync();
+                return Content(body, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { ok = false, error = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetLineApiAgentLoginStatus/{agentId}")]
+        public async Task<IActionResult> GetLineApiAgentLoginStatus(string agentId)
+        {
+            var baseUrl = GetLineAgentBaseUrl(agentId);
+            try
+            {
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+                http.DefaultRequestHeaders.Authorization = GetLineAgentAuth(agentId);
+                var response = await http.GetAsync($"{baseUrl}/login/status");
+                var body = await response.Content.ReadAsStringAsync();
+                return Content(body, "application/json");
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { ok = false, error = ex.Message });
+            }
+        }
+
+        private static string GetLineAgentBaseUrl(string agentId)
+        {
+            var clean = agentId.Replace("-", "");
+            var prefix = clean.Length >= 8 ? clean[..8].ToLower() : clean.ToLower();
+            return $"http://line-agent-{prefix}";
+        }
+
+        private static System.Net.Http.Headers.AuthenticationHeaderValue GetLineAgentAuth(string agentId)
+        {
+            var credentials = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes($"api:{agentId}"));
+            return new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
         }
 
         [ExcludeFromCodeCoverage]
@@ -254,6 +321,7 @@ namespace Its.Onix.Api.Controllers
             //Line
             bd.TryGetValue("title", out var titleObj);
             bd.TryGetValue("sourceLabel", out var sourceLabelObj);
+            bd.TryGetValue("bankTx", out var bankTx);
 
             //Heartbeat
             bd.TryGetValue("AppVersion", out var appVersionObj);
@@ -264,7 +332,22 @@ namespace Its.Onix.Api.Controllers
             var appVersion = appVersionObj?.ToString();
             var model = modelObj?.ToString();
 
-            List<string?> arr = [title, sourceLabel, appVersion, model];
+            var evtType = "";
+            var srcAccName = "";
+            if (bankTx is JsonElement bankTxElement)
+            {
+                var bankTxObj = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                    bankTxElement.GetRawText());
+
+                evtType = bankTxObj?.GetValueOrDefault("eventType")?.ToString() ?? "";
+                srcAccName = bankTxObj?.GetValueOrDefault("sourceAccountName")?.ToString();
+                if (!string.IsNullOrEmpty(srcAccName))
+                {
+                    srcAccName = $"src={bankTxObj?.GetValueOrDefault("sourceAccountName")}";
+                }
+            }
+
+            List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName];
             arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
 
             return arr;
@@ -343,40 +426,90 @@ namespace Its.Onix.Api.Controllers
                 var title = bd["title"].ToString();
                 var text = bd["text"].ToString();
 
+                bd.TryGetValue("bankTx", out var bankTx);
+                Dictionary<string, object>? bankTxObj = null;
+                if (bankTx is JsonElement bankTxElement)
+                {
+                    bankTxObj = JsonSerializer.Deserialize<Dictionary<string, object>>(bankTxElement.GetRawText());
+                }
+
                 if ((title == "Krungthai Connext") && !string.IsNullOrEmpty(text))
                 {
                     pmt.DestinationBankCode = "KTB";
-
-                    var match = Regex.Match(
-                        text,
-                        @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
-                    );
-
-                    if (match.Success)
+                    if (bankTxObj != null)
                     {
-                        var amount = decimal.Parse(match.Groups["amount"].Value);
-                        var account = match.Groups["account"].Value;
+                        //มาจาก notification การโอนเงินผ่านทาง Line API agent
+                        var evt = bankTxObj.TryGetValue("eventType", out var eventType) == true ? eventType?.ToString() : null;
+                        if (evt == "tx_in")
+                        {
+                            decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
+                            pmt.PaymentAmount = amt;
+                            pmt.DestinationAccountNo = bankTxObj["destinationAccount"].ToString();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        var match = Regex.Match(
+                            text,
+                            @"เงินเข้า:\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9]+)"
+                        );
 
-                        pmt.PaymentAmount = amount;
-                        pmt.DestinationAccountNo = account;
+                        if (match.Success)
+                        {
+                            var amount = decimal.Parse(match.Groups["amount"].Value);
+                            var account = match.Groups["account"].Value;
+
+                            pmt.PaymentAmount = amount;
+                            pmt.DestinationAccountNo = account;
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
                 }
                 else if ((title == "SCB Connect") && !string.IsNullOrEmpty(text))
                 {
                     pmt.DestinationBankCode = "SCB";
 
-                    var match = Regex.Match(
-                        text,
-                        @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9-]+)"
-                    );
-
-                    if (match.Success)
+                    if (bankTxObj != null)
                     {
-                        var amount = decimal.Parse(match.Groups["amount"].Value);
-                        var account = match.Groups["account"].Value;
+                        //มาจาก notification การโอนเงินผ่านทาง Line API agent
+                        var evt = bankTxObj["eventType"].ToString();
+                        if (evt == "tx_in")
+                        {
+                            decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
+                            pmt.PaymentAmount = amt;
+                            pmt.DestinationAccountNo = bankTxObj["destinationAccount"].ToString();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        var match = Regex.Match(
+                            text,
+                            @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9-]+)"
+                        );
 
-                        pmt.PaymentAmount = amount;
-                        pmt.DestinationAccountNo = account;
+                        if (match.Success)
+                        {
+                            var amount = decimal.Parse(match.Groups["amount"].Value);
+                            var account = match.Groups["account"].Value;
+
+                            pmt.PaymentAmount = amount;
+                            pmt.DestinationAccountNo = account;
+                        }
+                        else
+                        {
+                            return null;
+                        }   
                     }
                 }
             }
@@ -392,9 +525,23 @@ namespace Its.Onix.Api.Controllers
                 Description = "Success",
             };
 
+            if (lineNoti == null)
+            {
+                r.Status = "BANKCODE_NOT_FOUND";
+                r.Description = $"Unable to find bank code!!!";
+                return r;
+            }
+
             var bankCode = lineNoti.DestinationBankCode;
             var mvAgent = await svc.GetAgentById("global", agentId);
             var agent = mvAgent.Agent!;
+//Console.WriteLine($"DEBUG_1 : agentId=[{agentId}], IsNull=[{agent is null}]");
+            if (agent == null)
+            {
+                r.Status = "UNKNOWN_AGENT_ID";
+                r.Description = $"Unable to find agent ID=[{agentId}]";
+                return r;
+            }
 
             var bankAccounts = agent.BankAccountsSelectedObj;
             MBankAccount? selectedBankAccount = null;
@@ -439,6 +586,20 @@ namespace Its.Onix.Api.Controllers
 
             var eventJson = JsonSerializer.Serialize(wrapData);
 
+            List<string> items = [];
+            if (pmtLineNoti == null)
+            {
+                items.Add("UNKNOWN_EVENT");
+            }
+
+            if (ba == null)
+            {
+                items.Add(mvBa.Status!);
+            }
+            
+            string status = string.Join(",", items);
+
+
             var evt = new MAgentEvent()
             {
                 AgentId = agentId,
@@ -450,22 +611,19 @@ namespace Its.Onix.Api.Controllers
                 //PaymentNoti = pmtLineNoti,
                 //BankAccount = mvBa.BankAccount!,
 
-                Status = mvBa.Status,
-                StatusDesc = mvBa.Description,
+                Status = status,
+                StatusDesc = status,
             };
 
-            if (ba != null)
+            if ((ba != null) && (pmtLineNoti != null))
             {
                 var bankAccountId = ba.Id.ToString()!;
                 var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
 
-                if (mvTx.Status != "OK")
-                {
-                    evt.Status = mvTx.Status;
-                    evt.StatusDesc = mvTx.Description;
-                }
+                evt.Status = mvTx.Status;
+                evt.StatusDesc = mvTx.Description;
             }
-            
+
             var result = await svc.AddAgentEvent("global", evt);
 
             return Ok(result);
