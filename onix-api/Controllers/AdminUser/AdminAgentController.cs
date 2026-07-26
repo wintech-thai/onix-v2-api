@@ -591,11 +591,14 @@ namespace Its.Onix.Api.Controllers
             {
                 items.Add("UNKNOWN_EVENT");
             }
+
             if (ba == null)
             {
                 items.Add(mvBa.Status!);
             }
+            
             string status = string.Join(",", items);
+
 
             var evt = new MAgentEvent()
             {
@@ -617,13 +620,10 @@ namespace Its.Onix.Api.Controllers
                 var bankAccountId = ba.Id.ToString()!;
                 var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
 
-                if (mvTx.Status != "OK")
-                {
-                    evt.Status = mvTx.Status;
-                    evt.StatusDesc = mvTx.Description;
-                }
+                evt.Status = mvTx.Status;
+                evt.StatusDesc = mvTx.Description;
             }
-            
+
             var result = await svc.AddAgentEvent("global", evt);
 
             return Ok(result);
