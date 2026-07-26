@@ -530,6 +530,13 @@ namespace Its.Onix.Api.Controllers
             var bankCode = lineNoti.DestinationBankCode;
             var mvAgent = await svc.GetAgentById("global", agentId);
             var agent = mvAgent.Agent!;
+Console.WriteLine($"DEBUG_1 : agentId=[{agentId}], IsNull=[{agent is null}]");
+            if (agent == null)
+            {
+                r.Status = "UNKNOWN_AGENT_ID";
+                r.Description = $"Unable to find agent ID=[{agentId}]";
+                return r;
+            }
 
             var bankAccounts = agent.BankAccountsSelectedObj;
             MBankAccount? selectedBankAccount = null;
