@@ -89,7 +89,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (orgType == "PLEASE-PAYMENT")
+            if (orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-ERP")
             {
                 var merchant = org.Merchant!;
                 merchant.OrgId = customOrgId;
