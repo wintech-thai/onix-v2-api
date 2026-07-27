@@ -334,6 +334,7 @@ namespace Its.Onix.Api.Controllers
 
             var evtType = "";
             var srcAccName = "";
+            var acmount = "";
             if (bankTx is JsonElement bankTxElement)
             {
                 var bankTxObj = JsonSerializer.Deserialize<Dictionary<string, object>>(
@@ -345,9 +346,11 @@ namespace Its.Onix.Api.Controllers
                 {
                     srcAccName = $"src={bankTxObj?.GetValueOrDefault("sourceAccountName")}";
                 }
+
+                acmount = bankTxObj?.GetValueOrDefault("amount")?.ToString() ?? "";
             }
 
-            List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName];
+            List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName, acmount];
             arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
 
             return arr;
