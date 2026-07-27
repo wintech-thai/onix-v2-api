@@ -350,7 +350,7 @@ namespace Its.Onix.Api.Controllers
                 acmount = bankTxObj?.GetValueOrDefault("amount")?.ToString() ?? "";
             }
 
-            List<string?> arr = [title, sourceLabel, appVersion, model, evtType, srcAccName, acmount];
+            List<string?> arr = [title, appVersion, model, evtType, srcAccName, acmount];
             arr = [.. arr.Where(x => !string.IsNullOrWhiteSpace(x))];
 
             return arr;
