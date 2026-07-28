@@ -60,5 +60,21 @@ namespace Its.Onix.Api.Controllers
             var result = await _configSvc.SetBackupPolicy("global", config);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/TriggerBackupNow")]
+        public IActionResult TriggerBackupNow()
+        {
+            var job = new MJob
+            {
+                Type = "Backup.Adhoc",
+                Name = $"Adhoc Backup {DateTime.UtcNow:yyyyMMddHHmmss}",
+                Description = "Manual backup triggered from admin UI",
+                Tags = "backup,adhoc",
+            };
+            var result = _jobSvc.AddJob("global", job);
+            return Ok(result);
+        }
     }
 }
