@@ -35,7 +35,10 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public MBrandConfig? BrandConfig { get; set; }
-    
+
+        [NotMapped]
+        public MBackupPolicy? BackupPolicy { get; set; }
+
 
         public MConfiguration()
         {

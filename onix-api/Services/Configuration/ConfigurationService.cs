@@ -139,6 +139,60 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVConfiguration?> GetBackupPolicy(string orgId)
+        {
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Backup policy retrieved successfully"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetConfigurationByType("BackupPolicy");
+
+            if (result == null)
+            {
+                r.Status = "NOT_FOUND";
+                r.Description = "Backup policy not found";
+                return r;
+            }
+
+            if (!string.IsNullOrEmpty(result.ConfigValue))
+            {
+                result.BackupPolicy = JsonSerializer.Deserialize<MBackupPolicy>(result.ConfigValue);
+                result.ConfigValue = "";
+            }
+
+            r.Configuration = result;
+            return r;
+        }
+
+        public async Task<MVConfiguration> SetBackupPolicy(string orgId, MConfiguration config)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Backup policy saved successfully"
+            };
+
+            if (config.BackupPolicy == null)
+            {
+                r.Status = "CONFIG_VALUE_MISSING";
+                r.Description = "Backup policy data is missing";
+                return r;
+            }
+
+            config.ConfigType = "BackupPolicy";
+            config.ConfigValue = JsonSerializer.Serialize(config.BackupPolicy);
+
+            var c = await repository!.UpsertConfiguration(config);
+            c.ConfigValue = "";
+            r.Configuration = c;
+            return r;
+        }
+
         public async Task<MVConfiguration?> SetConfigStatusById(string orgId, string configId, string status)
         {
             repository!.SetCustomOrgId(orgId);
