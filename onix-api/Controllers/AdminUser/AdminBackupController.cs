@@ -28,7 +28,7 @@ namespace Its.Onix.Api.Controllers
         public IActionResult GetBackupJobs([FromBody] VMJob param)
         {
             if (param.Limit <= 0) param.Limit = 100;
-            param.JobType = "Backup.Schedule";
+            param.EventTypeSet = new[] { "Backup.Schedule", "Backup.Adhoc" };
             var result = _jobSvc.GetJobs("global", param);
             return Ok(result);
         }
@@ -38,7 +38,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/GetBackupJobCount")]
         public IActionResult GetBackupJobCount([FromBody] VMJob param)
         {
-            param.JobType = "Backup.Schedule";
+            param.EventTypeSet = new[] { "Backup.Schedule", "Backup.Adhoc" };
             var result = _jobSvc.GetJobCount("global", param);
             return Ok(result);
         }
