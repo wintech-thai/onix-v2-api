@@ -186,6 +186,7 @@ namespace Its.Onix.Api.Services
 
             config.ConfigType = "BackupPolicy";
             config.ConfigValue = JsonSerializer.Serialize(config.BackupPolicy);
+            config.Status = "Active";
 
             var c = await repository!.UpsertConfiguration(config);
             c.ConfigValue = "";
