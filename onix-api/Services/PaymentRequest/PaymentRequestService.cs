@@ -1111,7 +1111,7 @@ namespace Its.Onix.Api.Services
                 return pmResponse;
             }
 
-            var existingPayout = ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
+            var existingPayout = await ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
             if (existingPayout == null)
             {
                 r.Status = "ERROR_NO_PAYOUT_REQUEST_FOUND";
