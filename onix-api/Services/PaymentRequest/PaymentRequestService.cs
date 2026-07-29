@@ -1321,15 +1321,19 @@ namespace Its.Onix.Api.Services
                 var id = payoutRequest.Id.ToString();
 
                 var p2pUsedAmount = payoutRequest.TotalPayOutPendingPaidAmountDecimal + payoutRequest.TotalPayOutPaidAmountDecimal;
-                var leftAmount = payoutRequest.PayOutTotalAmountDecimal - p2pUsedAmount;
+                p2pUsedAmount ??= 0;
 
-                lines.Add($"Step01 - Request ID=[{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
+                var leftAmount = payoutRequest.PayOutTotalAmountDecimal - p2pUsedAmount;
+                leftAmount ??= 0;
+
+                lines.Add($"Step01.1 - ============");
+                lines.Add($"Step01.2 - Request ID=[{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
                 var promptPayId = payoutRequest.PayinPromptPayId;
                 var isOverride = false;
                 if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
                 {
-                    lines.Add($"Step01.1 - Request ID=[{id}], use override bank account");
+                    lines.Add($"Step01.1 - Request ID=[{id}], use overrided bank account");
 
                     promptPayId = payoutRequest.PayinPromptPayIdOverride;
                     isOverride = true;
