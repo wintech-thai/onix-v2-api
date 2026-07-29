@@ -1319,6 +1319,7 @@ namespace Its.Onix.Api.Services
             foreach (var payoutRequest in pendingPayoutRequests)
             {
                 var id = payoutRequest.Id.ToString();
+                var org = payoutRequest.OrgId;
 
                 var p2pUsedAmount = payoutRequest.TotalPayOutPendingPaidAmountDecimal + payoutRequest.TotalPayOutPaidAmountDecimal;
                 p2pUsedAmount ??= 0;
@@ -1327,13 +1328,13 @@ namespace Its.Onix.Api.Services
                 leftAmount ??= 0;
 
                 lines.Add($"Step01.1 - ============");
-                lines.Add($"Step01.2 - Request ID=[{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
+                lines.Add($"Step01.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
                 var promptPayId = payoutRequest.PayinPromptPayId;
                 var isOverride = false;
                 if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
                 {
-                    lines.Add($"Step01.1 - Request ID=[{id}], use overrided bank account");
+                    lines.Add($"Step01.1 - Request ID=[{org}:{id}], use overrided bank account");
 
                     promptPayId = payoutRequest.PayinPromptPayIdOverride;
                     isOverride = true;
@@ -1341,7 +1342,7 @@ namespace Its.Onix.Api.Services
 
                 if (string.IsNullOrEmpty(promptPayId))
                 {
-                    lines.Add($"Step02 - Request ID=[{id}], Skip because PromptPay ID is empty!!!");
+                    lines.Add($"Step02 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
                     //ไม่ใช่ prompt pay
                     continue;
                 }
@@ -1361,7 +1362,7 @@ namespace Its.Onix.Api.Services
 
                 if (leftAmount >= amt)
                 {
-                    lines.Add($"Step03 - Request ID=[{id}], Found bank account with PromptPay ID=[{promptPayId}]");
+                    lines.Add($"Step03 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}{bankAccountName}]");
                     var ba = new MBankAccount()
                     {
                         BankCode = bankCode,
