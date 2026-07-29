@@ -9,6 +9,9 @@ namespace Its.Onix.Api.Services
         public Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId);
 
         public Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant);
+
+        public Task<MVPaymentResponse> AddPaymentRequestPayInP2P(string orgId, MPaymentRequest paymentRequest, MMerchant merchant);
+
         public Task<MVPaymentRequest> AddPaymentRequestPayOut(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount);
         public Task<MVPaymentRequest> AddPaymentRequestTransfer(string orgId, MPaymentRequest paymentRequest, MBankAccount destBa, MBankAccount srcBa);
 
