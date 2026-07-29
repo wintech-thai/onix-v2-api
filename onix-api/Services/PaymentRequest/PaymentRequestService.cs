@@ -1314,7 +1314,7 @@ namespace Its.Onix.Api.Services
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
             var pendingPayoutRequests = await repository!.GetPendingPayOutRequests();
 
-            lines.Add($"Step00 - Found [{pendingPayoutRequests.Count}] pending payout request");
+            lines.Add($"Step0 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
             foreach (var payoutRequest in pendingPayoutRequests)
             {
@@ -1327,14 +1327,14 @@ namespace Its.Onix.Api.Services
                 var leftAmount = payoutRequest.PayOutTotalAmountDecimal - p2pUsedAmount;
                 leftAmount ??= 0;
 
-                lines.Add($"Step01.1 - ============");
-                lines.Add($"Step01.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
+                lines.Add($"Step1.1 - ============");
+                lines.Add($"Step1.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
                 var promptPayId = payoutRequest.PayinPromptPayId;
                 var isOverride = false;
                 if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
                 {
-                    lines.Add($"Step01.1 - Request ID=[{org}:{id}], use overrided bank account");
+                    lines.Add($"Step1.3 - Request ID=[{org}:{id}], use overrided bank account");
 
                     promptPayId = payoutRequest.PayinPromptPayIdOverride;
                     isOverride = true;
@@ -1342,7 +1342,7 @@ namespace Its.Onix.Api.Services
 
                 if (string.IsNullOrEmpty(promptPayId))
                 {
-                    lines.Add($"Step02 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
                     //ไม่ใช่ prompt pay
                     continue;
                 }
@@ -1360,24 +1360,27 @@ namespace Its.Onix.Api.Services
                 var amt = (decimal?) pr.RequestedAmount!;
                 amt ??= 0;
 
-                if (leftAmount >= amt)
+                if (leftAmount <= amt)
                 {
-                    lines.Add($"Step03 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}{bankAccountName}]");
-                    var ba = new MBankAccount()
-                    {
-                        BankCode = bankCode,
-                        PromptPayId = promptPayId,
-                        AccountNumber = bankAccountNo,
-                        AccountName = bankAccountName,
-                    };
-
-                    //TODO : เพิ่ม logic สำหรับ update Payout Request สำหรับอัพเดต partial history
-
-                    return (ba, lines);
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
+                    continue;
                 }
+
+                lines.Add($"Step1.5 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                var ba = new MBankAccount()
+                {
+                    BankCode = bankCode,
+                    PromptPayId = promptPayId,
+                    AccountNumber = bankAccountNo,
+                    AccountName = bankAccountName,
+                };
+
+                //TODO : เพิ่ม logic สำหรับ update Payout Request สำหรับอัพเดต partial history
+
+                return (ba, lines);
             }
 
-            lines.Add($"Step03 - No bank account match!!!");
+            lines.Add($"Step3 - No bank account match!!!");
 
             //ไม่มี bank account ที่ match
             return (null, lines);
