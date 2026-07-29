@@ -140,6 +140,38 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/SubmitPayInRequestP2P/{merchantId}")]
+        public async Task<IActionResult> SubmitPayInRequestP2P(string orgId, string merchantId, [FromBody] MPaymentRequest request)
+        {
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return Ok(mcVm);
+            }
+
+            var mc = mcVm.Merchant;
+            if (mc == null)
+            {
+                return Ok(mcVm);
+            }
+
+            if (string.IsNullOrEmpty(mc.OrgId))
+            {
+                mcVm.Status = "ERROR_ORG_ID_EMPTY";
+                mcVm.Description = "Organization ID is null or empty";
+                return Ok(mcVm);
+            }
+
+            request.MerchantId = merchantId;
+            request.MerchantId2 = Guid.Parse(merchantId);
+            var result = await _paymentRequestSvc.AddPaymentRequestPayInP2P(orgId, request, mc);
+
+            result.PaymentResponse!.QrCodeImage = "";
+
+            return Ok(result);
+        }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]

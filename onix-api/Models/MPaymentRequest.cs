@@ -127,6 +127,12 @@ namespace Its.Onix.Api.Models
         [Column("payin_account_type_override")]
         public string? PayinAccountTypeOverride { get; set; }
 
+        [Column("payin_is_peer_to_peer")]
+        public bool? PayinIsPeerToPeer { get; set; }
+
+        [Column("payin_p2p_payout_id")]
+        public string? PayinPeer2PeerPayoutId { get; set; } //เป็น ID ของ Payout Request ที่เราไปเอา Bank Account มาตอน Payout
+
 
         //PayOut fields - บัญชีที่เงินออกไปจ่ายให้ลูกค้า
         [Column("payout_bank_id")]
@@ -152,8 +158,8 @@ namespace Its.Onix.Api.Models
         
         [Column("payout_fee_pct")]
         public double? PayoutFeePct { get; set; } //เปอร์เซ็นค่าธรรมเนียมจ่ายออก
+        
         [Column("payout_fee_decimal")]
-
         public decimal? PayoutFeeDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
 
         [Column("total_payout_amount_decimal")]
@@ -161,6 +167,17 @@ namespace Its.Onix.Api.Models
 
         [Column("payout_fee_payer")]
         public string? PayoutFeePayer { get; set; } //ใครคือผู้รับภาระค่าธรรมเนียมการโอน (Merchant, Beneficiary)
+
+
+        //ยอด TotalPayOutPendingPaidAmountDecimal + TotalPayOutPaidAmountDecimal ต้องน้อยกว่าหรือเท่ากับ PayOutTotalAmountDecimal เสมอ
+        [Column("total_payout_pending_paid_amount_decimal")]
+        public decimal? TotalPayOutPendingPaidAmountDecimal { get; set; } //ยอดรวมที่ถูก lock เอาไปทำ P2P
+        
+        [Column("total_payout_paid_amount_decimal")]
+        public decimal? TotalPayOutPaidAmountDecimal { get; set; } //ยอดรวมที่จ่ายเข้ามาแล้ว เอาไปทำ P2P
+        
+        [Column("partial_payout_history")]
+        public decimal? PartialPayoutHistory { get; set; } //JSON เก็บ array ของ partial payment จาก P2P
 
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
@@ -243,6 +260,7 @@ namespace Its.Onix.Api.Models
             IsPayInBankAccountOverride = false;
             DiscardCent = false;
             PayoutFeePayer = "Merchant"; //หักจาก merhant
+            PayinIsPeerToPeer = false;
         }
     }
 }

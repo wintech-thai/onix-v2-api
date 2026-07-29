@@ -68,6 +68,8 @@ namespace Its.Onix.Api.Database.Repositories
                 PayinAccountType = x.pr.PayinAccountType,
                 PayinAccountLevel = x.pr.PayinAccountLevel,
                 PayInFeePct = x.pr.PayInFeePct,
+                PayinIsPeerToPeer = x.pr.PayinIsPeerToPeer,
+                PayinPeer2PeerPayoutId = x.pr.PayinPeer2PeerPayoutId,
 
                 PayoutBankAccountId = x.pr.PayoutBankAccountId,
                 PayoutBankCode = x.pr.PayoutBankCode,
@@ -78,6 +80,10 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutAccountLevel = x.pr.PayoutAccountLevel,
                 PayoutFeePct = x.pr.PayoutFeePct,
                 PayoutFeeDecimal = x.pr.PayoutFeeDecimal,
+                TotalPayOutPendingPaidAmountDecimal = x.pr.TotalPayOutPendingPaidAmountDecimal,
+                TotalPayOutPaidAmountDecimal = x.pr.TotalPayOutPaidAmountDecimal,
+                PartialPayoutHistory = x.pr.PartialPayoutHistory,
+
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
                 QrCode = x.pr.QrCode,
                 RejectReason = x.pr.RejectReason,
@@ -196,6 +202,29 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return pd;
+        }
+
+        public async Task<List<MPaymentRequest>> GetPendingPayOutRequests()
+        {
+            var oldOrgId = orgId;
+
+            var param = new VMPaymentRequest()
+            {
+                Direction = "PayOut",
+                Status = "Pending",
+            };
+
+            orgId = "global"; //เอามาหมดทุก merchant
+
+            var predicate = PaymentRequestPredicate2(param!);
+            var result = await GetPaymentRequestSelection().AsExpandable()
+            .Where(predicate)
+            .OrderBy(e => e.CreatedDate) //น้อยไปมาก เอาตัวที่สร้างก่อนขึ้นก่อน
+            .ToListAsync();
+
+            orgId = oldOrgId;
+
+            return result;
         }
 
         public async Task<List<MPaymentRequest>> GetPaymentRequestsForPaymentTx(VMPaymentRequest param)
