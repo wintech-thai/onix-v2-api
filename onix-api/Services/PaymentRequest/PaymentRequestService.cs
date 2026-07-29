@@ -106,6 +106,7 @@ namespace Its.Onix.Api.Services
 
             result.ResponseData = "";
             result.ProcessingMessages = "";
+            result.PartialPayoutHistory = "";
 
             r.PaymentRequest = result;
 
@@ -1168,6 +1169,7 @@ namespace Its.Onix.Api.Services
                     PayinRequestId = payIn.Id.ToString(),
                     PartialAmount = amt,
                     Status = "Pending",
+                    TxDate = payIn.CreatedDate,
                 };
 
                 txs.Add(ppo);

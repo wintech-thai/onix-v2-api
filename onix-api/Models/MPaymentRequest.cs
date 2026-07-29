@@ -256,6 +256,18 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public List<MPartialPayout>? PartialPayouts { get; set; }
 
+        [NotMapped]
+        public bool? IsPartialyPayout
+        {
+            get
+            {
+                var pendingAmt = TotalPayOutPendingPaidAmountDecimal ?? 0;
+                var paidAmt = TotalPayOutPaidAmountDecimal ?? 0m;
+
+                return (pendingAmt + paidAmt) > 0;
+            }
+        }
+
         public MPaymentRequest()
         {
             Id = Guid.NewGuid();
