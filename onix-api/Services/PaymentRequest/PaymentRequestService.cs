@@ -83,14 +83,25 @@ namespace Its.Onix.Api.Services
             List<string> lines;
             try
             {
-                lines = JsonSerializer.Deserialize<List<string>>(result.ProcessingMessages!) ?? new List<string>();
+                lines = JsonSerializer.Deserialize<List<string>>(result.ProcessingMessages!) ?? [];
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"ERROR - [{ex.Message}]");
                 lines = [];
             }
-            
+
+            List<MPartialPayout> partialPayoutTxs;
+            try
+            {
+                partialPayoutTxs = JsonSerializer.Deserialize<List<MPartialPayout>>(result.PartialPayoutHistory!) ?? [];
+            }
+            catch
+            {
+                partialPayoutTxs = [];
+            }
+
+            result.PartialPayouts = partialPayoutTxs;
             result.ProcessingSteps = lines;
 
             result.ResponseData = "";
@@ -1078,10 +1089,8 @@ namespace Its.Onix.Api.Services
 
             //ไม่ต้องมี logic สำหรับ random เศษสตางค์แล้ว
             var amt = paymentRequest.RequestedAmount;
-            if (amt == null)
-            {
-                amt = 0;
-            }
+            amt ??= 0;
+
             paymentRequest.GeneratedAmount = amt;
 
             //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
@@ -1100,6 +1109,16 @@ namespace Its.Onix.Api.Services
             if (pmResponse.Status != "OK")
             {
                 return pmResponse;
+            }
+
+            var existingPayout = ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
+            if (existingPayout == null)
+            {
+                r.Status = "ERROR_NO_PAYOUT_REQUEST_FOUND";
+                r.Description = $"Unable to update partial payout history!!!";
+
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, lines);
+                return r;
             }
 
             var jsonString = JsonSerializer.Serialize(pmResponse.PaymentResponse);
@@ -1124,6 +1143,42 @@ namespace Its.Onix.Api.Services
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
             return pmResponse;
+        }
+
+        private async Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action)
+        {
+            var payoutRequestId = payOut.Id.ToString()!;
+
+            var txHistory = payOut.PartialPayoutHistory;
+            if (string.IsNullOrEmpty(txHistory))
+            {
+                txHistory = "[]";
+            }
+
+            var txs = JsonSerializer.Deserialize<List<MPartialPayout>>(txHistory);
+            txs ??= [];
+
+            var amt = (decimal?) payIn.RequestedAmount;
+            amt ??= 0;
+
+            if (action == "Add")
+            {
+                var ppo = new MPartialPayout()
+                {
+                    PayinRequestId = payIn.Id.ToString(),
+                    PartialAmount = amt,
+                    Status = "Pending",
+                };
+
+                txs.Add(ppo);
+            }
+
+            payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
+            payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
+            payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
+
+            var result = await repository!.UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
+            return result;
         }
 
 
@@ -1661,6 +1716,7 @@ namespace Its.Onix.Api.Services
             { 
                 p.ResponseData = ""; 
                 p.ProcessingMessages = "";
+                p.PartialPayoutHistory = "";
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น

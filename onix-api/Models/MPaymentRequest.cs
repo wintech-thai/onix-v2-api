@@ -177,7 +177,7 @@ namespace Its.Onix.Api.Models
         public decimal? TotalPayOutPaidAmountDecimal { get; set; } //ยอดรวมที่จ่ายเข้ามาแล้ว เอาไปทำ P2P
         
         [Column("partial_payout_history")]
-        public decimal? PartialPayoutHistory { get; set; } //JSON เก็บ array ของ partial payment จาก P2P
+        public string? PartialPayoutHistory { get; set; } //JSON เก็บ array ของ partial payment จาก P2P
 
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
@@ -249,14 +249,19 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public MPaymentResponse? ResponseDataObj { get; set; }
+        
         [NotMapped]
         public List<string>? ProcessingSteps { get; set; }
+
+        [NotMapped]
+        public List<MPartialPayout>? PartialPayouts { get; set; }
 
         public MPaymentRequest()
         {
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             ProcessingSteps = [];
+            PartialPayouts= [];
             IsPayInBankAccountOverride = false;
             DiscardCent = false;
             PayoutFeePayer = "Merchant"; //หักจาก merhant
