@@ -212,6 +212,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 Direction = "PayOut",
                 Status = "Pending",
+                FromDate = DateTime.UtcNow.AddDays(-1), //ให้ย้อนหลังแค่ 1 วันพอ เพราะอยากให้เคลียร์ payment out request ทุกวันอยู่แล้ว
             };
 
             orgId = "global"; //เอามาหมดทุก merchant
