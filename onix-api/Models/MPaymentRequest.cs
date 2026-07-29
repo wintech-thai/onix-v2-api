@@ -159,6 +159,9 @@ namespace Its.Onix.Api.Models
         [Column("total_payout_amount_decimal")]
         public decimal? PayOutTotalAmountDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
 
+        [Column("payout_fee_payer")]
+        public string? PayoutFeePayer { get; set; } //ใครคือผู้รับภาระค่าธรรมเนียมการโอน (Merchant, Beneficiary)
+
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
@@ -239,6 +242,7 @@ namespace Its.Onix.Api.Models
             ProcessingSteps = [];
             IsPayInBankAccountOverride = false;
             DiscardCent = false;
+            PayoutFeePayer = "Merchant"; //หักจาก merhant
         }
     }
 }

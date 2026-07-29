@@ -450,6 +450,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
             var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
             if (mvPtx.Status != "OK")
             {
@@ -510,10 +511,23 @@ namespace Its.Onix.Api.Services
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
-            pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
-
             pt.PayoutFeeDecimal = (decimal) pt.PayOutFee!;
-            pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+
+            //หักออกจากบัญชีปลายทางเลย
+            decimal? merchantDeductFee;
+            if (existing.PayoutFeePayer != "Merchant")
+            {
+                //หักออกตอนโอนไปปลายทางเลย
+                pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
+                pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+                merchantDeductFee = 0;
+            }
+            else
+            {
+                pt.PayOutTotalAmount = pt.TxAmount;
+                pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal;
+                merchantDeductFee = pt.PayoutFeeDecimal;
+            }
 
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
@@ -544,7 +558,7 @@ namespace Its.Onix.Api.Services
             var merchantWallet = mcWallet.Wallet;
             var bankWallet = baWallet.Wallet;
 
-            var merchantDeductAmt = pt.TxAmountDecimal;
+            var merchantDeductAmt = pt.TxAmountDecimal + merchantDeductFee;
             var merchantCurrentBalance = merchantWallet!.PointBalanceDecimal;
             var bankAccountDeductAmt = pt.PayOutTotalAmountDecimal;
             var bankAccountCurrentBalance = bankWallet!.PointBalanceDecimal;
@@ -901,7 +915,17 @@ namespace Its.Onix.Api.Services
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
             var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
 
-            paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            if (paymentRequest.PayoutFeePayer != "Merchant")
+            {
+                //หักออกจากผู้โอน
+                paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            }
+            else
+            {
+                //เดี่ยวจะไปหักจาก merchant ทีหลัง
+                paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt);
+            }
+
             paymentRequest.PayoutFeeDecimal = payoutFee;
 
             //สร้าง QR
