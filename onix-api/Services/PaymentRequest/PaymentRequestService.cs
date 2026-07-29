@@ -1086,7 +1086,7 @@ namespace Its.Onix.Api.Services
 
             //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
             //บัญชีตรงของ Payout Request ต้องเป็น PromptPay ด้วย
-            var (bnkAcct, lines) = await GetPeer2PeerBankAccount(paymentRequest, merchant);
+            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest, merchant);
             if (bnkAcct == null)
             {
                 r.Status = "ERROR_NO_P2P_ACCOUNT_MATCH";
@@ -1109,6 +1109,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.ProcessingMessages = messageString;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
+            paymentRequest.PayinPeer2PeerPayoutId = payoutRequest?.Id.ToString(); //เอาไว้บอกว่าทำ P2P กับ payout request อันไหน
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
             paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
@@ -1304,7 +1305,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<(MBankAccount?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr, MMerchant merchant)
+        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr, MMerchant merchant)
         {
             //TODO : ต้องมีการ lock ในระดับ PayoutRequest ในระดับ global เลยเพื่อกัน race condition
 
@@ -1377,13 +1378,13 @@ namespace Its.Onix.Api.Services
 
                 //TODO : เพิ่ม logic สำหรับ update Payout Request สำหรับอัพเดต partial history
 
-                return (ba, lines);
+                return (ba, payoutRequest, lines);
             }
 
             lines.Add($"Step3 - No bank account match!!!");
 
             //ไม่มี bank account ที่ match
-            return (null, lines);
+            return (null, null, lines);
         }
 
         private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr, MMerchant merchant)
