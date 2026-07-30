@@ -1150,6 +1150,8 @@ namespace Its.Onix.Api.Services
         {
             var payoutRequestId = payOut.Id.ToString()!;
 
+            //TODO : ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
+
             var txHistory = payOut.PartialPayoutHistory;
             if (string.IsNullOrEmpty(txHistory))
             {
@@ -1173,6 +1175,15 @@ namespace Its.Onix.Api.Services
                 };
 
                 txs.Add(ppo);
+            }
+            else if (action == "Cencel")
+            {
+                var payinRequestId = payIn.Id.ToString();
+                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
+                if (partialPayout != null)
+                {
+                    partialPayout.Status = "Canceled";
+                }
             }
 
             payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
@@ -1431,9 +1442,8 @@ namespace Its.Onix.Api.Services
                     PromptPayId = promptPayId,
                     AccountNumber = bankAccountNo,
                     AccountName = bankAccountName,
+                    AccountType = "PromptPay",
                 };
-
-                //TODO : เพิ่ม logic สำหรับ update Payout Request สำหรับอัพเดต partial history
 
                 return (ba, payoutRequest, lines);
             }
@@ -1824,6 +1834,28 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Payment Request ID [{paymentRequestId}] is not Pending, current status=[{pmr.Status}]";
 
                 return r;
+            }
+
+            //ถ้าเป็น P2P ก็จะต้องยกเลิก partial pending payment ตรงนั้นไปด้วย
+            if ((pmt1.PayinIsPeerToPeer == true) && !string.IsNullOrEmpty(pmt1.PayinPeer2PeerPayoutId))
+            {
+                var payoutRequest = await repository!.GetPaymentRequestById(pmt1.PayinPeer2PeerPayoutId);
+                if (payoutRequest == null)
+                {
+                    r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_FOUND";
+                    r.Description = $"No P2P Pay-Out for this Payment Request ID [{paymentRequestId}]";
+
+                    return r;
+                }
+
+                var existingPayout = await ProcessPartialPayoutHistory(payoutRequest!, pmt1, "Cancel");
+                if (existingPayout == null)
+                {
+                    r.Status = "ERROR_P2P_PAYMENT_REQUEST_UPDATE";
+                    r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{paymentRequestId}]";
+
+                    return r;
+                }
             }
 
             pmr.Status = "Rejected";
