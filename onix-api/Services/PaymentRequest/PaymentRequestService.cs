@@ -1189,7 +1189,7 @@ Console.WriteLine($"DEBUG4 - [{payinRequestId}]");
             }
 txs.ForEach(s =>
 {
-    Console.WriteLine($"DEBUG5 - [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
+    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
 });
             payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
             payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
