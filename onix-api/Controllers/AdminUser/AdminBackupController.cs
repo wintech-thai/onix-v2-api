@@ -62,6 +62,16 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetBackupJobById/{jobId}")]
+        public IActionResult GetBackupJobById(string jobId)
+        {
+            var result = _jobSvc.GetJobById("global", jobId);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/TriggerBackupNow")]
         public IActionResult TriggerBackupNow()
