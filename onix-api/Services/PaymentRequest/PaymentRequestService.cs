@@ -921,7 +921,7 @@ namespace Its.Onix.Api.Services
 
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
-            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+            paymentRequest.PayoutFeePct = merchant.PayoutFeePct;
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             var requestAmt = paymentRequest.RequestedAmount ?? 0;

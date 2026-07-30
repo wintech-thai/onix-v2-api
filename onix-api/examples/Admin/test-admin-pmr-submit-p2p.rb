@@ -19,16 +19,16 @@ hhmmss = Time.now.strftime("%H%M%S")
 ### 
 apiUrl = "admin-api/AdminPaymentRequest/org/global/action/SubmitPaymentRequestByMerchantIdP2P/#{merchantId}"
 param =  {
-  RefId: "XA-MSB-0001922-#{hhmmss}",
-  RefId1: "INVOICE-0011223",
-  RefId2: "ORDER-XSWKEKEI",
+  RefId1: "XA-MSB-0001922-#{hhmmss}",
+  RefId2: "",
+  RefId3: "",
   Description: "ทดสอบยิง payment request เข้ามาเฉย ๆ",
   CustomerEmail: "",
   CustomerPhone: "",
   Currency: "THB",
   BankAccountNo: "",
   BankAccountName: "",
-  RequestedAmount: 325,
+  RequestedAmount: 200,
   QrProvider: "PP",
   Tags: "testing",
   #SelectedPayInBankAccountId:
@@ -42,4 +42,4 @@ ENV['ACCESS_TOKEN'] = token
 #puts("===[#{token}]")
 
 result = make_request(:post, apiUrl, param)
-puts(result)
+puts(result.to_json)
