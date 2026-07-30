@@ -10,7 +10,7 @@ namespace Its.Onix.Api.Services
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
         //ธนาคารที่ support การสร้าง QR payment ตอนนี้ - ถ้าจะเพิ่มธนาคารอื่นในอนาคต แค่เพิ่มเข้า array นี้ (ไม่ต้องแก้ logic เดิม)
-        private static readonly string[] allowedQrProvider = { "PP", "SCB" };
+        private static readonly string[] allowedQrProvider = ["PP", "SCB"];
 
         private readonly IPaymentRequestRepository? repository = null;
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
@@ -1112,7 +1112,7 @@ namespace Its.Onix.Api.Services
                 return pmResponse;
             }
 
-            var existingPayout = await ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
+            var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
             if (existingPayout == null)
             {
                 r.Status = "ERROR_NO_PAYOUT_REQUEST_FOUND";
@@ -1145,58 +1145,6 @@ namespace Its.Onix.Api.Services
 
             return pmResponse;
         }
-
-        private async Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action)
-        {
-            var payoutRequestId = payOut.Id.ToString()!;
-
-            //TODO : ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
-
-            var txHistory = payOut.PartialPayoutHistory;
-            if (string.IsNullOrEmpty(txHistory))
-            {
-                txHistory = "[]";
-            }
-
-            var txs = JsonSerializer.Deserialize<List<MPartialPayout>>(txHistory);
-            txs ??= [];
-
-            var amt = (decimal?) payIn.RequestedAmount;
-            amt ??= 0;
-
-            if (action == "Add")
-            {
-                var ppo = new MPartialPayout()
-                {
-                    PayinRequestId = payIn.Id.ToString(),
-                    PartialAmount = amt,
-                    Status = "Pending",
-                    TxDate = payIn.CreatedDate,
-                };
-
-                txs.Add(ppo);
-            }
-            else if (action == "Cancel")
-            {
-                var payinRequestId = payIn.Id.ToString();
-                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
-                if (partialPayout != null)
-                {
-                    partialPayout.Status = "Canceled";
-                }
-            }
-//txs.ForEach(s =>
-//{
-//    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
-//});
-            payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
-            payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
-            payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
-
-            var result = await repository!.UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
-            return result;
-        }
-
 
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
@@ -1851,7 +1799,7 @@ namespace Its.Onix.Api.Services
                     return r;
                 }
 
-                var existingPayout = await ProcessPartialPayoutHistory(payoutRequest!, pmt1, "Cancel");
+                var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, pmt1, "Cancel");
                 if (existingPayout == null)
                 {
                     r.Status = "ERROR_P2P_PAYMENT_REQUEST_UPDATE";

@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPaymentTransactionRepository? repository = null;
         private readonly IPaymentRequestRepository? _paymentRequestRepo = null;
+        //private readonly IPaymentRequestService? _paymentRequestSvc = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
         private readonly IJobService? _jobService = null;
@@ -22,6 +23,7 @@ namespace Its.Onix.Api.Services
         public PaymentTransactionService(
             IPaymentTransactionRepository repo, 
             IPaymentRequestRepository paymentRequestRepo,
+            //IPaymentRequestService paymentRequestService,
             IPointService pointService,
             IBankAccountRepository bankAccountRepo,
             IJobService jobService,
@@ -37,6 +39,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
             _hub = hub;
             _merchantService = merchantService;
+            //_paymentRequestSvc = paymentRequestService;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)

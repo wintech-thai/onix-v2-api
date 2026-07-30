@@ -2,6 +2,7 @@ using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using System.Data.Entity;
+using System.Text.Json;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -545,6 +546,58 @@ namespace Its.Onix.Api.Database.Repositories
 
             await context.SaveChangesAsync();
             return existing;
+        }
+
+        public async Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action)
+        {
+            //เอามาไว้ตรงนี้เพราะมีการเรียกใช้ร่วมกันใน Payment Request service และ Payment Transaction service
+            var payoutRequestId = payOut.Id.ToString()!;
+
+            //TODO : ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
+
+            var txHistory = payOut.PartialPayoutHistory;
+            if (string.IsNullOrEmpty(txHistory))
+            {
+                txHistory = "[]";
+            }
+
+            var txs = JsonSerializer.Deserialize<List<MPartialPayout>>(txHistory);
+            txs ??= [];
+
+            var amt = (decimal?) payIn.RequestedAmount;
+            amt ??= 0;
+
+            if (action == "Add")
+            {
+                var ppo = new MPartialPayout()
+                {
+                    PayinRequestId = payIn.Id.ToString(),
+                    PartialAmount = amt,
+                    Status = "Pending",
+                    TxDate = payIn.CreatedDate,
+                };
+
+                txs.Add(ppo);
+            }
+            else if (action == "Cancel")
+            {
+                var payinRequestId = payIn.Id.ToString();
+                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
+                if (partialPayout != null)
+                {
+                    partialPayout.Status = "Canceled";
+                }
+            }
+//txs.ForEach(s =>
+//{
+//    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
+//});
+            payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
+            payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
+            payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
+
+            var result = await UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
+            return result;
         }
     }
 }
