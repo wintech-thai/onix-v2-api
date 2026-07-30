@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260729003025_PaymentRequest_PayoutFeePayer_001")]
+    partial class PaymentRequest_PayoutFeePayer_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2205,10 +2208,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
-                    b.Property<string>("PartialPayoutHistory")
-                        .HasColumnType("text")
-                        .HasColumnName("partial_payout_history");
-
                     b.Property<double?>("PayInFeePct")
                         .HasColumnType("double precision")
                         .HasColumnName("pay_in_fee_pct");
@@ -2256,14 +2255,6 @@ namespace onix.api.Migrations
                     b.Property<string>("PayinBankCodeOverride")
                         .HasColumnType("text")
                         .HasColumnName("payin_bank_code_override");
-
-                    b.Property<bool?>("PayinIsPeerToPeer")
-                        .HasColumnType("boolean")
-                        .HasColumnName("payin_is_peer_to_peer");
-
-                    b.Property<string>("PayinPeer2PeerPayoutId")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_p2p_payout_id");
 
                     b.Property<string>("PayinPromptPayId")
                         .HasColumnType("text")
@@ -2376,14 +2367,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Tags")
                         .HasColumnType("text")
                         .HasColumnName("tags");
-
-                    b.Property<decimal?>("TotalPayOutPaidAmountDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("total_payout_paid_amount_decimal");
-
-                    b.Property<decimal?>("TotalPayOutPendingPaidAmountDecimal")
-                        .HasColumnType("numeric")
-                        .HasColumnName("total_payout_pending_paid_amount_decimal");
 
                     b.HasKey("Id");
 

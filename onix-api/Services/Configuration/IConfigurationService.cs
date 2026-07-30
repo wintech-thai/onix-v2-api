@@ -10,5 +10,7 @@ namespace Its.Onix.Api.Services
         public Task<MVConfiguration> SetBrandConfig(string orgId, MConfiguration config);
         public Task<MVConfiguration?> SetConfigStatusById(string orgId, string configId, string status);
         public Task<MVPresignedUrl> GetBrandLogoUploadPresignedUrl(string orgId, VMUploadDocument param);
+        public Task<MVConfiguration?> GetBackupPolicy(string orgId);
+        public Task<MVConfiguration> SetBackupPolicy(string orgId, MConfiguration config);
     }
 }

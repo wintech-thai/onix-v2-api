@@ -27,6 +27,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 // Update existing configuration
                 existing.ConfigValue = config.ConfigValue;
+                existing.Status = config.Status;
                 existing.CreatedDate = DateTime.UtcNow;
             }
             else

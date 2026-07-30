@@ -9,6 +9,8 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> IsRefIdExist(string refId);
         public Task<List<MPaymentRequest>> GetPaymentRequestsForPaymentTx(VMPaymentRequest param);
         public Task<List<MPaymentRequest>> GetPaymentRequests(VMPaymentRequest param);
+        public Task<List<MPaymentRequest>> GetPendingPayOutRequests();
+
         public Task<int> GetPaymentRequestCount(VMPaymentRequest param);
         public Task<MPaymentRequest?> GetPaymentRequestById(string paymentRequestId);
         public Task<MPaymentRequest> AddPaymentRequest(MPaymentRequest paymentRequest);
@@ -18,10 +20,12 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPaymentRequest?> UpdatePaymentRequestPaidStatusById(string paymentRequestId, string paymentTxId);
         public Task<MPaymentRequest?> UpdatePaymentStatusRejectById(string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<MPaymentRequest?> UpdatePaymentStatusApprovedById(string paymentRequestId, MPaymentRequest paymentRequest);
+        public Task<MPaymentRequest?> UpdatePayOutPeer2PeerHistoryById(string paymentRequestId, MPaymentRequest paymentRequest);
 
         public Task<MPaymentRequest?> UpdateTransferRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<bool> DeletePayOutRequestById(string paymentRequestId);
         public Task<MPaymentRequest?> RejectPaymentRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId);
+        public Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action);
     }
 }

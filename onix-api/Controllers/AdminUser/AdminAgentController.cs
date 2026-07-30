@@ -621,7 +621,7 @@ namespace Its.Onix.Api.Controllers
             if ((ba != null) && (pmtLineNoti != null))
             {
                 var bankAccountId = ba.Id.ToString()!;
-                var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!);
+                var mvTx = await _paymentTxSvc.ProcessLinePaymentTxNotification("global", bankAccountId, pmtLineNoti!, 1);
 
                 evt.Status = mvTx.Status;
                 evt.StatusDesc = mvTx.Description;

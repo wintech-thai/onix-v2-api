@@ -26,6 +26,7 @@ namespace Its.Onix.Api.Services
                 new() { Name = "Payment.Success", Value = "Payment success event" },
                 new() { Name = "Payment.Unidentified", Value = "Payment unidentified event" },
                 new() { Name = "Payment.DailyTxAmountLimitExceeded", Value = "Payment daily transaction amount limit exceeded event" },
+                new() { Name = "Backup.Done", Value = "Backup completed successfully" },
             };
 
             return list;

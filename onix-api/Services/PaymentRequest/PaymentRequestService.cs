@@ -10,7 +10,7 @@ namespace Its.Onix.Api.Services
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
         //ธนาคารที่ support การสร้าง QR payment ตอนนี้ - ถ้าจะเพิ่มธนาคารอื่นในอนาคต แค่เพิ่มเข้า array นี้ (ไม่ต้องแก้ logic เดิม)
-        private static readonly string[] allowedQrProvider = { "PP", "SCB" };
+        private static readonly string[] allowedQrProvider = ["PP", "SCB"];
 
         private readonly IPaymentRequestRepository? repository = null;
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
@@ -83,18 +83,30 @@ namespace Its.Onix.Api.Services
             List<string> lines;
             try
             {
-                lines = JsonSerializer.Deserialize<List<string>>(result.ProcessingMessages!) ?? new List<string>();
+                lines = JsonSerializer.Deserialize<List<string>>(result.ProcessingMessages!) ?? [];
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"ERROR - [{ex.Message}]");
                 lines = [];
             }
-            
+
+            List<MPartialPayout> partialPayoutTxs;
+            try
+            {
+                partialPayoutTxs = JsonSerializer.Deserialize<List<MPartialPayout>>(result.PartialPayoutHistory!) ?? [];
+            }
+            catch
+            {
+                partialPayoutTxs = [];
+            }
+
+            result.PartialPayouts = partialPayoutTxs;
             result.ProcessingSteps = lines;
 
             result.ResponseData = "";
             result.ProcessingMessages = "";
+            result.PartialPayoutHistory = "";
 
             r.PaymentRequest = result;
 
@@ -450,6 +462,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
             var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
             if (mvPtx.Status != "OK")
             {
@@ -510,10 +523,23 @@ namespace Its.Onix.Api.Services
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
-            pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
-
             pt.PayoutFeeDecimal = (decimal) pt.PayOutFee!;
-            pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+
+            //หักออกจากบัญชีปลายทางเลย
+            decimal? merchantDeductFee;
+            if (existing.PayoutFeePayer != "Merchant")
+            {
+                //หักออกตอนโอนไปปลายทางเลย
+                pt.PayOutTotalAmount = pt.TxAmount - pt.PayOutFee;
+                pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal - pt.PayoutFeeDecimal;
+                merchantDeductFee = 0;
+            }
+            else
+            {
+                pt.PayOutTotalAmount = pt.TxAmount;
+                pt.PayOutTotalAmountDecimal = pt.TxAmountDecimal;
+                merchantDeductFee = pt.PayoutFeeDecimal;
+            }
 
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
@@ -544,7 +570,7 @@ namespace Its.Onix.Api.Services
             var merchantWallet = mcWallet.Wallet;
             var bankWallet = baWallet.Wallet;
 
-            var merchantDeductAmt = pt.TxAmountDecimal;
+            var merchantDeductAmt = pt.TxAmountDecimal + merchantDeductFee;
             var merchantCurrentBalance = merchantWallet!.PointBalanceDecimal;
             var bankAccountDeductAmt = pt.PayOutTotalAmountDecimal;
             var bankAccountCurrentBalance = bankWallet!.PointBalanceDecimal;
@@ -895,13 +921,23 @@ namespace Its.Onix.Api.Services
 
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
-            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+            paymentRequest.PayoutFeePct = merchant.PayoutFeePct;
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
             var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
 
-            paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            if (paymentRequest.PayoutFeePayer != "Merchant")
+            {
+                //หักออกจากผู้โอน
+                paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt) - payoutFee;
+            }
+            else
+            {
+                //เดี่ยวจะไปหักจาก merchant ทีหลัง
+                paymentRequest.PayOutTotalAmountDecimal = ((decimal) requestAmt);
+            }
+
             paymentRequest.PayoutFeeDecimal = payoutFee;
 
             //สร้าง QR
@@ -946,10 +982,175 @@ namespace Its.Onix.Api.Services
             return cacheValue;
         }
 
+        public async Task<MVPaymentResponse> AddPaymentRequestPayInP2P(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
+        {
+            repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
+            _bankAccountRepo!.SetCustomOrgId("global");
+            paymentRequest.PayinIsPeerToPeer = true;
+
+            var r = new MVPaymentResponse()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (string.IsNullOrEmpty(paymentRequest.RefId1))
+            {
+                r.Status = "REF_ID1_MISSING";
+                r.Description = $"Ref ID1 is missing!!!";
+
+                return r;
+            }
+
+            paymentRequest.RefId = paymentRequest.RefId1; /* RefId ไม่ใช้แล้วแต่ก็ set ให้ท่ากับ RefId1 ไปเลย แล้วยังคงความป็น unique อยู่นะ */
+            if (string.IsNullOrEmpty(paymentRequest.RefId))
+            {
+                r.Status = "REF_ID_MISSING";
+                r.Description = $"Ref ID is missing!!!";
+
+                return r;
+            }
+
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            if (isRefIdExist)
+            {
+                r.Status = "REF_ID_DUPLICATE";
+                r.Description = $"Ref ID1 [{paymentRequest.RefId}] is duplicate!!!";
+
+                return r;
+            }
+
+            if (paymentRequest.Currency != "THB")
+            {
+                r.Status = "CURRENCY_NOT_SUPPORT";
+                r.Description = $"Currency [{paymentRequest.Currency}] not currently support, only THB is allowed.";
+
+                return r;
+            }
+
+            if (!allowedQrProvider.Contains(paymentRequest.QrProvider))
+            {
+                r.Status = "BANK_PROVIDER_NOT_SUPPORT";
+                r.Description = $"Provider [{paymentRequest.QrProvider}] not currently support, only [{string.Join(", ", allowedQrProvider)}] are allowed.";
+
+                return r;
+            }
+
+            if (paymentRequest.RequestedAmount <= 0)
+            {
+                r.Status = "INVALID_PAYMENT_AMOUNT";
+                r.Description = $"Request amount [{paymentRequest.RequestedAmount}] must be greater than 0.00";
+
+                return r;
+            }
+
+            var currentDailyTxBalance = await GetMerchantCurrentDailyTxBalance("global", merchant);
+
+            var txAmountLimit = merchant.PayinDailyTxAmountLimit;
+            if (txAmountLimit > 0)
+            {
+                //จะทำการ check ถ้า set ค่า txAmountLimit ไว้มากกว่า 0
+                if ((currentDailyTxBalance.TxAmount + (decimal) paymentRequest.RequestedAmount!) > txAmountLimit)
+                {
+                    r.Status = "ERROR_DAILY_AMOUNT_EXCEEDED";
+                    r.Description = $"Merchant daily transaction amount exceeded, CurrentDailyTxAmount=[{currentDailyTxBalance.TxAmount}], RequestedAmount=[{paymentRequest.RequestedAmount}], MaxDailyAmount=[{txAmountLimit}]";
+                    
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ r.Description ]);
+                    return r;
+                }
+            }
+
+            var txCountLimit = merchant.PayinDailyTxCountLimit;
+            if (txCountLimit > 0)
+            {
+                //จะทำการ check ถ้า set ค่า txCountLimit ไว้มากกว่า 0
+                if ((currentDailyTxBalance.TxCount + 1) > txCountLimit)
+                {
+                    r.Status = "ERROR_DAILY_COUNT_EXCEEDED";
+                    r.Description = $"Merchant daily transaction count exceeded, CurrentDailyTxCount=[{currentDailyTxBalance.TxCount}], MaxDailyCount=[{txCountLimit}]";
+                    
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ r.Description ]);
+                    return r;
+                }
+            }
+
+            //Validate ว่า amount เกิน range ของ merchant มั้ย
+            var minAmt = merchant.PayinMinAmount;
+            var maxAmt = merchant.PayinMaxAmount;
+            var requestAmt = paymentRequest.RequestedAmount;
+
+            if ((requestAmt < minAmt) || (requestAmt > maxAmt))
+            {
+                r.Status = "ERROR_VALUE_NOT_IN_RANGE";
+                r.Description = $"Amount [{requestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
+
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ r.Description ]);
+                return r;
+            }
+
+            //ไม่ต้องมี logic สำหรับ random เศษสตางค์แล้ว
+            var amt = paymentRequest.RequestedAmount;
+            amt ??= 0;
+
+            paymentRequest.GeneratedAmount = amt;
+
+            //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
+            //บัญชีตรงของ Payout Request ต้องเป็น PromptPay ด้วย
+            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest, merchant);
+            if (bnkAcct == null)
+            {
+                r.Status = "ERROR_NO_P2P_ACCOUNT_MATCH";
+                r.Description = $"No peer to peer bank account match!!!";
+
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, lines);
+                return r;
+            }
+
+            var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct);
+            if (pmResponse.Status != "OK")
+            {
+                return pmResponse;
+            }
+
+            var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
+            if (existingPayout == null)
+            {
+                r.Status = "ERROR_NO_PAYOUT_REQUEST_FOUND";
+                r.Description = $"Unable to update partial payout history!!!";
+
+                var _ = await AddRejectedPaymentRequest(paymentRequest, r, lines);
+                return r;
+            }
+
+            var jsonString = JsonSerializer.Serialize(pmResponse.PaymentResponse);
+            paymentRequest.ResponseData = jsonString;
+
+            var messageString = JsonSerializer.Serialize(lines);
+            paymentRequest.ProcessingMessages = messageString;
+
+            //Logic สำหรับการสร้าง QR payment ตรงนี้
+            paymentRequest.PayinPeer2PeerPayoutId = payoutRequest?.Id.ToString(); //เอาไว้บอกว่าทำ P2P กับ payout request อันไหน
+            paymentRequest.Status = "Pending";
+            paymentRequest.Direction = "PayIn";
+            paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
+            paymentRequest.PayinBankAccountNo = bnkAcct.AccountNumber;
+            paymentRequest.PayinBankCode = bnkAcct.BankCode;
+            paymentRequest.PayinPromptPayId = bnkAcct.PromptPayId;
+            paymentRequest.PayinAccountType = bnkAcct.AccountType;
+            paymentRequest.PayinAccountLevel = bnkAcct.AccountLevel;
+            paymentRequest.PayInFeePct = merchant.PayinFeePct;
+            paymentRequest.PayinBankAccountId = bnkAcct.Id.ToString();
+
+            _ = await repository!.AddPaymentRequest(paymentRequest);
+
+            return pmResponse;
+        }
+
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
             _bankAccountRepo!.SetCustomOrgId("global");
+             paymentRequest.PayinIsPeerToPeer = false;
 
             var r = new MVPaymentResponse()
             {
@@ -1121,6 +1322,87 @@ namespace Its.Onix.Api.Services
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
             return r;
+        }
+
+        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr, MMerchant merchant)
+        {
+            //TODO : ต้องมีการ lock ในระดับ PayoutRequest ในระดับ global เลยเพื่อกัน race condition
+
+            //var merchantId = pr.MerchantId!;
+            List<string> lines = [];
+
+            //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
+            var pendingPayoutRequests = await repository!.GetPendingPayOutRequests();
+
+            lines.Add($"Step0 - Found [{pendingPayoutRequests.Count}] pending payout request");
+
+            foreach (var payoutRequest in pendingPayoutRequests)
+            {
+                var id = payoutRequest.Id.ToString();
+                var org = payoutRequest.OrgId;
+
+                var p2pUsedAmount = payoutRequest.TotalPayOutPendingPaidAmountDecimal + payoutRequest.TotalPayOutPaidAmountDecimal;
+                p2pUsedAmount ??= 0;
+
+                var leftAmount = payoutRequest.PayOutTotalAmountDecimal - p2pUsedAmount;
+                leftAmount ??= 0;
+
+                lines.Add($"Step1.1 - ============");
+                lines.Add($"Step1.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
+
+                var promptPayId = payoutRequest.PayinPromptPayId;
+                var isOverride = false;
+                if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
+                {
+                    lines.Add($"Step1.3 - Request ID=[{org}:{id}], use overrided bank account");
+
+                    promptPayId = payoutRequest.PayinPromptPayIdOverride;
+                    isOverride = true;
+                }
+
+                if (string.IsNullOrEmpty(promptPayId))
+                {
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
+                    //ไม่ใช่ prompt pay
+                    continue;
+                }
+
+                var bankCode = payoutRequest.PayinBankCode;
+                var bankAccountNo = payoutRequest.PayinBankAccountNo;
+                var bankAccountName = payoutRequest.PayinBankAccountName;
+                if (isOverride)
+                {
+                    bankCode = payoutRequest.PayinBankCodeOverride;
+                    bankAccountNo = payoutRequest.PayinBankAccountNoOverride;
+                    bankAccountName = payoutRequest.PayinBankAccountNameOverride;
+                }
+
+                var amt = (decimal?) pr.RequestedAmount!;
+                amt ??= 0;
+
+                if (leftAmount <= amt)
+                {
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
+                    continue;
+                }
+
+                lines.Add($"Step1.5 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                var ba = new MBankAccount()
+                {
+                    BankCode = bankCode,
+                    PromptPayId = promptPayId,
+                    AccountNumber = bankAccountNo,
+                    AccountName = bankAccountName,
+                    AccountType = "PromptPay",
+                };
+
+                return (ba, payoutRequest, lines);
+            }
+
+            lines.Add($"Step3 - No bank account match!!!");
+
+            //ไม่มี bank account ที่ match
+            return (null, null, lines);
         }
 
         private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr, MMerchant merchant)
@@ -1397,6 +1679,7 @@ namespace Its.Onix.Api.Services
             { 
                 p.ResponseData = ""; 
                 p.ProcessingMessages = "";
+                p.PartialPayoutHistory = "";
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น
@@ -1502,6 +1785,28 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Payment Request ID [{paymentRequestId}] is not Pending, current status=[{pmr.Status}]";
 
                 return r;
+            }
+
+            //ถ้าเป็น P2P ก็จะต้องยกเลิก partial pending payment ตรงนั้นไปด้วย
+            if ((pmt1.PayinIsPeerToPeer == true) && !string.IsNullOrEmpty(pmt1.PayinPeer2PeerPayoutId))
+            {
+                var payoutRequest = await repository!.GetPaymentRequestById(pmt1.PayinPeer2PeerPayoutId);
+                if (payoutRequest == null)
+                {
+                    r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_FOUND";
+                    r.Description = $"No P2P Pay-Out for this Payment Request ID [{paymentRequestId}]";
+
+                    return r;
+                }
+
+                var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, pmt1, "Cancel");
+                if (existingPayout == null)
+                {
+                    r.Status = "ERROR_P2P_PAYMENT_REQUEST_UPDATE";
+                    r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{paymentRequestId}]";
+
+                    return r;
+                }
             }
 
             pmr.Status = "Rejected";
