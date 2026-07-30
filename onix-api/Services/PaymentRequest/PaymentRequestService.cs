@@ -1176,7 +1176,7 @@ namespace Its.Onix.Api.Services
 
                 txs.Add(ppo);
             }
-            else if (action == "Cencel")
+            else if (action == "Cancel")
             {
                 var payinRequestId = payIn.Id.ToString();
 Console.WriteLine($"DEBUG3 - [{payinRequestId}]");
