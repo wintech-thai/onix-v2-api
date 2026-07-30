@@ -919,10 +919,49 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
+
+            //สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
+            var payInPmt = new MPaymentTransaction()
+            {
+                Status = "Identified",
+                Direction = "PayIn",
+                Currency = "THB",
+                TxAmount = (double) requestAmt,
+                TxAmountDecimal = requestAmt,
+                FromBankAccountNo = "",
+                FromBankCode = "",
+                ProcessingMessages = "[]",
+                RawInput = "{}",
+                PayInFeePct = (double) payinFeePct,
+                PayInFee = (double) payinFee,
+                PayInFeeDecimal = (decimal) payinFee,
+                PayInTotalAmount = (double) requestAmt - (double) payinFee,
+                PayInTotalAmountDecimal = requestAmt - payinFee,
+                PayInBankCode = payin.PayinBankCode,
+                PayInBankAccountNo = payin.PayinBankAccountNo,
+                PayInBankAccountName = payin.PayinBankAccountName,
+                PaymentRequestId = payinId,
+                MerchantId = payin.MerchantId,
+            };
+            
+            //==== TODO : Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType = "Payment.Success";
+            var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
+            payInPmt.JobId = pmtSuccessJob?.Id.ToString();
+
+            repository!.SetCustomOrgId(payInPmt.OrgId!);
+            var _0 = await repository!.AddPaymentTransaction(payInPmt);
+            repository!.SetCustomOrgId(orgId);
+
+            //ยิง Payment.Success event
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(pmtSuccessJob);
+            var _1 = await _redis.PublishMessageAsync(stream!, message);
 
 
-            //topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
+
+            //==== topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
             var pointTx0 = new MPointTx()
             {
                 WalletId = payoutWallet.Wallet!.Id.ToString(),
@@ -935,7 +974,7 @@ namespace Its.Onix.Api.Services
             };
             await _pointService!.AddPoint(payin.OrgId!, pointTx0);
 
-            //Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
+            //==== Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
             var pointTx1 = new MPointTx()
             {
                 WalletId = payoutWallet.Wallet!.Id.ToString(),
@@ -957,8 +996,6 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            //TODO : Notify payment.success และ payout.success กลับไปหา merchant ด้วย
 
             //TODO : คำนวณยอดเงินคงเหลือที่จะต้องโอนออกเพื่อนำไปสร้างเป็น QR ยอดใหม่
 
@@ -993,7 +1030,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            MVPaymentTransaction pmtVm = r;
+            MVPaymentTransaction pmtVm;
             if (pmr.PayinIsPeerToPeer == true)
             {
                 //เป็น P2P
@@ -1028,7 +1065,7 @@ namespace Its.Onix.Api.Services
             }
 
             //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
-            var _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
+            _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
 
             return pmtVm;
         }
