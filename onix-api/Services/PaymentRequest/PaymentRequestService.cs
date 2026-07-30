@@ -1835,10 +1835,11 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
+Console.WriteLine($"DEBUG1 - [{pmt1.PayinIsPeerToPeer}] [{pmt1.PayinPeer2PeerPayoutId}]");
             //ถ้าเป็น P2P ก็จะต้องยกเลิก partial pending payment ตรงนั้นไปด้วย
             if ((pmt1.PayinIsPeerToPeer == true) && !string.IsNullOrEmpty(pmt1.PayinPeer2PeerPayoutId))
             {
+Console.WriteLine($"DEBUG2 - [{pmt1.PayinIsPeerToPeer}] [{pmt1.PayinPeer2PeerPayoutId}]");
                 var payoutRequest = await repository!.GetPaymentRequestById(pmt1.PayinPeer2PeerPayoutId);
                 if (payoutRequest == null)
                 {
