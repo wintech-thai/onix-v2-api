@@ -323,11 +323,6 @@ namespace Its.Onix.Api.Services
             pmt.PayInBankAccountId = oldBankAccountId;
 
 
-            //==== Update Payment Tx
-            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
-            paymentTx.PaymentTransaction = mpt;
-
-
             //=== Update merchant & bank account wallet
             var mcWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
             if (mcWallet!.Status == "OK")
@@ -341,7 +336,7 @@ namespace Its.Onix.Api.Services
                     //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
                     TxAmountDecimal = pmt.PayInTotalAmountDecimal,
 
-                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                    Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(merchantOrgId, pointTx);
@@ -359,7 +354,7 @@ namespace Its.Onix.Api.Services
                     //TxAmountDecimal ตรงนี้จะเป็นค่าที่ยังไม่หัก fee เพื่อนำไปเป็นยอดที่เข้า wallet
                     TxAmountDecimal = pmt.TxAmountDecimal,
 
-                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                    Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(orgId, pointTx);
@@ -382,8 +377,11 @@ namespace Its.Onix.Api.Services
             };
 
             var jobType = "Payment.Success";
-            var job = CreatePaymentSuccessJob(mc.OrgId!, jobType, pmt, pmr!);
+            var job = CreatePaymentSuccessJob(merchantOrgId, jobType, pmt, pmr!);
             pmt.JobId = job?.Id.ToString();
+
+            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
+            paymentTx.PaymentTransaction = mpt;
 
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             var stream = $"JobSubmitted:{environment}:{jobType}";
@@ -701,7 +699,9 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "TX_AMOUNT", Value = pmt?.TxAmountDecimal.ToString() },
                     new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
-                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_FEE", Value = pmt?.PayInFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_FEE_PCT", Value = ((decimal?) pmt?.PayInFeePct).ToString() },
+                    new NameValue { Name = "PAYIN_DISCARD_CENT", Value = pmt?.DiscardCent.ToString() },
                     new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NAME", Value = pmt?.PayInBankAccountName },
@@ -847,6 +847,7 @@ namespace Its.Onix.Api.Services
         private async Task<MVPaymentTransaction> ProcessPeer2PeerPaymentApprove(string orgId, MPaymentRequest payin)
         {
             _paymentRequestRepo!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId);
         
             var r = new MVPaymentTransaction()
             {
@@ -917,10 +918,91 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
+
+            //สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
+            var payInPmt = new MPaymentTransaction()
+            {
+                Status = "Identified",
+                Direction = "PayIn",
+                Currency = "THB",
+                TxAmount = (double) requestAmt,
+                TxAmountDecimal = requestAmt,
+                FromBankAccountNo = "",
+                FromBankCode = "",
+                ProcessingMessages = "[]",
+                RawInput = "{}",
+                PayInFeePct = (double) payinFeePct,
+                PayInFee = (double) payinFee,
+                PayInFeeDecimal = (decimal) payinFee,
+                PayInTotalAmount = (double) requestAmt - (double) payinFee,
+                PayInTotalAmountDecimal = requestAmt - payinFee,
+                PayInBankCode = payin.PayinBankCode,
+                PayInBankAccountNo = payin.PayinBankAccountNo,
+                PayInBankAccountName = payin.PayinBankAccountName,
+                PaymentRequestId = payinId,
+                MerchantId = payin.MerchantId,
+            };
+
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType = "Payment.Success";
+            var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
+            payInPmt.JobId = pmtSuccessJob?.Id.ToString();
+
+            var _0 = await repository!.AddPaymentTransaction(payInPmt);
+
+            //ยิง Payment.Success event
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(pmtSuccessJob);
+            var _1 = await _redis.PublishMessageAsync(stream!, message);
 
 
-            //topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
+
+            //=============== สร้าง payment tx payout (เพื่อเอาไว้ทำพวก revenue report)
+            var payOutPmt = new MPaymentTransaction()
+            {
+                TxAmount = (double) requestAmt,
+                TxAmountDecimal = requestAmt,
+                FromBankAccountNo = "UNKNOWN",
+                FromBankCode = "UNKNOWN",
+                PaymentRequestId = payoutId,
+
+                MerchantId = payoutRequest.MerchantId,
+
+                PayOutFeePct = (double) payoutFeePct,
+                PayoutFeeDecimal = payoutFee,
+                PayOutFee = (double) payoutFee,
+                PayOutTotalAmount = (double) requestAmt,
+                PayOutTotalAmountDecimal = requestAmt,
+
+                PayOutBankAccountId = "UNKNOWN",
+                PayOutBankCode = "UNKNOWN",
+                PayInBankAccountNo = payoutRequest.PayinBankAccountName,
+                PayInBankAccountName = payoutRequest.PayinBankAccountName,
+
+                Status = "Approved",
+                Direction = "PayOut",
+                Currency = "THB",
+            };
+
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType2 = "PaymentOut.Success";
+            var pmtSuccessJob2 = CreatePaymentSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
+            payOutPmt.JobId = pmtSuccessJob2?.Id.ToString();
+
+            repository.SetCustomOrgId(payoutRequest.OrgId!); //ต้อง set ตรงนี้เพราะว่า document อยู่คนละ org กันได้กับ payin
+            var _2 = await repository!.AddPaymentTransaction(payOutPmt);
+            repository!.SetCustomOrgId(orgId);
+
+            //ยิง PaymentOut.Success event
+            var environment2 = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream2 = $"JobSubmitted:{environment2}:{jobType2}";
+            var message2 = JsonSerializer.Serialize(pmtSuccessJob2);
+            var _3 = await _redis.PublishMessageAsync(stream2!, message2);
+            //====================
+
+
+            //==== topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
             var pointTx0 = new MPointTx()
             {
                 WalletId = payoutWallet.Wallet!.Id.ToString(),
@@ -929,11 +1011,11 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = payinMcTopupAmt,
 
                 Description = $"{requestAmt} - {payinFee} (fee={payinFeePct}%)",
-                Tags = $"PaymentTxId=[xxxxx]",
+                Tags = $"PaymentTxId=[{payInPmt.Id}]",
             };
             await _pointService!.AddPoint(payin.OrgId!, pointTx0);
 
-            //Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
+            //==== Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
             var pointTx1 = new MPointTx()
             {
                 WalletId = payoutWallet.Wallet!.Id.ToString(),
@@ -955,8 +1037,6 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-
-            //TODO : Notify payment.success และ payout.success กลับไปหา merchant ด้วย
 
             //TODO : คำนวณยอดเงินคงเหลือที่จะต้องโอนออกเพื่อนำไปสร้างเป็น QR ยอดใหม่
 
@@ -991,11 +1071,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            MVPaymentTransaction pmtVm = r;
+            MVPaymentTransaction pmtVm;
             if (pmr.PayinIsPeerToPeer == true)
             {
                 //เป็น P2P
-                pmtVm = await ProcessPeer2PeerPaymentApprove(orgId, pmr);
+                pmtVm = await ProcessPeer2PeerPaymentApprove(pmr.OrgId!, pmr);
             }
             else
             {
@@ -1017,7 +1097,7 @@ namespace Its.Onix.Api.Services
                     PayinRequestId = pmr.Id.ToString(), //ส่งไปให้เพราะเราจะให้ match กับ pay-in ตัวนี้เลย
                 };
 
-                pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
+                pmtVm = await ProcessLinePaymentTxNotification(pmr.OrgId!, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
             }
 
             if (pmtVm.Status != "OK")
@@ -1026,7 +1106,7 @@ namespace Its.Onix.Api.Services
             }
 
             //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
-            var _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
+            _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
 
             return pmtVm;
         }
