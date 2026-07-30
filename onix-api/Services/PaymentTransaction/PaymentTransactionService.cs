@@ -943,12 +943,11 @@ namespace Its.Onix.Api.Services
                 MerchantId = payin.MerchantId,
             };
 
-            //==== TODO : Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType = "Payment.Success";
             var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
             payInPmt.JobId = pmtSuccessJob?.Id.ToString();
 
-            
             var _0 = await repository!.AddPaymentTransaction(payInPmt);
 
             //ยิง Payment.Success event
@@ -957,6 +956,50 @@ namespace Its.Onix.Api.Services
             var message = JsonSerializer.Serialize(pmtSuccessJob);
             var _1 = await _redis.PublishMessageAsync(stream!, message);
 
+
+
+            //=============== สร้าง payment tx payout (เพื่อเอาไว้ทำพวก revenue report)
+            var payOutPmt = new MPaymentTransaction()
+            {
+                TxAmount = (double) requestAmt,
+                TxAmountDecimal = requestAmt,
+                FromBankAccountNo = "UNKNOWN",
+                FromBankCode = "UNKNOWN",
+                PaymentRequestId = payoutId,
+
+                MerchantId = payoutRequest.MerchantId,
+
+                PayOutFeePct = (double) payoutFeePct,
+                PayoutFeeDecimal = payoutFee,
+                PayOutFee = (double) payoutFee,
+                PayOutTotalAmount = (double) requestAmt,
+                PayOutTotalAmountDecimal = requestAmt,
+
+                PayOutBankAccountId = "UNKNOWN",
+                PayOutBankCode = "UNKNOWN",
+                PayInBankAccountNo = payoutRequest.PayinBankAccountName,
+                PayInBankAccountName = payoutRequest.PayinBankAccountName,
+
+                Status = "Approved",
+                Direction = "PayOut",
+                Currency = "THB",
+            };
+
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType2 = "PaymentOut.Success";
+            var pmtSuccessJob2 = CreatePaymentSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
+            payOutPmt.JobId = pmtSuccessJob2?.Id.ToString();
+
+            repository.SetCustomOrgId(payoutRequest.OrgId!); //ต้อง set ตรงนี้เพราะว่า document อยู่คนละ org กันได้กับ payin
+            var _2 = await repository!.AddPaymentTransaction(payOutPmt);
+            repository!.SetCustomOrgId(orgId);
+
+            //ยิง PaymentOut.Success event
+            var environment2 = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream2 = $"JobSubmitted:{environment2}:{jobType2}";
+            var message2 = JsonSerializer.Serialize(pmtSuccessJob2);
+            var _3 = await _redis.PublishMessageAsync(stream2!, message2);
+            //====================
 
 
             //==== topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
