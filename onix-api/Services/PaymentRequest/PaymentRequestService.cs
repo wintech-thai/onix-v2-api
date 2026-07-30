@@ -1179,18 +1179,16 @@ namespace Its.Onix.Api.Services
             else if (action == "Cancel")
             {
                 var payinRequestId = payIn.Id.ToString();
-Console.WriteLine($"DEBUG3 - [{payinRequestId}]");
                 var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
                 if (partialPayout != null)
                 {
-Console.WriteLine($"DEBUG4 - [{payinRequestId}]");
                     partialPayout.Status = "Canceled";
                 }
             }
-txs.ForEach(s =>
-{
-    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
-});
+//txs.ForEach(s =>
+//{
+//    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
+//});
             payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
             payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
             payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
@@ -1840,11 +1838,10 @@ txs.ForEach(s =>
 
                 return r;
             }
-Console.WriteLine($"DEBUG1 - [{pmt1.PayinIsPeerToPeer}] [{pmt1.PayinPeer2PeerPayoutId}]");
+
             //ถ้าเป็น P2P ก็จะต้องยกเลิก partial pending payment ตรงนั้นไปด้วย
             if ((pmt1.PayinIsPeerToPeer == true) && !string.IsNullOrEmpty(pmt1.PayinPeer2PeerPayoutId))
             {
-Console.WriteLine($"DEBUG2 - [{pmt1.PayinIsPeerToPeer}] [{pmt1.PayinPeer2PeerPayoutId}]");
                 var payoutRequest = await repository!.GetPaymentRequestById(pmt1.PayinPeer2PeerPayoutId);
                 if (payoutRequest == null)
                 {
