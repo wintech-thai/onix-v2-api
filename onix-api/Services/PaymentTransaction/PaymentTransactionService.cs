@@ -928,7 +928,7 @@ namespace Its.Onix.Api.Services
                 TxAmount =  (long) Math.Floor((decimal) payinMcTopupAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
                 TxAmountDecimal = payinMcTopupAmt,
 
-                Description = $"{requestAmt} - {payinFee}",
+                Description = $"{requestAmt} - {payinFee} (fee={payinFeePct}%)",
                 Tags = $"PaymentTxId=[xxxxx]",
             };
             await _pointService!.AddPoint(payin.OrgId!, pointTx0);
@@ -941,8 +941,8 @@ namespace Its.Onix.Api.Services
                 TxAmount =  (long) Math.Floor((decimal) payoutMcDeductAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
                 TxAmountDecimal = payoutMcDeductAmt,
 
-                Description = $"{requestAmt} + {payoutFee}",
-                Tags = $"PayOutRequestId=[{payoutRequest.Id.ToString()}]",
+                Description = $"{requestAmt} + {payoutFee} (fee={payoutFeePct}%)",
+                Tags = $"PayOutRequestId=[{payoutRequest.Id}]",
             };
             await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTx1);
 
