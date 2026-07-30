@@ -849,6 +849,7 @@ namespace Its.Onix.Api.Services
         private async Task<MVPaymentTransaction> ProcessPeer2PeerPaymentApprove(string orgId, MPaymentRequest payin)
         {
             _paymentRequestRepo!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId);
         
             var r = new MVPaymentTransaction()
             {
@@ -949,9 +950,8 @@ namespace Its.Onix.Api.Services
             var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
             payInPmt.JobId = pmtSuccessJob?.Id.ToString();
 
-            repository!.SetCustomOrgId(payInPmt.OrgId!);
+            
             var _0 = await repository!.AddPaymentTransaction(payInPmt);
-            repository!.SetCustomOrgId(orgId);
 
             //ยิง Payment.Success event
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -1034,7 +1034,7 @@ namespace Its.Onix.Api.Services
             if (pmr.PayinIsPeerToPeer == true)
             {
                 //เป็น P2P
-                pmtVm = await ProcessPeer2PeerPaymentApprove(orgId, pmr);
+                pmtVm = await ProcessPeer2PeerPaymentApprove(pmr.OrgId!, pmr);
             }
             else
             {
@@ -1056,7 +1056,7 @@ namespace Its.Onix.Api.Services
                     PayinRequestId = pmr.Id.ToString(), //ส่งไปให้เพราะเราจะให้ match กับ pay-in ตัวนี้เลย
                 };
 
-                pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
+                pmtVm = await ProcessLinePaymentTxNotification(pmr.OrgId!, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
             }
 
             if (pmtVm.Status != "OK")
