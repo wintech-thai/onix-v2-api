@@ -588,6 +588,15 @@ namespace Its.Onix.Api.Database.Repositories
                     partialPayout.Status = "Canceled";
                 }
             }
+            else if (action == "Approve")
+            {
+                var payinRequestId = payIn.Id.ToString();
+                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
+                if (partialPayout != null)
+                {
+                    partialPayout.Status = "Approved";
+                }
+            }
 //txs.ForEach(s =>
 //{
 //    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");

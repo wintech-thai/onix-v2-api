@@ -823,6 +823,58 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private async Task<MVPaymentTransaction> ProcessPeer2PeerPaymentApprove(string orgId, MPaymentRequest payin)
+        {
+            _paymentRequestRepo!.SetCustomOrgId(orgId);
+        
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var payinId = payin.Id.ToString();
+            var payoutId = payin.PayinPeer2PeerPayoutId;
+
+            if (payoutId == null)
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_ID_NOT_FOUND";
+                r.Description = $"No P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            var payoutRequest = await _paymentRequestRepo!.GetPaymentRequestById(payoutId);
+            if (payoutRequest == null)
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_FOUND";
+                r.Description = $"No P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            //TODO : Chek ยอด wallet balance ของ merchant ดูว่าสามารถตัดตอน approve payout ได้หรือไม่
+
+            //TODO : สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
+
+            //TODO : topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
+
+            //TODO : deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
+
+            var existingPayout = await _paymentRequestRepo!.ProcessPartialPayoutHistory(payoutRequest!, payin, "Approve");
+            if (existingPayout == null)
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_UPDATE";
+                r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            //TODO : คำนวณยอดเงินคงเหลือที่จะต้องโอนออกเพื่อนำไปสร้างเป็น QR ยอดใหม่
+
+            return r;
+        }
+
         public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId)
         {
             repository!.SetCustomOrgId(orgId);
@@ -855,6 +907,7 @@ namespace Its.Onix.Api.Services
             if (pmr.PayinIsPeerToPeer == true)
             {
                 //เป็น P2P
+                pmtVm = await ProcessPeer2PeerPaymentApprove(orgId, pmr);
             }
             else
             {
@@ -877,10 +930,11 @@ namespace Its.Onix.Api.Services
                 };
 
                 pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
-                if (pmtVm.Status != "OK")
-                {
-                    return pmtVm;
-                }
+            }
+
+            if (pmtVm.Status != "OK")
+            {
+                return pmtVm;
             }
 
             //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
