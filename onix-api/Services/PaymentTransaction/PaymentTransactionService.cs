@@ -323,11 +323,6 @@ namespace Its.Onix.Api.Services
             pmt.PayInBankAccountId = oldBankAccountId;
 
 
-            //==== Update Payment Tx
-            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
-            paymentTx.PaymentTransaction = mpt;
-
-
             //=== Update merchant & bank account wallet
             var mcWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
             if (mcWallet!.Status == "OK")
@@ -382,8 +377,11 @@ namespace Its.Onix.Api.Services
             };
 
             var jobType = "Payment.Success";
-            var job = CreatePaymentSuccessJob(mc.OrgId!, jobType, pmt, pmr!);
+            var job = CreatePaymentSuccessJob(merchantOrgId, jobType, pmt, pmr!);
             pmt.JobId = job?.Id.ToString();
+
+            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
+            paymentTx.PaymentTransaction = mpt;
 
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             var stream = $"JobSubmitted:{environment}:{jobType}";

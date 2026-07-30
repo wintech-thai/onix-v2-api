@@ -248,6 +248,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayInTotalAmountDecimal = paymentTransaction.PayInTotalAmountDecimal;
                 existing.DiscardCent = paymentTransaction.DiscardCent;
                 existing.PaymentRequestId = paymentTransaction.PaymentRequestId;
+                existing.JobId = paymentTransaction.JobId;
             }
 
             await context.SaveChangesAsync();
