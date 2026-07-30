@@ -159,6 +159,15 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(merchantIdPd);
             }
 
+            if ((param.PayinRequestId != null) && (param.PayinRequestId != ""))
+            {
+                var payinRequestId = Guid.Parse(param.PayinRequestId);
+                var payinRequestIdPd = PredicateBuilder.New<MPaymentRequest>();
+                payinRequestIdPd = payinRequestIdPd.Or(p => p.Id!.Equals(payinRequestId));
+
+                pd = pd.And(payinRequestIdPd);
+            }
+
             // FromDate
             if (param.FromDate.HasValue)
             {

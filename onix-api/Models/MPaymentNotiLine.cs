@@ -15,6 +15,7 @@ namespace Its.Onix.Api.Models
         public string? DestinationBankCode { get; set; } //ธนาคารปลายทาง
         public string? DestinationAccountNo { get; set; } //XX9148 - จะ mask data แล้วแสดง 4 ตัวหลัง
         public string? MerchantId { get; set; }
+        public string? PayinRequestId { get; set; }
 
         public string? RefId1 { get; set; }
         public Dictionary<string, object> OriginalData { get; set; }

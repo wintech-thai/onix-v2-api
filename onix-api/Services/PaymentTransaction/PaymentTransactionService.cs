@@ -214,7 +214,10 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId)
+        public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(
+            string orgId, 
+            string paymentTransactionId, 
+            string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
             _bankAccountRepo!.SetCustomOrgId(orgId);
@@ -390,7 +393,8 @@ namespace Its.Onix.Api.Services
         public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
             string orgId, 
             string bankAccountId, 
-            MPaymentNotiLine paymentNotiLine)
+            MPaymentNotiLine paymentNotiLine,
+            int previousHour)
         {
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
@@ -418,6 +422,12 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            DateTime? fromDate = null;
+            if (previousHour > 0)
+            {
+                fromDate = DateTime.UtcNow.AddHours(-1 * previousHour);
+            }
+
             var prParam = new VMPaymentRequest()
             {
                 //ไม่ต้องระบุ merchantId เพราะว่าเรายังไม่รู้ว่า transaction นี้เป็นของ merchant ไหน
@@ -425,9 +435,10 @@ namespace Its.Onix.Api.Services
                 BankAccountId = bankAccountId,
                 Status = "Pending",
                 RefId1 = paymentNotiLine.RefId1,
+                PayinRequestId = paymentNotiLine.PayinRequestId,
                 
                 GeneratedAmountStr = amtStr, //เอาเลขเศษสตางค์ไป match ด้วย
-                FromDate = DateTime.UtcNow.AddHours(-1),
+                FromDate = fromDate, //ถ้ามาจากการ approve แบบ manual เราจะไม่ระบุช่วงเวลาย้อนหลัง
             };
 
             paymentNotiLine.PaymentRequestQuery = prParam;
@@ -837,26 +848,36 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var bankAccountId = pmr.PayinBankAccountId!;
-            if (bankAccountId == null)
+            MVPaymentTransaction pmtVm = r;
+            if (pmr.PayinIsPeerToPeer == true)
             {
-                r.Status = "ERROR_BANK_ACCOUNT_UNKNOWN";
-                r.Description = $"Missing bank account ID [{bankAccountId}]";
-
-                return r;
+                //เป็น P2P
             }
-
-            var paymentNotiLine = new MPaymentNotiLine()
+            else
             {
-                PaymentAmount = (decimal) pmr.GeneratedAmount!,
-                MerchantId = pmr.MerchantId,
-                RefId1 = pmr.RefId1,
-            };
+                //เป็นแบบเดิมที่ต้องมี payment confirm ยิงเข้ามา
+                var bankAccountId = pmr.PayinBankAccountId!;
+                if (bankAccountId == null)
+                {
+                    r.Status = "ERROR_BANK_ACCOUNT_UNKNOWN";
+                    r.Description = $"Missing bank account ID [{bankAccountId}]";
 
-            var pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine);
-            if (pmtVm.Status != "OK")
-            {
-                return pmtVm;
+                    return r;
+                }
+
+                var paymentNotiLine = new MPaymentNotiLine()
+                {
+                    PaymentAmount = (decimal) pmr.GeneratedAmount!,
+                    MerchantId = pmr.MerchantId,
+                    RefId1 = pmr.RefId1,
+                    PayinRequestId = pmr.Id.ToString(), //ส่งไปให้เพราะเราจะให้ match กับ pay-in ตัวนี้เลย
+                };
+
+                pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
+                if (pmtVm.Status != "OK")
+                {
+                    return pmtVm;
+                }
             }
 
             //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
