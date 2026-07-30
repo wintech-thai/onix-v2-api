@@ -1179,13 +1179,18 @@ namespace Its.Onix.Api.Services
             else if (action == "Cencel")
             {
                 var payinRequestId = payIn.Id.ToString();
+Console.WriteLine($"DEBUG3 - [{payinRequestId}]");
                 var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
                 if (partialPayout != null)
                 {
+Console.WriteLine($"DEBUG4 - [{payinRequestId}]");
                     partialPayout.Status = "Canceled";
                 }
             }
-
+txs.ForEach(s =>
+{
+    Console.WriteLine($"DEBUG5 - [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
+});
             payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
             payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
             payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
