@@ -823,6 +823,27 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private async Task<MVWallet> GetWallet(MPaymentRequest payment)
+        {
+            var orgId = payment.OrgId!;
+
+            var result = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var mcWallet = await _pointService!.GetWalletByMerchantId(orgId, payment.MerchantId!);
+            if (mcWallet!.Status != "OK")
+            {
+                result.Status = mcWallet.Status;
+                result.Description = $"Failed to get merchant wallet, MerchantId=[{payment.MerchantId}]";
+                return result;
+            }
+
+            return mcWallet;
+        }
+
         private async Task<MVPaymentTransaction> ProcessPeer2PeerPaymentApprove(string orgId, MPaymentRequest payin)
         {
             _paymentRequestRepo!.SetCustomOrgId(orgId);
@@ -853,13 +874,78 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : Chek ยอด wallet balance ของ merchant ดูว่าสามารถตัดตอน approve payout ได้หรือไม่
+            var requestAmt = (decimal?) payin.GeneratedAmount;
+            requestAmt ??= 0;
+
+            var payinFeePct = (decimal?) payin.PayInFeePct;
+            payinFeePct ??= 0;
+            var payinFee = requestAmt * payinFeePct/100;
+
+            var payoutFeePct = (decimal?) payoutRequest.PayoutFeePct;
+            payoutFeePct ??= 0;
+            var payoutFee = requestAmt * payoutFeePct/100;;
+
+            var payinWallet = await GetWallet(payin);
+            if (payinWallet.Status != "OK")
+            {
+                r.Status = payinWallet.Status;
+                r.Description = payinWallet.Description;
+
+                return r;
+            }
+
+            var payoutWallet = await GetWallet(payoutRequest);
+            if (payoutWallet.Status != "OK")
+            {
+                r.Status = payoutWallet.Status;
+                r.Description = payoutWallet.Description;
+                
+                return r;
+            }
+
+            var payinMcTopupAmt = requestAmt - payinFee;
+            var payoutMcDeductAmt = requestAmt + payoutFee;
+
+            var payoutMcCurrentBalance = payoutWallet.Wallet?.PointBalanceDecimal;
+            payoutMcCurrentBalance ??= 0;
+
+            //Check ยอด wallet balance ของ merchant payout ดูว่าสามารถตัดยอดได้หรือไม่
+            if (payoutMcCurrentBalance < payoutMcDeductAmt)
+            {
+                r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                r.Description = $"Merchant wallet has insufficient balance, MerchantId=[{payoutRequest.MerchantId}], CurrentBalance=[{payoutMcCurrentBalance}], RequiredAmount=[{payoutMcDeductAmt}]";
+                return r;
+            }
 
             //TODO : สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
 
-            //TODO : topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
 
-            //TODO : deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
+            //topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
+            var pointTx0 = new MPointTx()
+            {
+                WalletId = payoutWallet.Wallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) payinMcTopupAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                TxAmountDecimal = payinMcTopupAmt,
+
+                Description = $"{requestAmt} - {payinFee}",
+                Tags = $"PaymentTxId=[xxxxx]",
+            };
+            await _pointService!.AddPoint(payin.OrgId!, pointTx0);
+
+            //Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
+            var pointTx1 = new MPointTx()
+            {
+                WalletId = payoutWallet.Wallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) payoutMcDeductAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                TxAmountDecimal = payoutMcDeductAmt,
+
+                Description = $"{requestAmt} + {payoutFee}",
+                Tags = $"PayOutRequestId=[{payoutRequest.Id.ToString()}]",
+            };
+            await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTx1);
+
 
             var existingPayout = await _paymentRequestRepo!.ProcessPartialPayoutHistory(payoutRequest!, payin, "Approve");
             if (existingPayout == null)
@@ -869,6 +955,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            //TODO : Notify payment.success และ payout.success กลับไปหา merchant ด้วย
 
             //TODO : คำนวณยอดเงินคงเหลือที่จะต้องโอนออกเพื่อนำไปสร้างเป็น QR ยอดใหม่
 
