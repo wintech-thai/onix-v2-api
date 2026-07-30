@@ -341,7 +341,7 @@ namespace Its.Onix.Api.Services
                     //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
                     TxAmountDecimal = pmt.PayInTotalAmountDecimal,
 
-                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                    Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(merchantOrgId, pointTx);
@@ -359,7 +359,7 @@ namespace Its.Onix.Api.Services
                     //TxAmountDecimal ตรงนี้จะเป็นค่าที่ยังไม่หัก fee เพื่อนำไปเป็นยอดที่เข้า wallet
                     TxAmountDecimal = pmt.TxAmountDecimal,
 
-                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                    Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(orgId, pointTx);
@@ -943,7 +943,7 @@ namespace Its.Onix.Api.Services
                 PaymentRequestId = payinId,
                 MerchantId = payin.MerchantId,
             };
-            
+
             //==== TODO : Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType = "Payment.Success";
             var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
@@ -970,7 +970,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = payinMcTopupAmt,
 
                 Description = $"{requestAmt} - {payinFee} (fee={payinFeePct}%)",
-                Tags = $"PaymentTxId=[xxxxx]",
+                Tags = $"PaymentTxId=[{payInPmt.Id}]",
             };
             await _pointService!.AddPoint(payin.OrgId!, pointTx0);
 
