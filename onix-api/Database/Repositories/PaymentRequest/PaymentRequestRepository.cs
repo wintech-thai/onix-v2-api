@@ -418,6 +418,27 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        public async Task<MPaymentRequest?> UpdatePayOutPeer2PeerHistoryById(string paymentRequestId, MPaymentRequest paymentRequest)
+        {
+            var oldOrgId = orgId;
+            orgId = "global";
+
+            //ให้ update เฉพาะ field ที่เกี่ยวกับการตัดจ่ายด้วย P2P เท่านั้น
+            Guid id = Guid.Parse(paymentRequestId);
+
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.PartialPayoutHistory = paymentRequest.PartialPayoutHistory;
+                existing.TotalPayOutPaidAmountDecimal = paymentRequest.TotalPayOutPaidAmountDecimal;
+                existing.TotalPayOutPendingPaidAmountDecimal = paymentRequest.TotalPayOutPendingPaidAmountDecimal;
+            }
+
+            orgId = oldOrgId;
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
 
         public async Task<MPaymentRequest?> UpdateTransferRequestById(string paymentRequestId, MPaymentRequest paymentRequest)
         {
