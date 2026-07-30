@@ -689,6 +689,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
                     new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
@@ -704,7 +705,6 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NAME", Value = pmt?.PayInBankAccountName },
-                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeePct.ToString() },
                 ]
             };
 
