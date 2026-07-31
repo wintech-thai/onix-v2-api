@@ -509,13 +509,25 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            var actualAmount = existing.RequestedAmount; //ยอดเต็มไม่มีการทำ partial pay ผ่าน P2P
+            actualAmount ??= 0;
+
+            var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P;
+            payoutAmountWithP2P ??= 0;
+
+            if (payoutAmountWithP2P > 0)
+            {
+                //มีการชำระจ่ายบางส่วนแบบ P2P เข้ามาแล้ว
+                actualAmount = payoutAmountWithP2P;
+            }
+
             var pt = new MPaymentTransaction
             {
                 Status = "Approved",
                 Direction = "PayOut",
                 Currency = "THB",
-                TxAmount = (double) existing.RequestedAmount!,
-                TxAmountDecimal = (decimal) existing.RequestedAmount!,
+                TxAmount = (double) actualAmount,
+                TxAmountDecimal = (decimal) actualAmount,
                 FromBankAccountNo = existing.PayoutBankAccountNo,
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
