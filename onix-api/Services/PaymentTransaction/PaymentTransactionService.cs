@@ -296,6 +296,7 @@ namespace Its.Onix.Api.Services
             pmt.PayInFeePct = mc.PayinFeePct;
             pmt.PayInFee = (double) Math.Round((decimal) (pmt.TxAmount! * mc.PayinFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
             pmt.PayInTotalAmount = pmt.TxAmount - pmt.PayInFee;
+            pmt.TxIsPeerToPeer = false;
 
             if (mc.DiscardCent)
             {
@@ -538,6 +539,7 @@ namespace Its.Onix.Api.Services
             }
             else
             {
+                //ตรงนี้คือโอนเงินเข้ามาเฉย ๆ ไม่ผ่านการแสกน QR ที่ออกโดยระบบ
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
                 if (bankAccount == null)
                 {
@@ -551,6 +553,8 @@ namespace Its.Onix.Api.Services
                     pt.PayInBankCode = bankAccount.BankCode;
                     pt.PayInBankAccountNo = bankAccount.AccountNumber;
                     pt.PayInBankAccountName = bankAccount.AccountName;
+                    pt.PayInPromptPayId = bankAccount.PromptPayId;
+                    pt.TxIsPeerToPeer = false;
                 }
             }
 
