@@ -84,9 +84,11 @@ namespace Its.Onix.Api.Database.Repositories
                 TotalPayOutPendingPaidAmountDecimal = x.pr.TotalPayOutPendingPaidAmountDecimal,
                 TotalPayOutPaidAmountDecimal = x.pr.TotalPayOutPaidAmountDecimal,
                 PartialPayoutHistory = x.pr.PartialPayoutHistory,
+                PayOutTotalAmountDecimalP2P = x.pr.PayOutTotalAmountDecimalP2P,
 
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
                 QrCode = x.pr.QrCode,
+                QrCodeP2P = x.pr.QrCodeP2P,
                 RejectReason = x.pr.RejectReason,
 
                 IsPayInBankAccountOverride = x.pr.IsPayInBankAccountOverride,
@@ -442,6 +444,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PartialPayoutHistory = paymentRequest.PartialPayoutHistory;
                 existing.TotalPayOutPaidAmountDecimal = paymentRequest.TotalPayOutPaidAmountDecimal;
                 existing.TotalPayOutPendingPaidAmountDecimal = paymentRequest.TotalPayOutPendingPaidAmountDecimal;
+                existing.PayOutTotalAmountDecimalP2P = paymentRequest.PayOutTotalAmountDecimalP2P;
             }
 
             orgId = oldOrgId;
