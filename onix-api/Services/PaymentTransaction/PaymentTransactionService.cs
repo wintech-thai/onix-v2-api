@@ -1042,8 +1042,10 @@ namespace Its.Onix.Api.Services
             IQrGenerator qrGenerator;
             QrGeneratorResult? qrResult = null;
             var destBa = GetBankAccount(payoutRequest);
+Console.WriteLine($"DEBUG_A - [{destBa.PromptPayId}]");
             if (!string.IsNullOrEmpty(destBa.PromptPayId))
             {
+Console.WriteLine($"DEBUG_B - [{destBa.PromptPayId}]");
                 var tmpPr = new MPaymentRequest()
                 {
                     RefId = payoutRequest.RefId1,
@@ -1062,7 +1064,9 @@ namespace Its.Onix.Api.Services
 
                     return r;
                 }
+Console.WriteLine($"DEBUG_C - [{payoutRequest.QrCodeP2P}]");
             }
+Console.WriteLine($"DEBUG_D - [{payoutRequest.QrCodeP2P}]");
 
             return r;
         }

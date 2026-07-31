@@ -622,7 +622,7 @@ namespace Its.Onix.Api.Database.Repositories
             payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
             payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
             payOut.PayOutTotalAmountDecimalP2P = payOut.PayOutTotalAmountDecimal - payOut.TotalPayOutPaidAmountDecimal;
-
+Console.WriteLine($"DEBUG_X - [{payOut.PayOutTotalAmountDecimalP2P}] [{payOut.PayOutTotalAmountDecimal}] [{payOut.TotalPayOutPaidAmountDecimal}]");
             var result = await UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
             return result;
         }
