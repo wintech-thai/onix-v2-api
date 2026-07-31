@@ -1038,9 +1038,54 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : คำนวณยอดเงินคงเหลือที่จะต้องโอนออกเพื่อนำไปสร้างเป็น QR ยอดใหม่
+            //สร้าง QR ใหม่
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+            var destBa = GetBankAccount(payoutRequest);
+            if (!string.IsNullOrEmpty(destBa.PromptPayId))
+            {
+                var tmpPr = new MPaymentRequest()
+                {
+                    RefId = payoutRequest.RefId1,
+                    GeneratedAmount = (double) payoutRequest.PayOutTotalAmountDecimalP2P!,
+                };
+
+                qrGenerator = new QrGeneratorPromptPay(tmpPr, destBa);
+                qrResult = qrGenerator.Generate();
+                payoutRequest.QrCodeP2P = qrResult?.QrPayload;
+
+                var existingPayout2 = await _paymentRequestRepo!.UpdateQrCodeByIdForP2P(payoutId, payoutRequest!);
+                if (existingPayout2 == null)
+                {
+                    r.Status = "ERROR_P2P_QR_PAYMENT_REQUEST_UPDATE";
+                    r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                    return r;
+                }
+            }
 
             return r;
+        }
+
+        private static MBankAccount GetBankAccount(MPaymentRequest payout)
+        {
+            var ba = new MBankAccount()
+            {
+                BankCode = payout.PayinBankCode,
+                AccountName = payout.PayinBankAccountName,
+                AccountNumber = payout.PayinBankAccountNo,
+                PromptPayId = payout.PayinPromptPayId,
+            };
+
+            if (payout.IsPayInBankAccountOverride)
+            {
+                ba.BankCode = payout.PayinBankCodeOverride;
+                ba.AccountName = payout.PayinBankAccountNameOverride;
+                ba.AccountNumber = payout.PayinBankAccountNoOverride;
+                ba.PromptPayId = payout.PayinPromptPayIdOverride;
+            }
+
+            return ba;
         }
 
         public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId)
@@ -1075,10 +1120,13 @@ namespace Its.Onix.Api.Services
             if (pmr.PayinIsPeerToPeer == true)
             {
                 //เป็น P2P
+                //user ทำการ approve "Pending" payin request ที่เป็น P2P
                 pmtVm = await ProcessPeer2PeerPaymentApprove(pmr.OrgId!, pmr);
             }
             else
             {
+                //user ทำการ approve "Pending" payin request ที่เป็นแบบ native ธรรมดา
+
                 //เป็นแบบเดิมที่ต้องมี payment confirm ยิงเข้ามา
                 var bankAccountId = pmr.PayinBankAccountId!;
                 if (bankAccountId == null)

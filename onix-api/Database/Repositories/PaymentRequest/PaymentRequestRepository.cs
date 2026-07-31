@@ -548,6 +548,20 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        public async Task<MPaymentRequest?> UpdateQrCodeByIdForP2P(string paymentRequestId, MPaymentRequest payOut)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
+                existing.QrCodeP2P = payOut.QrCodeP2P;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
         public async Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action)
         {
             //เอามาไว้ตรงนี้เพราะมีการเรียกใช้ร่วมกันใน Payment Request service และ Payment Transaction service
@@ -604,6 +618,7 @@ namespace Its.Onix.Api.Database.Repositories
             payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
             payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
             payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
+            payOut.PayOutTotalAmountDecimalP2P = payOut.PayOutTotalAmountDecimal - payOut.TotalPayOutPaidAmountDecimal;
 
             var result = await UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
             return result;
