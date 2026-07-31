@@ -3,14 +3,17 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using System.Data.Entity;
 using System.Text.Json;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Database.Repositories
 {
     public class PaymentRequestRepository : BaseRepository, IPaymentRequestRepository
     {
-        public PaymentRequestRepository(IDataContext ctx)
+        private readonly IRedisHelper _redis;
+        public PaymentRequestRepository(IDataContext ctx, IRedisHelper redis)
         {
             context = ctx;
+            _redis = redis;
         }
 
         public async Task<bool> IsRefIdExist(string refId)
@@ -570,7 +573,17 @@ namespace Its.Onix.Api.Database.Repositories
             //เอามาไว้ตรงนี้เพราะมีการเรียกใช้ร่วมกันใน Payment Request service และ Payment Transaction service
             var payoutRequestId = payOut.Id.ToString()!;
 
-            //TODO : ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
+            //ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
+            using var redPmrLock = await _redis.AcquireRedLockAsync(
+                $"lock:ProcessPartialPayoutHistory:{payoutRequestId}",  // resource
+                TimeSpan.FromSeconds(5)   // lock expiry
+            );
+
+            if (!redPmrLock.IsAcquired)
+            {
+                Console.WriteLine($"Unable to acquire lock 'lock:ProcessPartialPayoutHistory:{payoutRequestId}'");
+                return null;
+            }
 
             var txHistory = payOut.PartialPayoutHistory;
             if (string.IsNullOrEmpty(txHistory))
