@@ -52,6 +52,19 @@ namespace Its.Onix.Api.Models
         public string? StatusReason { get; set; }
 
 
+        [Column("ref_id1")]
+        public string? RefId1 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+        [Column("ref_id2")]
+        public string? RefId2 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+        [Column("ref_id3")]
+        public string? RefId3 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+        [Column("tx_is_peer_to_peer")]
+        public bool? TxIsPeerToPeer { get; set; } //ใช้บอกว่าเป็น transaction จาก peer to peer มั้ย
+
+
         [Column("direction")]
         public string? Direction { get; set; } //PayIn, PayOut
 
@@ -101,6 +114,9 @@ namespace Its.Onix.Api.Models
         [Column("payin_bank_account_name")]
         public string? PayInBankAccountName { get; set; }
 
+        [Column("payin_promptpay_id")]
+        public string? PayInPromptPayId { get; set; }
+
 
         //ข้อมูลเกี่ยวกับ บัญชีที่โอนออกไปปลายทาง
         [Column("payout_bank_account_id")]
@@ -114,6 +130,9 @@ namespace Its.Onix.Api.Models
 
         [Column("payout_bank_account_name")]
         public string? PayOutBankAccountName { get; set; }
+
+        [Column("payout_promptpay_id")]
+        public string? PayOutPromptPayId { get; set; }
 
 
         [Column("payout_fee_decimal")]

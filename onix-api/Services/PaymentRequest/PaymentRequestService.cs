@@ -555,8 +555,10 @@ namespace Its.Onix.Api.Services
 
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
             pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
             pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
+            pt.PayInPromptPayId = paymentRequest.PayinPromptPayId;
 
             pt.MerchantId = existing.MerchantId;
 

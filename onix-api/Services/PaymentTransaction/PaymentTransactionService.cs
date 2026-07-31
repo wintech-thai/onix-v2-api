@@ -504,6 +504,11 @@ namespace Its.Onix.Api.Services
                 pt.PayInFee = (double) Math.Round((decimal) (pt.TxAmount * pmr.PayInFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
                 pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee;
 
+                pt.RefId1 = pmr.RefId1;
+                pt.RefId2 = pmr.RefId2; 
+                pt.RefId3 = pmr.RefId3;
+                pt.TxIsPeerToPeer = pmr.PayinIsPeerToPeer;
+
                 if (pmr.DiscardCent)
                 {
                     //ที่ merchant มีการ config ไว้ว่าให้หักเศษสตางค์
@@ -524,6 +529,7 @@ namespace Its.Onix.Api.Services
                 pt.PayInBankCode = pmr.PayinBankCode;
                 pt.PayInBankAccountNo = pmr.PayinBankAccountNo;
                 pt.PayInBankAccountName = pmr.PayinBankAccountName;
+                pt.PayInPromptPayId = pmr.PayinPromptPayId;
                 pt.PaymentRequestId = pmr.Id.ToString();
 
                 pt.MerchantId = pmr.MerchantId;
@@ -939,8 +945,14 @@ namespace Its.Onix.Api.Services
                 PayInBankCode = payin.PayinBankCode,
                 PayInBankAccountNo = payin.PayinBankAccountNo,
                 PayInBankAccountName = payin.PayinBankAccountName,
+                PayInPromptPayId = payin.PayinPromptPayId,
                 PaymentRequestId = payinId,
                 MerchantId = payin.MerchantId,
+
+                RefId1 = payin.RefId1,
+                RefId2 = payin.RefId2,
+                RefId3 = payin.RefId3,
+                TxIsPeerToPeer = payin.PayinIsPeerToPeer,
             };
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
