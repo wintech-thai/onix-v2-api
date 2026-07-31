@@ -509,13 +509,25 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            var actualAmount = existing.RequestedAmount; //ยอดเต็มไม่มีการทำ partial pay ผ่าน P2P
+            actualAmount ??= 0;
+
+            var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P;
+            payoutAmountWithP2P ??= 0;
+
+            if (payoutAmountWithP2P > 0)
+            {
+                //มีการชำระจ่ายบางส่วนแบบ P2P เข้ามาแล้ว
+                actualAmount = payoutAmountWithP2P;
+            }
+
             var pt = new MPaymentTransaction
             {
                 Status = "Approved",
                 Direction = "PayOut",
                 Currency = "THB",
-                TxAmount = (double) existing.RequestedAmount!,
-                TxAmountDecimal = (decimal) existing.RequestedAmount!,
+                TxAmount = (double) actualAmount,
+                TxAmountDecimal = (decimal) actualAmount,
                 FromBankAccountNo = existing.PayoutBankAccountNo,
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
@@ -543,8 +555,10 @@ namespace Its.Onix.Api.Services
 
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
             pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
             pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
+            pt.PayInPromptPayId = paymentRequest.PayinPromptPayId;
 
             pt.MerchantId = existing.MerchantId;
 
@@ -994,6 +1008,21 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            //ต้องมีการ lock ในระดับ PayoutRequest ในระดับ global เลยเพื่อกัน race condition
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            using var redPmrLock = await _redis.AcquireRedLockAsync(
+                $"lock:AddPaymentRequestPayInP2P:{environment}",  // resource
+                TimeSpan.FromSeconds(5)   // lock expiry
+            );
+
+            if (!redPmrLock.IsAcquired)
+            {
+                r.Status = "ERROR_UNABLE_TO_ACQUIRE_LOCK";
+                r.Description = $"Unable to acquire lock 'lock:AddPaymentRequestPayInP2P:{environment}'";
+                return r;
+            }
+
+
             if (string.IsNullOrEmpty(paymentRequest.RefId1))
             {
                 r.Status = "REF_ID1_MISSING";
@@ -1096,7 +1125,7 @@ namespace Its.Onix.Api.Services
 
             //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
             //บัญชีตรงของ Payout Request ต้องเป็น PromptPay ด้วย
-            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest, merchant);
+            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest);
             if (bnkAcct == null)
             {
                 r.Status = "ERROR_NO_P2P_ACCOUNT_MATCH";
@@ -1324,10 +1353,8 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr, MMerchant merchant)
+        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr)
         {
-            //TODO : ต้องมีการ lock ในระดับ PayoutRequest ในระดับ global เลยเพื่อกัน race condition
-
             //var merchantId = pr.MerchantId!;
             List<string> lines = [];
 

@@ -296,6 +296,7 @@ namespace Its.Onix.Api.Services
             pmt.PayInFeePct = mc.PayinFeePct;
             pmt.PayInFee = (double) Math.Round((decimal) (pmt.TxAmount! * mc.PayinFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
             pmt.PayInTotalAmount = pmt.TxAmount - pmt.PayInFee;
+            pmt.TxIsPeerToPeer = false;
 
             if (mc.DiscardCent)
             {
@@ -504,6 +505,11 @@ namespace Its.Onix.Api.Services
                 pt.PayInFee = (double) Math.Round((decimal) (pt.TxAmount * pmr.PayInFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
                 pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee;
 
+                pt.RefId1 = pmr.RefId1;
+                pt.RefId2 = pmr.RefId2; 
+                pt.RefId3 = pmr.RefId3;
+                pt.TxIsPeerToPeer = pmr.PayinIsPeerToPeer;
+
                 if (pmr.DiscardCent)
                 {
                     //ที่ merchant มีการ config ไว้ว่าให้หักเศษสตางค์
@@ -524,6 +530,7 @@ namespace Its.Onix.Api.Services
                 pt.PayInBankCode = pmr.PayinBankCode;
                 pt.PayInBankAccountNo = pmr.PayinBankAccountNo;
                 pt.PayInBankAccountName = pmr.PayinBankAccountName;
+                pt.PayInPromptPayId = pmr.PayinPromptPayId;
                 pt.PaymentRequestId = pmr.Id.ToString();
 
                 pt.MerchantId = pmr.MerchantId;
@@ -532,6 +539,7 @@ namespace Its.Onix.Api.Services
             }
             else
             {
+                //ตรงนี้คือโอนเงินเข้ามาเฉย ๆ ไม่ผ่านการแสกน QR ที่ออกโดยระบบ
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
                 if (bankAccount == null)
                 {
@@ -545,6 +553,8 @@ namespace Its.Onix.Api.Services
                     pt.PayInBankCode = bankAccount.BankCode;
                     pt.PayInBankAccountNo = bankAccount.AccountNumber;
                     pt.PayInBankAccountName = bankAccount.AccountName;
+                    pt.PayInPromptPayId = bankAccount.PromptPayId;
+                    pt.TxIsPeerToPeer = false;
                 }
             }
 
@@ -939,8 +949,14 @@ namespace Its.Onix.Api.Services
                 PayInBankCode = payin.PayinBankCode,
                 PayInBankAccountNo = payin.PayinBankAccountNo,
                 PayInBankAccountName = payin.PayinBankAccountName,
+                PayInPromptPayId = payin.PayinPromptPayId,
                 PaymentRequestId = payinId,
                 MerchantId = payin.MerchantId,
+
+                RefId1 = payin.RefId1,
+                RefId2 = payin.RefId2,
+                RefId3 = payin.RefId3,
+                TxIsPeerToPeer = payin.PayinIsPeerToPeer,
             };
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
@@ -1038,9 +1054,58 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : คำนวณยอดเงินคงเหลือที่จะต้องโอนออกเพื่อนำไปสร้างเป็น QR ยอดใหม่
+            //สร้าง QR ใหม่
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+            var destBa = GetBankAccount(payoutRequest);
+//Console.WriteLine($"DEBUG_A - [{destBa.PromptPayId}]");
+            if (!string.IsNullOrEmpty(destBa.PromptPayId))
+            {
+//Console.WriteLine($"DEBUG_B - [{destBa.PromptPayId}]");
+                var tmpPr = new MPaymentRequest()
+                {
+                    RefId = payoutRequest.RefId1,
+                    GeneratedAmount = (double) payoutRequest.PayOutTotalAmountDecimalP2P!,
+                };
+
+                qrGenerator = new QrGeneratorPromptPay(tmpPr, destBa);
+                qrResult = qrGenerator.Generate();
+                payoutRequest.QrCodeP2P = qrResult?.QrPayload;
+
+                var existingPayout2 = await _paymentRequestRepo!.UpdateQrCodeByIdForP2P(payoutId, payoutRequest!);
+                if (existingPayout2 == null)
+                {
+                    r.Status = "ERROR_P2P_QR_PAYMENT_REQUEST_UPDATE";
+                    r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                    return r;
+                }
+//Console.WriteLine($"DEBUG_C - [{payoutRequest.QrCodeP2P}]");
+            }
+//Console.WriteLine($"DEBUG_D - [{payoutRequest.QrCodeP2P}]");
 
             return r;
+        }
+
+        private static MBankAccount GetBankAccount(MPaymentRequest payout)
+        {
+            var ba = new MBankAccount()
+            {
+                BankCode = payout.PayinBankCode,
+                AccountName = payout.PayinBankAccountName,
+                AccountNumber = payout.PayinBankAccountNo,
+                PromptPayId = payout.PayinPromptPayId,
+            };
+
+            if (payout.IsPayInBankAccountOverride)
+            {
+                ba.BankCode = payout.PayinBankCodeOverride;
+                ba.AccountName = payout.PayinBankAccountNameOverride;
+                ba.AccountNumber = payout.PayinBankAccountNoOverride;
+                ba.PromptPayId = payout.PayinPromptPayIdOverride;
+            }
+
+            return ba;
         }
 
         public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId)
@@ -1075,10 +1140,13 @@ namespace Its.Onix.Api.Services
             if (pmr.PayinIsPeerToPeer == true)
             {
                 //เป็น P2P
+                //user ทำการ approve "Pending" payin request ที่เป็น P2P
                 pmtVm = await ProcessPeer2PeerPaymentApprove(pmr.OrgId!, pmr);
             }
             else
             {
+                //user ทำการ approve "Pending" payin request ที่เป็นแบบ native ธรรมดา
+
                 //เป็นแบบเดิมที่ต้องมี payment confirm ยิงเข้ามา
                 var bankAccountId = pmr.PayinBankAccountId!;
                 if (bankAccountId == null)

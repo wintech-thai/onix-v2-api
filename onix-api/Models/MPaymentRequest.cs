@@ -179,6 +179,9 @@ namespace Its.Onix.Api.Models
         [Column("partial_payout_history")]
         public string? PartialPayoutHistory { get; set; } //JSON เก็บ array ของ partial payment จาก P2P
 
+        [Column("total_payout_amount_decimal_p2p")]
+        public decimal? PayOutTotalAmountDecimalP2P { get; set; } //ยอดคงเหลือที่หัก TotalPayOutPaidAmountDecimal ออกแล้ว (PayOutTotalAmountDecimal - TotalPayOutPaidAmountDecimal)
+
 
         //ด้านล่างเป็น field ที่ใช้กันภายใน
         [Column("tags")]
@@ -223,6 +226,8 @@ namespace Its.Onix.Api.Models
         [Column("qr_code")]
         public string? QrCode { get; set; }
 
+        [Column("qr_code_p2p")]
+        public string? QrCodeP2P { get; set; }
 
         //System fields
         [Column("created_date")]

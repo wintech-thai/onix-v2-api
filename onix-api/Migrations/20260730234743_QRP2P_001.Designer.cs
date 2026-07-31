@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260730234743_QRP2P_001")]
+    partial class QRP2P_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2506,10 +2509,6 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("pay_in_fee_pct");
 
-                    b.Property<string>("PayInPromptPayId")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_promptpay_id");
-
                     b.Property<double?>("PayInTotalAmount")
                         .HasColumnType("double precision")
                         .HasColumnName("total_payin_amount");
@@ -2542,10 +2541,6 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("pay_out_fee_pct");
 
-                    b.Property<string>("PayOutPromptPayId")
-                        .HasColumnType("text")
-                        .HasColumnName("payout_promptpay_id");
-
                     b.Property<double?>("PayOutTotalAmount")
                         .HasColumnType("double precision")
                         .HasColumnName("total_payout_amount");
@@ -2570,18 +2565,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("raw_input");
 
-                    b.Property<string>("RefId1")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id1");
-
-                    b.Property<string>("RefId2")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id2");
-
-                    b.Property<string>("RefId3")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id3");
-
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("status");
@@ -2601,10 +2584,6 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("TxAmountDecimal")
                         .HasColumnType("numeric")
                         .HasColumnName("tx_amount_decimal");
-
-                    b.Property<bool?>("TxIsPeerToPeer")
-                        .HasColumnType("boolean")
-                        .HasColumnName("tx_is_peer_to_peer");
 
                     b.HasKey("Id");
 
