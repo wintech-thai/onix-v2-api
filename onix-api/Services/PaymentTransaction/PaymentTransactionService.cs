@@ -975,6 +975,7 @@ namespace Its.Onix.Api.Services
 
 
             //=============== สร้าง payment tx payout (เพื่อเอาไว้ทำพวก revenue report)
+            //TODO : ใช้ฟีลด์ override
             var payOutPmt = new MPaymentTransaction()
             {
                 TxAmount = (double) requestAmt,
@@ -990,11 +991,14 @@ namespace Its.Onix.Api.Services
                 PayOutFee = (double) payoutFee,
                 PayOutTotalAmount = (double) requestAmt,
                 PayOutTotalAmountDecimal = requestAmt,
-
                 PayOutBankAccountId = "UNKNOWN",
-                PayOutBankCode = "UNKNOWN",
+                PayOutBankCode = payoutRequest.PayoutBankCode,
+                PayOutPromptPayId = payoutRequest.PayoutPromptPayId,
+
                 PayInBankAccountNo = payoutRequest.PayinBankAccountNo,
                 PayInBankAccountName = payoutRequest.PayinBankAccountName,
+                PayInPromptPayId = payoutRequest.PayinPromptPayId,
+                
                 TxIsPeerToPeer = true,
 
                 RefId1 = payoutRequest.RefId1,

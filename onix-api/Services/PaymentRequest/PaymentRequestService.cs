@@ -535,6 +535,10 @@ namespace Its.Onix.Api.Services
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
+
+                RefId1 = existing.RefId1,
+                RefId2 = existing.RefId2,
+                RefId3 = existing.RefId3,
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
@@ -556,6 +560,7 @@ namespace Its.Onix.Api.Services
                 merchantDeductFee = pt.PayoutFeeDecimal;
             }
 
+            //TODO : Check ว่า override มั้ย
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
@@ -640,12 +645,23 @@ namespace Its.Onix.Api.Services
 
             //===== update point wallet ===
 
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType2 = "PaymentOut.Success";
+            var pmtSuccessJob2 = _jobService!.CreatePayOutSuccessJob(existing.OrgId!, jobType2, pt, existing!);
+            pt.JobId = pmtSuccessJob2?.Id.ToString();
 
             pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
             pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
 
             var mpt = await _paymentTransactionRepo!.AddPaymentTransaction(pt);
             mvPt.PaymentTransaction = mpt;
+
+
+            //ยิง PaymentOut.Success event
+            var environment2 = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream2 = $"JobSubmitted:{environment2}:{jobType2}";
+            var message2 = JsonSerializer.Serialize(pmtSuccessJob2);
+            var _3 = await _redis.PublishMessageAsync(stream2!, message2);
 
             return mvPt;
         }
