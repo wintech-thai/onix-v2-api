@@ -17,12 +17,14 @@ namespace Its.Onix.Api.Services
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
         private readonly IRedisHelper _redis;
+        private readonly IJobService? _jobService = null;
 
         public PaymentRequestService(
             IPaymentRequestRepository repo, 
             IPaymentTransactionRepository paymentTxRepo, 
             IBankAccountRepository bankAcctRepo,
             IRedisHelper redis,
+            IJobService jobService,
             IPointService pointService) : base()
         {
             repository = repo;
@@ -30,6 +32,7 @@ namespace Its.Onix.Api.Services
             _bankAccountRepo = bankAcctRepo;
             _pointService = pointService;
             _redis = redis;
+            _jobService = jobService;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -389,7 +392,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
-            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+            paymentRequest.PayoutFeePct = existing.PayoutFeePct;
 
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
@@ -487,7 +490,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
-            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+            paymentRequest.PayoutFeePct = existing.PayoutFeePct;
 
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
@@ -498,8 +501,8 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, 
-            MPaymentRequest paymentRequest, 
+        private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId,
+            MPaymentRequest paymentRequest,
             MPaymentRequest existing)
         {
             _paymentTransactionRepo!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
@@ -515,7 +518,7 @@ namespace Its.Onix.Api.Services
             var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P;
             payoutAmountWithP2P ??= 0;
 
-            if (payoutAmountWithP2P > 0)
+            if (payoutAmountWithP2P >= 0)
             {
                 //มีการชำระจ่ายบางส่วนแบบ P2P เข้ามาแล้ว
                 actualAmount = payoutAmountWithP2P;
@@ -532,6 +535,10 @@ namespace Its.Onix.Api.Services
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
+
+                RefId1 = existing.RefId1,
+                RefId2 = existing.RefId2,
+                RefId3 = existing.RefId3,
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
@@ -553,6 +560,7 @@ namespace Its.Onix.Api.Services
                 merchantDeductFee = pt.PayoutFeeDecimal;
             }
 
+            //TODO : Check ว่า override มั้ย
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
@@ -637,12 +645,23 @@ namespace Its.Onix.Api.Services
 
             //===== update point wallet ===
 
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType2 = "PaymentOut.Success";
+            var pmtSuccessJob2 = _jobService!.CreatePayOutSuccessJob(existing.OrgId!, jobType2, pt, existing!);
+            pt.JobId = pmtSuccessJob2?.Id.ToString();
 
             pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
             pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
 
             var mpt = await _paymentTransactionRepo!.AddPaymentTransaction(pt);
             mvPt.PaymentTransaction = mpt;
+
+
+            //ยิง PaymentOut.Success event
+            var environment2 = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream2 = $"JobSubmitted:{environment2}:{jobType2}";
+            var message2 = JsonSerializer.Serialize(pmtSuccessJob2);
+            var _3 = await _redis.PublishMessageAsync(stream2!, message2);
 
             return mvPt;
         }
@@ -1407,7 +1426,7 @@ namespace Its.Onix.Api.Services
                 var amt = (decimal?) pr.RequestedAmount!;
                 amt ??= 0;
 
-                if (leftAmount <= amt)
+                if (leftAmount < amt)
                 {
                     lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
                     continue;
@@ -1426,7 +1445,7 @@ namespace Its.Onix.Api.Services
                 return (ba, payoutRequest, lines);
             }
 
-            lines.Add($"Step3 - No bank account match!!!");
+            lines.Add($"Step3 - No PayOut request available!!!");
 
             //ไม่มี bank account ที่ match
             return (null, null, lines);

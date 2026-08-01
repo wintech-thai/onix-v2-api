@@ -177,5 +177,66 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public MJob CreatePayOutSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
+        {
+            //์ยิง webhook และ notify เพือ่แจ้ง merchant ว่า transaction โอนออกไปแล้ว
+
+            var bankCode = pmr?.PayinBankCode;
+            var accountNo = pmr?.PayinBankAccountNo;
+            var accountName = pmr?.PayinBankAccountName;
+            var promptPayId = pmr?.PayinPromptPayId;
+
+            if (pmr!.IsPayInBankAccountOverride)
+            {
+                bankCode = pmr?.PayinBankCodeOverride;
+                accountNo = pmr?.PayinBankAccountNoOverride;
+                accountName = pmr?.PayinBankAccountNameOverride;
+                promptPayId = pmr?.PayinPromptPayIdOverride;
+            }
+
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "JobService.CreatePayOutSuccessJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayOut" },
+                    new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
+                    new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId },
+                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
+                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
+
+                    new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
+                    new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
+                    new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
+
+                    new NameValue { Name = "TX_AMOUNT", Value = pmt?.TxAmountDecimal.ToString() },
+                    new NameValue { Name = "PAYOUT_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
+                    new NameValue { Name = "PAYOUT_FEE", Value = pmt?.PayoutFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYOUT_FEE_PCT", Value = ((decimal?) pmt?.PayOutFeePct).ToString() },
+
+                    new NameValue { Name = "PAYOUT_BANK_CODE", Value = bankCode },
+                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = accountNo },
+                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = accountName },
+                    new NameValue { Name = "PAYOUT_PROMPTPAY_ID", Value = promptPayId },
+
+                    new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = pmt?.TxIsPeerToPeer.ToString() },
+                ]
+            };
+
+            //ยังไม่ต้อง trigger job ให้ทำงานทันที เดี๋ยวรอให้สร้าง Payment Tx เสร็จแล้วค่อย trigger พร้อมกับส่ง jobId ไปด้วยจะได้ดู log การ process ได้ง่ายขึ้น
+            var result = AddJob(orgId, job, false); 
+            var newJob = result?.Job!;
+
+            return newJob;
+        }
     }
 }

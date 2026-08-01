@@ -695,6 +695,7 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayIn" },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
                     new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
@@ -885,6 +886,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (payoutRequest.Status != "Pending")
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_PENDING";
+                r.Description = $"P2P Pay-Out for this Payment Request ID [{payinId}] is not in Pending status";
+
+                return r;
+            }
+
             var requestAmt = (decimal?) payin.GeneratedAmount;
             requestAmt ??= 0;
 
@@ -975,6 +984,7 @@ namespace Its.Onix.Api.Services
 
 
             //=============== สร้าง payment tx payout (เพื่อเอาไว้ทำพวก revenue report)
+            //TODO : ใช้ฟีลด์ override
             var payOutPmt = new MPaymentTransaction()
             {
                 TxAmount = (double) requestAmt,
@@ -990,11 +1000,19 @@ namespace Its.Onix.Api.Services
                 PayOutFee = (double) payoutFee,
                 PayOutTotalAmount = (double) requestAmt,
                 PayOutTotalAmountDecimal = requestAmt,
-
                 PayOutBankAccountId = "UNKNOWN",
-                PayOutBankCode = "UNKNOWN",
-                PayInBankAccountNo = payoutRequest.PayinBankAccountName,
+                PayOutBankCode = payoutRequest.PayoutBankCode,
+                PayOutPromptPayId = payoutRequest.PayoutPromptPayId,
+
+                PayInBankAccountNo = payoutRequest.PayinBankAccountNo,
                 PayInBankAccountName = payoutRequest.PayinBankAccountName,
+                PayInPromptPayId = payoutRequest.PayinPromptPayId,
+                
+                TxIsPeerToPeer = true,
+
+                RefId1 = payoutRequest.RefId1,
+                RefId2 = payoutRequest.RefId2,
+                RefId3 = payoutRequest.RefId3,
 
                 Status = "Approved",
                 Direction = "PayOut",
@@ -1003,7 +1021,7 @@ namespace Its.Onix.Api.Services
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType2 = "PaymentOut.Success";
-            var pmtSuccessJob2 = CreatePaymentSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
+            var pmtSuccessJob2 = _jobService!.CreatePayOutSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
             payOutPmt.JobId = pmtSuccessJob2?.Id.ToString();
 
             repository.SetCustomOrgId(payoutRequest.OrgId!); //ต้อง set ตรงนี้เพราะว่า document อยู่คนละ org กันได้กับ payin
