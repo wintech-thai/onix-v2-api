@@ -389,7 +389,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
-            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+            paymentRequest.PayoutFeePct = existing.PayoutFeePct;
 
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
@@ -487,7 +487,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutAccountType = srcBankAccount.AccountType;
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
-            paymentRequest.PayoutFeePct = paymentRequest.PayoutFeePct;
+            paymentRequest.PayoutFeePct = existing.PayoutFeePct;
 
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
@@ -498,8 +498,8 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId, 
-            MPaymentRequest paymentRequest, 
+        private async Task<MVPaymentTransaction> ProcessPayoutTx(string orgId,
+            MPaymentRequest paymentRequest,
             MPaymentRequest existing)
         {
             _paymentTransactionRepo!.SetCustomOrgId(orgId); //ให้เป็นของ orgId ของ merchant
