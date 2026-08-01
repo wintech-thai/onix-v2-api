@@ -518,7 +518,7 @@ namespace Its.Onix.Api.Services
             var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P;
             payoutAmountWithP2P ??= 0;
 
-            if (payoutAmountWithP2P > 0)
+            if (payoutAmountWithP2P >= 0)
             {
                 //มีการชำระจ่ายบางส่วนแบบ P2P เข้ามาแล้ว
                 actualAmount = payoutAmountWithP2P;
