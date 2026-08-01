@@ -181,6 +181,20 @@ namespace Its.Onix.Api.Services
         public MJob CreatePayOutSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
         {
             //์ยิง webhook และ notify เพือ่แจ้ง merchant ว่า transaction โอนออกไปแล้ว
+
+            var bankCode = pmr?.PayinBankCode;
+            var accountNo = pmr?.PayinBankAccountNo;
+            var accountName = pmr?.PayinBankAccountName;
+            var promptPayId = pmr?.PayinPromptPayId;
+
+            if (pmr!.IsPayInBankAccountOverride)
+            {
+                bankCode = pmr?.PayinBankCodeOverride;
+                accountNo = pmr?.PayinBankAccountNoOverride;
+                accountName = pmr?.PayinBankAccountNameOverride;
+                promptPayId = pmr?.PayinPromptPayIdOverride;
+            }
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -194,7 +208,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
-                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
                     new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
@@ -207,9 +221,12 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYOUT_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYOUT_FEE", Value = pmt?.PayoutFeeDecimal.ToString() },
                     new NameValue { Name = "PAYOUT_FEE_PCT", Value = ((decimal?) pmt?.PayOutFeePct).ToString() },
-                    new NameValue { Name = "PAYOUT_BANK_CODE", Value = pmr?.PayoutBankCode },
-                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = pmr?.PayoutBankAccountNo },
-                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = pmr?.PayoutBankAccountName },
+
+                    new NameValue { Name = "PAYOUT_BANK_CODE", Value = bankCode },
+                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = accountNo },
+                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = accountName },
+                    new NameValue { Name = "PAYOUT_PROMPTPAY_ID", Value = promptPayId },
+
                     new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = pmt?.TxIsPeerToPeer.ToString() },
                 ]
             };
