@@ -997,6 +997,9 @@ namespace Its.Onix.Api.Services
                 PayInBankAccountName = payoutRequest.PayinBankAccountName,
                 TxIsPeerToPeer = true,
 
+                RefId1 = payoutRequest.RefId1,
+                RefId2 = payoutRequest.RefId2,
+                RefId3 = payoutRequest.RefId3,
 
                 Status = "Approved",
                 Direction = "PayOut",

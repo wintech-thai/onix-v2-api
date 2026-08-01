@@ -207,9 +207,9 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYOUT_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYOUT_FEE", Value = pmt?.PayoutFeeDecimal.ToString() },
                     new NameValue { Name = "PAYOUT_FEE_PCT", Value = ((decimal?) pmt?.PayOutFeePct).ToString() },
-                    new NameValue { Name = "PAYOUT_BANK_CODE", Value = pmr?.PayinBankCode },
-                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = pmr?.PayinBankAccountNo },
-                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = pmr?.PayinBankAccountName },
+                    new NameValue { Name = "PAYOUT_BANK_CODE", Value = pmr?.PayoutBankCode },
+                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = pmr?.PayoutBankAccountNo },
+                    new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = pmr?.PayoutBankAccountName },
                     new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = pmt?.TxIsPeerToPeer.ToString() },
                 ]
             };
