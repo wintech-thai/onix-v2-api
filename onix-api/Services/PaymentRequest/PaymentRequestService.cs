@@ -1426,7 +1426,7 @@ namespace Its.Onix.Api.Services
                 var amt = (decimal?) pr.RequestedAmount!;
                 amt ??= 0;
 
-                if (leftAmount <= amt)
+                if (leftAmount < amt)
                 {
                     lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
                     continue;
@@ -1445,7 +1445,7 @@ namespace Its.Onix.Api.Services
                 return (ba, payoutRequest, lines);
             }
 
-            lines.Add($"Step3 - No bank account match!!!");
+            lines.Add($"Step3 - No PayOut request available!!!");
 
             //ไม่มี bank account ที่ match
             return (null, null, lines);

@@ -886,6 +886,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (payoutRequest.Status != "Pending")
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_PENDING";
+                r.Description = $"P2P Pay-Out for this Payment Request ID [{payinId}] is not in Pending status";
+
+                return r;
+            }
+
             var requestAmt = (decimal?) payin.GeneratedAmount;
             requestAmt ??= 0;
 
