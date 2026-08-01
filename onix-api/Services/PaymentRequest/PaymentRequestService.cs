@@ -10,19 +10,21 @@ namespace Its.Onix.Api.Services
     public class PaymentRequestService : BaseService, IPaymentRequestService
     {
         //ธนาคารที่ support การสร้าง QR payment ตอนนี้ - ถ้าจะเพิ่มธนาคารอื่นในอนาคต แค่เพิ่มเข้า array นี้ (ไม่ต้องแก้ logic เดิม)
-        private static readonly string[] allowedQrProvider = { "PP", "SCB" };
+        private static readonly string[] allowedQrProvider = ["PP", "SCB"];
 
         private readonly IPaymentRequestRepository? repository = null;
         private readonly IPaymentTransactionRepository? _paymentTransactionRepo = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
         private readonly IRedisHelper _redis;
+        private readonly IJobService? _jobService = null;
 
         public PaymentRequestService(
             IPaymentRequestRepository repo, 
             IPaymentTransactionRepository paymentTxRepo, 
             IBankAccountRepository bankAcctRepo,
             IRedisHelper redis,
+            IJobService jobService,
             IPointService pointService) : base()
         {
             repository = repo;
@@ -30,6 +32,7 @@ namespace Its.Onix.Api.Services
             _bankAccountRepo = bankAcctRepo;
             _pointService = pointService;
             _redis = redis;
+            _jobService = jobService;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -509,17 +512,33 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            var actualAmount = existing.RequestedAmount; //ยอดเต็มไม่มีการทำ partial pay ผ่าน P2P
+            actualAmount ??= 0;
+
+            var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P;
+            payoutAmountWithP2P ??= 0;
+
+            if (payoutAmountWithP2P > 0)
+            {
+                //มีการชำระจ่ายบางส่วนแบบ P2P เข้ามาแล้ว
+                actualAmount = payoutAmountWithP2P;
+            }
+
             var pt = new MPaymentTransaction
             {
                 Status = "Approved",
                 Direction = "PayOut",
                 Currency = "THB",
-                TxAmount = (double) existing.RequestedAmount!,
-                TxAmountDecimal = (decimal) existing.RequestedAmount!,
+                TxAmount = (double) actualAmount,
+                TxAmountDecimal = (decimal) actualAmount,
                 FromBankAccountNo = existing.PayoutBankAccountNo,
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
+
+                RefId1 = existing.RefId1,
+                RefId2 = existing.RefId2,
+                RefId3 = existing.RefId3,
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
@@ -541,10 +560,13 @@ namespace Its.Onix.Api.Services
                 merchantDeductFee = pt.PayoutFeeDecimal;
             }
 
+            //TODO : Check ว่า override มั้ย
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
             pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
             pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
+            pt.PayInPromptPayId = paymentRequest.PayinPromptPayId;
 
             pt.MerchantId = existing.MerchantId;
 
@@ -623,12 +645,23 @@ namespace Its.Onix.Api.Services
 
             //===== update point wallet ===
 
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType2 = "PaymentOut.Success";
+            var pmtSuccessJob2 = _jobService!.CreatePayOutSuccessJob(existing.OrgId!, jobType2, pt, existing!);
+            pt.JobId = pmtSuccessJob2?.Id.ToString();
 
             pt.PayInBankAccountId = dstBankAccountId; //ของ merchant
             pt.PayOutBankAccountId = srcBankAccountId; //ของ pool กลาง
 
             var mpt = await _paymentTransactionRepo!.AddPaymentTransaction(pt);
             mvPt.PaymentTransaction = mpt;
+
+
+            //ยิง PaymentOut.Success event
+            var environment2 = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream2 = $"JobSubmitted:{environment2}:{jobType2}";
+            var message2 = JsonSerializer.Serialize(pmtSuccessJob2);
+            var _3 = await _redis.PublishMessageAsync(stream2!, message2);
 
             return mvPt;
         }
@@ -921,7 +954,7 @@ namespace Its.Onix.Api.Services
 
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
-            paymentRequest.PayoutFeePct = merchant.PayinFeePct;
+            paymentRequest.PayoutFeePct = merchant.PayoutFeePct;
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
@@ -993,6 +1026,21 @@ namespace Its.Onix.Api.Services
                 Status = "OK",
                 Description = "Success",
             };
+
+            //ต้องมีการ lock ในระดับ PayoutRequest ในระดับ global เลยเพื่อกัน race condition
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            using var redPmrLock = await _redis.AcquireRedLockAsync(
+                $"lock:AddPaymentRequestPayInP2P:{environment}",  // resource
+                TimeSpan.FromSeconds(5)   // lock expiry
+            );
+
+            if (!redPmrLock.IsAcquired)
+            {
+                r.Status = "ERROR_UNABLE_TO_ACQUIRE_LOCK";
+                r.Description = $"Unable to acquire lock 'lock:AddPaymentRequestPayInP2P:{environment}'";
+                return r;
+            }
+
 
             if (string.IsNullOrEmpty(paymentRequest.RefId1))
             {
@@ -1096,7 +1144,7 @@ namespace Its.Onix.Api.Services
 
             //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
             //บัญชีตรงของ Payout Request ต้องเป็น PromptPay ด้วย
-            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest, merchant);
+            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest);
             if (bnkAcct == null)
             {
                 r.Status = "ERROR_NO_P2P_ACCOUNT_MATCH";
@@ -1112,7 +1160,7 @@ namespace Its.Onix.Api.Services
                 return pmResponse;
             }
 
-            var existingPayout = await ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
+            var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
             if (existingPayout == null)
             {
                 r.Status = "ERROR_NO_PAYOUT_REQUEST_FOUND";
@@ -1145,58 +1193,6 @@ namespace Its.Onix.Api.Services
 
             return pmResponse;
         }
-
-        private async Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action)
-        {
-            var payoutRequestId = payOut.Id.ToString()!;
-
-            //TODO : ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
-
-            var txHistory = payOut.PartialPayoutHistory;
-            if (string.IsNullOrEmpty(txHistory))
-            {
-                txHistory = "[]";
-            }
-
-            var txs = JsonSerializer.Deserialize<List<MPartialPayout>>(txHistory);
-            txs ??= [];
-
-            var amt = (decimal?) payIn.RequestedAmount;
-            amt ??= 0;
-
-            if (action == "Add")
-            {
-                var ppo = new MPartialPayout()
-                {
-                    PayinRequestId = payIn.Id.ToString(),
-                    PartialAmount = amt,
-                    Status = "Pending",
-                    TxDate = payIn.CreatedDate,
-                };
-
-                txs.Add(ppo);
-            }
-            else if (action == "Cancel")
-            {
-                var payinRequestId = payIn.Id.ToString();
-                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
-                if (partialPayout != null)
-                {
-                    partialPayout.Status = "Canceled";
-                }
-            }
-//txs.ForEach(s =>
-//{
-//    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
-//});
-            payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
-            payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
-            payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
-
-            var result = await repository!.UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
-            return result;
-        }
-
 
         public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
         {
@@ -1376,10 +1372,8 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr, MMerchant merchant)
+        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr)
         {
-            //TODO : ต้องมีการ lock ในระดับ PayoutRequest ในระดับ global เลยเพื่อกัน race condition
-
             //var merchantId = pr.MerchantId!;
             List<string> lines = [];
 
@@ -1851,7 +1845,7 @@ namespace Its.Onix.Api.Services
                     return r;
                 }
 
-                var existingPayout = await ProcessPartialPayoutHistory(payoutRequest!, pmt1, "Cancel");
+                var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, pmt1, "Cancel");
                 if (existingPayout == null)
                 {
                     r.Status = "ERROR_P2P_PAYMENT_REQUEST_UPDATE";

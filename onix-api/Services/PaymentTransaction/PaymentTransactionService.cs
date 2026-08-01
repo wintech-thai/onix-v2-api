@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPaymentTransactionRepository? repository = null;
         private readonly IPaymentRequestRepository? _paymentRequestRepo = null;
+        //private readonly IPaymentRequestService? _paymentRequestSvc = null;
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
         private readonly IJobService? _jobService = null;
@@ -22,6 +23,7 @@ namespace Its.Onix.Api.Services
         public PaymentTransactionService(
             IPaymentTransactionRepository repo, 
             IPaymentRequestRepository paymentRequestRepo,
+            //IPaymentRequestService paymentRequestService,
             IPointService pointService,
             IBankAccountRepository bankAccountRepo,
             IJobService jobService,
@@ -37,6 +39,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
             _hub = hub;
             _merchantService = merchantService;
+            //_paymentRequestSvc = paymentRequestService;
         }
 
         public async Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId)
@@ -214,7 +217,10 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId)
+        public async Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(
+            string orgId, 
+            string paymentTransactionId, 
+            string merchantId)
         {
             repository!.SetCustomOrgId(orgId);
             _bankAccountRepo!.SetCustomOrgId(orgId);
@@ -290,6 +296,7 @@ namespace Its.Onix.Api.Services
             pmt.PayInFeePct = mc.PayinFeePct;
             pmt.PayInFee = (double) Math.Round((decimal) (pmt.TxAmount! * mc.PayinFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
             pmt.PayInTotalAmount = pmt.TxAmount - pmt.PayInFee;
+            pmt.TxIsPeerToPeer = false;
 
             if (mc.DiscardCent)
             {
@@ -317,11 +324,6 @@ namespace Its.Onix.Api.Services
             pmt.PayInBankAccountId = oldBankAccountId;
 
 
-            //==== Update Payment Tx
-            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
-            paymentTx.PaymentTransaction = mpt;
-
-
             //=== Update merchant & bank account wallet
             var mcWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
             if (mcWallet!.Status == "OK")
@@ -335,7 +337,7 @@ namespace Its.Onix.Api.Services
                     //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
                     TxAmountDecimal = pmt.PayInTotalAmountDecimal,
 
-                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                    Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(merchantOrgId, pointTx);
@@ -353,7 +355,7 @@ namespace Its.Onix.Api.Services
                     //TxAmountDecimal ตรงนี้จะเป็นค่าที่ยังไม่หัก fee เพื่อนำไปเป็นยอดที่เข้า wallet
                     TxAmountDecimal = pmt.TxAmountDecimal,
 
-                    Tags = $"PaymentTxId=[{pmt.Id.ToString()}]",
+                    Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(orgId, pointTx);
@@ -376,8 +378,11 @@ namespace Its.Onix.Api.Services
             };
 
             var jobType = "Payment.Success";
-            var job = CreatePaymentSuccessJob(mc.OrgId!, jobType, pmt, pmr!);
+            var job = CreatePaymentSuccessJob(merchantOrgId, jobType, pmt, pmr!);
             pmt.JobId = job?.Id.ToString();
+
+            var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
+            paymentTx.PaymentTransaction = mpt;
 
             var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             var stream = $"JobSubmitted:{environment}:{jobType}";
@@ -390,7 +395,8 @@ namespace Its.Onix.Api.Services
         public async Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(
             string orgId, 
             string bankAccountId, 
-            MPaymentNotiLine paymentNotiLine)
+            MPaymentNotiLine paymentNotiLine,
+            int previousHour)
         {
             //ณ จุดนี้เรายังไม่รู้ว่า transaction เป็นของ merchant ไหน
             _paymentRequestRepo!.SetCustomOrgId("global");
@@ -418,6 +424,12 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            DateTime? fromDate = null;
+            if (previousHour > 0)
+            {
+                fromDate = DateTime.UtcNow.AddHours(-1 * previousHour);
+            }
+
             var prParam = new VMPaymentRequest()
             {
                 //ไม่ต้องระบุ merchantId เพราะว่าเรายังไม่รู้ว่า transaction นี้เป็นของ merchant ไหน
@@ -425,9 +437,10 @@ namespace Its.Onix.Api.Services
                 BankAccountId = bankAccountId,
                 Status = "Pending",
                 RefId1 = paymentNotiLine.RefId1,
+                PayinRequestId = paymentNotiLine.PayinRequestId,
                 
                 GeneratedAmountStr = amtStr, //เอาเลขเศษสตางค์ไป match ด้วย
-                FromDate = DateTime.UtcNow.AddHours(-1),
+                FromDate = fromDate, //ถ้ามาจากการ approve แบบ manual เราจะไม่ระบุช่วงเวลาย้อนหลัง
             };
 
             paymentNotiLine.PaymentRequestQuery = prParam;
@@ -492,6 +505,11 @@ namespace Its.Onix.Api.Services
                 pt.PayInFee = (double) Math.Round((decimal) (pt.TxAmount * pmr.PayInFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
                 pt.PayInTotalAmount = pt.TxAmount - pt.PayInFee;
 
+                pt.RefId1 = pmr.RefId1;
+                pt.RefId2 = pmr.RefId2; 
+                pt.RefId3 = pmr.RefId3;
+                pt.TxIsPeerToPeer = pmr.PayinIsPeerToPeer;
+
                 if (pmr.DiscardCent)
                 {
                     //ที่ merchant มีการ config ไว้ว่าให้หักเศษสตางค์
@@ -512,6 +530,7 @@ namespace Its.Onix.Api.Services
                 pt.PayInBankCode = pmr.PayinBankCode;
                 pt.PayInBankAccountNo = pmr.PayinBankAccountNo;
                 pt.PayInBankAccountName = pmr.PayinBankAccountName;
+                pt.PayInPromptPayId = pmr.PayinPromptPayId;
                 pt.PaymentRequestId = pmr.Id.ToString();
 
                 pt.MerchantId = pmr.MerchantId;
@@ -520,6 +539,7 @@ namespace Its.Onix.Api.Services
             }
             else
             {
+                //ตรงนี้คือโอนเงินเข้ามาเฉย ๆ ไม่ผ่านการแสกน QR ที่ออกโดยระบบ
                 lines.Add($"STEP6 : Info -> No payment request found [{matchCount}], BankAccountId=[{bankAccountId}], GeneratedAmount=[{prParam.GeneratedAmountStr}]");
                 if (bankAccount == null)
                 {
@@ -533,6 +553,8 @@ namespace Its.Onix.Api.Services
                     pt.PayInBankCode = bankAccount.BankCode;
                     pt.PayInBankAccountNo = bankAccount.AccountNumber;
                     pt.PayInBankAccountName = bankAccount.AccountName;
+                    pt.PayInPromptPayId = bankAccount.PromptPayId;
+                    pt.TxIsPeerToPeer = false;
                 }
             }
 
@@ -675,6 +697,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
                     new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
@@ -686,11 +709,12 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "TX_AMOUNT", Value = pmt?.TxAmountDecimal.ToString() },
                     new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
-                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_FEE", Value = pmt?.PayInFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_FEE_PCT", Value = ((decimal?) pmt?.PayInFeePct).ToString() },
+                    new NameValue { Name = "PAYIN_DISCARD_CENT", Value = pmt?.DiscardCent.ToString() },
                     new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
                     new NameValue { Name = "PAYIN_BANK_ACCOUNT_NAME", Value = pmt?.PayInBankAccountName },
-                    new NameValue { Name = "PAYIN_FEE_PCT", Value = pmt?.PayInFeePct.ToString() },
                 ]
             };
 
@@ -809,6 +833,290 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        private async Task<MVWallet> GetWallet(MPaymentRequest payment)
+        {
+            var orgId = payment.OrgId!;
+
+            var result = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var mcWallet = await _pointService!.GetWalletByMerchantId(orgId, payment.MerchantId!);
+            if (mcWallet!.Status != "OK")
+            {
+                result.Status = mcWallet.Status;
+                result.Description = $"Failed to get merchant wallet, MerchantId=[{payment.MerchantId}]";
+                return result;
+            }
+
+            return mcWallet;
+        }
+
+        private async Task<MVPaymentTransaction> ProcessPeer2PeerPaymentApprove(string orgId, MPaymentRequest payin)
+        {
+            _paymentRequestRepo!.SetCustomOrgId(orgId);
+            repository!.SetCustomOrgId(orgId);
+        
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var payinId = payin.Id.ToString();
+            var payoutId = payin.PayinPeer2PeerPayoutId;
+
+            if (payoutId == null)
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_ID_NOT_FOUND";
+                r.Description = $"No P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            var payoutRequest = await _paymentRequestRepo!.GetPaymentRequestById(payoutId);
+            if (payoutRequest == null)
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_FOUND";
+                r.Description = $"No P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            var requestAmt = (decimal?) payin.GeneratedAmount;
+            requestAmt ??= 0;
+
+            var payinFeePct = (decimal?) payin.PayInFeePct;
+            payinFeePct ??= 0;
+            var payinFee = requestAmt * payinFeePct/100;
+
+            var payoutFeePct = (decimal?) payoutRequest.PayoutFeePct;
+            payoutFeePct ??= 0;
+            var payoutFee = requestAmt * payoutFeePct/100;;
+
+            var payinWallet = await GetWallet(payin);
+            if (payinWallet.Status != "OK")
+            {
+                r.Status = payinWallet.Status;
+                r.Description = payinWallet.Description;
+
+                return r;
+            }
+
+            var payoutWallet = await GetWallet(payoutRequest);
+            if (payoutWallet.Status != "OK")
+            {
+                r.Status = payoutWallet.Status;
+                r.Description = payoutWallet.Description;
+                
+                return r;
+            }
+
+            var payinMcTopupAmt = requestAmt - payinFee;
+            var payoutMcDeductAmt = requestAmt + payoutFee;
+
+            var payoutMcCurrentBalance = payoutWallet.Wallet?.PointBalanceDecimal;
+            payoutMcCurrentBalance ??= 0;
+
+            //Check ยอด wallet balance ของ merchant payout ดูว่าสามารถตัดยอดได้หรือไม่
+            if (payoutMcCurrentBalance < payoutMcDeductAmt)
+            {
+                r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                r.Description = $"Merchant wallet has insufficient balance, MerchantId=[{payoutRequest.MerchantId}], CurrentBalance=[{payoutMcCurrentBalance}], RequiredAmount=[{payoutMcDeductAmt}]";
+                return r;
+            }
+
+
+            //สร้าง payment tx ทั้ง payin และ payout (เพื่อเอาไว้ทำพวก revenue report)
+            var payInPmt = new MPaymentTransaction()
+            {
+                Status = "Identified",
+                Direction = "PayIn",
+                Currency = "THB",
+                TxAmount = (double) requestAmt,
+                TxAmountDecimal = requestAmt,
+                FromBankAccountNo = "",
+                FromBankCode = "",
+                ProcessingMessages = "[]",
+                RawInput = "{}",
+                PayInFeePct = (double) payinFeePct,
+                PayInFee = (double) payinFee,
+                PayInFeeDecimal = (decimal) payinFee,
+                PayInTotalAmount = (double) requestAmt - (double) payinFee,
+                PayInTotalAmountDecimal = requestAmt - payinFee,
+                PayInBankCode = payin.PayinBankCode,
+                PayInBankAccountNo = payin.PayinBankAccountNo,
+                PayInBankAccountName = payin.PayinBankAccountName,
+                PayInPromptPayId = payin.PayinPromptPayId,
+                PaymentRequestId = payinId,
+                MerchantId = payin.MerchantId,
+
+                RefId1 = payin.RefId1,
+                RefId2 = payin.RefId2,
+                RefId3 = payin.RefId3,
+                TxIsPeerToPeer = payin.PayinIsPeerToPeer,
+            };
+
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType = "Payment.Success";
+            var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
+            payInPmt.JobId = pmtSuccessJob?.Id.ToString();
+
+            var _0 = await repository!.AddPaymentTransaction(payInPmt);
+
+            //ยิง Payment.Success event
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(pmtSuccessJob);
+            var _1 = await _redis.PublishMessageAsync(stream!, message);
+
+
+
+            //=============== สร้าง payment tx payout (เพื่อเอาไว้ทำพวก revenue report)
+            //TODO : ใช้ฟีลด์ override
+            var payOutPmt = new MPaymentTransaction()
+            {
+                TxAmount = (double) requestAmt,
+                TxAmountDecimal = requestAmt,
+                FromBankAccountNo = "UNKNOWN",
+                FromBankCode = "UNKNOWN",
+                PaymentRequestId = payoutId,
+
+                MerchantId = payoutRequest.MerchantId,
+
+                PayOutFeePct = (double) payoutFeePct,
+                PayoutFeeDecimal = payoutFee,
+                PayOutFee = (double) payoutFee,
+                PayOutTotalAmount = (double) requestAmt,
+                PayOutTotalAmountDecimal = requestAmt,
+                PayOutBankAccountId = "UNKNOWN",
+                PayOutBankCode = payoutRequest.PayoutBankCode,
+                PayOutPromptPayId = payoutRequest.PayoutPromptPayId,
+
+                PayInBankAccountNo = payoutRequest.PayinBankAccountNo,
+                PayInBankAccountName = payoutRequest.PayinBankAccountName,
+                PayInPromptPayId = payoutRequest.PayinPromptPayId,
+                
+                TxIsPeerToPeer = true,
+
+                RefId1 = payoutRequest.RefId1,
+                RefId2 = payoutRequest.RefId2,
+                RefId3 = payoutRequest.RefId3,
+
+                Status = "Approved",
+                Direction = "PayOut",
+                Currency = "THB",
+            };
+
+            //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
+            var jobType2 = "PaymentOut.Success";
+            var pmtSuccessJob2 = _jobService!.CreatePayOutSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
+            payOutPmt.JobId = pmtSuccessJob2?.Id.ToString();
+
+            repository.SetCustomOrgId(payoutRequest.OrgId!); //ต้อง set ตรงนี้เพราะว่า document อยู่คนละ org กันได้กับ payin
+            var _2 = await repository!.AddPaymentTransaction(payOutPmt);
+            repository!.SetCustomOrgId(orgId);
+
+            //ยิง PaymentOut.Success event
+            var environment2 = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream2 = $"JobSubmitted:{environment2}:{jobType2}";
+            var message2 = JsonSerializer.Serialize(pmtSuccessJob2);
+            var _3 = await _redis.PublishMessageAsync(stream2!, message2);
+            //====================
+
+
+            //==== topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
+            var pointTx0 = new MPointTx()
+            {
+                WalletId = payoutWallet.Wallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) payinMcTopupAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                TxAmountDecimal = payinMcTopupAmt,
+
+                Description = $"{requestAmt} - {payinFee} (fee={payinFeePct}%)",
+                Tags = $"PaymentTxId=[{payInPmt.Id}]",
+            };
+            await _pointService!.AddPoint(payin.OrgId!, pointTx0);
+
+            //==== Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
+            var pointTx1 = new MPointTx()
+            {
+                WalletId = payoutWallet.Wallet!.Id.ToString(),
+
+                TxAmount =  (long) Math.Floor((decimal) payoutMcDeductAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                TxAmountDecimal = payoutMcDeductAmt,
+
+                Description = $"{requestAmt} + {payoutFee} (fee={payoutFeePct}%)",
+                Tags = $"PayOutRequestId=[{payoutRequest.Id}]",
+            };
+            await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTx1);
+
+
+            var existingPayout = await _paymentRequestRepo!.ProcessPartialPayoutHistory(payoutRequest!, payin, "Approve");
+            if (existingPayout == null)
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_UPDATE";
+                r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            //สร้าง QR ใหม่
+            IQrGenerator qrGenerator;
+            QrGeneratorResult? qrResult = null;
+            var destBa = GetBankAccount(payoutRequest);
+//Console.WriteLine($"DEBUG_A - [{destBa.PromptPayId}]");
+            if (!string.IsNullOrEmpty(destBa.PromptPayId))
+            {
+//Console.WriteLine($"DEBUG_B - [{destBa.PromptPayId}]");
+                var tmpPr = new MPaymentRequest()
+                {
+                    RefId = payoutRequest.RefId1,
+                    GeneratedAmount = (double) payoutRequest.PayOutTotalAmountDecimalP2P!,
+                };
+
+                qrGenerator = new QrGeneratorPromptPay(tmpPr, destBa);
+                qrResult = qrGenerator.Generate();
+                payoutRequest.QrCodeP2P = qrResult?.QrPayload;
+
+                var existingPayout2 = await _paymentRequestRepo!.UpdateQrCodeByIdForP2P(payoutId, payoutRequest!);
+                if (existingPayout2 == null)
+                {
+                    r.Status = "ERROR_P2P_QR_PAYMENT_REQUEST_UPDATE";
+                    r.Description = $"Unable to update P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                    return r;
+                }
+//Console.WriteLine($"DEBUG_C - [{payoutRequest.QrCodeP2P}]");
+            }
+//Console.WriteLine($"DEBUG_D - [{payoutRequest.QrCodeP2P}]");
+
+            return r;
+        }
+
+        private static MBankAccount GetBankAccount(MPaymentRequest payout)
+        {
+            var ba = new MBankAccount()
+            {
+                BankCode = payout.PayinBankCode,
+                AccountName = payout.PayinBankAccountName,
+                AccountNumber = payout.PayinBankAccountNo,
+                PromptPayId = payout.PayinPromptPayId,
+            };
+
+            if (payout.IsPayInBankAccountOverride)
+            {
+                ba.BankCode = payout.PayinBankCodeOverride;
+                ba.AccountName = payout.PayinBankAccountNameOverride;
+                ba.AccountNumber = payout.PayinBankAccountNoOverride;
+                ba.PromptPayId = payout.PayinPromptPayIdOverride;
+            }
+
+            return ba;
+        }
+
         public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId)
         {
             repository!.SetCustomOrgId(orgId);
@@ -837,30 +1145,45 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var bankAccountId = pmr.PayinBankAccountId!;
-            if (bankAccountId == null)
+            MVPaymentTransaction pmtVm;
+            if (pmr.PayinIsPeerToPeer == true)
             {
-                r.Status = "ERROR_BANK_ACCOUNT_UNKNOWN";
-                r.Description = $"Missing bank account ID [{bankAccountId}]";
+                //เป็น P2P
+                //user ทำการ approve "Pending" payin request ที่เป็น P2P
+                pmtVm = await ProcessPeer2PeerPaymentApprove(pmr.OrgId!, pmr);
+            }
+            else
+            {
+                //user ทำการ approve "Pending" payin request ที่เป็นแบบ native ธรรมดา
 
-                return r;
+                //เป็นแบบเดิมที่ต้องมี payment confirm ยิงเข้ามา
+                var bankAccountId = pmr.PayinBankAccountId!;
+                if (bankAccountId == null)
+                {
+                    r.Status = "ERROR_BANK_ACCOUNT_UNKNOWN";
+                    r.Description = $"Missing bank account ID [{bankAccountId}]";
+
+                    return r;
+                }
+
+                var paymentNotiLine = new MPaymentNotiLine()
+                {
+                    PaymentAmount = (decimal) pmr.GeneratedAmount!,
+                    MerchantId = pmr.MerchantId,
+                    RefId1 = pmr.RefId1,
+                    PayinRequestId = pmr.Id.ToString(), //ส่งไปให้เพราะเราจะให้ match กับ pay-in ตัวนี้เลย
+                };
+
+                pmtVm = await ProcessLinePaymentTxNotification(pmr.OrgId!, bankAccountId, paymentNotiLine, 0); //ไม่กำหนดช่วงเวลาย้อนหลัง
             }
 
-            var paymentNotiLine = new MPaymentNotiLine()
-            {
-                PaymentAmount = (decimal) pmr.GeneratedAmount!,
-                MerchantId = pmr.MerchantId,
-                RefId1 = pmr.RefId1,
-            };
-
-            var pmtVm = await ProcessLinePaymentTxNotification(orgId, bankAccountId, paymentNotiLine);
             if (pmtVm.Status != "OK")
             {
                 return pmtVm;
             }
 
             //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
-            var _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
+            _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
 
             return pmtVm;
         }

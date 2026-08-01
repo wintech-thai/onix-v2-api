@@ -2,14 +2,18 @@ using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using System.Data.Entity;
+using System.Text.Json;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Database.Repositories
 {
     public class PaymentRequestRepository : BaseRepository, IPaymentRequestRepository
     {
-        public PaymentRequestRepository(IDataContext ctx)
+        private readonly IRedisHelper _redis;
+        public PaymentRequestRepository(IDataContext ctx, IRedisHelper redis)
         {
             context = ctx;
+            _redis = redis;
         }
 
         public async Task<bool> IsRefIdExist(string refId)
@@ -83,9 +87,11 @@ namespace Its.Onix.Api.Database.Repositories
                 TotalPayOutPendingPaidAmountDecimal = x.pr.TotalPayOutPendingPaidAmountDecimal,
                 TotalPayOutPaidAmountDecimal = x.pr.TotalPayOutPaidAmountDecimal,
                 PartialPayoutHistory = x.pr.PartialPayoutHistory,
+                PayOutTotalAmountDecimalP2P = x.pr.PayOutTotalAmountDecimalP2P,
 
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
                 QrCode = x.pr.QrCode,
+                QrCodeP2P = x.pr.QrCodeP2P,
                 RejectReason = x.pr.RejectReason,
 
                 IsPayInBankAccountOverride = x.pr.IsPayInBankAccountOverride,
@@ -157,6 +163,15 @@ namespace Its.Onix.Api.Database.Repositories
                 merchantIdPd = merchantIdPd.Or(p => p.MerchantId!.Equals(param.MerchantId));
 
                 pd = pd.And(merchantIdPd);
+            }
+
+            if ((param.PayinRequestId != null) && (param.PayinRequestId != ""))
+            {
+                var payinRequestId = Guid.Parse(param.PayinRequestId);
+                var payinRequestIdPd = PredicateBuilder.New<MPaymentRequest>();
+                payinRequestIdPd = payinRequestIdPd.Or(p => p.Id!.Equals(payinRequestId));
+
+                pd = pd.And(payinRequestIdPd);
             }
 
             // FromDate
@@ -432,6 +447,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PartialPayoutHistory = paymentRequest.PartialPayoutHistory;
                 existing.TotalPayOutPaidAmountDecimal = paymentRequest.TotalPayOutPaidAmountDecimal;
                 existing.TotalPayOutPendingPaidAmountDecimal = paymentRequest.TotalPayOutPendingPaidAmountDecimal;
+                existing.PayOutTotalAmountDecimalP2P = paymentRequest.PayOutTotalAmountDecimalP2P;
             }
 
             orgId = oldOrgId;
@@ -536,6 +552,92 @@ namespace Its.Onix.Api.Database.Repositories
 
             await context.SaveChangesAsync();
             return existing;
+        }
+
+        public async Task<MPaymentRequest?> UpdateQrCodeByIdForP2P(string paymentRequestId, MPaymentRequest payOut)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
+                existing.QrCodeP2P = payOut.QrCodeP2P;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action)
+        {
+            //เอามาไว้ตรงนี้เพราะมีการเรียกใช้ร่วมกันใน Payment Request service และ Payment Transaction service
+            var payoutRequestId = payOut.Id.ToString()!;
+
+            //ให้มีการ lock ในระดับ payoutRequestId ด้วยเพื่อกัน race condition
+            using var redPmrLock = await _redis.AcquireRedLockAsync(
+                $"lock:ProcessPartialPayoutHistory:{payoutRequestId}",  // resource
+                TimeSpan.FromSeconds(5)   // lock expiry
+            );
+
+            if (!redPmrLock.IsAcquired)
+            {
+                Console.WriteLine($"Unable to acquire lock 'lock:ProcessPartialPayoutHistory:{payoutRequestId}'");
+                return null;
+            }
+
+            var txHistory = payOut.PartialPayoutHistory;
+            if (string.IsNullOrEmpty(txHistory))
+            {
+                txHistory = "[]";
+            }
+
+            var txs = JsonSerializer.Deserialize<List<MPartialPayout>>(txHistory);
+            txs ??= [];
+
+            var amt = (decimal?) payIn.RequestedAmount;
+            amt ??= 0;
+
+            if (action == "Add")
+            {
+                var ppo = new MPartialPayout()
+                {
+                    PayinRequestId = payIn.Id.ToString(),
+                    PartialAmount = amt,
+                    Status = "Pending",
+                    TxDate = payIn.CreatedDate,
+                };
+
+                txs.Add(ppo);
+            }
+            else if (action == "Cancel")
+            {
+                var payinRequestId = payIn.Id.ToString();
+                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
+                if (partialPayout != null)
+                {
+                    partialPayout.Status = "Canceled";
+                }
+            }
+            else if (action == "Approve")
+            {
+                var payinRequestId = payIn.Id.ToString();
+                var partialPayout = txs.FirstOrDefault(x => x.PayinRequestId == payinRequestId);
+                if (partialPayout != null)
+                {
+                    partialPayout.Status = "Approved";
+                }
+            }
+//txs.ForEach(s =>
+//{
+//    Console.WriteLine($"DEBUG5 - [{action}] [{s.PayinRequestId}] [{s.Status}] [{s.PartialAmount}]");
+//});
+            payOut.PartialPayoutHistory = JsonSerializer.Serialize(txs);
+            payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
+            payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
+            payOut.PayOutTotalAmountDecimalP2P = payOut.PayOutTotalAmountDecimal - payOut.TotalPayOutPaidAmountDecimal;
+//Console.WriteLine($"DEBUG_X - [{payOut.PayOutTotalAmountDecimalP2P}] [{payOut.PayOutTotalAmountDecimal}] [{payOut.TotalPayOutPaidAmountDecimal}]");
+            var result = await UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
+            return result;
         }
     }
 }

@@ -29,7 +29,7 @@ param =  {
   Currency: "THB",
   BankAccountNo: "",
   BankAccountName: "",
-  RequestedAmount: 325,
+  RequestedAmount: 35,
   QrProvider: "PP",
   Tags: "testing",
   #SelectedPayInBankAccountId:

@@ -26,5 +26,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> DeletePayOutRequestById(string paymentRequestId);
         public Task<MPaymentRequest?> RejectPaymentRequestById(string paymentRequestId, MPaymentRequest paymentRequest);
         public Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId);
+        public Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action);
+        public Task<MPaymentRequest?> UpdateQrCodeByIdForP2P(string paymentRequestId, MPaymentRequest payOut);
     }
 }

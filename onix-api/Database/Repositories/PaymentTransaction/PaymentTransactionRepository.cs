@@ -54,6 +54,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayInBankCode = x.pt.PayInBankCode,
                 PayInBankAccountNo = x.pt.PayInBankAccountNo,
                 PayInBankAccountName = x.pt.PayInBankAccountName,
+                PayInPromptPayId = x.pt.PayInPromptPayId,
 
                 PayOutFeePct = x.pt.PayOutFeePct,
                 PayOutFee = x.pt.PayOutFee,
@@ -64,6 +65,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayOutBankAccountId = x.pt.PayOutBankAccountId,
                 PayoutFeeDecimal = x.pt.PayoutFeeDecimal,
                 PayOutTotalAmountDecimal = x.pt.PayOutTotalAmountDecimal,
+                PayOutPromptPayId = x.pt.PayOutPromptPayId,
 
                 FromBankCode = x.pt.FromBankCode,
                 FromBankAccountNo = x.pt.FromBankAccountNo,
@@ -71,6 +73,11 @@ namespace Its.Onix.Api.Database.Repositories
                 
                 ProcessingMessages = x.pt.ProcessingMessages,
                 RawInput = x.pt.RawInput,
+
+                RefId1 = x.pt.RefId1,
+                RefId2 = x.pt.RefId2,
+                RefId3 = x.pt.RefId3,
+                TxIsPeerToPeer = x.pt.TxIsPeerToPeer,
 
                 CreatedDate = x.pt.CreatedDate,
                 MerchantName = x.merchant.Name,
@@ -248,6 +255,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayInTotalAmountDecimal = paymentTransaction.PayInTotalAmountDecimal;
                 existing.DiscardCent = paymentTransaction.DiscardCent;
                 existing.PaymentRequestId = paymentTransaction.PaymentRequestId;
+                existing.JobId = paymentTransaction.JobId;
             }
 
             await context.SaveChangesAsync();
