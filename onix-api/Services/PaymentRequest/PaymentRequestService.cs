@@ -17,12 +17,14 @@ namespace Its.Onix.Api.Services
         private readonly IBankAccountRepository? _bankAccountRepo = null;
         private readonly IPointService? _pointService = null;
         private readonly IRedisHelper _redis;
+        private readonly IJobService? _jobService = null;
 
         public PaymentRequestService(
             IPaymentRequestRepository repo, 
             IPaymentTransactionRepository paymentTxRepo, 
             IBankAccountRepository bankAcctRepo,
             IRedisHelper redis,
+            IJobService jobService,
             IPointService pointService) : base()
         {
             repository = repo;
@@ -30,6 +32,7 @@ namespace Its.Onix.Api.Services
             _bankAccountRepo = bankAcctRepo;
             _pointService = pointService;
             _redis = redis;
+            _jobService = jobService;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)

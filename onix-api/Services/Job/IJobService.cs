@@ -12,5 +12,6 @@ namespace Its.Onix.Api.Services
         public IEnumerable<MJob> GetJobs(string orgId, VMJob param);
         public int GetJobCount(string orgId, VMJob param);
         public MVJob? DeleteJobById(string orgId, string jobId);
+        public MJob CreatePayOutSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr);
     }
 }

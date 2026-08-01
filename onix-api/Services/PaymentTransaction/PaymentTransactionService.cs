@@ -993,8 +993,10 @@ namespace Its.Onix.Api.Services
 
                 PayOutBankAccountId = "UNKNOWN",
                 PayOutBankCode = "UNKNOWN",
-                PayInBankAccountNo = payoutRequest.PayinBankAccountName,
+                PayInBankAccountNo = payoutRequest.PayinBankAccountNo,
                 PayInBankAccountName = payoutRequest.PayinBankAccountName,
+                TxIsPeerToPeer = true,
+
 
                 Status = "Approved",
                 Direction = "PayOut",
@@ -1003,7 +1005,7 @@ namespace Its.Onix.Api.Services
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType2 = "PaymentOut.Success";
-            var pmtSuccessJob2 = CreatePaymentSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
+            var pmtSuccessJob2 = _jobService!.CreatePayOutSuccessJob(payoutRequest.OrgId!, jobType2, payOutPmt, payoutRequest!);
             payOutPmt.JobId = pmtSuccessJob2?.Id.ToString();
 
             repository.SetCustomOrgId(payoutRequest.OrgId!); //ต้อง set ตรงนี้เพราะว่า document อยู่คนละ org กันได้กับ payin
