@@ -695,6 +695,7 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayIn" },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
                     new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
