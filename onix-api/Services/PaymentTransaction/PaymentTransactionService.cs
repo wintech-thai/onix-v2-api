@@ -1041,7 +1041,7 @@ namespace Its.Onix.Api.Services
             //==== topup ยอดเงิน (include payin fee) ไปยัง merchant ที่เอาเงินเข้า
             var pointTx0 = new MPointTx()
             {
-                WalletId = payoutWallet.Wallet!.Id.ToString(),
+                WalletId = payinWallet.Wallet!.Id.ToString(),
 
                 TxAmount =  (long) Math.Floor((decimal) payinMcTopupAmt), //เอาส่วนจำนวนเต็มมาเท่านั้น
                 TxAmountDecimal = payinMcTopupAmt,
