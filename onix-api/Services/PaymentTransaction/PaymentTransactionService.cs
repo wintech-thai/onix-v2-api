@@ -877,7 +877,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            _paymentRequestRepo!.SetCustomOrgId("global"); //ส่งเป็น global เพราะว่าให้ดึง payout request ที่อยู่ต่าง merchant ออกมาได้ด้วย
             var payoutRequest = await _paymentRequestRepo!.GetPaymentRequestById(payoutId);
+            _paymentRequestRepo!.SetCustomOrgId(orgId); //เปลี่ยนกลับเป็น orgId ของ merchant เดิม
             if (payoutRequest == null)
             {
                 r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_FOUND";
