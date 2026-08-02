@@ -1094,7 +1094,9 @@ namespace Its.Onix.Api.Services
                 qrResult = qrGenerator.Generate();
                 payoutRequest.QrCodeP2P = qrResult?.QrPayload;
 
+                _paymentRequestRepo!.SetCustomOrgId("global"); //ส่งเป็น global เพราะว่าให้ดึง payout request ที่อยู่ต่าง merchant ออกมาได้ด้วย
                 var existingPayout2 = await _paymentRequestRepo!.UpdateQrCodeByIdForP2P(payoutId, payoutRequest!);
+                _paymentRequestRepo!.SetCustomOrgId(orgId); //เปลี่ยนกลับเป็น orgId ของ merchant เดิม
                 if (existingPayout2 == null)
                 {
                     r.Status = "ERROR_P2P_QR_PAYMENT_REQUEST_UPDATE";
