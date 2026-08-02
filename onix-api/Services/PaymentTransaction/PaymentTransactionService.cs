@@ -1049,7 +1049,14 @@ namespace Its.Onix.Api.Services
                 Description = $"{requestAmt} - {payinFee} (fee={payinFeePct}%)",
                 Tags = $"PaymentTxId=[{payInPmt.Id}]",
             };
-            await _pointService!.AddPoint(payin.OrgId!, pointTx0);
+            var addResult = await _pointService!.AddPoint(payin.OrgId!, pointTx0);
+            if (addResult.Status != "OK")
+            {
+                r.Status = addResult.Status;
+                r.Description = addResult.Description;
+
+                return r;
+            }
 
             //==== Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
             var pointTx1 = new MPointTx()
@@ -1062,8 +1069,14 @@ namespace Its.Onix.Api.Services
                 Description = $"{requestAmt} + {payoutFee} (fee={payoutFeePct}%)",
                 Tags = $"PayOutRequestId=[{payoutRequest.Id}]",
             };
-            await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTx1);
+            var deductResult = await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTx1);
+            if (deductResult.Status != "OK")
+            {
+                r.Status = deductResult.Status;
+                r.Description = deductResult.Description;
 
+                return r;
+            }
 
             _paymentRequestRepo!.SetCustomOrgId("global"); //ส่งเป็น global เพราะว่าให้ดึง payout request ที่อยู่ต่าง merchant ออกมาได้ด้วย
             var existingPayout = await _paymentRequestRepo!.ProcessPartialPayoutHistory(payoutRequest!, payin, "Approve");
