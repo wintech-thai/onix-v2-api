@@ -195,6 +195,8 @@ namespace Its.Onix.Api.Services
                 promptPayId = pmr?.PayinPromptPayIdOverride;
             }
 
+            var isP2P = pmr?.PayinIsPeerToPeer ?? false;
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -227,7 +229,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = accountName },
                     new NameValue { Name = "PAYOUT_PROMPTPAY_ID", Value = promptPayId },
 
-                    new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = pmt?.TxIsPeerToPeer.ToString() },
+                    new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = isP2P.ToString() },
                 ]
             };
 
