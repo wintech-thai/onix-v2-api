@@ -284,7 +284,7 @@ namespace Its.Onix.Api.Models
             PayoutFeePayer = "Merchant"; //หักจาก merhant
             PayinIsPeerToPeer = false;
 
-            PayOutTotalAmountDecimalP2P = 0;
+            PayOutTotalAmountDecimalP2P = null;
             TotalPayOutPaidAmountDecimal = 0;
             TotalPayOutPendingPaidAmountDecimal = 0;
         }
