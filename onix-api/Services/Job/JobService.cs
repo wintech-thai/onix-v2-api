@@ -195,6 +195,8 @@ namespace Its.Onix.Api.Services
                 promptPayId = pmr?.PayinPromptPayIdOverride;
             }
 
+            var isP2P = pmt?.TxIsPeerToPeer ?? false;
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -209,10 +211,9 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYMENT_TYPE", Value = "PayOut" },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
-                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId },
-                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
-                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
-                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
+                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId },
+                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId2 },
 
                     new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
                     new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
@@ -228,7 +229,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = accountName },
                     new NameValue { Name = "PAYOUT_PROMPTPAY_ID", Value = promptPayId },
 
-                    new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = pmt?.TxIsPeerToPeer.ToString() },
+                    new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = isP2P.ToString() },
                 ]
             };
 
