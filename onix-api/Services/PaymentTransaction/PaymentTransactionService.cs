@@ -695,6 +695,7 @@ namespace Its.Onix.Api.Services
                 Parameters =
                 [
                     new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayIn" },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
                     new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
@@ -881,6 +882,14 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_FOUND";
                 r.Description = $"No P2P Pay-Out for this Payment Request ID [{payinId}]";
+
+                return r;
+            }
+
+            if (payoutRequest.Status != "Pending")
+            {
+                r.Status = "ERROR_P2P_PAYMENT_REQUEST_NOT_PENDING";
+                r.Description = $"P2P Pay-Out for this Payment Request ID [{payinId}] is not in Pending status";
 
                 return r;
             }
