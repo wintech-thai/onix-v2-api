@@ -43,7 +43,7 @@ namespace Its.Onix.Api.Controllers
                 KeyType = "PaymentRequest",
                 KeyName = $"PayInRequest:{uuid}",
                 KeyDescription = "Auto generated key, DO NOT delete!!!",
-                Roles = [ "PAYMENT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+                Roles = [ "PAYMENT_REQUEST", "PAYOUT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
             };
 
             var apiKey = _apiKeySvc.AddApiKey(orgId, request);
@@ -62,7 +62,7 @@ namespace Its.Onix.Api.Controllers
                 KeyType = "PayOut",
                 KeyName = $"PayOutRequest:{uuid}",
                 KeyDescription = "Auto generated key, DO NOT delete!!!",
-                Roles = [ "PAYOUT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
+                Roles = [ "PAYOUT_REQUEST", "PAYMENT_REQUEST" ], //เป็น system role สำหรับ API SubmitPaymentRequest() โดยเฉพาะ
             };
 
             var apiKey = _apiKeySvc.AddApiKey(orgId, request);
