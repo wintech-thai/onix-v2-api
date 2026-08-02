@@ -195,7 +195,7 @@ namespace Its.Onix.Api.Services
                 promptPayId = pmr?.PayinPromptPayIdOverride;
             }
 
-            var isP2P = pmr?.PayinIsPeerToPeer ?? false;
+            var isP2P = pmt?.TxIsPeerToPeer ?? false;
 
             var job = new MJob()
             {
