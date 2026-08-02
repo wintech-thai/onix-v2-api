@@ -512,11 +512,15 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
+            //1. ชำระเต็มตาม payout request : ใช้ค่า TxAmount = existing.RequestedAmount
+            //2. ชำระเต็มแต่มาทาง P2P : ใช้ค่า TxAmount = existing.PayOutTotalAmountDecimalP2P (ค่าคงเหลือที่ต้องจ่าย ควรต้องเป็น 0)
+            //3. ชำระบางส่วนผ่าน P2P แล้วมาชำระเต็มผ่าน payout request : ใช้ค่า TxAmount = existing.PayOutTotalAmountDecimalP2P
+
             var actualAmount = existing.RequestedAmount; //ยอดเต็มไม่มีการทำ partial pay ผ่าน P2P
             actualAmount ??= 0;
 
-            var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P;
-            payoutAmountWithP2P ??= 0;
+            var payoutAmountWithP2P = (double?) existing.PayOutTotalAmountDecimalP2P; //ยอดคงเหลือหลังจากชำระบางส่วนผ่าน P2P แล้ว
+            payoutAmountWithP2P ??= actualAmount; //ถ้าเป็น null หมายถึงไม่มีการชำระจ่ายแบบ P2P เข้ามาเลย ให้ใช้ยอดเต็มตาม payout request
 
             if (payoutAmountWithP2P >= 0)
             {

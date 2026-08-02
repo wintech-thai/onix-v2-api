@@ -283,6 +283,10 @@ namespace Its.Onix.Api.Models
             DiscardCent = false;
             PayoutFeePayer = "Merchant"; //หักจาก merhant
             PayinIsPeerToPeer = false;
+
+            PayOutTotalAmountDecimalP2P = 0;
+            TotalPayOutPaidAmountDecimal = 0;
+            TotalPayOutPendingPaidAmountDecimal = 0;
         }
     }
 }
