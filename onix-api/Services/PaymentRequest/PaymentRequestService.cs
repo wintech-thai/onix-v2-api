@@ -466,16 +466,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
-            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
-            if (mvPtx.Status != "OK")
-            {
-                r.Status = mvPtx.Status;
-                r.Description = mvPtx.Description;
-
-                return r;
-            }
-
             var srcBankAccount = await _bankAccountRepo!.GetBankAccountById(paymentRequest.PayoutBankAccountId!);
             if (srcBankAccount == null)
             {
@@ -492,6 +482,16 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
             paymentRequest.PayoutFeePct = existing.PayoutFeePct;
+
+            paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
+            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
+            if (mvPtx.Status != "OK")
+            {
+                r.Status = mvPtx.Status;
+                r.Description = mvPtx.Description;
+
+                return r;
+            }
 
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
@@ -569,21 +569,20 @@ namespace Its.Onix.Api.Services
             pt.PayoutFeePayer = paymentRequest.PayoutFeePayer;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
-            pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
 
-            pt.PayInBankCode = paymentRequest.PayinBankCode;
-            pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
-            pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
-            pt.PayInPromptPayId = paymentRequest.PayinPromptPayId;
+            pt.PayInBankCode = existing.PayinBankCode;
+            pt.PayInBankAccountNo = existing.PayinBankAccountNo;
+            pt.PayInBankAccountName = existing.PayinBankAccountName;
+            pt.PayInPromptPayId = existing.PayinPromptPayId;
 
-            if (paymentRequest.IsPayInBankAccountOverride)
+            if (existing.IsPayInBankAccountOverride)
             {
                 //บัญชีปลายทาง override มาจาก merchant
-                pt.PayInBankCode = paymentRequest.PayinBankCodeOverride;
-                pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNoOverride;
-                pt.PayInBankAccountName = paymentRequest.PayinBankAccountNameOverride;
-                pt.PayInPromptPayId = paymentRequest.PayinPromptPayIdOverride;
+                pt.PayInBankCode = existing.PayinBankCodeOverride;
+                pt.PayInBankAccountNo = existing.PayinBankAccountNoOverride;
+                pt.PayInBankAccountName = existing.PayinBankAccountNameOverride;
+                pt.PayInPromptPayId = existing.PayinPromptPayIdOverride;
             }
 
             pt.MerchantId = existing.MerchantId;
