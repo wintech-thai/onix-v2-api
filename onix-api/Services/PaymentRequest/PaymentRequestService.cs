@@ -566,7 +566,7 @@ namespace Its.Onix.Api.Services
             }
 
             pt.TxIsPeerToPeer = false;
-            pt.PayoutFeePayer = existing.PayoutFeePayer;
+            pt.PayoutFeePayer = paymentRequest.PayoutFeePayer;
 
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutBankAccountNo = paymentRequest.PayoutBankAccountNo;

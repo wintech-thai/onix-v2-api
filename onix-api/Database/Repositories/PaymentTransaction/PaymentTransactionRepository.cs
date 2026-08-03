@@ -78,6 +78,7 @@ namespace Its.Onix.Api.Database.Repositories
                 RefId2 = x.pt.RefId2,
                 RefId3 = x.pt.RefId3,
                 TxIsPeerToPeer = x.pt.TxIsPeerToPeer,
+                PayoutFeePayer = x.pt.PayoutFeePayer,
 
                 CreatedDate = x.pt.CreatedDate,
                 MerchantName = x.merchant.Name,
