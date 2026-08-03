@@ -565,18 +565,31 @@ namespace Its.Onix.Api.Services
                 merchantDeductFee = pt.PayoutFeeDecimal;
             }
 
-            //TODO : Check ว่า override มั้ย
+            pt.TxIsPeerToPeer = false;
+            pt.PayoutFeePayer = paymentRequest.PayoutFeePayer;
+            pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
             pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
+
+            pt.PayInBankCode = paymentRequest.PayinBankCode;
             pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
             pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
             pt.PayInPromptPayId = paymentRequest.PayinPromptPayId;
 
+            if (paymentRequest.IsPayInBankAccountOverride)
+            {
+                //บัญชีปลายทาง override มาจาก merchant
+                pt.PayInBankCode = paymentRequest.PayinBankCodeOverride;
+                pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNoOverride;
+                pt.PayInBankAccountName = paymentRequest.PayinBankAccountNameOverride;
+                pt.PayInPromptPayId = paymentRequest.PayinPromptPayIdOverride;
+            }
+
             pt.MerchantId = existing.MerchantId;
 
             var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
-            var dstBankAccountId = existing.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
+            var dstBankAccountId = paymentRequest.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
 
             var mcWallet = await _pointService!.GetWalletByMerchantId(orgId, existing.MerchantId!);
             if (mcWallet!.Status != "OK")
