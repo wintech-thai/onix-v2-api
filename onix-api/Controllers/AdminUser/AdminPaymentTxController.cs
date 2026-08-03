@@ -165,6 +165,16 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Route("org/global/action/GetPayOutTransactionCount")]
+        public async Task<IActionResult> GetPayOutTransactionCount([FromBody] VMPaymentTransaction request)
+        {
+            request.Direction = "PayOut";
+            var result = await svc.GetPaymentTransactionCount("global", request);
+
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/CreatePaymentTxByPayInRequestId/{paymentRequestId}")]

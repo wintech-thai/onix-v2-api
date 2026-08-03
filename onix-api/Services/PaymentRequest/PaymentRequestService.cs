@@ -466,16 +466,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
-            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
-            if (mvPtx.Status != "OK")
-            {
-                r.Status = mvPtx.Status;
-                r.Description = mvPtx.Description;
-
-                return r;
-            }
-
             var srcBankAccount = await _bankAccountRepo!.GetBankAccountById(paymentRequest.PayoutBankAccountId!);
             if (srcBankAccount == null)
             {
@@ -492,6 +482,16 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
             paymentRequest.PayoutFeePct = existing.PayoutFeePct;
+
+            paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
+            var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
+            if (mvPtx.Status != "OK")
+            {
+                r.Status = mvPtx.Status;
+                r.Description = mvPtx.Description;
+
+                return r;
+            }
 
             paymentRequest.PaymentTxId = mvPtx.PaymentTransaction!.Id.ToString();
 
@@ -565,18 +565,33 @@ namespace Its.Onix.Api.Services
                 merchantDeductFee = pt.PayoutFeeDecimal;
             }
 
-            //TODO : Check ว่า override มั้ย
-            pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
+            pt.TxIsPeerToPeer = false;
+            pt.PayoutFeePayer = paymentRequest.PayoutFeePayer;
+
             pt.PayOutBankCode = paymentRequest.PayoutBankCode;
+            pt.PayOutBankAccountNo = paymentRequest.PayoutBankAccountNo;
+            pt.PayOutBankAccountName = paymentRequest.PayoutBankAccountName;
+            pt.PayOutBankAccountId = paymentRequest.PayoutBankAccountId;
             pt.PayOutPromptPayId = paymentRequest.PayoutPromptPayId;
-            pt.PayInBankAccountNo = paymentRequest.PayinBankAccountNo;
-            pt.PayInBankAccountName = paymentRequest.PayinBankAccountName;
-            pt.PayInPromptPayId = paymentRequest.PayinPromptPayId;
+
+            pt.PayInBankCode = existing.PayinBankCode;
+            pt.PayInBankAccountNo = existing.PayinBankAccountNo;
+            pt.PayInBankAccountName = existing.PayinBankAccountName;
+            pt.PayInPromptPayId = existing.PayinPromptPayId;
+
+            if (existing.IsPayInBankAccountOverride)
+            {
+                //บัญชีปลายทาง override มาจาก merchant
+                pt.PayInBankCode = existing.PayinBankCodeOverride;
+                pt.PayInBankAccountNo = existing.PayinBankAccountNoOverride;
+                pt.PayInBankAccountName = existing.PayinBankAccountNameOverride;
+                pt.PayInPromptPayId = existing.PayinPromptPayIdOverride;
+            }
 
             pt.MerchantId = existing.MerchantId;
 
             var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
-            var dstBankAccountId = existing.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
+            var dstBankAccountId = paymentRequest.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
 
             var mcWallet = await _pointService!.GetWalletByMerchantId(orgId, existing.MerchantId!);
             if (mcWallet!.Status != "OK")
