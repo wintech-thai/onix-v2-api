@@ -236,7 +236,8 @@ namespace Its.Onix.Api.Models
         [Column("expire_date")]
         public DateTime? ExpireDate { get; set; }
 
-
+        [Column("job_id")]
+        public string? JobId { get; set; }
 
 
         [NotMapped]

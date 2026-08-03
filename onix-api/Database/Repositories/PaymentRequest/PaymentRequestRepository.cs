@@ -106,6 +106,8 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantMinPayout = x.merchant != null ? x.merchant.PayoutMinAmount : null,
                 MerchantMaxPayout = x.merchant != null ? x.merchant.PayoutMaxAmount : null,
                 DiscardCent = x.merchant != null && x.merchant.DiscardCent,
+
+                JobId = x.pr.JobId,
             });
         }
 
