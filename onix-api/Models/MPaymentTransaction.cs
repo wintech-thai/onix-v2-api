@@ -64,6 +64,9 @@ namespace Its.Onix.Api.Models
         [Column("tx_is_peer_to_peer")]
         public bool? TxIsPeerToPeer { get; set; } //ใช้บอกว่าเป็น transaction จาก peer to peer มั้ย
 
+        [Column("payout_fee_payer")]
+        public string? PayoutFeePayer { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
 
         [Column("direction")]
         public string? Direction { get; set; } //PayIn, PayOut
