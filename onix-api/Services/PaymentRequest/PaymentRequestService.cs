@@ -560,7 +560,7 @@ namespace Its.Onix.Api.Services
 
                 RefId1 = existing.RefId1,
                 RefId2 = existing.RefId2,
-                RefId3 = existing.RefId3, 
+                RefId3 = existing.RefId3,
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
