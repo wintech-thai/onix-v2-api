@@ -541,7 +541,7 @@ namespace Its.Onix.Api.Services
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
 
-                RefId1 = existing.RefId1,
+                RefId1 = existing.RefId1 ?? existing.RefId,
                 RefId2 = existing.RefId2,
                 RefId3 = existing.RefId3,
             };
