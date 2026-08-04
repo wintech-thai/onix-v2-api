@@ -1877,6 +1877,18 @@ namespace Its.Onix.Api.Services
 
             pmr.Status = "Rejected";
 
+            //สร้าง job ได้ jobId มาก็เอาไป update ใน PaymentRequest record ได้เลย
+            var jobType = "PaymentIn.Rejected";
+            var pmtRejectedJob = _jobService!.CreatePayInRejectedJob(pmr.OrgId!, jobType, pmr);
+            pmr.JobId = pmtRejectedJob?.Id.ToString();
+
+            //ยิง PaymentIn.Rejected event
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(pmtRejectedJob);
+            var _ = await _redis.PublishMessageAsync(stream!, message);
+
+
             var pmt2 = await repository!.RejectPaymentRequestById(paymentRequestId, pmr);
 
             r.PaymentRequest = pmt2;
