@@ -558,9 +558,9 @@ namespace Its.Onix.Api.Services
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
 
-                RefId1 = existing.RefId,
-                RefId2 = existing.RefId1,
-                RefId3 = existing.RefId2,
+                RefId1 = existing.RefId1,
+                RefId2 = existing.RefId2,
+                RefId3 = existing.RefId3,
             };
 
             pt.PayOutFee = (double) Math.Round((decimal) (pt.TxAmount * existing.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
