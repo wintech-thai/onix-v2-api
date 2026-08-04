@@ -432,6 +432,21 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //สร้าง job ได้ jobId มาก็เอาไป update ใน PaymentRequest record ได้เลย
+            var jobType = "PaymentOut.Rejected";
+
+            existing.Status = "Rejected";
+            var pmtRejectedJob = _jobService!.CreatePayOutRejectedJob(existing.OrgId!, jobType, existing);
+
+            paymentRequest.JobId = pmtRejectedJob?.Id.ToString();
+
+            //ยิง PaymentOut.Rejected event
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var stream = $"JobSubmitted:{environment}:{jobType}";
+            var message = JsonSerializer.Serialize(pmtRejectedJob);
+            var _ = await _redis.PublishMessageAsync(stream!, message);
+
+
             var result = await repository!.UpdatePaymentStatusRejectById(paymentRequestId, paymentRequest);
             r.PaymentRequest = result;
 

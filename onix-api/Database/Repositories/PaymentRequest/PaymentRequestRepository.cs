@@ -489,6 +489,8 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 existing.Status = "Rejected";
                 existing.RejectReason = paymentRequest.RejectReason;
+                existing.StatusCode = paymentRequest.StatusCode;
+                existing.JobId = paymentRequest.JobId;
             }
 
             await context.SaveChangesAsync();
