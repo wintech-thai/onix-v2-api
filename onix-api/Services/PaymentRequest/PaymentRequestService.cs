@@ -436,6 +436,9 @@ namespace Its.Onix.Api.Services
             var jobType = "PaymentOut.Rejected";
 
             existing.Status = "Rejected";
+            existing.StatusCode = paymentRequest.StatusCode;
+            existing.StatusReason = paymentRequest.StatusReason;
+
             var pmtRejectedJob = _jobService!.CreatePayOutRejectedJob(existing.OrgId!, jobType, existing);
 
             paymentRequest.JobId = pmtRejectedJob?.Id.ToString();
