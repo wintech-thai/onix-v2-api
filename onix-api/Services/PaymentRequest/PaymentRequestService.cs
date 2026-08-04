@@ -437,7 +437,7 @@ namespace Its.Onix.Api.Services
 
             existing.Status = "Rejected";
             existing.StatusCode = paymentRequest.StatusCode;
-            existing.StatusReason = paymentRequest.StatusReason;
+            existing.StatusReason = paymentRequest.RejectReason; //ตอน payout reject เราเก็บ reason ไว้ใน field นี้
 
             var pmtRejectedJob = _jobService!.CreatePayOutRejectedJob(existing.OrgId!, jobType, existing);
 

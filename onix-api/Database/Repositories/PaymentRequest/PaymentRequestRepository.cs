@@ -489,6 +489,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 existing.Status = "Rejected";
                 existing.RejectReason = paymentRequest.RejectReason;
+                existing.StatusReason = paymentRequest.StatusReason;
                 existing.StatusCode = paymentRequest.StatusCode;
                 existing.JobId = paymentRequest.JobId;
             }
@@ -539,6 +540,7 @@ namespace Its.Onix.Api.Database.Repositories
                 //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
                 existing.Status = "Rejected";
                 existing.StatusReason = paymentRequest.StatusReason;
+                existing.RejectReason = paymentRequest.RejectReason;
                 existing.StatusCode = paymentRequest.StatusCode;
                 existing.JobId = paymentRequest.JobId;
             }
