@@ -108,6 +108,7 @@ namespace Its.Onix.Api.Database.Repositories
                 DiscardCent = x.merchant != null && x.merchant.DiscardCent,
 
                 JobId = x.pr.JobId,
+                StatusCode = x.pr.StatusCode,
             });
         }
 
@@ -536,6 +537,7 @@ namespace Its.Onix.Api.Database.Repositories
                 //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
                 existing.Status = "Rejected";
                 existing.StatusReason = paymentRequest.StatusReason;
+                existing.StatusCode = paymentRequest.StatusCode;
             }
 
             await context.SaveChangesAsync();

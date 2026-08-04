@@ -178,6 +178,12 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MJob CreatePayOutRejectedJob(string orgId, string jobType, MPaymentRequest pmr)
+        {
+            //TODO : Implement this
+            return null!;
+        }
+
         public MJob CreatePayOutSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
         {
             //์ยิง webhook และ notify เพือ่แจ้ง merchant ว่า transaction โอนออกไปแล้ว

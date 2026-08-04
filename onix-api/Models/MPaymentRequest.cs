@@ -193,6 +193,9 @@ namespace Its.Onix.Api.Models
         [Column("status_reason")]
         public string? StatusReason { get; set; }
 
+        [Column("status_code")]
+        public string? StatusCode { get; set; } //เอาไว้เก็บว่า reject เนื่องจากอะไร อันนี้จะคนละความหมายกับ Status
+
 
         [Column("direction")]
         public string? Direction { get; set; } //PayIn, PayOut
