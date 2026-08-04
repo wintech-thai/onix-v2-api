@@ -446,7 +446,6 @@ namespace Its.Onix.Api.Services
             var message = JsonSerializer.Serialize(pmtRejectedJob);
             var _ = await _redis.PublishMessageAsync(stream!, message);
 
-
             var result = await repository!.UpdatePaymentStatusRejectById(paymentRequestId, paymentRequest);
             r.PaymentRequest = result;
 
