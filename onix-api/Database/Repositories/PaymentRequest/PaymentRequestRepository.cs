@@ -106,6 +106,9 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantMinPayout = x.merchant != null ? x.merchant.PayoutMinAmount : null,
                 MerchantMaxPayout = x.merchant != null ? x.merchant.PayoutMaxAmount : null,
                 DiscardCent = x.merchant != null && x.merchant.DiscardCent,
+
+                JobId = x.pr.JobId,
+                StatusCode = x.pr.StatusCode,
             });
         }
 
@@ -534,6 +537,8 @@ namespace Its.Onix.Api.Database.Repositories
                 //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
                 existing.Status = "Rejected";
                 existing.StatusReason = paymentRequest.StatusReason;
+                existing.StatusCode = paymentRequest.StatusCode;
+                existing.JobId = paymentRequest.JobId;
             }
 
             await context.SaveChangesAsync();

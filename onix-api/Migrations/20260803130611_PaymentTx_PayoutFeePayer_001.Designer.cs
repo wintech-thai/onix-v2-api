@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260803130611_PaymentTx_PayoutFeePayer_001")]
+    partial class PaymentTx_PayoutFeePayer_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2193,10 +2196,6 @@ namespace onix.api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_payin_bank_account_override");
 
-                    b.Property<string>("JobId")
-                        .HasColumnType("text")
-                        .HasColumnName("job_id");
-
                     b.Property<string>("MerchantId")
                         .HasColumnType("text")
                         .HasColumnName("merchant_id");
@@ -2380,10 +2379,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("status");
-
-                    b.Property<string>("StatusCode")
-                        .HasColumnType("text")
-                        .HasColumnName("status_code");
 
                     b.Property<string>("StatusReason")
                         .HasColumnType("text")

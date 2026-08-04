@@ -1003,14 +1003,19 @@ namespace Its.Onix.Api.Services
                 PayOutTotalAmount = (double) requestAmt,
                 PayOutTotalAmountDecimal = requestAmt,
                 PayOutBankAccountId = "UNKNOWN",
-                PayOutBankCode = payoutRequest.PayoutBankCode,
-                PayOutPromptPayId = payoutRequest.PayoutPromptPayId,
 
+                PayInBankCode = payoutRequest.PayinBankCode,
                 PayInBankAccountNo = payoutRequest.PayinBankAccountNo,
                 PayInBankAccountName = payoutRequest.PayinBankAccountName,
                 PayInPromptPayId = payoutRequest.PayinPromptPayId,
-                
+
+                PayOutBankCode = payin.PayinBankCode,
+                PayOutBankAccountNo = payin.PayinBankAccountNo,
+                PayOutBankAccountName = payin.PayinBankAccountName,
+                PayOutPromptPayId = payin.PayinPromptPayId,
+
                 TxIsPeerToPeer = true,
+                PayoutFeePayer = "Merchant", //ตรงนี้ merchant รับเสมอ
 
                 RefId1 = payoutRequest.RefId1,
                 RefId2 = payoutRequest.RefId2,
@@ -1020,6 +1025,14 @@ namespace Its.Onix.Api.Services
                 Direction = "PayOut",
                 Currency = "THB",
             };
+
+            if (payoutRequest.IsPayInBankAccountOverride)
+            {
+                payOutPmt.PayInBankCode = payoutRequest.PayinBankCodeOverride;
+                payOutPmt.PayInBankAccountNo = payoutRequest.PayinBankAccountNoOverride;
+                payOutPmt.PayInBankAccountName = payoutRequest.PayinBankAccountNameOverride;
+                payOutPmt.PayInPromptPayId = payoutRequest.PayinPromptPayIdOverride;
+            }
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType2 = "PaymentOut.Success";

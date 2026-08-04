@@ -13,5 +13,7 @@ namespace Its.Onix.Api.Services
         public int GetJobCount(string orgId, VMJob param);
         public MVJob? DeleteJobById(string orgId, string jobId);
         public MJob CreatePayOutSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr);
+        public MJob CreatePayInRejectedJob(string orgId, string jobType, MPaymentRequest pmr, bool triggerJob = false);
+        public MJob CreatePayOutRejectedJob(string orgId, string jobType, MPaymentRequest pmr, bool triggerJob = false);
     }
 }
