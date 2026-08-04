@@ -378,7 +378,7 @@ namespace Its.Onix.Api.Services
             };
 
             var jobType = "Payment.Success";
-            var job = CreatePaymentSuccessJob(merchantOrgId, jobType, pmt, pmr!);
+            var job = _jobService!.CreatePaymentInSuccessJob(merchantOrgId, jobType, pmt, pmr!);
             pmt.JobId = job?.Id.ToString();
 
             var mpt = await repository!.ApprovePaymentTransactionById(paymentTransactionId, pmt);
@@ -599,7 +599,7 @@ namespace Its.Onix.Api.Services
             {
                 jobType = "Payment.Success";
             }
-            var job = CreatePaymentSuccessJob(merchantOrgId, jobType, pt, pmr!);
+            var job = _jobService!.CreatePaymentInSuccessJob(merchantOrgId, jobType, pt, pmr!);
             pt.JobId = job?.Id.ToString();
 
 
@@ -680,50 +680,6 @@ namespace Its.Onix.Api.Services
             }
 
             return mvPt;
-        }
-
-        private MJob CreatePaymentSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
-        {
-            var job = new MJob()
-            {
-                Name = $"{Guid.NewGuid()}",
-                Description = "PaymentTransaction.CreatePaymentSuccessJob()",
-                Type = jobType,
-                Status = "Pending",
-                Tags = jobType,
-
-                Parameters =
-                [
-                    new NameValue { Name = "ORG_ID", Value = orgId },
-                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayIn" },
-                    new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
-                    new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
-                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
-                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
-                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
-                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
-
-                    new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
-                    new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
-                    new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
-
-                    new NameValue { Name = "TX_AMOUNT", Value = pmt?.TxAmountDecimal.ToString() },
-                    new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
-                    new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
-                    new NameValue { Name = "PAYIN_FEE", Value = pmt?.PayInFeeDecimal.ToString() },
-                    new NameValue { Name = "PAYIN_FEE_PCT", Value = ((decimal?) pmt?.PayInFeePct).ToString() },
-                    new NameValue { Name = "PAYIN_DISCARD_CENT", Value = pmt?.DiscardCent.ToString() },
-                    new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
-                    new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
-                    new NameValue { Name = "PAYIN_BANK_ACCOUNT_NAME", Value = pmt?.PayInBankAccountName },
-                ]
-            };
-
-            //ยังไม่ต้อง trigger job ให้ทำงานทันที เดี๋ยวรอให้สร้าง Payment Tx เสร็จแล้วค่อย trigger พร้อมกับส่ง jobId ไปด้วยจะได้ดู log การ process ได้ง่ายขึ้น
-            var result = _jobService!.AddJob(orgId, job, false); 
-            var newJob = result?.Job!;
-
-            return newJob;
         }
 
         private async Task<MJob> CreatePaymentExceededLimitJob(
@@ -972,7 +928,7 @@ namespace Its.Onix.Api.Services
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType = "Payment.Success";
-            var pmtSuccessJob = CreatePaymentSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
+            var pmtSuccessJob = _jobService!.CreatePaymentInSuccessJob(payin.OrgId!, jobType, payInPmt, payin!);
             payInPmt.JobId = pmtSuccessJob?.Id.ToString();
 
             var _0 = await repository!.AddPaymentTransaction(payInPmt);

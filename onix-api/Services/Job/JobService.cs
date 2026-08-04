@@ -178,6 +178,53 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MJob CreatePaymentInSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
+        {
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "JobService.CreatePaymentInSuccessJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+
+                Parameters =
+                [
+                    new NameValue { Name = "EVENT_TYPE", Value = "PaymentIn.Success" },
+                    new NameValue { Name = "STATUS_CODE", Value = "OK" },
+                    new NameValue { Name = "STATUS_REASON", Value = "Success" },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayIn" },
+
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
+                    new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
+                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
+
+                    new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
+                    new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
+                    new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
+
+                    new NameValue { Name = "TX_AMOUNT", Value = pmt?.TxAmountDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
+                    new NameValue { Name = "PAYIN_GENERATED_AMOUNT", Value = pmr?.GeneratedAmount.ToString() },
+                    new NameValue { Name = "PAYIN_FEE", Value = pmt?.PayInFeeDecimal.ToString() },
+                    new NameValue { Name = "PAYIN_FEE_PCT", Value = ((decimal?) pmt?.PayInFeePct).ToString() },
+                    new NameValue { Name = "PAYIN_DISCARD_CENT", Value = pmt?.DiscardCent.ToString() },
+                    new NameValue { Name = "PAYIN_BANK_CODE", Value = pmt?.PayInBankCode },
+                    new NameValue { Name = "PAYIN_BANK_ACCOUNT_NO", Value = pmt?.PayInBankAccountNo },
+                    new NameValue { Name = "PAYIN_BANK_ACCOUNT_NAME", Value = pmt?.PayInBankAccountName },
+                ]
+            };
+
+            //ยังไม่ต้อง trigger job ให้ทำงานทันที เดี๋ยวรอให้สร้าง Payment Tx เสร็จแล้วค่อย trigger พร้อมกับส่ง jobId ไปด้วยจะได้ดู log การ process ได้ง่ายขึ้น
+            var result = AddJob(orgId, job, false); 
+            var newJob = result?.Job!;
+
+            return newJob;
+        }
 
         public MJob CreatePayInRejectedJob(string orgId, string jobType, MPaymentRequest pmr, bool triggerJob = false)
         {
@@ -335,9 +382,9 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "EVENT_TYPE", Value = "PaymentOut.Success" },
                     new NameValue { Name = "STATUS_CODE", Value = "OK" },
                     new NameValue { Name = "STATUS_REASON", Value = "Success" },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayOut" },
 
                     new NameValue { Name = "ORG_ID", Value = orgId },
-                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayOut" },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
