@@ -1716,6 +1716,9 @@ namespace Its.Onix.Api.Services
 
                 Id = pr.Id.ToString(),
                 ReferenceId = pr.RefId1,
+                RefId1 = pr.RefId1,
+                RefId2 = pr.RefId2,
+                RefId3 = pr.RefId3,
                 SessionId = pr.Id.ToString(),
                 WebsocketPath = "/realtime/payment-tx",
                 Type = pr.Direction,
