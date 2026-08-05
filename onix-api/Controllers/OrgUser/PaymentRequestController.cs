@@ -16,13 +16,15 @@ namespace Its.Onix.Api.Controllers
         private readonly IPaymentRequestService _paymentRequestSvc;
         private readonly IMerchantService _merchantSvc;
         private readonly IBankAccountService _bankAccountSvc;
+        private readonly IJobService _jobService;
 
         [ExcludeFromCodeCoverage]
-        public PaymentRequestController(IPaymentRequestService paymentRequestSvc, IMerchantService merchantSvc, IBankAccountService bankAccountSvc)
+        public PaymentRequestController(IPaymentRequestService paymentRequestSvc, IMerchantService merchantSvc, IBankAccountService bankAccountSvc, IJobService jobService)
         {
             _paymentRequestSvc = paymentRequestSvc;
             _merchantSvc = merchantSvc;
             _bankAccountSvc = bankAccountSvc;
+            _jobService = jobService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -246,6 +248,22 @@ namespace Its.Onix.Api.Controllers
             request.Currency = "THB";
 
             var result = await _paymentRequestSvc.AddPaymentRequestPayOut(orgId, request, merchant, baVm.BankAccount);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPaymentRequestJobById/{paymentRequestId}/{jobId}")]
+        public async Task<IActionResult> GetPaymentRequestJobById(string orgId, string paymentRequestId, string jobId)
+        {
+            var pmtVm = await _paymentRequestSvc.GetPaymentRequestById(orgId, paymentRequestId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentRequest!;
+            var result = _jobService.GetJobById(pmt.OrgId!, jobId);
+
             return Ok(result);
         }
     }
