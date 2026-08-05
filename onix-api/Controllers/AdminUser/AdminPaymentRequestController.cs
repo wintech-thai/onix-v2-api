@@ -15,16 +15,19 @@ namespace Its.Onix.Api.Controllers
         private readonly IPaymentRequestService svc;
         private readonly IMerchantService _merchantSvc;
         private readonly IBankAccountService _bankAccountSvc;
+        private readonly IJobService _jobService;
 
         [ExcludeFromCodeCoverage]
         public AdminPaymentRequestController(
-            IPaymentRequestService service, 
+            IPaymentRequestService service,
             IMerchantService merchantService,
-            IBankAccountService bankAccountService)
+            IBankAccountService bankAccountService,
+            IJobService jobService)
         {
             svc = service;
             _merchantSvc = merchantService;
             _bankAccountSvc = bankAccountService;
+            _jobService = jobService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -149,6 +152,22 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetPaymentRequestById(string paymentRequestId)
         {
             var result = await svc.GetPaymentRequestById("global", paymentRequestId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetPaymentRequestJobById/{paymentRequestId}/{jobId}")]
+        public async Task<IActionResult> GetPaymentRequestJobById(string paymentRequestId, string jobId)
+        {
+            var pmtVm = await svc.GetPaymentRequestById("global", paymentRequestId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentRequest!;
+            var result = _jobService.GetJobById(pmt.OrgId!, jobId);
+
             return Ok(result);
         }
 
