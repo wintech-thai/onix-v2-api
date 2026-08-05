@@ -1895,6 +1895,7 @@ namespace Its.Onix.Api.Services
             pmr.Status = "Rejected";
 
             pmt1.Status = pmr.Status;
+            pmt1.StatusCode = pmr.StatusCode;
             pmt1.StatusReason = pmr.StatusReason;
 
             //สร้าง job ได้ jobId มาก็เอาไป update ใน PaymentRequest record ได้เลย
