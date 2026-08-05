@@ -7,6 +7,9 @@ namespace Its.Onix.Api.Models
     {
         public string? Id { get; set; } //UUID
         public string? ReferenceId { get; set; } //คำอธิบายการชำระเงิน
+        public string? RefId1 { get; set; }
+        public string? RefId2 { get; set; }
+        public string? RefId3 { get; set; }
         public string? SessionId { get; set; } //สำหรับให้ websocket ต่อเข้ามาสำหรับ realtime URL
         public string? Type { get; set; } //PayIn
         public string? Status { get; set; } //PayIn
