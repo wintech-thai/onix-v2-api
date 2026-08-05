@@ -1715,7 +1715,7 @@ namespace Its.Onix.Api.Services
                 ExpireAt = pr.ExpireDate,
 
                 Id = pr.Id.ToString(),
-                ReferenceId = pr.RefId,
+                ReferenceId = pr.RefId1,
                 SessionId = pr.Id.ToString(),
                 WebsocketPath = "/realtime/payment-tx",
                 Type = pr.Direction,
