@@ -501,6 +501,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutFeePct = existing.PayoutFeePct;
 
             paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
+            existing.Status = "Approved";
             var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
             if (mvPtx.Status != "OK")
             {
@@ -805,7 +806,7 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            if (string.IsNullOrEmpty(paymentRequest.RefId))
+            if (string.IsNullOrEmpty(paymentRequest.RefId1))
             {
                 r.Status = "REF_ID_MISSING";
                 r.Description = $"Ref ID is missing!!!";
@@ -813,11 +814,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
                 r.Status = "REF_ID_DUPLICATE";
-                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
+                r.Description = $"Ref ID [{paymentRequest.RefId1}] is duplicate!!!";
 
                 return r;
             }
@@ -890,6 +891,7 @@ namespace Its.Onix.Api.Services
                 var tmpPr = new MPaymentRequest()
                 {
                     RefId = paymentRequest.RefId,
+                    RefId1 = paymentRequest.RefId1,
                     GeneratedAmount = (double) paymentRequest.PayOutTotalAmountDecimal,
                 };
 
@@ -916,19 +918,19 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            if (string.IsNullOrEmpty(paymentRequest.RefId))
+            if (string.IsNullOrEmpty(paymentRequest.RefId1))
             {
-                r.Status = "REF_ID_MISSING";
-                r.Description = $"Ref ID is missing!!!";
+                r.Status = "REF_ID1_MISSING";
+                r.Description = $"Ref ID1 is missing!!!";
 
                 return r;
             }
 
-            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
-                r.Status = "REF_ID_DUPLICATE";
-                r.Description = $"Ref ID [{paymentRequest.RefId}] is duplicate!!!";
+                r.Status = "REF_ID1_DUPLICATE";
+                r.Description = $"Ref ID1 [{paymentRequest.RefId1}] is duplicate!!!";
 
                 return r;
             }
@@ -1018,6 +1020,7 @@ namespace Its.Onix.Api.Services
                 var tmpPr = new MPaymentRequest()
                 {
                     RefId = paymentRequest.RefId,
+                    RefId1 = paymentRequest.RefId1,
                     GeneratedAmount = (double) paymentRequest.PayOutTotalAmountDecimal,
                 };
 
@@ -1087,20 +1090,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            paymentRequest.RefId = paymentRequest.RefId1; /* RefId ไม่ใช้แล้วแต่ก็ set ให้ท่ากับ RefId1 ไปเลย แล้วยังคงความป็น unique อยู่นะ */
-            if (string.IsNullOrEmpty(paymentRequest.RefId))
-            {
-                r.Status = "REF_ID_MISSING";
-                r.Description = $"Ref ID is missing!!!";
-
-                return r;
-            }
-
-            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
-                r.Status = "REF_ID_DUPLICATE";
-                r.Description = $"Ref ID1 [{paymentRequest.RefId}] is duplicate!!!";
+                r.Status = "REF_ID1_DUPLICATE";
+                r.Description = $"Ref ID1 [{paymentRequest.RefId1}] is duplicate!!!";
 
                 return r;
             }
@@ -1251,20 +1245,11 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            paymentRequest.RefId = paymentRequest.RefId1; /* RefId ไม่ใช้แล้วแต่ก็ set ให้ท่ากับ RefId1 ไปเลย แล้วยังคงความป็น unique อยู่นะ */
-            if (string.IsNullOrEmpty(paymentRequest.RefId))
-            {
-                r.Status = "REF_ID_MISSING";
-                r.Description = $"Ref ID is missing!!!";
-
-                return r;
-            }
-
-            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId);
+            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
-                r.Status = "REF_ID_DUPLICATE";
-                r.Description = $"Ref ID1 [{paymentRequest.RefId}] is duplicate!!!";
+                r.Status = "REF_ID1_DUPLICATE";
+                r.Description = $"Ref ID1 [{paymentRequest.RefId1}] is duplicate!!!";
 
                 return r;
             }

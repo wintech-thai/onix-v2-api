@@ -138,7 +138,7 @@ namespace Its.Onix.Api.Services
             {
                 TargetId = _bankAccount.PromptPayId!,
                 Amount = _pqymentRequest.GeneratedAmount,
-                Reference1 = _pqymentRequest.RefId,
+                Reference1 = _pqymentRequest.RefId1,
                 Reference2 = "",
                 AccountName = $"{_bankAccount.BankCode}:{_bankAccount.AccountNumber}",
             };
