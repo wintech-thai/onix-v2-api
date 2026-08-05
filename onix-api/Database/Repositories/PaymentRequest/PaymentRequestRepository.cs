@@ -63,6 +63,7 @@ namespace Its.Onix.Api.Database.Repositories
                 ResponseData = x.pr.ResponseData,
                 ProcessingMessages = x.pr.ProcessingMessages,
                 CreatedDate = x.pr.CreatedDate,
+                ExpireDate = x.pr.ExpireDate,
 
                 PayinBankAccountId = x.pr.PayinBankAccountId,
                 PayinBankCode = x.pr.PayinBankCode,
