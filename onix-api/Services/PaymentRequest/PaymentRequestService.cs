@@ -1185,6 +1185,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct);
             if (pmResponse.Status != "OK")
             {
@@ -1334,6 +1335,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct);
             if (pmResponse.Status != "OK")
             {
