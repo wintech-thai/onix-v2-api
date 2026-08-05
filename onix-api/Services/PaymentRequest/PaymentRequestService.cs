@@ -501,6 +501,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutFeePct = existing.PayoutFeePct;
 
             paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
+            existing.Status = "Approved";
             var mvPtx = await ProcessPayoutTx(existing.OrgId!, paymentRequest, existing);
             if (mvPtx.Status != "OK")
             {
