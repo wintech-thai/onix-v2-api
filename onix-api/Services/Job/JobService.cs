@@ -389,6 +389,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "ORG_ID", Value = orgId },
                     new NameValue { Name = "PMT_ID", Value = pmt?.Id.ToString() },
                     new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 }, //ตั้งใจส่ง RefId1 ไป 2 parameter เพื่อให้ merchant ใช้ได้สะดวก
                     new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
                     new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
                     new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
