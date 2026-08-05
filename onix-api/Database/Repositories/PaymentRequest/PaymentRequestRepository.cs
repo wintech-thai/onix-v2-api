@@ -18,7 +18,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<bool> IsRefIdExist(string refId)
         {
-            var exists = await context!.PaymentRequests!.AsExpandable().AnyAsync(p => p!.RefId!.Equals(refId) && p!.OrgId!.Equals(orgId));
+            var exists = await context!.PaymentRequests!.AsExpandable().AnyAsync(p => p!.RefId1!.Equals(refId) && p!.OrgId!.Equals(orgId));
             return exists;
         }
 
