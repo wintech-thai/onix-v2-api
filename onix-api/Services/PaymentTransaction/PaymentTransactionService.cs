@@ -632,7 +632,7 @@ namespace Its.Onix.Api.Services
                         //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
                         TxAmountDecimal = pt.PayInTotalAmountDecimal,
 
-                        Tags = $"PaymentTxId=[{paymentTxId}]",
+                        Tags = $"PaymentTxId=[{paymentTxId}], RefId1=[{pt.RefId1}]",
                     };
 
                     await _pointService!.AddPoint(merchantOrgId, pointTx);
@@ -649,7 +649,7 @@ namespace Its.Onix.Api.Services
                         //TxAmountDecimal ตรงนี้จะเป็นค่าที่ยังไม่หัก fee เพื่อนำไปเป็นยอดที่เข้า wallet
                         TxAmountDecimal = pt.TxAmountDecimal,
 
-                        Tags = $"PaymentTxId=[{paymentTxId}]",
+                        Tags = $"PaymentTxId=[{paymentTxId}], RefId1=[{pt.RefId1}]",
                     };
 
                     await _pointService!.AddPoint(bankAccountOrgId, pointTx);
