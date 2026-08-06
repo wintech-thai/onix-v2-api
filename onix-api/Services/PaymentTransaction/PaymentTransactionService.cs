@@ -1016,7 +1016,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = payinMcTopupAmt,
 
                 Description = $"{requestAmt} - {payinFee} (fee={payinFeePct}%)",
-                Tags = $"PaymentTxId=[{payInPmt.Id}]",
+                Tags = $"PaymentTxId=[{payInPmt.Id}], RefId1=[{payInPmt.RefId1}]",
             };
             var addResult = await _pointService!.AddPoint(payin.OrgId!, pointTx0);
             if (addResult.Status != "OK")
@@ -1036,7 +1036,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = payoutMcDeductAmt,
 
                 Description = $"{requestAmt} + {payoutFee} (fee={payoutFeePct}%)",
-                Tags = $"PayOutRequestId=[{payoutRequest.Id}]",
+                Tags = $"PayOutRequestId=[{payoutRequest.Id}], RefId1=[{payOutPmt.RefId1}]",
             };
             var deductResult = await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTx1);
             if (deductResult.Status != "OK")
