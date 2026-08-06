@@ -660,7 +660,7 @@ namespace Its.Onix.Api.Services
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่แจ้งโอนออก
                 TxAmountDecimal = merchantDeductAmt,
 
-                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
+                Tags = $"PayOutRequestId=[{existing.Id}]" + (!string.IsNullOrEmpty(pt.RefId1) ? $", RefId1=[{pt.RefId1}]" : ""),
             };
             await _pointService!.DeductPoint(orgId, pointTx1);
 
@@ -672,7 +672,7 @@ namespace Its.Onix.Api.Services
                 //TxAmountDecimal ตรงนี้จะเป็นค่าที่โอนเข้าจริง ๆ ซึ่งจะต้องเป็นจำนวนเงินที่หักค่าธรรมเนียมออกไปแล้ว
                 TxAmountDecimal = bankAccountDeductAmt,
 
-                Tags = $"PayOutRequestId=[{existing.Id.ToString()}]",
+                Tags = $"PayOutRequestId=[{existing.Id}]" + (!string.IsNullOrEmpty(pt.RefId1) ? $", RefId1=[{pt.RefId1}]" : ""),
             };
             var pointVm = await _pointService!.DeductPoint("global", pointTx2);
             if (pointVm.Status != "OK")
@@ -1060,6 +1060,7 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
             _bankAccountRepo!.SetCustomOrgId("global");
+            paymentRequest.OrgId = orgId;
             paymentRequest.PayinIsPeerToPeer = true;
 
             var r = new MVPaymentResponse()
@@ -1231,7 +1232,8 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
             _bankAccountRepo!.SetCustomOrgId("global");
-             paymentRequest.PayinIsPeerToPeer = false;
+            paymentRequest.OrgId = orgId;
+            paymentRequest.PayinIsPeerToPeer = false;
 
             var r = new MVPaymentResponse()
             {
