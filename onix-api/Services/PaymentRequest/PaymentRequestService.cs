@@ -1881,7 +1881,8 @@ namespace Its.Onix.Api.Services
             var cacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
             _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{slipToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
 
-            r.Description = $"/payin-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
+            r.Description = "Success";
+            r.SlipUploadUrl = $"/payin-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
             return r;
         }
 
