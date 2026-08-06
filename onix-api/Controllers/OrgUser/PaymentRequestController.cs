@@ -5,6 +5,7 @@ using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -264,6 +265,40 @@ namespace Its.Onix.Api.Controllers
             var pmt = pmtVm.PaymentRequest!;
             var result = _jobService.GetJobById(pmt.OrgId!, jobId);
 
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{orgId}/action/VerifyPayInToken/{paymentRequestId}/{token}")]
+        public async Task<IActionResult> VerifyPayInToken(string orgId, string paymentRequestId, string token)
+        {
+            var result = await _paymentRequestSvc.VerifyPayInSlipToken(paymentRequestId, token);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("org/{orgId}/action/UploadPayInSlipById/{paymentRequestId}/{token}")]
+        public async Task<IActionResult> UploadPayInSlipById(string orgId, string paymentRequestId, string token, [FromBody] VMUploadPayInSlip payload)
+        {
+            var result = await _paymentRequestSvc.UploadPayInSlipById(paymentRequestId, token, payload.ImageBase64!);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPayInSlipUpload/{paymentRequestId}")]
+        public async Task<IActionResult> GetPayInSlipUpload(string orgId, string paymentRequestId)
+        {
+            var result = await _paymentRequestSvc.GetPayInSlipUploads(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{orgId}/action/GeneratePayInSlipUploadToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId)
+        {
+            var result = await _paymentRequestSvc.GeneratePayInSlipUploadToken(orgId, paymentRequestId);
             return Ok(result);
         }
     }

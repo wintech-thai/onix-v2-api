@@ -32,5 +32,10 @@ namespace Its.Onix.Api.Services
 
         public Task<MVScbInquiryResult> InquireScbPaymentStatus(string orgId, string paymentRequestId);
         public Task<MVPaymentRequest> RejectPendingPayInRequestById(string orgId, string paymentRequestId, MPaymentRequest pmr);
+
+        public Task<MVBase> VerifyPayInSlipToken(string paymentRequestId, string token);
+        public Task<MVBase> UploadPayInSlipById(string paymentRequestId, string token, string base64Image);
+        public Task<MVPayInSlipUploads> GetPayInSlipUploads(string orgId, string paymentRequestId);
+        public Task<MVBase> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId);
     }
 }

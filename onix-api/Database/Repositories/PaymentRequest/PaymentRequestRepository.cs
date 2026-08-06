@@ -649,5 +649,19 @@ namespace Its.Onix.Api.Database.Repositories
             var result = await UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
             return result;
         }
+
+        public async Task<MPaymentRequest?> UpdatePayInSlipById(string paymentRequestId, string slipsJson, int uploadCount)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(x => x!.Id == id).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.PayInSlipUploads = slipsJson;
+                existing.PayInSlipUploadCount = uploadCount;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }

@@ -110,6 +110,7 @@ namespace Its.Onix.Api.Services
             result.ResponseData = "";
             result.ProcessingMessages = "";
             result.PartialPayoutHistory = "";
+            result.PayInSlipUploads = null; // ข้อมูลใหญ่ ดึงแยกผ่าน GetPayInSlipUploads
 
             r.PaymentRequest = result;
 
@@ -1739,9 +1740,149 @@ namespace Its.Onix.Api.Services
                 PayInPromptPayId = bnkAcct.PromptPayId,
             };
 
+            // สร้าง token สำหรับ upload slip แล้วเก็บใน Redis 1 วัน
+            var slipToken = Guid.NewGuid().ToString();
+            var slipCacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
+            _ = _redis.SetObjectAsync($"{slipCacheKey}:{pr.Id}:{slipToken}", pr.Id!.ToString(), TimeSpan.FromMinutes(60 * 24));
+            pmr.SlipUploadUrl = $"/payin-slip-upload/{pr.OrgId}/{pr.Id}/{slipToken}";
+
             mvResponse.PaymentResponse = pmr;
 
             return mvResponse;
+        }
+
+        public async Task<MVBase> VerifyPayInSlipToken(string paymentRequestId, string token)
+        {
+            var r = new MVBase() { Status = "OK", Description = "Token is valid" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            var cacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
+            var cached = await _redis.GetObjectAsync<string>($"{cacheKey}:{paymentRequestId}:{token}");
+            if (cached == null)
+            {
+                r.Status = "TOKEN_INVALID";
+                r.Description = "Token is invalid or expired";
+            }
+
+            return r;
+        }
+
+        public async Task<MVBase> UploadPayInSlipById(string paymentRequestId, string token, string base64Image)
+        {
+            var verify = await VerifyPayInSlipToken(paymentRequestId, token);
+            if (verify.Status != "OK") return verify;
+
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+                return new MVBase { Status = "NOTFOUND", Description = $"Payment Request ID [{paymentRequestId}] not found" };
+
+            List<MPayInSlipItem> slips;
+            try
+            {
+                slips = string.IsNullOrEmpty(pr.PayInSlipUploads)
+                    ? []
+                    : JsonSerializer.Deserialize<List<MPayInSlipItem>>(pr.PayInSlipUploads) ?? [];
+            }
+            catch { slips = []; }
+
+            slips.Add(new MPayInSlipItem { ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow });
+
+            var slipsJson = JsonSerializer.Serialize(slips);
+            await repository!.UpdatePayInSlipById(paymentRequestId, slipsJson, slips.Count);
+
+            return new MVBase { Status = "OK", Description = "Slip uploaded successfully" };
+        }
+
+        public async Task<MVPayInSlipUploads> GetPayInSlipUploads(string orgId, string paymentRequestId)
+        {
+            var r = new MVPayInSlipUploads() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            if (orgId != "global" && pr.OrgId != orgId)
+            {
+                r.Status = "ERROR_DATA_NOT_OWN_BY_ORG_ID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not owned by org [{orgId}]";
+                return r;
+            }
+
+            List<MPayInSlipItem> slips;
+            try
+            {
+                slips = string.IsNullOrEmpty(pr.PayInSlipUploads)
+                    ? []
+                    : JsonSerializer.Deserialize<List<MPayInSlipItem>>(pr.PayInSlipUploads) ?? [];
+            }
+            catch { slips = []; }
+
+            // อันที่ upload ล่าสุดอยู่บนสุด
+            slips.Reverse();
+            r.Slips = slips;
+
+            return r;
+        }
+
+        public async Task<MVBase> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId)
+        {
+            var r = new MVBase() { Status = "OK" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            if (pr.Status != "Pending")
+            {
+                r.Status = "ERROR_NOT_PENDING";
+                r.Description = "Can only generate upload link for Pending payment requests";
+                return r;
+            }
+
+            var slipToken = Guid.NewGuid().ToString();
+            var cacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
+            _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{slipToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
+
+            r.Description = $"/payin-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
+            return r;
         }
 
         public async Task<List<MPaymentRequest>> GetPaymentRequests(string orgId, VMPaymentRequest param)
@@ -1750,11 +1891,12 @@ namespace Its.Onix.Api.Services
             var result = await repository!.GetPaymentRequests(param);
 
             // ลบ ResponseData ออกเพื่อลด payload
-            result.ForEach(p => 
-            { 
-                p.ResponseData = ""; 
+            result.ForEach(p =>
+            {
+                p.ResponseData = "";
                 p.ProcessingMessages = "";
                 p.PartialPayoutHistory = "";
+                p.PayInSlipUploads = null; // ข้อมูลใหญ่ ไม่ดึงใน list
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น
