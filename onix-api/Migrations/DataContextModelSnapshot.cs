@@ -2217,6 +2217,14 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("pay_in_fee_pct");
 
+                    b.Property<int>("PayInSlipUploadCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("payin_slip_upload_count");
+
+                    b.Property<string>("PayInSlipUploads")
+                        .HasColumnType("text")
+                        .HasColumnName("payin_slip_uploads");
+
                     b.Property<decimal?>("PayOutTotalAmountDecimal")
                         .HasColumnType("numeric")
                         .HasColumnName("total_payout_amount_decimal");
