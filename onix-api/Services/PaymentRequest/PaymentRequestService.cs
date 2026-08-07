@@ -1764,6 +1764,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            // AllowAnonymous endpoint — no JWT so orgId defaults to reserved value; bypass org filter
+            repository!.SetCustomOrgId("global");
             var pr = await repository!.GetPaymentRequestById(paymentRequestId);
             if (pr == null)
             {
