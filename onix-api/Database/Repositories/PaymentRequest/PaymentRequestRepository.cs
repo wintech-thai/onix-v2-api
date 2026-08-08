@@ -110,6 +110,9 @@ namespace Its.Onix.Api.Database.Repositories
 
                 JobId = x.pr.JobId,
                 StatusCode = x.pr.StatusCode,
+
+                PayInSlipUploadCount = x.pr.PayInSlipUploadCount,
+                PayInSlipUploads = x.pr.PayInSlipUploads,
             });
         }
 
