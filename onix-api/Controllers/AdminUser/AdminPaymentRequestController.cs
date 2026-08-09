@@ -385,5 +385,23 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.RejectPendingPayInRequestById("global", paymentRequestId, request);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GeneratePayInSlipUploadToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayInSlipUploadToken(string paymentRequestId)
+        {
+            var result = await svc.GeneratePayInSlipUploadToken("global", paymentRequestId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetPayInSlipUpload/{paymentRequestId}")]
+        public async Task<IActionResult> GetPayInSlipUpload(string paymentRequestId)
+        {
+            var result = await svc.GetPayInSlipUploads("global", paymentRequestId);
+            return Ok(result);
+        }
     }
 }

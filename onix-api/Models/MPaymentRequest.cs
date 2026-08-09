@@ -242,6 +242,11 @@ namespace Its.Onix.Api.Models
         [Column("job_id")]
         public string? JobId { get; set; }
 
+        [Column("payin_slip_upload_count")]
+        public int PayInSlipUploadCount { get; set; }
+
+        [Column("payin_slip_uploads")]
+        public string? PayInSlipUploads { get; set; } /* JSON array of { imageBase64, uploadedAt } */
 
         [NotMapped]
         public string? MerchantName { get; set; }

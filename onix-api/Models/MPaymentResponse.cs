@@ -28,6 +28,8 @@ namespace Its.Onix.Api.Models
         public string? PayInBankCode { get; set; }
         public string? PayInPromptPayId { get; set; }
 
+        public string? SlipUploadUrl { get; set; }
+
         public MPaymentResponse()
         {
         }

@@ -133,6 +133,13 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreatePayInSlipUploadTokenKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"{orgId}:{environment}:PayInSlipUpload";
+            return key;
+        }
+
         public static string CreateScanItemActionKey(string orgId)
         {
             //TODO : Use environment as key component
