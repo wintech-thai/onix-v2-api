@@ -272,6 +272,27 @@ namespace Its.Onix.Api.Services
             return Task.FromResult(r);
         }
 
+        public Task<MOrganization> GetCompanyProfile(string orgId)
+        {
+            return GetOrganization(orgId);
+        }
+
+        public Task<MVOrganization> UpdateCompanyProfile(string orgId, MOrganization org)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVOrganization()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var t = repository.UpdateOrganization(org);
+            r.Organization = t.Result;
+
+            return Task.FromResult(r);
+        }
+
         public async Task<MVOrganization?> UpdateOrganizationStatus(string orgId, string status)
         {
             repository!.SetCustomOrgId(orgId);
