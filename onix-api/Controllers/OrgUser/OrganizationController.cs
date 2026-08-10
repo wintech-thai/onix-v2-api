@@ -27,21 +27,19 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("company-profile")]
-        public async Task<IActionResult> GetCompanyProfile()
+        [Route("org/{id}/action/company-profile")]
+        public async Task<IActionResult> GetCompanyProfile(string id)
         {
-            var orgId = GetCurrentOrgId();
-            var result = await svc.GetCompanyProfile(orgId!);
+            var result = await svc.GetCompanyProfile(id);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("company-profile/update")]
-        public async Task<IActionResult> UpdateCompanyProfile([FromBody] MOrganization request)
+        [Route("org/{id}/action/company-profile/update")]
+        public async Task<IActionResult> UpdateCompanyProfile(string id, [FromBody] MOrganization request)
         {
-            var orgId = GetCurrentOrgId();
-            var result = await svc.UpdateCompanyProfile(orgId!, request);
+            var result = await svc.UpdateCompanyProfile(id, request);
             return Ok(result);
         }
 
