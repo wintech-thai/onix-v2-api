@@ -68,6 +68,12 @@ namespace Its.Onix.Api.Models
         [Column("email")]
         public string? Email { get; set; }
 
+        [Column("tax_id")]
+        public string? TaxId { get; set; }
+
+        [Column("website")]
+        public string? Website { get; set; }
+
         [Column("Status")]
         public string? Status { get; set; } //Active, Pending, Disabled
 
