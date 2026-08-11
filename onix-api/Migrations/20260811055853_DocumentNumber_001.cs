@@ -11,78 +11,6 @@ namespace onix.api.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "address_en",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "address_th",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "contact_name_en",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "contact_name_th",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "email",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "fax",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "logo_image_base64",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "org_name_en",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "org_name_th",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "phone",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "tax_id",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "website",
-                table: "Organizations",
-                type: "text",
-                nullable: true);
-
             migrationBuilder.CreateTable(
                 name: "DocumentNumberConfig",
                 columns: table => new
@@ -121,54 +49,6 @@ namespace onix.api.Migrations
         {
             migrationBuilder.DropTable(
                 name: "DocumentNumberConfig");
-
-            migrationBuilder.DropColumn(
-                name: "address_en",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "address_th",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "contact_name_en",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "contact_name_th",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "email",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "fax",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "logo_image_base64",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "org_name_en",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "org_name_th",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "phone",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "tax_id",
-                table: "Organizations");
-
-            migrationBuilder.DropColumn(
-                name: "website",
-                table: "Organizations");
         }
     }
 }
