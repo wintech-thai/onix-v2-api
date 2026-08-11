@@ -25,8 +25,15 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/AddDocumentNumberConfig")]
         public async Task<IActionResult> AddDocumentNumberConfig(string id, [FromBody] MDocumentNumberConfig request)
         {
-            var result = await _svc.AddDocumentNumberConfig(id, request);
-            return Ok(result);
+            try
+            {
+                var result = await _svc.AddDocumentNumberConfig(id, request);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { status = "ERROR_DUPLICATE_DOCUMENT_TYPE", description = ex.Message });
+            }
         }
 
         [ExcludeFromCodeCoverage]
