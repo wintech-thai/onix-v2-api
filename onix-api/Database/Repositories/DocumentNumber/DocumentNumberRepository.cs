@@ -122,7 +122,7 @@ namespace Its.Onix.Api.Database.Repositories
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<MDocumentNumberConfig?> UpdateDocumentNumberSequenceAsync(string id, int sequenceNo, string sequenceKey)
+        public async Task<MDocumentNumberConfig?> UpdateDocumentNumberSequenceAsync(string id, int sequenceNo, string sequenceKey, string? lastDocumentNumber = null)
         {
             Guid guid = Guid.Parse(id);
             var existing = await context!.DocumentNumberConfigs!
@@ -134,6 +134,8 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 existing.CurrentSequenceNo = sequenceNo;
                 existing.CurrentSequenceKey = sequenceKey;
+                if (lastDocumentNumber != null)
+                    existing.LastDocumentNumber = lastDocumentNumber;
                 await context.SaveChangesAsync();
             }
 

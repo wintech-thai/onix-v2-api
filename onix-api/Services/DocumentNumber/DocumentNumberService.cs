@@ -82,16 +82,16 @@ namespace Its.Onix.Api.Services
             var seqNo = (config.CurrentSequenceKey != currentKey) ? 0 : (config.CurrentSequenceNo ?? 0);
             seqNo++;
 
-            await _repo.UpdateDocumentNumberSequenceAsync(config.Id!.ToString()!, seqNo, currentKey);
-
-            // Format: apply YearOffset, pad seq to SeqDigit digits
+            // Format docNo before saving so we can persist it
             var year = now.Year + (config.YearOffset ?? 0);
             var seqStr = seqNo.ToString().PadLeft(config.SeqDigit ?? 4, '0');
 
             var docNo = (config.DocumentFormat ?? "")
                 .Replace("${yyyy}", year.ToString())
-                .Replace("${mm}", now.Month.ToString())
+                .Replace("${mm}", now.Month.ToString("D2"))
                 .Replace("${seq}", seqStr);
+
+            await _repo.UpdateDocumentNumberSequenceAsync(config.Id!.ToString()!, seqNo, currentKey, docNo);
 
             return docNo;
         }

@@ -14,6 +14,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MDocumentNumberConfig?> DeleteDocumentNumberConfigByIdAsync(string id);
         public Task<bool> IsDocumentTypeExistAsync(string documentType);
         public Task<MDocumentNumberConfig?> GetDocumentNumberConfigByTypeAsync(string documentType);
-        public Task<MDocumentNumberConfig?> UpdateDocumentNumberSequenceAsync(string id, int sequenceNo, string sequenceKey);
+        public Task<MDocumentNumberConfig?> UpdateDocumentNumberSequenceAsync(string id, int sequenceNo, string sequenceKey, string? lastDocumentNumber = null);
     }
 }

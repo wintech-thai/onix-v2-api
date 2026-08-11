@@ -43,6 +43,8 @@ namespace Its.Onix.Api.Models
         [Column("current_sequence_no")]
         public int? CurrentSequenceNo { get; set; } /* หมายเลขลำดับปัจจุบัน */
 
+        [Column("last_document_number")]
+        public string? LastDocumentNumber { get; set; } /* Doc No ล่าสุดที่ gen */
 
         //System fields
         [Column("created_date")]
