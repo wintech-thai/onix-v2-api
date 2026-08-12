@@ -295,6 +295,22 @@ namespace Its.Onix.Api
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+                var appliedMigrations = dbContext.Database.GetAppliedMigrations().ToList();
+                bool hasDocNumber002 = appliedMigrations.Contains("20260811120000_DocumentNumber_002");
+                bool hasCompanyProfile001 = appliedMigrations.Contains("20260810000001_Organization_CompanyProfile_001");
+
+                if (hasDocNumber002 && !hasCompanyProfile001)
+                {
+                    dbContext.Database.ExecuteSqlRaw(@"
+                        INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                        VALUES
+                          ('20260810000001_Organization_CompanyProfile_001', '8.0.8'),
+                          ('20260810000002_Organization_CompanyProfile_002', '8.0.8')
+                        ON CONFLICT DO NOTHING;
+                    ");
+                }
+
                 dbContext.Database.Migrate();
 
                 var service = scope.ServiceProvider.GetRequiredService<DataSeeder>();
