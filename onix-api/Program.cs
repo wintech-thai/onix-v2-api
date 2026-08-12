@@ -296,6 +296,8 @@ namespace Its.Onix.Api
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
+                // CompanyProfile_001/002 ขาด Designer.cs → EF Core ไม่เคย discover → columns ถูก add ด้วย manual ALTER TABLE
+                // insert history แทน manual เพื่อไม่ให้ Migrate() พยายาม ADD COLUMN ซ้ำใน existing DB
                 var appliedMigrations = dbContext.Database.GetAppliedMigrations().ToList();
                 bool hasDocNumber002 = appliedMigrations.Contains("20260811120000_DocumentNumber_002");
                 bool hasCompanyProfile001 = appliedMigrations.Contains("20260810000001_Organization_CompanyProfile_001");
