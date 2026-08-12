@@ -131,6 +131,7 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 //Not allow to update code, refType
                 result.Description = masterRef.Description;
+                result.Tags = masterRef.Tags;
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();
             }
