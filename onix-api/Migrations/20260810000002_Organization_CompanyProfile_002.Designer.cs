@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260810000002_Organization_CompanyProfile_002")]
+    partial class Organization_CompanyProfile_002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -961,63 +964,6 @@ namespace onix.api.Migrations
                     b.ToTable("Cycles");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MDocumentNumberConfig", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("document_number_config_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("CurrentSequenceKey")
-                        .HasColumnType("text")
-                        .HasColumnName("current_sequence_key");
-
-                    b.Property<int?>("CurrentSequenceNo")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_sequence_no");
-
-                    b.Property<string>("DocumentFormat")
-                        .HasColumnType("text")
-                        .HasColumnName("document_format");
-
-                    b.Property<string>("DocumentType")
-                        .HasColumnType("text")
-                        .HasColumnName("document_type");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("ResetType")
-                        .HasColumnType("text")
-                        .HasColumnName("reset_type");
-
-                    b.Property<int?>("SeqDigit")
-                        .HasColumnType("integer")
-                        .HasColumnName("seq_digit");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<int?>("YearOffset")
-                        .HasColumnType("integer")
-                        .HasColumnName("year_offset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("OrgId", "DocumentType")
-                        .IsUnique();
-
-                    b.ToTable("DocumentNumberConfig");
-                });
-
             modelBuilder.Entity("Its.Onix.Api.Models.MEntity", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -1928,14 +1874,6 @@ namespace onix.api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("org_id");
 
-                    b.Property<string>("AddressEn")
-                        .HasColumnType("text")
-                        .HasColumnName("address_en");
-
-                    b.Property<string>("AddressTh")
-                        .HasColumnType("text")
-                        .HasColumnName("address_th");
-
                     b.Property<string>("Addresses")
                         .HasColumnType("text")
                         .HasColumnName("addresses");
@@ -1943,26 +1881,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Channels")
                         .HasColumnType("text")
                         .HasColumnName("channels");
-
-                    b.Property<string>("ContactNameEn")
-                        .HasColumnType("text")
-                        .HasColumnName("contact_name_en");
-
-                    b.Property<string>("ContactNameTh")
-                        .HasColumnType("text")
-                        .HasColumnName("contact_name_th");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("text")
-                        .HasColumnName("email");
-
-                    b.Property<string>("Fax")
-                        .HasColumnType("text")
-                        .HasColumnName("fax");
-
-                    b.Property<string>("LogoImageBase64")
-                        .HasColumnType("text")
-                        .HasColumnName("logo_image_base64");
 
                     b.Property<string>("LogoImagePath")
                         .HasColumnType("text")
@@ -1984,21 +1902,9 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_name");
 
-                    b.Property<string>("OrgNameEn")
-                        .HasColumnType("text")
-                        .HasColumnName("org_name_en");
-
-                    b.Property<string>("OrgNameTh")
-                        .HasColumnType("text")
-                        .HasColumnName("org_name_th");
-
                     b.Property<string>("OrgType")
                         .HasColumnType("text")
                         .HasColumnName("org_type");
-
-                    b.Property<string>("Phone")
-                        .HasColumnType("text")
-                        .HasColumnName("phone");
 
                     b.Property<string>("Status")
                         .HasColumnType("text")
@@ -2008,6 +1914,47 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("tags");
 
+
+                    b.Property<string>("AddressEn")
+                        .HasColumnType("text")
+                        .HasColumnName("address_en");
+
+                    b.Property<string>("AddressTh")
+                        .HasColumnType("text")
+                        .HasColumnName("address_th");
+
+                    b.Property<string>("ContactNameEn")
+                        .HasColumnType("text")
+                        .HasColumnName("contact_name_en");
+
+                    b.Property<string>("ContactNameTh")
+                        .HasColumnType("text")
+                        .HasColumnName("contact_name_th");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Fax")
+                        .HasColumnType("text")
+                        .HasColumnName("fax");
+
+                    b.Property<string>("LogoImageBase64")
+                        .HasColumnType("text")
+                        .HasColumnName("logo_image_base64");
+
+                    b.Property<string>("OrgNameEn")
+                        .HasColumnType("text")
+                        .HasColumnName("org_name_en");
+
+                    b.Property<string>("OrgNameTh")
+                        .HasColumnType("text")
+                        .HasColumnName("org_name_th");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("text")
+                        .HasColumnName("phone");
+
                     b.Property<string>("TaxId")
                         .HasColumnType("text")
                         .HasColumnName("tax_id");
@@ -2015,7 +1962,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Website")
                         .HasColumnType("text")
                         .HasColumnName("website");
-
                     b.HasKey("OrgId");
 
                     b.HasIndex("OrgCustomId")

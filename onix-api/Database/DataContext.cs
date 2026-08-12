@@ -68,6 +68,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MCaseManagement>? CaseManagements { get; set; }
     public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }
 
+    public DbSet<MDocumentNumberConfig>? DocumentNumberConfigs { get; set; }
+
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
 
@@ -243,6 +245,9 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
             .HasIndex(t => new { t.OrgId, t.DocumentNo }).IsUnique();
 
         modelBuilder.Entity<MFinancialDocItemExpense>();
+
+        modelBuilder.Entity<MDocumentNumberConfig>()
+            .HasIndex(t => new { t.OrgId, t.DocumentType }).IsUnique();
 
         modelBuilder.Entity<IdentityUser>()
             .ToTable("AspNetUsers");

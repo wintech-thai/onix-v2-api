@@ -12,7 +12,7 @@ load_env("../.env")
 
 orgId = ENV['API_ORG']
 keyFile = ".token"
-pmtId = 'efd7eb0b-8f99-4bf2-9f02-0505d293eac2'
+pmtId = '259e92e7-2af0-4954-b66e-30d9e11d8f5b'
 
 ### 
 apiUrl = "admin-api/AdminPaymentTx/org/global/action/GetPaymentTransactionById/#{pmtId}"
@@ -26,4 +26,4 @@ ENV['ACCESS_TOKEN'] = token
 #puts("===[#{token}]")
 
 result = make_request(:get, apiUrl, param)
-puts(result)
+puts(result.to_json)

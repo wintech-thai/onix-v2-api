@@ -38,6 +38,42 @@ namespace Its.Onix.Api.Models
         [Column("logo_image_path")]
         public string? LogoImagePath { get; set; } // JSON string
 
+        [Column("logo_image_base64")]
+        public string? LogoImageBase64 { get; set; }
+
+        [Column("org_name_th")]
+        public string? OrgNameTh { get; set; }
+
+        [Column("org_name_en")]
+        public string? OrgNameEn { get; set; }
+
+        [Column("contact_name_th")]
+        public string? ContactNameTh { get; set; }
+
+        [Column("contact_name_en")]
+        public string? ContactNameEn { get; set; }
+
+        [Column("address_th")]
+        public string? AddressTh { get; set; }
+
+        [Column("address_en")]
+        public string? AddressEn { get; set; }
+
+        [Column("phone")]
+        public string? Phone { get; set; }
+
+        [Column("fax")]
+        public string? Fax { get; set; }
+
+        [Column("email")]
+        public string? Email { get; set; }
+
+        [Column("tax_id")]
+        public string? TaxId { get; set; }
+
+        [Column("website")]
+        public string? Website { get; set; }
+
         [Column("Status")]
         public string? Status { get; set; } //Active, Pending, Disabled
 

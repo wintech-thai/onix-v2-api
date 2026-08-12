@@ -58,6 +58,8 @@ namespace Its.Onix.Api.Database
         public DbSet<MCaseManagement>? CaseManagements { get; set; }
         public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }
 
+        public DbSet<MDocumentNumberConfig>? DocumentNumberConfigs { get; set; }
+
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
     }

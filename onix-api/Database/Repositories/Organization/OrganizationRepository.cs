@@ -133,6 +133,18 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Channels = org.Channels;
                 result.LogoImagePath = org.LogoImagePath;
                 result.Status = org.Status;
+                result.OrgNameTh = org.OrgNameTh;
+                result.OrgNameEn = org.OrgNameEn;
+                result.ContactNameTh = org.ContactNameTh;
+                result.ContactNameEn = org.ContactNameEn;
+                result.AddressTh = org.AddressTh;
+                result.AddressEn = org.AddressEn;
+                result.Phone = org.Phone;
+                result.Fax = org.Fax;
+                result.Email = org.Email;
+                result.TaxId = org.TaxId;
+                result.Website = org.Website;
+                result.LogoImageBase64 = org.LogoImageBase64;
 
                 await context.SaveChangesAsync();
             }

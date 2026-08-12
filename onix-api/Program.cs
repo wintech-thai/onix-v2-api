@@ -171,6 +171,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<INotiChannelService, NotiChannelService>();
             builder.Services.AddScoped<IFinancialDocService, FinancialDocService>();
             builder.Services.AddScoped<ICaseManagementService, CaseManagementService>();
+            builder.Services.AddScoped<IDocumentNumberService, DocumentNumberService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -220,6 +221,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<INotiChannelRepository, NotiChannelRepository>();
             builder.Services.AddScoped<IFinancialDocRepository, FinancialDocRepository>();
             builder.Services.AddScoped<ICaseManagementRepository, CaseManagementRepository>();
+            builder.Services.AddScoped<IDocumentNumberRepository, DocumentNumberRepository>();
 
 
             builder.Services.AddAuthentication("BasicOrBearer")
@@ -293,6 +295,24 @@ namespace Its.Onix.Api
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+                // CompanyProfile_001/002 ขาด Designer.cs → EF Core ไม่เคย discover → columns ถูก add ด้วย manual ALTER TABLE
+                // insert history แทน manual เพื่อไม่ให้ Migrate() พยายาม ADD COLUMN ซ้ำใน existing DB
+                var appliedMigrations = dbContext.Database.GetAppliedMigrations().ToList();
+                bool hasDocNumber002 = appliedMigrations.Contains("20260811120000_DocumentNumber_002");
+                bool hasCompanyProfile001 = appliedMigrations.Contains("20260810000001_Organization_CompanyProfile_001");
+
+                if (hasDocNumber002 && !hasCompanyProfile001)
+                {
+                    dbContext.Database.ExecuteSqlRaw(@"
+                        INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                        VALUES
+                          ('20260810000001_Organization_CompanyProfile_001', '8.0.8'),
+                          ('20260810000002_Organization_CompanyProfile_002', '8.0.8')
+                        ON CONFLICT DO NOTHING;
+                    ");
+                }
+
                 dbContext.Database.Migrate();
 
                 var service = scope.ServiceProvider.GetRequiredService<DataSeeder>();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
+using System.Security.Claims;
 
 namespace Prom.LPR.Api.Controllers
 {
@@ -17,6 +18,29 @@ namespace Prom.LPR.Api.Controllers
         public OrganizationController(IOrganizationService service)
         {
             svc = service;
+        }
+
+        private string? GetCurrentOrgId()
+        {
+            return User.FindFirst(ClaimTypes.GroupSid)?.Value;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/company-profile")]
+        public async Task<IActionResult> GetCompanyProfile(string id)
+        {
+            var result = await svc.GetCompanyProfile(id);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/company-profile/update")]
+        public async Task<IActionResult> UpdateCompanyProfile(string id, [FromBody] MOrganization request)
+        {
+            var result = await svc.UpdateCompanyProfile(id, request);
+            return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
