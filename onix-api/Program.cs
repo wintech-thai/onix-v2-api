@@ -296,13 +296,25 @@ namespace Its.Onix.Api
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-                // CompanyProfile_001/002 ขาด Designer.cs → EF Core ไม่เคย discover → columns ถูก add ด้วย manual ALTER TABLE
-                // insert history แทน manual เพื่อไม่ให้ Migrate() พยายาม ADD COLUMN ซ้ำใน existing DB
+                // migrations ที่ถูกสร้างด้วยมือ (ขาด Designer.cs) → EF Core ไม่ discover → columns ถูก add ด้วย manual ALTER TABLE
+                // insert history แทนเพื่อไม่ให้ Migrate() พยายาม ADD COLUMN ซ้ำใน existing DB
                 var appliedMigrations = dbContext.Database.GetAppliedMigrations().ToList();
+                bool hasDocNumber001 = appliedMigrations.Contains("20260811055853_DocumentNumber_001");
                 bool hasDocNumber002 = appliedMigrations.Contains("20260811120000_DocumentNumber_002");
                 bool hasCompanyProfile001 = appliedMigrations.Contains("20260810000001_Organization_CompanyProfile_001");
 
-                if (hasDocNumber002 && !hasCompanyProfile001)
+                // existing DB: DocumentNumber_002 ถูกสร้างมือ → ไม่อยู่ใน history → ต้อง insert ก่อน Migrate()
+                if (hasDocNumber001 && !hasDocNumber002)
+                {
+                    dbContext.Database.ExecuteSqlRaw(@"
+                        INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
+                        VALUES ('20260811120000_DocumentNumber_002', '8.0.8')
+                        ON CONFLICT DO NOTHING;
+                    ");
+                }
+
+                // existing DB: CompanyProfile_001/002 ถูกสร้างมือ → ไม่อยู่ใน history
+                if (hasDocNumber001 && !hasCompanyProfile001)
                 {
                     dbContext.Database.ExecuteSqlRaw(@"
                         INSERT INTO ""__EFMigrationsHistory"" (""MigrationId"", ""ProductVersion"")
