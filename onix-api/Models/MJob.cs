@@ -76,6 +76,8 @@ namespace Its.Onix.Api.Models
         [Column("ref_id")]
         public string? RefId { get; set; } /* เป็น key ref ของอะไรก็ได้ */
 
+        [Column("metadata")]
+        public string? Metadata { get; set; } /* JSON: { bucket, folder, filename } — เก็บที่อยู่ไฟล์ backup */
 
         [NotMapped]
         public List<NameValue> Parameters { get; set; }

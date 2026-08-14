@@ -515,6 +515,47 @@ namespace Its.Onix.Api.Controllers
                         }   
                     }
                 }
+                else if ((title == "GSB NOW") && !string.IsNullOrEmpty(text))
+                {
+                    pmt.DestinationBankCode = "GSB";
+
+                    if (bankTxObj != null)
+                    {
+                        //มาจาก notification การโอนเงินผ่านทาง Line API agent
+                        var evt = bankTxObj["eventType"].ToString();
+                        if (evt == "tx_in")
+                        {
+                            decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
+                            pmt.PaymentAmount = amt;
+                            pmt.DestinationAccountNo = bankTxObj["destinationAccount"].ToString();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        //Android app
+                        var match = Regex.Match(
+                            text,
+                            @"รายการเงินเข้า\s*(?<amount>[\d,]+\.\d{2})\s*บาท\s*เข้าบัญชี\s*(?<account>[A-Z0-9-]+)"
+                        );
+
+                        if (match.Success)
+                        {
+                            var amount = decimal.Parse(match.Groups["amount"].Value);
+                            var account = match.Groups["account"].Value;
+
+                            pmt.PaymentAmount = amount;
+                            pmt.DestinationAccountNo = account;
+                        }
+                        else
+                        {
+                            return null;
+                        }   
+                    }
+                }
             }
 
             return pmt;
