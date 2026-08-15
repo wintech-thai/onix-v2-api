@@ -184,9 +184,13 @@ public class DataSeeder
 
     private void SeedDefaultRoles3()
     {
+        //อันนี้เลิกใช้แล้ว PAYMENT_REQUEST
         AddRole("PAYMENT_REQUEST", "PaymentRequest:SubmitPayInRequest", "ORGANIZATION", "For merchant to submit payment request");
+
         AddRole("PAYOUT_REQUEST", "PaymentRequest:SubmitPayOutRequest", "ORGANIZATION", "For merchant to submit pay-out request");
-        
+        AddRole("PAYIN_REQUEST", "PaymentRequest:SubmitPayInRequest", "ORGANIZATION", "For merchant to submit pay-in request");
+        AddRole("PAYIN_REQUEST_P2P", "PaymentRequest:SubmitPayInRequestP2P", "ORGANIZATION", "For merchant to submit pay-in (P2P) request");
+
         context.SaveChanges();
     }
 

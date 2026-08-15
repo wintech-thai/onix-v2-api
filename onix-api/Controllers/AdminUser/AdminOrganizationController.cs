@@ -32,6 +32,25 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+
+        [HttpPost]
+        [Route("org/global/action/CreatePaymentEndpointsApiKey/{orgId}/{roles}")]
+        public IActionResult CreatePaymentEndpointsApiKey(string orgId, string roles)
+        {
+            var uuid = Guid.NewGuid();
+
+            var request = new MApiKey()
+            {
+                KeyType = "Payment",
+                KeyName = $"Payment:{uuid}",
+                KeyDescription = "Auto generated key for Payment API, DO NOT delete!!!",
+                Roles = [.. roles.Split(',')], //แกะ roles ที่คั่นด้วย comma ออกมาเป็น array
+            };
+
+            var apiKey = _apiKeySvc.AddApiKey(orgId, request);
+            return Ok(apiKey);
+        }
+
         [HttpPost]
         [Route("org/global/action/CreatePaymentRequestApiKey/{orgId}")]
         public IActionResult CreatePaymentRequestApiKey(string orgId)

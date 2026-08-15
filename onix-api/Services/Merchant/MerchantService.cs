@@ -243,6 +243,18 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public List<NameValue> GetMerchantPaymentEndpoints(string orgId, string merchantId)
+        {
+            var arr = new List<NameValue>()
+            {
+                new() { Name = "Pay-In", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitPayInRequest/{merchantId}" },
+                new() { Name = "Pay-In (P2P)", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitPayInRequestP2P/{merchantId}" },
+                new() { Name = "Pay-Out", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitPayOutRequest/{merchantId}" },
+            };
+
+            return arr;
+        }
+
         public async Task<List<MMerchant>> GetMerchants(string orgId, VMMerchant param)
         {
             repository!.SetCustomOrgId(orgId);

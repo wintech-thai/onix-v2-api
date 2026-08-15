@@ -12,5 +12,7 @@ namespace Its.Onix.Api.ModelsViews
         public string? PaymentTxNotiUrl { get; set; }
         public string? AgentHeartbeatUrl { get; set; }
         public string? AgentPaymentTxNotiUrl { get; set; }
+
+        public List<NameValue>? Endpoints { get; set; }
     }
 }
