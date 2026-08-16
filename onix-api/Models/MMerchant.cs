@@ -79,6 +79,10 @@ namespace Its.Onix.Api.Models
         [Column("payin_daily_tx_count_limit")]
         public decimal? PayinDailyTxCountLimit { get; set; }
 
+        [Column("payin_expire_minute")]
+        public int? PayinExpireMinute { get; set; }
+
+
         [NotMapped]
         public List<string>? WhitelistBankAccountNamesArr { get; set; } //deserialize มาจาก WhitelistBankAccountNames
 
@@ -103,6 +107,7 @@ namespace Its.Onix.Api.Models
             CreatedDate = DateTime.UtcNow;
             RandomDecimal = true;
             IncludeGlobalBankAccount = true;
+            PayinExpireMinute = 30; //Default 30 minutes
         }
     }
 }
