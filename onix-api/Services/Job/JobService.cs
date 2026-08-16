@@ -70,6 +70,31 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public MVJob? CloseBackupJob(string orgId, string jobId)
+        {
+            var r = new MVJob { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(jobId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Job ID [{jobId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = repository!.CloseBackupJob(jobId);
+
+            if (m == null)
+            {
+                r.Status = "NOTFOUND_OR_INVALID";
+                r.Description = $"Job [{jobId}] not found, not Running, or not a closeable type";
+                return r;
+            }
+
+            r.Job = m;
+            return r;
+        }
+
         public MJob GetJobTemplate(string orgId, string jobType, string userName)
         {
             var email = "your-email@email-xxx.com";

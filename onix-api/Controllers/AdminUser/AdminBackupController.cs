@@ -141,6 +141,20 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        // ─── Close a stuck Running backup job ────────────────────────────────────
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/CloseBackupJob/{jobId}")]
+        public IActionResult CloseBackupJob(string jobId)
+        {
+            var result = _jobSvc.CloseBackupJob("global", jobId);
+            if (result == null) return NotFound();
+            if (result.Status == "NOTFOUND_OR_INVALID") return BadRequest(result);
+            if (result.Status == "UUID_INVALID") return BadRequest(result);
+            return Ok(result);
+        }
+
         // ─── Private helpers ─────────────────────────────────────────────────────
 
         private static async Task<List<object>> ListS3FilesAsync(MBackupPolicy policy)

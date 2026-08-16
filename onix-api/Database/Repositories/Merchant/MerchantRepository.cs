@@ -106,6 +106,7 @@ namespace Its.Onix.Api.Database.Repositories
                 IncludeGlobalBankAccount = x.merchant.IncludeGlobalBankAccount,
                 PayinDailyTxAmountLimit = x.merchant.PayinDailyTxAmountLimit,
                 PayinDailyTxCountLimit = x.merchant.PayinDailyTxCountLimit,
+                PayinExpireMinute = x.merchant.PayinExpireMinute,
             });
         }
 
@@ -184,6 +185,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.WhitelistBankAccountNames = merchant.WhitelistBankAccountNames;
                 existing.PayinDailyTxAmountLimit = merchant.PayinDailyTxAmountLimit;
                 existing.PayinDailyTxCountLimit = merchant.PayinDailyTxCountLimit;
+                existing.PayinExpireMinute = merchant.PayinExpireMinute;
             }
 
             await context.SaveChangesAsync();

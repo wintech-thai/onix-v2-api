@@ -11,5 +11,6 @@ namespace Its.Onix.Api.Database.Repositories
         public IEnumerable<MJob> GetJobs(VMJob param);
         public MJob GetJobById(string cycleId);
         public MJob? DeleteJobById(string jobId);
+        public MJob? CloseBackupJob(string jobId);
     }
 }

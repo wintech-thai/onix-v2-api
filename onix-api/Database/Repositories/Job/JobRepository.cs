@@ -182,5 +182,25 @@ namespace Its.Onix.Api.Database.Repositories
 
             return r;
         }
+
+        public MJob? CloseBackupJob(string jobId)
+        {
+            Guid id = Guid.Parse(jobId);
+
+            var job = context!.Jobs!
+                .Where(x => x.Id.Equals(id))
+                .FirstOrDefault();
+
+            if (job == null) return null;
+            if (job.Status != "Running") return null;
+            if (job.Type != "Backup.Adhoc" && job.Type != "Backup.Schedule") return null;
+
+            job.Status = "Closed";
+            job.EndDate = DateTime.UtcNow;
+            job.UpdatedDate = DateTime.UtcNow;
+            context.SaveChanges();
+
+            return job;
+        }
     }
 }

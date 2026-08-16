@@ -69,6 +69,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }
 
     public DbSet<MDocumentNumberConfig>? DocumentNumberConfigs { get; set; }
+    public DbSet<MAuditTrack>? AuditTracks { get; set; }
+
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -254,5 +256,7 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
         modelBuilder.Entity<IdentityRole>()
             .ToTable("AspNetRoles");
+
+        modelBuilder.Entity<MAuditTrack>();
     }
 }

@@ -1188,7 +1188,7 @@ namespace Its.Onix.Api.Services
             }
 
             paymentRequest.Status = "Pending";
-            var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct);
+            var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
             if (pmResponse.Status != "OK")
             {
                 return pmResponse;
@@ -1339,7 +1339,7 @@ namespace Its.Onix.Api.Services
             }
 
             paymentRequest.Status = "Pending";
-            var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct);
+            var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
             if (pmResponse.Status != "OK")
             {
                 return pmResponse;
@@ -1678,7 +1678,7 @@ namespace Its.Onix.Api.Services
             return false;
         }
 
-        private async Task<MVPaymentResponse> CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct)
+        private async Task<MVPaymentResponse> CreatePaymentResponse(MPaymentRequest pr, MBankAccount bnkAcct, MMerchant mc)
         {
             var mvResponse = new MVPaymentResponse()
             {
@@ -1714,8 +1714,14 @@ namespace Its.Onix.Api.Services
                 return mvResponse;
             }
 
-            //TODO : ให้ set expire minute ได้ใน level ของ merchant ด้วย แต่ตอนนี้ให้ default เป็น 30 นาที
-            pr.ExpireDate = DateTime.UtcNow.AddMinutes(30); //QR code จะหมดอายุใน 30 นาที
+            //ให้ set expire minute ได้ใน level ของ merchant ด้วย แต่ตอนนี้ให้ default เป็น 30 นาที
+            var expireMinute = mc.PayinExpireMinute;
+            if ((expireMinute == null) || (expireMinute <= 0))
+            {
+                expireMinute = 30;
+            }
+
+            pr.ExpireDate = DateTime.UtcNow.AddMinutes((double) expireMinute); //Payment Request จะหมดอายุใน XX นาที
             var pmr = new MPaymentResponse()
             {
                 CreatedAt = pr.CreatedDate,

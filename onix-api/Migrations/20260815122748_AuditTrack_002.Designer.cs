@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260815122748_AuditTrack_002")]
+    partial class AuditTrack_002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1856,10 +1859,6 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("PayinDailyTxCountLimit")
                         .HasColumnType("numeric")
                         .HasColumnName("payin_daily_tx_count_limit");
-
-                    b.Property<int?>("PayinExpireMinute")
-                        .HasColumnType("integer")
-                        .HasColumnName("payin_expire_minute");
 
                     b.Property<double?>("PayinFeePct")
                         .HasColumnType("double precision")
