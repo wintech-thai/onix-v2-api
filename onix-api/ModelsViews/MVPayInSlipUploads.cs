@@ -7,6 +7,9 @@ namespace Its.Onix.Api.ModelsViews
     {
         public string? ImageBase64 { get; set; }
         public DateTime? UploadedAt { get; set; }
+        public string? First4 { get; set; }
+        public string? Last4 { get; set; }
+        public string? Note { get; set; }
     }
 
     [ExcludeFromCodeCoverage]

@@ -141,6 +141,35 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/{orgId}/action/GetMerchantPaymentEndpoints")]
+        public async Task<IActionResult> GetMerchantPaymentEndpoints(string orgId)
+        {
+            var merchantId = await GetCurrentMerchantId(orgId);
+            if (string.IsNullOrEmpty(merchantId))
+            {
+                return Ok(new { Status = "Error", Description = "Merchant not found" });
+            }
+
+            var mvMerchant = await _merchantSvc.GetMerchantById(orgId, merchantId);
+            if (mvMerchant.Status != "OK")
+            {
+                return Ok(mvMerchant);
+            }
+
+            var mc = mvMerchant.Merchant!;
+            var merchantOrgId = mc.OrgId;
+
+            var endpoints = new[]
+            {
+                new { Name = "Pay-In Request URL", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayInRequest/{merchantId}" },
+                new { Name = "Pay-Out Request URL", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayOutRequest/{merchantId}" },
+            };
+
+            return Ok(endpoints);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/{orgId}/action/GetMerchantWebhooks")]
         public async Task<IActionResult> GetMerchantWebhooks(string orgId)
         {

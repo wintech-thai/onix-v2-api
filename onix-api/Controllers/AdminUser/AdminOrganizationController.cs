@@ -97,6 +97,20 @@ namespace Its.Onix.Api.Controllers
             return Ok(keys);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetPaymentApiKeys/{orgId}")]
+        public IActionResult GetPaymentApiKeys(string orgId)
+        {
+            var request = new VMApiKey()
+            {
+                KeyTypeSet = "Payment,PaymentRequest",
+            };
+
+            var keys = _apiKeySvc.GetApiKeys(orgId, request);
+
+            return Ok(keys);
+        }
+
         [HttpPost]
         [Route("org/global/action/DeletePaymentRequestApiKeyById/{orgId}/{apiKeyId}")]
         public IActionResult DeletePaymentRequestApiKeyById(string orgId, string apiKeyId)

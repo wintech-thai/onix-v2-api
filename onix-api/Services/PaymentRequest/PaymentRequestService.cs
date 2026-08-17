@@ -1,4 +1,5 @@
 using Its.Onix.Api.Models;
+using Its.Onix.Api.Database;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
@@ -18,14 +19,16 @@ namespace Its.Onix.Api.Services
         private readonly IPointService? _pointService = null;
         private readonly IRedisHelper _redis;
         private readonly IJobService? _jobService = null;
+        private readonly IDataContext? context = null;
 
         public PaymentRequestService(
-            IPaymentRequestRepository repo, 
-            IPaymentTransactionRepository paymentTxRepo, 
+            IPaymentRequestRepository repo,
+            IPaymentTransactionRepository paymentTxRepo,
             IBankAccountRepository bankAcctRepo,
             IRedisHelper redis,
             IJobService jobService,
-            IPointService pointService) : base()
+            IPointService pointService,
+            IDataContext dataContext) : base()
         {
             repository = repo;
             _paymentTransactionRepo = paymentTxRepo;
@@ -33,6 +36,7 @@ namespace Its.Onix.Api.Services
             _pointService = pointService;
             _redis = redis;
             _jobService = jobService;
+            context = dataContext;
         }
 
         public async Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId)
@@ -1785,7 +1789,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVBase> UploadPayInSlipById(string paymentRequestId, string token, string base64Image)
+        public async Task<MVBase> UploadPayInSlipById(string paymentRequestId, string token, string base64Image, string? first4 = null, string? last4 = null, string? note = null)
         {
             var verify = await VerifyPayInSlipToken(paymentRequestId, token);
             if (verify.Status != "OK") return verify;
@@ -1803,12 +1807,37 @@ namespace Its.Onix.Api.Services
             }
             catch { slips = []; }
 
-            slips.Add(new MPayInSlipItem { ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow });
+            slips.Add(new MPayInSlipItem { ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow, First4 = first4, Last4 = last4, Note = note });
 
             var slipsJson = JsonSerializer.Serialize(slips);
             await repository!.UpdatePayInSlipById(paymentRequestId, slipsJson, slips.Count);
 
+            if (!string.IsNullOrEmpty(first4) && !string.IsNullOrEmpty(last4))
+            {
+                var dupRecord = new MDuplicateRecord
+                {
+                    DupType = "PayinSlipId",
+                    First4 = first4.ToUpper(),
+                    Last4 = last4.ToUpper(),
+                    OrgId = pr.OrgId,
+                    DocumentId = paymentRequestId,
+                };
+                context!.DuplicateRecords!.Add(dupRecord);
+                await context.SaveChangesAsync();
+            }
+
             return new MVBase { Status = "OK", Description = "Slip uploaded successfully" };
+        }
+
+        public List<MDuplicateRecord> CheckPayInSlipDup(string first4, string last4, string? excludeDocumentId = null)
+        {
+            var f4 = first4.ToUpper();
+            var l4 = last4.ToUpper();
+            var query = context!.DuplicateRecords!
+                .Where(r => r.DupType == "PayinSlipId" && r.First4 == f4 && r.Last4 == l4);
+            if (!string.IsNullOrEmpty(excludeDocumentId))
+                query = query.Where(r => r.DocumentId != excludeDocumentId);
+            return [.. query];
         }
 
         public async Task<MVPayInSlipUploads> GetPayInSlipUploads(string orgId, string paymentRequestId)

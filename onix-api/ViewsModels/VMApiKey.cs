@@ -7,5 +7,6 @@ namespace Its.Onix.Api.ViewsModels
     {
         public string? FullTextSearch { get; set; }
         public string? KeyType { get; set; }
+        public string? KeyTypeSet { get; set; }
     }
 }

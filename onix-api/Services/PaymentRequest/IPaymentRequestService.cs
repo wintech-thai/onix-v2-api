@@ -34,7 +34,8 @@ namespace Its.Onix.Api.Services
         public Task<MVPaymentRequest> RejectPendingPayInRequestById(string orgId, string paymentRequestId, MPaymentRequest pmr);
 
         public Task<MVBase> VerifyPayInSlipToken(string paymentRequestId, string token);
-        public Task<MVBase> UploadPayInSlipById(string paymentRequestId, string token, string base64Image);
+        public Task<MVBase> UploadPayInSlipById(string paymentRequestId, string token, string base64Image, string? first4 = null, string? last4 = null, string? note = null);
+        public List<MDuplicateRecord> CheckPayInSlipDup(string first4, string last4, string? excludeDocumentId = null);
         public Task<MVPayInSlipUploads> GetPayInSlipUploads(string orgId, string paymentRequestId);
         public Task<MVBase> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId);
     }

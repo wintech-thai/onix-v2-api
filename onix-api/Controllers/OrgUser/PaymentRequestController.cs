@@ -282,8 +282,17 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/UploadPayInSlipById/{paymentRequestId}/{token}")]
         public async Task<IActionResult> UploadPayInSlipById(string orgId, string paymentRequestId, string token, [FromBody] VMUploadPayInSlip payload)
         {
-            var result = await _paymentRequestSvc.UploadPayInSlipById(paymentRequestId, token, payload.ImageBase64!);
+            var result = await _paymentRequestSvc.UploadPayInSlipById(paymentRequestId, token, payload.ImageBase64!, payload.First4, payload.Last4, payload.Note);
             return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{orgId}/action/CheckPayInSlipDup/{paymentRequestId}/{first4}/{last4}")]
+        public IActionResult CheckPayInSlipDup(string orgId, string paymentRequestId, string first4, string last4)
+        {
+            var dups = _paymentRequestSvc.CheckPayInSlipDup(first4, last4, paymentRequestId);
+            return Ok(new { Status = "OK", Duplicates = dups });
         }
 
         [HttpGet]
