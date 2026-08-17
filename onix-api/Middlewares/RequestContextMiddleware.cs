@@ -36,8 +36,10 @@ public class RequestContextMiddleware
             clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
         }
 
-        requestContext.IpAddress = cfClientIp;
-        requestContext.IpAddress2 = clientIp;
+        var remoteAddr = context.Connection.RemoteIpAddress?.ToString();
+
+        requestContext.IpAddress = string.Join(",", [cfClientIp, clientIp]);;
+        requestContext.IpAddress2 = remoteAddr;
 
         var pc = ServiceUtils.GetPathComponent(context.Request);
 
