@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Its.Onix.Api.Utils;
 
 public class RequestContextMiddleware
@@ -45,8 +46,8 @@ public class RequestContextMiddleware
 
         requestContext.OrgId = pc.OrgId;
         requestContext.RequestPath = context.Request.Path;
-        requestContext.ActionBy = GetValue(context, "Temp-Identity-Name", "");
-
+        requestContext.ActionBy = context.User.FindFirst(ClaimTypes.Name)?.Value;
+        
         await _next(context);
     }
 }
