@@ -31,7 +31,7 @@ namespace Its.Onix.Api.Models
         public string? ActionName { get; set; } /* Added, Modified, Delete */
 
         [Column("action_requested")]
-        public string? ActionRequested { get; set; } /* อาจจะเป็นชื่อ API ก็ได้ */
+        public string? ActionRequested { get; set; } /* อาจจะเป็นชื่อ path API ก็ได้ */
 
         [Column("action_by")]
         public string? ActionBy { get; set; } /* ชื่อ user ที่ทำ action นั้น */
@@ -47,6 +47,9 @@ namespace Its.Onix.Api.Models
 
         [Column("new_value")]
         public string? NewValue { get; set; } /* JSON string ที่เก็บ state เดิมหลัง change */
+
+        [Column("api_name")]
+        public string? ApiName { get; set; } /* ชื่อ API */
 
 
         //System fields

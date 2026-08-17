@@ -8,4 +8,5 @@ public class RequestContext
     public string? IpAddress2 { get; set; }
 
     public string? RequestPath { get; set; }
+    public string? ApiName { get; set; }
 }

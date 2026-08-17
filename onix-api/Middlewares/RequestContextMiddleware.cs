@@ -39,15 +39,18 @@ public class RequestContextMiddleware
 
         var remoteAddr = context.Connection.RemoteIpAddress?.ToString();
 
-        requestContext.IpAddress = string.Join(",", [cfClientIp, clientIp]);;
+        requestContext.IpAddress = string.Join(",",
+            new[] { cfClientIp, clientIp }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
         requestContext.IpAddress2 = remoteAddr;
 
         var pc = ServiceUtils.GetPathComponent(context.Request);
 
         requestContext.OrgId = pc.OrgId;
+        requestContext.ApiName = pc.ApiName;
         requestContext.RequestPath = context.Request.Path;
         requestContext.ActionBy = context.User.FindFirst(ClaimTypes.Name)?.Value;
-        
+
         await _next(context);
     }
 }
