@@ -112,7 +112,17 @@ namespace Its.Onix.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(connStr, o => o.CommandTimeout(1200)));
+            builder.Services.AddScoped<AuditTrailInterceptor>();
+            builder.Services.AddDbContext<DataContext>((sp, options) =>
+            {
+                options.UseNpgsql(
+                    connStr,
+                    o => o.CommandTimeout(1200));
+
+                options.AddInterceptors(
+                    sp.GetRequiredService<AuditTrailInterceptor>());
+            });
+
             builder.Services.AddTransient<DataSeeder>();
 
             builder.Services.AddScoped<IDataContext, DataContext>();
