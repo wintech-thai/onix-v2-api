@@ -28,7 +28,10 @@ namespace Its.Onix.Api.Models
         public string? RowId { get; set; } /* ID ของ row นั้น ๆ ที่เราจะ track */
 
         [Column("action_name")]
-        public string? ActionName { get; set; } /* อาจจะเป็นชื่อ API ก็ได้ */
+        public string? ActionName { get; set; } /* Added, Modified, Delete */
+
+        [Column("action_requested")]
+        public string? ActionRequested { get; set; } /* อาจจะเป็นชื่อ API ก็ได้ */
 
         [Column("action_by")]
         public string? ActionBy { get; set; } /* ชื่อ user ที่ทำ action นั้น */
@@ -36,6 +39,8 @@ namespace Its.Onix.Api.Models
         [Column("ip_address")]
         public string? IpAddress { get; set; } /* เพื่อตอบคำถาม where */
 
+        [Column("ip_address2")]
+        public string? IpAddress2 { get; set; } /* เพื่อตอบคำถาม where */
 
         [Column("old_value")]
         public string? OldValue { get; set; } /* JSON string ที่เก็บ state เดิมก่อน change */

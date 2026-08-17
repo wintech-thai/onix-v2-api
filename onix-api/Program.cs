@@ -113,6 +113,7 @@ namespace Its.Onix.Api
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddScoped<AuditTrailInterceptor>();
+            builder.Services.AddScoped<RequestContext>();
             builder.Services.AddDbContext<DataContext>((sp, options) =>
             {
                 options.UseNpgsql(
@@ -124,7 +125,6 @@ namespace Its.Onix.Api
             });
 
             builder.Services.AddTransient<DataSeeder>();
-
             builder.Services.AddScoped<IDataContext, DataContext>();
             builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
             builder.Services.AddScoped<IOrganizationService, OrganizationService>();
@@ -355,6 +355,7 @@ namespace Its.Onix.Api
 
             app.UseRateLimiter();
             app.UseMiddleware<AuditLogMiddleware>();
+            app.UseMiddleware<RequestContextMiddleware>();
             app.MapHealthChecks("/health");
             app.UseHttpsRedirection();
             app.UseAuthentication();

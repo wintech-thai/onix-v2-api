@@ -6,12 +6,19 @@ using Its.Onix.Api.Models;
 
 public class AuditTrailInterceptor : SaveChangesInterceptor
 {
+    private readonly RequestContext _requestContext;
+
     private static readonly HashSet<string> AuditedTables =
         new(StringComparer.OrdinalIgnoreCase)
         {
             "PaymentRequests",
             "PaymentTransactions"
         };
+
+    public AuditTrailInterceptor(RequestContext requestContext)
+    {
+        _requestContext = requestContext;
+    }
 
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData,
@@ -35,7 +42,7 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
             cancellationToken);
     }
 
-    private static void AddAuditTracks(DbContext? context)
+    private void AddAuditTracks(DbContext? context)
     {
         if (context == null)
             return;
@@ -59,7 +66,7 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
         }
     }
 
-    private static MAuditTrack CreateAuditTrack(
+    private MAuditTrack CreateAuditTrack(
         EntityEntry entry)
     {
         var tableName = entry.Metadata.GetTableName()!;
@@ -105,12 +112,21 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
             TrackModel = tableName,
             RowId = rowId,
             ActionName = entry.State.ToString(),
+
             OldValue = oldValues.Count > 0
                 ? JsonSerializer.Serialize(oldValues)
                 : null,
+
             NewValue = newValues.Count > 0
                 ? JsonSerializer.Serialize(newValues)
-                : null
+                : null,
+
+            IpAddress = _requestContext.IpAddress,
+            IpAddress2 = _requestContext.IpAddress2,
+            ActionBy = _requestContext.ActionBy,
+            OrgId = _requestContext.OrgId,
+            ActionRequested = _requestContext.RequestPath,
+
         };
     }
 }
