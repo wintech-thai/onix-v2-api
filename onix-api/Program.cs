@@ -354,12 +354,14 @@ namespace Its.Onix.Api
             }
 
             app.UseRateLimiter();
-            app.UseMiddleware<AuditLogMiddleware>();
-            app.UseMiddleware<RequestContextMiddleware>();
-            app.MapHealthChecks("/health");
             app.UseHttpsRedirection();
+
             app.UseAuthentication();
+            app.UseMiddleware<RequestContextMiddleware>();
+            app.UseMiddleware<AuditLogMiddleware>();
             app.UseAuthorization();
+
+            app.MapHealthChecks("/health");            
             app.MapControllers();
             app.MapHub<PaymentHub>("/realtime/payment-tx");
             app.Run();
