@@ -130,29 +130,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [ExcludeFromCodeCoverage]
-        [HttpGet]
-        [Route("org/global/action/GetMerchantPaymentEndpoints/{merchantId}")]
-        public async Task<IActionResult> GetMerchantPaymentEndpoints(string merchantId)
-        {
-            var mvMerchant = await svc.GetMerchantById("notused", merchantId);
-            if (mvMerchant.Status != "OK")
-            {
-                return Ok(mvMerchant);
-            }
-
-            var mc = mvMerchant.Merchant!;
-            var merchantOrgId = mc.OrgId;
-
-            var endpoints = new[]
-            {
-                new { Name = "Pay-In Request URL", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayInRequest/{merchantId}" },
-                new { Name = "Pay-Out Request URL", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{merchantOrgId}/action/SubmitPayOutRequest/{merchantId}" },
-            };
-
-            return Ok(endpoints);
-        }
-
         [HttpPost]
         [Route("org/global/action/GetMerchants")]
         public async Task<IActionResult> GetMerchants([FromBody] VMMerchant param)
