@@ -42,6 +42,9 @@ namespace Its.Onix.Api.Models
         [Column("agent_config")]
         public string? AgentConfig { get; set; } /* JSON string เก็บเพื่อบอกว่ามี config อะไรบ้าง */
 
+        [Column("agent_status")]
+        public string? AgentStatus { get; set; } /* Active, Disable */
+
 
         //System fields
         [Column("created_date")]
@@ -73,6 +76,7 @@ namespace Its.Onix.Api.Models
             CreatedDate = DateTime.UtcNow;
             ApiKeyId = "";
             BankAccountsSelectedObj = [];
+            AgentStatus = "Active";
         }
     }
 }
