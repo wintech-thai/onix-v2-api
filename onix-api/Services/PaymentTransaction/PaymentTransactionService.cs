@@ -502,7 +502,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = paymentNotiLine?.PaymentAmount,
                 FromBankAccountNo = paymentNotiLine?.SourceBankAccountNo,
                 FromBankCode = paymentNotiLine?.SourceBankCode,
-                StatusReason = $"Matched [pendingMatchCount] pending payment request",
+                StatusReason = $"Matched [{pendingMatchCount}] pending payment request",
             };
 
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
