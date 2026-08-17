@@ -126,7 +126,7 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
             ActionBy = _requestContext.ActionBy,
             OrgId = _requestContext.OrgId,
             ActionRequested = _requestContext.RequestPath,
-
+            ApiName = _requestContext.ApiName,
         };
     }
 }
