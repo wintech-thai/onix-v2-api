@@ -363,12 +363,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> UpdateAgentStatusById(string agentId, string status)
         {
             Guid id = Guid.Parse(agentId);
-            var result = context!.Agents!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
 
             if (result != null)
             {
                 result.AgentStatus = status;
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
             return result!;
