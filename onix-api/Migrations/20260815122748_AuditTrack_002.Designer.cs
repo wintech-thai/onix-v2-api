@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260815122748_AuditTrack_002")]
+    partial class AuditTrack_002
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -580,14 +583,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("action_name");
 
-                    b.Property<string>("ActionRequested")
-                        .HasColumnType("text")
-                        .HasColumnName("action_requested");
-
-                    b.Property<string>("ApiName")
-                        .HasColumnType("text")
-                        .HasColumnName("api_name");
-
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
@@ -595,10 +590,6 @@ namespace onix.api.Migrations
                     b.Property<string>("IpAddress")
                         .HasColumnType("text")
                         .HasColumnName("ip_address");
-
-                    b.Property<string>("IpAddress2")
-                        .HasColumnType("text")
-                        .HasColumnName("ip_address2");
 
                     b.Property<string>("NewValue")
                         .HasColumnType("text")
@@ -1086,44 +1077,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("DocumentNumberConfig");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MDuplicateRecord", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("DocumentId")
-                        .HasColumnType("text")
-                        .HasColumnName("document_id");
-
-                    b.Property<string>("DupType")
-                        .HasColumnType("text")
-                        .HasColumnName("dup_type");
-
-                    b.Property<string>("First4")
-                        .HasColumnType("text")
-                        .HasColumnName("first4");
-
-                    b.Property<string>("Last4")
-                        .HasColumnType("text")
-                        .HasColumnName("last4");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("First4", "Last4");
-
-                    b.ToTable("DuplicateRecords");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MEntity", b =>
@@ -1906,10 +1859,6 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("PayinDailyTxCountLimit")
                         .HasColumnType("numeric")
                         .HasColumnName("payin_daily_tx_count_limit");
-
-                    b.Property<int?>("PayinExpireMinute")
-                        .HasColumnType("integer")
-                        .HasColumnName("payin_expire_minute");
 
                     b.Property<double?>("PayinFeePct")
                         .HasColumnType("double precision")

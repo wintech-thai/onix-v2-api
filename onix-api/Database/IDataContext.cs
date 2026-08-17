@@ -59,6 +59,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MCaseManagementComment>? CaseManagementComments { get; set; }
 
         public DbSet<MDocumentNumberConfig>? DocumentNumberConfigs { get; set; }
+        public DbSet<MAuditTrack>? AuditTracks { get; set; }
 
         public DbSet<MDuplicateRecord>? DuplicateRecords { get; set; }
 

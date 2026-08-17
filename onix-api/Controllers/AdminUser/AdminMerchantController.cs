@@ -78,6 +78,31 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetMerchantPaymentEndpoints/{merchantId}")]
+        public async Task<IActionResult> GetMerchantPaymentEndpoints(string merchantId)
+        {
+            var mvMerchant = await svc.GetMerchantById("notused", merchantId);
+            if (mvMerchant.Status != "OK")
+            {
+                return Ok(mvMerchant);
+            }
+
+            var mc = mvMerchant.Merchant!;
+            var merchantOrgId = mc.OrgId!;
+
+            var arr = svc.GetMerchantPaymentEndpoints(merchantOrgId, merchantId);
+
+            var result = new MVEndPoint()
+            {
+                Status = "OK",
+                Description = "Success",
+                Endpoints = arr,
+            };
+
+            return Ok(result);
+        }
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
