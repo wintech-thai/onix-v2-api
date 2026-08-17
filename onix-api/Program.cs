@@ -112,9 +112,19 @@ namespace Its.Onix.Api
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(connStr, o => o.CommandTimeout(1200)));
-            builder.Services.AddTransient<DataSeeder>();
+            builder.Services.AddScoped<AuditTrailInterceptor>();
+            builder.Services.AddScoped<RequestContext>();
+            builder.Services.AddDbContext<DataContext>((sp, options) =>
+            {
+                options.UseNpgsql(
+                    connStr,
+                    o => o.CommandTimeout(1200));
 
+                options.AddInterceptors(
+                    sp.GetRequiredService<AuditTrailInterceptor>());
+            });
+
+            builder.Services.AddTransient<DataSeeder>();
             builder.Services.AddScoped<IDataContext, DataContext>();
             builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
             builder.Services.AddScoped<IOrganizationService, OrganizationService>();
@@ -344,11 +354,14 @@ namespace Its.Onix.Api
             }
 
             app.UseRateLimiter();
-            app.UseMiddleware<AuditLogMiddleware>();
-            app.MapHealthChecks("/health");
             app.UseHttpsRedirection();
+
             app.UseAuthentication();
+            app.UseMiddleware<RequestContextMiddleware>();
+            app.UseMiddleware<AuditLogMiddleware>();
             app.UseAuthorization();
+
+            app.MapHealthChecks("/health");            
             app.MapControllers();
             app.MapHub<PaymentHub>("/realtime/payment-tx");
             app.Run();
