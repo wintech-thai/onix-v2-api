@@ -403,5 +403,14 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.GetPayInSlipUploads("global", paymentRequestId);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{orgId}/action/CheckPayInSlipDup/{paymentRequestId}/{first4}/{last4}")]
+        public IActionResult CheckPayInSlipDup(string orgId, string paymentRequestId, string first4, string last4)
+        {
+            var dups = svc.CheckPayInSlipDup(first4, last4, paymentRequestId);
+            return Ok(new { Status = "OK", Duplicates = dups });
+        }
     }
 }

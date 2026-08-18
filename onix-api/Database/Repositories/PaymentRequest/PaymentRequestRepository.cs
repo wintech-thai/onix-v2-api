@@ -345,7 +345,10 @@ namespace Its.Onix.Api.Database.Repositories
         {
             paymentRequest.OrgId = orgId;
             paymentRequest.CreatedDate = DateTime.UtcNow;
-            paymentRequest.GeneratedAmountStr = paymentRequest.GeneratedAmount.ToString();
+
+            var amt = (decimal) paymentRequest.GeneratedAmount!;
+            var amtStr = amt.ToString("F2");
+            paymentRequest.GeneratedAmountStr = amtStr;
 
             await context!.PaymentRequests!.AddAsync(paymentRequest);
             await context.SaveChangesAsync();

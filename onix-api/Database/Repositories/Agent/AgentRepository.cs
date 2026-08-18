@@ -86,6 +86,7 @@ namespace Its.Onix.Api.Database.Repositories
                 LastSeenDate = x.agent.LastSeenDate,
                 BankAccountsSelected = x.agent.BankAccountsSelected,
                 AgentConfig = x.agent.AgentConfig,
+                AgentStatus = x.agent.AgentStatus,
             });
         }
 
@@ -151,6 +152,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.Tags = agent.Tags;
                 existing.BankAccountsSelected = agent.BankAccountsSelected;
                 existing.AgentConfig = agent.AgentConfig;
+                //existing.AgentStatus = agent.AgentStatus;
             }
 
             await context.SaveChangesAsync();
@@ -356,6 +358,20 @@ namespace Its.Onix.Api.Database.Repositories
                 .ToList();
 
             return grouped;
+        }
+
+        public async Task<MAgent?> UpdateAgentStatusById(string agentId, string status)
+        {
+            Guid id = Guid.Parse(agentId);
+            var result = await GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.AgentStatus = status;
+                await context!.SaveChangesAsync();
+            }
+
+            return result!;
         }
     }
 }

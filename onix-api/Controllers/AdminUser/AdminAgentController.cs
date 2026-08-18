@@ -98,6 +98,24 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/EnableLineApiAgentById/{agentId}")]
+        public async Task<IActionResult> EnableLineApiAgentById(string agentId)
+        {
+            var result = await svc.EnableLineApiAgentById("global", agentId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/DisableLineApiAgentById/{agentId}")]
+        public async Task<IActionResult> DisableLineApiAgentById(string agentId)
+        {
+            var result = await svc.DisableLineApiAgentById("global", agentId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/RestartLineApiAgentById/{agentId}")]
         public async Task<IActionResult> RestartLineApiAgentById(string agentId)
         {

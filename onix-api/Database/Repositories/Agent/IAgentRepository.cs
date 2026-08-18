@@ -23,5 +23,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<List<MAgentEvent>> GetAgentEvents(VMAgentEvent param);
         public Task<MAgentEvent?> GetAgentEventById(string agentEventId);
         public Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(VMAgentEvent param);
+        public Task<MAgent?> UpdateAgentStatusById(string agentId, string status);
     }
 }

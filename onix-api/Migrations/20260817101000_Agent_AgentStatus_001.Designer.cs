@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260817101000_Agent_AgentStatus_001")]
+    partial class Agent_AgentStatus_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -693,10 +696,6 @@ namespace onix.api.Migrations
                     b.Property<double?>("DailyQuota")
                         .HasColumnType("double precision")
                         .HasColumnName("daily_quota");
-
-                    b.Property<bool?>("IsRandomCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_random_cent");
 
                     b.Property<DateTime?>("LastUsedDate")
                         .HasColumnType("timestamp with time zone")

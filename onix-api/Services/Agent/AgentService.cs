@@ -283,6 +283,91 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVAgent> EnableLineApiAgentById(string orgId, string agentId)
+        {
+            var r = new MVAgent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(agentId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Agent ID [{agentId}] format is invalid";
+
+                return r;
+            }
+
+            var currentAgent = await GetAgentById(orgId, agentId);
+            if (currentAgent.Agent == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent ID [{agentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+
+            var m = await repository!.UpdateAgentStatusById(agentId, "Active");
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent ID [{agentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Agent = m;
+
+            //สร้าง job ไปยัง Redis, ให้สร้าง deployment, service คืนมา
+            await AddJob(orgId, "Agent.Create", currentAgent.Agent);
+
+            return r;
+        }
+
+        public async Task<MVAgent> DisableLineApiAgentById(string orgId, string agentId)
+        {
+            var r = new MVAgent()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(agentId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Agent ID [{agentId}] format is invalid";
+
+                return r;
+            }
+
+            var currentAgent = await GetAgentById(orgId, agentId);
+            if (currentAgent.Agent == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent ID [{agentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            var m = await repository!.UpdateAgentStatusById(agentId, "Disabled");
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Agent ID [{agentId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Agent = m;
+
+            //สร้าง job ไปยัง Redis, ให้ลบ deployment, service
+            await AddJob(orgId, "Agent.Delete", currentAgent.Agent);
+
+            return r;
+        }
+
         public async Task<MVAgent> ReloadLineApiAgentById(string orgId, string agentId)
         {
             var r = new MVAgent()

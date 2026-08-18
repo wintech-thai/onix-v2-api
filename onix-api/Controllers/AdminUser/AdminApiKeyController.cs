@@ -102,5 +102,22 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.GetApiKeyById("global", keyId);
             return result;
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/CreatePaymentEndpointsApiKey/{orgId}/{roles}")]
+        public IActionResult CreatePaymentEndpointsApiKey(string orgId, string roles)
+        {
+            var uuid = Guid.NewGuid();
+            var request = new MApiKey()
+            {
+                KeyType = "Payment",
+                KeyName = $"Payment:{uuid}",
+                KeyDescription = "Auto generated key for Payment API, DO NOT delete!!!",
+                Roles = [.. roles.Split(',').Select(r => r.Trim()).Where(r => r != "")],
+            };
+            var apiKey = svc.AddApiKey(orgId, request);
+            return Ok(apiKey);
+        }
     }
 }

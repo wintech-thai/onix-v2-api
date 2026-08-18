@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260817060445_DuplicateRecord_001")]
+    partial class DuplicateRecord_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -234,10 +237,6 @@ namespace onix.api.Migrations
                     b.Property<string>("AgentConfig")
                         .HasColumnType("text")
                         .HasColumnName("agent_config");
-
-                    b.Property<string>("AgentStatus")
-                        .HasColumnType("text")
-                        .HasColumnName("agent_status");
 
                     b.Property<string>("AgentType")
                         .HasColumnType("text")
@@ -569,72 +568,6 @@ namespace onix.api.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MAuditTrack", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("track_id");
-
-                    b.Property<string>("ActionBy")
-                        .HasColumnType("text")
-                        .HasColumnName("action_by");
-
-                    b.Property<string>("ActionName")
-                        .HasColumnType("text")
-                        .HasColumnName("action_name");
-
-                    b.Property<string>("ActionRequested")
-                        .HasColumnType("text")
-                        .HasColumnName("action_requested");
-
-                    b.Property<string>("ApiName")
-                        .HasColumnType("text")
-                        .HasColumnName("api_name");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("text")
-                        .HasColumnName("ip_address");
-
-                    b.Property<string>("IpAddress2")
-                        .HasColumnType("text")
-                        .HasColumnName("ip_address2");
-
-                    b.Property<string>("NewValue")
-                        .HasColumnType("text")
-                        .HasColumnName("new_value");
-
-                    b.Property<string>("OldValue")
-                        .HasColumnType("text")
-                        .HasColumnName("old_value");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("RowId")
-                        .HasColumnType("text")
-                        .HasColumnName("row_id");
-
-                    b.Property<string>("TrackModel")
-                        .HasColumnType("text")
-                        .HasColumnName("track_model");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("RowId");
-
-                    b.HasIndex("TrackModel");
-
-                    b.ToTable("AuditTracks");
-                });
-
             modelBuilder.Entity("Its.Onix.Api.Models.MBankAccount", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -693,10 +626,6 @@ namespace onix.api.Migrations
                     b.Property<double?>("DailyQuota")
                         .HasColumnType("double precision")
                         .HasColumnName("daily_quota");
-
-                    b.Property<bool?>("IsRandomCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_random_cent");
 
                     b.Property<DateTime?>("LastUsedDate")
                         .HasColumnType("timestamp with time zone")
@@ -1914,10 +1843,6 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("PayinDailyTxCountLimit")
                         .HasColumnType("numeric")
                         .HasColumnName("payin_daily_tx_count_limit");
-
-                    b.Property<int?>("PayinExpireMinute")
-                        .HasColumnType("integer")
-                        .HasColumnName("payin_expire_minute");
 
                     b.Property<double?>("PayinFeePct")
                         .HasColumnType("double precision")

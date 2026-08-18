@@ -61,6 +61,8 @@ namespace Its.Onix.Api.Database
         public DbSet<MDocumentNumberConfig>? DocumentNumberConfigs { get; set; }
         public DbSet<MAuditTrack>? AuditTracks { get; set; }
 
+        public DbSet<MDuplicateRecord>? DuplicateRecords { get; set; }
+
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
     }

@@ -72,6 +72,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MAuditTrack>? AuditTracks { get; set; }
 
 
+    public DbSet<MDuplicateRecord>? DuplicateRecords { get; set; }
+
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
 
