@@ -186,15 +186,21 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant)
+        private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)
         {
             var amt = paymentRequest.RequestedAmount;
             if (amt == null)
             {
                 return 0;
             }
-            
+/*
             if (merchant.RandomDecimal == false)
+            {
+                return amt;
+            }
+*/
+            //ควบคุมการ random decimal จาก bankaccount แทนที่ระดับ merchant 
+            if ((bankAccount.IsRandomCent == null) || (bankAccount.IsRandomCent == false))
             {
                 return amt;
             }
@@ -1330,8 +1336,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant);
-
             var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest, merchant);
             if (bnkAcct == null)
             {
@@ -1341,6 +1345,8 @@ namespace Its.Onix.Api.Services
                 var _ = await AddRejectedPaymentRequest(paymentRequest, r, lines);
                 return r;
             }
+
+            paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant, bnkAcct);
 
             paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
