@@ -77,6 +77,9 @@ namespace Its.Onix.Api.Models
         [Column("bank_config")]
         public string? BankConfig { get; set; } //JSON string to represent object
 
+        [Column("is_random_cent")]
+        public bool? IsRandomCent { get; set; } //เอาไว้บอกว่าจะ random ทศนิยมเศษสตางค์หรือไม่
+
 
         //System fields
         [Column("created_date")]
@@ -109,6 +112,7 @@ namespace Its.Onix.Api.Models
             Id = Guid.NewGuid();
             CreatedDate = DateTime.UtcNow;
             IsNativeQrSupport = false;
+            IsRandomCent = false;
         }
     }
 }
