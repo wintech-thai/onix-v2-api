@@ -1197,6 +1197,12 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (bnkAcct.AccountType != "PromptPay")
+            {
+                //ให้ mocked ไว้ก่อนเพื่อไม่ให้มันไปตายที่ CreatePaymentResponse() ตอนสร้าง QR
+                bnkAcct.PromptPayId = "0000000000000";
+            }
+
             paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
             if (pmResponse.Status != "OK")
