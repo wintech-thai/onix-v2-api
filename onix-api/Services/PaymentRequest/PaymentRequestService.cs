@@ -1204,6 +1204,14 @@ namespace Its.Onix.Api.Services
                 return pmResponse;
             }
 
+            if (bnkAcct.AccountType != "PromptPay")
+            {
+                //ไม่ต้องส่งออกไป เพราะว่าบัญชีที่จะรับโอนไมมี PromptPay
+                pmResponse.PaymentResponse!.QrCode = "";
+                pmResponse.PaymentResponse!.QrCodeImage = "";
+                pmResponse.PaymentResponse!.IsQrAvailable = false;
+            }
+
             var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
             if (existingPayout == null)
             {
@@ -1417,6 +1425,8 @@ namespace Its.Onix.Api.Services
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
             var pendingPayoutRequests = await repository!.GetPendingPayOutRequests();
 
+            //TODO : ให้ sorting ก่อนโดยเรียกงตามวันที่เก่าขึ้นก่อน แล้วก็ถ้าตัวไหนมี promptpay Id ก็ให้ขึ้นมาก่อนด้วย
+
             lines.Add($"Step0 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
             foreach (var payoutRequest in pendingPayoutRequests)
@@ -1434,20 +1444,29 @@ namespace Its.Onix.Api.Services
                 lines.Add($"Step1.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
                 var promptPayId = payoutRequest.PayinPromptPayId;
-                var isOverride = false;
                 if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
                 {
                     lines.Add($"Step1.3 - Request ID=[{org}:{id}], use overrided bank account");
-
                     promptPayId = payoutRequest.PayinPromptPayIdOverride;
+                }
+
+                var isOverride = false;
+                if (!string.IsNullOrEmpty(payoutRequest.PayinBankAccountNoOverride))
+                {
+                    lines.Add($"Step1.3.1 - Request ID=[{org}:{id}], use overrided bank account");
                     isOverride = true;
                 }
 
+                var accountType = "PromptPay";
                 if (string.IsNullOrEmpty(promptPayId))
                 {
-                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], PromptPay ID is empty!!!");
                     //ไม่ใช่ prompt pay
-                    continue;
+                    accountType = "Native";
+
+
+                    //ให้ match ได้ด้วยถ้าไม่ใช่ promptpay
+                    //continue;
                 }
 
                 var bankCode = payoutRequest.PayinBankCode;
@@ -1465,6 +1484,7 @@ namespace Its.Onix.Api.Services
 
                 if (leftAmount < amt)
                 {
+                    //ยอดไม่พอ
                     lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
                     continue;
                 }
@@ -1476,7 +1496,7 @@ namespace Its.Onix.Api.Services
                     PromptPayId = promptPayId,
                     AccountNumber = bankAccountNo,
                     AccountName = bankAccountName,
-                    AccountType = "PromptPay",
+                    AccountType = accountType,
                 };
 
                 return (ba, payoutRequest, lines);
