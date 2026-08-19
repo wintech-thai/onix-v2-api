@@ -1221,6 +1221,7 @@ namespace Its.Onix.Api.Services
                 pmResponse.PaymentResponse!.QrCode = "";
                 pmResponse.PaymentResponse!.QrCodeImage = "";
                 pmResponse.PaymentResponse!.IsQrAvailable = false;
+                bnkAcct.PromptPayId = ""; //reset มันกลับเป็น blank
             }
 
             var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");

@@ -70,6 +70,7 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
     public DbSet<MDocumentNumberConfig>? DocumentNumberConfigs { get; set; }
     public DbSet<MAuditTrack>? AuditTracks { get; set; }
+    public DbSet<MAuditNotice>? AuditNotices { get; set; }
 
 
     public DbSet<MDuplicateRecord>? DuplicateRecords { get; set; }
@@ -260,5 +261,6 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
             .ToTable("AspNetRoles");
 
         modelBuilder.Entity<MAuditTrack>();
+        modelBuilder.Entity<MAuditNotice>();
     }
 }
