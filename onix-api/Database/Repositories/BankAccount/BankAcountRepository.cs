@@ -290,6 +290,7 @@ namespace Its.Onix.Api.Database.Repositories
                 DailyPayinCountQuota = x.ba.DailyPayinCountQuota,
                 Status = x.ba.Status,
                 IsRandomCent = x.ba.IsRandomCent,
+                DecimalAction = x.ba.DecimalAction,
             });
         }
 
@@ -381,6 +382,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.DailyQuota = bankAccount.DailyQuota;
                 existing.DailyPayinCountQuota = bankAccount.DailyPayinCountQuota;
                 existing.IsRandomCent = bankAccount.IsRandomCent;
+                existing.DecimalAction = bankAccount.DecimalAction;
             }
 
             await context.SaveChangesAsync();

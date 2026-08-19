@@ -80,6 +80,9 @@ namespace Its.Onix.Api.Models
         [Column("is_random_cent")]
         public bool? IsRandomCent { get; set; } //เอาไว้บอกว่าจะ random ทศนิยมเศษสตางค์หรือไม่
 
+        [Column("decimal_action")]
+        public string? DecimalAction { get; set; } /* Round, RoundUp, Truncate */ //เอาไว้บอกว่าหากยอด request เข้ามามีทศนิยมจะทำอย่างไร
+
 
         //System fields
         [Column("created_date")]
@@ -113,6 +116,7 @@ namespace Its.Onix.Api.Models
             CreatedDate = DateTime.UtcNow;
             IsNativeQrSupport = false;
             IsRandomCent = false;
+            DecimalAction = ""; //ไม่ต้องทำอะไร กรอกเข้ามาอย่างไรก็ใช้อย่างนั้น
         }
     }
 }

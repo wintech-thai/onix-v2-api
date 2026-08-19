@@ -202,6 +202,11 @@ namespace Its.Onix.Api.Services
             //ควบคุมการ random decimal จาก bankaccount แทนที่ระดับ merchant 
             if ((bankAccount.IsRandomCent == null) || (bankAccount.IsRandomCent == false))
             {
+                //ดูต่อว่าจะทำ DecimalAction อย่างไร
+                var action = bankAccount.DecimalAction;
+                action ??= "";
+
+                amt = ServiceUtils.GenerateIntAmount(action, amt);
                 return amt;
             }
 
@@ -1758,7 +1763,7 @@ namespace Its.Onix.Api.Services
             }
 
             pr.ExpireDate = DateTime.UtcNow.AddMinutes((double) expireMinute); //Payment Request จะหมดอายุใน XX นาที
-            var pmr = new MPaymentResponse()
+            var pmr = new MPaymentResponse
             {
                 CreatedAt = pr.CreatedDate,
                 ExpireAt = pr.ExpireDate,
@@ -1782,7 +1787,13 @@ namespace Its.Onix.Api.Services
                 PayInBankAccountNo = bnkAcct.AccountNumber,
                 PayInBankCode = bnkAcct.BankCode,
                 PayInPromptPayId = bnkAcct.PromptPayId,
+                IsQrAvailable = false
             };
+
+            if (!string.IsNullOrEmpty(pmr.PayInPromptPayId))
+            {
+                pmr.IsQrAvailable = true;
+            }
 
             // สร้าง token สำหรับ upload slip แล้วเก็บใน Redis 1 วัน
             var slipToken = Guid.NewGuid().ToString();
