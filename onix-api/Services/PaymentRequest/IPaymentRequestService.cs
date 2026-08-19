@@ -38,5 +38,7 @@ namespace Its.Onix.Api.Services
         public List<MDuplicateRecord> CheckPayInSlipDup(string first4, string last4, string? excludeDocumentId = null);
         public Task<MVPayInSlipUploads> GetPayInSlipUploads(string orgId, string paymentRequestId);
         public Task<MVBase> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId);
+        public Task<MVPayOutSlipUploads> GetPayOutSlipUploads(string orgId, string paymentRequestId);
+        public Task<MVBase> GeneratePayOutSlipUploadToken(string orgId, string paymentRequestId);
     }
 }

@@ -29,5 +29,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPaymentRequest?> ProcessPartialPayoutHistory(MPaymentRequest payOut, MPaymentRequest payIn, string action);
         public Task<MPaymentRequest?> UpdateQrCodeByIdForP2P(string paymentRequestId, MPaymentRequest payOut);
         public Task<MPaymentRequest?> UpdatePayInSlipById(string paymentRequestId, string slipsJson, int uploadCount);
+        public Task<MPaymentRequest?> UpdatePayOutSlipById(string paymentRequestId, string slipsJson, int uploadCount);
     }
 }

@@ -406,6 +406,24 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/global/action/GeneratePayOutSlipUploadToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayOutSlipUploadToken(string paymentRequestId)
+        {
+            var result = await svc.GeneratePayOutSlipUploadToken("global", paymentRequestId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetPayOutSlipUpload/{paymentRequestId}")]
+        public async Task<IActionResult> GetPayOutSlipUpload(string paymentRequestId)
+        {
+            var result = await svc.GetPayOutSlipUploads("global", paymentRequestId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/{orgId}/action/CheckPayInSlipDup/{paymentRequestId}/{first4}/{last4}")]
         public IActionResult CheckPayInSlipDup(string orgId, string paymentRequestId, string first4, string last4)
         {

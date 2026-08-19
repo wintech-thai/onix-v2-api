@@ -670,5 +670,19 @@ namespace Its.Onix.Api.Database.Repositories
             await context.SaveChangesAsync();
             return existing;
         }
+
+        public async Task<MPaymentRequest?> UpdatePayOutSlipById(string paymentRequestId, string slipsJson, int uploadCount)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(x => x!.Id == id).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.PayOutSlipUploads = slipsJson;
+                existing.PayOutSlipUploadCount = uploadCount;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
     }
 }

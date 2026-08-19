@@ -248,6 +248,12 @@ namespace Its.Onix.Api.Models
         [Column("payin_slip_uploads")]
         public string? PayInSlipUploads { get; set; } /* JSON array of { imageBase64, uploadedAt } */
 
+        [Column("payout_slip_upload_count")]
+        public int PayOutSlipUploadCount { get; set; }
+
+        [Column("payout_slip_uploads")]
+        public string? PayOutSlipUploads { get; set; } /* JSON array of { imageBase64, uploadedAt } */
+
         [Column("notice_count")]
         public int? NoticeCount { get; set; }
 

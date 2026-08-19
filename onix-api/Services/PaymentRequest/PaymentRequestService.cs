@@ -115,6 +115,7 @@ namespace Its.Onix.Api.Services
             result.ProcessingMessages = "";
             result.PartialPayoutHistory = "";
             result.PayInSlipUploads = null; // ข้อมูลใหญ่ ดึงแยกผ่าน GetPayInSlipUploads
+            result.PayOutSlipUploads = null; // ข้อมูลใหญ่ ดึงแยกผ่าน GetPayOutSlipUploads
 
             r.PaymentRequest = result;
 
@@ -1969,6 +1970,84 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVPayOutSlipUploads> GetPayOutSlipUploads(string orgId, string paymentRequestId)
+        {
+            var r = new MVPayOutSlipUploads() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            if (orgId != "global" && pr.OrgId != orgId)
+            {
+                r.Status = "ERROR_DATA_NOT_OWN_BY_ORG_ID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not owned by org [{orgId}]";
+                return r;
+            }
+
+            List<MPayOutSlipItem> slips;
+            try
+            {
+                slips = string.IsNullOrEmpty(pr.PayOutSlipUploads)
+                    ? []
+                    : JsonSerializer.Deserialize<List<MPayOutSlipItem>>(pr.PayOutSlipUploads) ?? [];
+            }
+            catch { slips = []; }
+
+            slips.Reverse();
+            r.Slips = slips;
+
+            return r;
+        }
+
+        public async Task<MVBase> GeneratePayOutSlipUploadToken(string orgId, string paymentRequestId)
+        {
+            var r = new MVBase() { Status = "OK" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            if (pr.Status != "Pending")
+            {
+                r.Status = "ERROR_NOT_PENDING";
+                r.Description = "Can only generate upload link for Pending payment requests";
+                return r;
+            }
+
+            var slipToken = Guid.NewGuid().ToString();
+            var cacheKey = CacheHelper.CreatePayOutSlipUploadTokenKey(pr.OrgId!);
+            _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{slipToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
+
+            r.Description = "Success";
+            r.SlipUploadUrl = $"/payout-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
+            return r;
+        }
+
         public async Task<List<MPaymentRequest>> GetPaymentRequests(string orgId, VMPaymentRequest param)
         {
             repository!.SetCustomOrgId(orgId);
@@ -1981,6 +2060,7 @@ namespace Its.Onix.Api.Services
                 p.ProcessingMessages = "";
                 p.PartialPayoutHistory = "";
                 p.PayInSlipUploads = null; // ข้อมูลใหญ่ ไม่ดึงใน list
+                p.PayOutSlipUploads = null;
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น
