@@ -186,16 +186,27 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant)
+        private double? GetGeneratedAmount(MPaymentRequest paymentRequest, MMerchant merchant, MBankAccount bankAccount)
         {
             var amt = paymentRequest.RequestedAmount;
             if (amt == null)
             {
                 return 0;
             }
-            
+/*
             if (merchant.RandomDecimal == false)
             {
+                return amt;
+            }
+*/
+            //ควบคุมการ random decimal จาก bankaccount แทนที่ระดับ merchant 
+            if ((bankAccount.IsRandomCent == null) || (bankAccount.IsRandomCent == false))
+            {
+                //ดูต่อว่าจะทำ DecimalAction อย่างไร
+                var action = bankAccount.DecimalAction;
+                action ??= "";
+
+                amt = ServiceUtils.GenerateIntAmount(action, amt);
                 return amt;
             }
 
@@ -1191,11 +1202,26 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (bnkAcct.AccountType != "PromptPay")
+            {
+                //ให้ mocked ไว้ก่อนเพื่อไม่ให้มันไปตายที่ CreatePaymentResponse() ตอนสร้าง QR
+                bnkAcct.PromptPayId = "0000000000000";
+            }
+
             paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
             if (pmResponse.Status != "OK")
             {
                 return pmResponse;
+            }
+
+            if (bnkAcct.AccountType != "PromptPay")
+            {
+                //ไม่ต้องส่งออกไป เพราะว่าบัญชีที่จะรับโอนไมมี PromptPay
+                pmResponse.PaymentResponse!.QrCode = "";
+                pmResponse.PaymentResponse!.QrCodeImage = "";
+                pmResponse.PaymentResponse!.IsQrAvailable = false;
+                bnkAcct.PromptPayId = ""; //reset มันกลับเป็น blank
             }
 
             var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
@@ -1330,8 +1356,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant);
-
             var (bnkAcct, lines) = await GetPayInBankAccount(paymentRequest, merchant);
             if (bnkAcct == null)
             {
@@ -1341,6 +1365,8 @@ namespace Its.Onix.Api.Services
                 var _ = await AddRejectedPaymentRequest(paymentRequest, r, lines);
                 return r;
             }
+
+            paymentRequest.GeneratedAmount = GetGeneratedAmount(paymentRequest, merchant, bnkAcct);
 
             paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
@@ -1411,6 +1437,8 @@ namespace Its.Onix.Api.Services
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
             var pendingPayoutRequests = await repository!.GetPendingPayOutRequests();
 
+            //TODO : ให้ sorting ก่อนโดยเรียกงตามวันที่เก่าขึ้นก่อน แล้วก็ถ้าตัวไหนมี promptpay Id ก็ให้ขึ้นมาก่อนด้วย
+
             lines.Add($"Step0 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
             foreach (var payoutRequest in pendingPayoutRequests)
@@ -1428,20 +1456,29 @@ namespace Its.Onix.Api.Services
                 lines.Add($"Step1.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
                 var promptPayId = payoutRequest.PayinPromptPayId;
-                var isOverride = false;
                 if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
                 {
                     lines.Add($"Step1.3 - Request ID=[{org}:{id}], use overrided bank account");
-
                     promptPayId = payoutRequest.PayinPromptPayIdOverride;
+                }
+
+                var isOverride = false;
+                if (!string.IsNullOrEmpty(payoutRequest.PayinBankAccountNoOverride))
+                {
+                    lines.Add($"Step1.3.1 - Request ID=[{org}:{id}], use overrided bank account");
                     isOverride = true;
                 }
 
+                var accountType = "PromptPay";
                 if (string.IsNullOrEmpty(promptPayId))
                 {
-                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], PromptPay ID is empty!!!");
                     //ไม่ใช่ prompt pay
-                    continue;
+                    accountType = "Native";
+
+
+                    //ให้ match ได้ด้วยถ้าไม่ใช่ promptpay
+                    //continue;
                 }
 
                 var bankCode = payoutRequest.PayinBankCode;
@@ -1459,6 +1496,7 @@ namespace Its.Onix.Api.Services
 
                 if (leftAmount < amt)
                 {
+                    //ยอดไม่พอ
                     lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
                     continue;
                 }
@@ -1470,7 +1508,7 @@ namespace Its.Onix.Api.Services
                     PromptPayId = promptPayId,
                     AccountNumber = bankAccountNo,
                     AccountName = bankAccountName,
-                    AccountType = "PromptPay",
+                    AccountType = accountType,
                 };
 
                 return (ba, payoutRequest, lines);
@@ -1726,7 +1764,7 @@ namespace Its.Onix.Api.Services
             }
 
             pr.ExpireDate = DateTime.UtcNow.AddMinutes((double) expireMinute); //Payment Request จะหมดอายุใน XX นาที
-            var pmr = new MPaymentResponse()
+            var pmr = new MPaymentResponse
             {
                 CreatedAt = pr.CreatedDate,
                 ExpireAt = pr.ExpireDate,
@@ -1750,7 +1788,13 @@ namespace Its.Onix.Api.Services
                 PayInBankAccountNo = bnkAcct.AccountNumber,
                 PayInBankCode = bnkAcct.BankCode,
                 PayInPromptPayId = bnkAcct.PromptPayId,
+                IsQrAvailable = false
             };
+
+            if (!string.IsNullOrEmpty(pmr.PayInPromptPayId))
+            {
+                pmr.IsQrAvailable = true;
+            }
 
             // สร้าง token สำหรับ upload slip แล้วเก็บใน Redis 1 วัน
             var slipToken = Guid.NewGuid().ToString();

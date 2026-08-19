@@ -22,6 +22,7 @@ namespace Its.Onix.Api.Models
         public string? WebsocketPath { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? ExpireAt { get; set; }
+        public bool? IsQrAvailable { get; set; }
 
         public string? PayInBankAccountNo { get; set; }
         public string? PayInBankAccountName { get; set; }
@@ -32,6 +33,7 @@ namespace Its.Onix.Api.Models
 
         public MPaymentResponse()
         {
+            IsQrAvailable = true;
         }
     }
 }

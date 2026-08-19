@@ -205,6 +205,7 @@ namespace Its.Onix.Api.Services
 
         public MJob CreatePaymentInSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr)
         {
+            //TODO : Check jobType ว่าเป็น Unindentified ด้วยหรือไม่ เพื่อจะเปลี่ยน EVENT_TYPE ให้สอดคล้องกัน
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",

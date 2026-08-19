@@ -113,6 +113,7 @@ namespace Its.Onix.Api.Database.Repositories
 
                 PayInSlipUploadCount = x.pr.PayInSlipUploadCount,
                 PayInSlipUploads = x.pr.PayInSlipUploads,
+                NoticeCount = x.pr.NoticeCount,
             });
         }
 
@@ -345,7 +346,10 @@ namespace Its.Onix.Api.Database.Repositories
         {
             paymentRequest.OrgId = orgId;
             paymentRequest.CreatedDate = DateTime.UtcNow;
-            paymentRequest.GeneratedAmountStr = paymentRequest.GeneratedAmount.ToString();
+
+            var amt = (decimal) paymentRequest.GeneratedAmount!;
+            var amtStr = amt.ToString("F2");
+            paymentRequest.GeneratedAmountStr = amtStr;
 
             await context!.PaymentRequests!.AddAsync(paymentRequest);
             await context.SaveChangesAsync();

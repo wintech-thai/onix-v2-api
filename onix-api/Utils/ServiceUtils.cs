@@ -228,6 +228,30 @@ namespace Its.Onix.Api.Utils
             return null;
         }
 
+        public static double? GenerateIntAmount(string action, double? amount)
+        {
+            var amt = amount ?? 0;
+
+            if (action == "")
+            {
+                return amt;
+            }
+            else if (action == "Round")
+            {
+                return Math.Round(amt, MidpointRounding.AwayFromZero);
+            }
+            else if (action == "Round Up")
+            {
+                return Math.Ceiling(amt);
+            }
+            else if (action == "Truncate")
+            {
+                return Math.Truncate(amt);
+            }
+
+            return amt;
+        }
+
         public static (bool isValid, string error) ValidateWorkflows(List<Workflow> workflows)
         {
             try

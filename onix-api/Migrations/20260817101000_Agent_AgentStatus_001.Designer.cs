@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260817101000_Agent_AgentStatus_001")]
+    partial class Agent_AgentStatus_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -569,44 +572,6 @@ namespace onix.api.Migrations
                     b.ToTable("AuditLogs");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MAuditNotice", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("notice_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("RowId")
-                        .HasColumnType("text")
-                        .HasColumnName("row_id");
-
-                    b.Property<string>("TrackModel")
-                        .HasColumnType("text")
-                        .HasColumnName("track_model");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId");
-
-                    b.HasIndex("RowId");
-
-                    b.HasIndex("TrackModel");
-
-                    b.ToTable("AuditNotices");
-                });
-
             modelBuilder.Entity("Its.Onix.Api.Models.MAuditTrack", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -731,14 +696,6 @@ namespace onix.api.Migrations
                     b.Property<double?>("DailyQuota")
                         .HasColumnType("double precision")
                         .HasColumnName("daily_quota");
-
-                    b.Property<string>("DecimalAction")
-                        .HasColumnType("text")
-                        .HasColumnName("decimal_action");
-
-                    b.Property<bool?>("IsRandomCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_random_cent");
 
                     b.Property<DateTime?>("LastUsedDate")
                         .HasColumnType("timestamp with time zone")
@@ -2476,10 +2433,6 @@ namespace onix.api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("merchant_id2");
 
-                    b.Property<int?>("NoticeCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("notice_count");
-
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -2764,10 +2717,6 @@ namespace onix.api.Migrations
                     b.Property<string>("MerchantId")
                         .HasColumnType("text")
                         .HasColumnName("merchant_id");
-
-                    b.Property<int?>("NoticeCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("notice_count");
 
                     b.Property<string>("OrgId")
                         .HasColumnType("text")

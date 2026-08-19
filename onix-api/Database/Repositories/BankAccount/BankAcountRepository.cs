@@ -288,7 +288,9 @@ namespace Its.Onix.Api.Database.Repositories
                 CurrentDailyPayinCount = x.ba.CurrentDailyPayinCount,
                 CurrentBalance = x.ba.CurrentBalance,
                 DailyPayinCountQuota = x.ba.DailyPayinCountQuota,
-                Status = x.ba.Status
+                Status = x.ba.Status,
+                IsRandomCent = x.ba.IsRandomCent,
+                DecimalAction = x.ba.DecimalAction,
             });
         }
 
@@ -379,6 +381,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayoutMaxAmount = bankAccount.PayoutMaxAmount;
                 existing.DailyQuota = bankAccount.DailyQuota;
                 existing.DailyPayinCountQuota = bankAccount.DailyPayinCountQuota;
+                existing.IsRandomCent = bankAccount.IsRandomCent;
+                existing.DecimalAction = bankAccount.DecimalAction;
             }
 
             await context.SaveChangesAsync();

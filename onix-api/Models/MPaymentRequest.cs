@@ -248,6 +248,10 @@ namespace Its.Onix.Api.Models
         [Column("payin_slip_uploads")]
         public string? PayInSlipUploads { get; set; } /* JSON array of { imageBase64, uploadedAt } */
 
+        [Column("notice_count")]
+        public int? NoticeCount { get; set; }
+
+
         [NotMapped]
         public string? MerchantName { get; set; }
         [NotMapped]
@@ -296,6 +300,7 @@ namespace Its.Onix.Api.Models
             PayOutTotalAmountDecimalP2P = null;
             TotalPayOutPaidAmountDecimal = 0;
             TotalPayOutPendingPaidAmountDecimal = 0;
+            NoticeCount = 0;
         }
     }
 }

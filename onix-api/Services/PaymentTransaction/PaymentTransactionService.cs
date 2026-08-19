@@ -447,6 +447,7 @@ namespace Its.Onix.Api.Services
 
             var paymentRequests = await GetPaymentRequestsForPaymentTx("global", prParam);
             var matchCount = paymentRequests.Count;
+            var pendingMatchCount = 0;
 
             MPaymentRequest? pmr = null;
             List<string> lines = [];
@@ -472,13 +473,24 @@ namespace Its.Onix.Api.Services
                 if (pr.Status == "Pending")
                 {
                     var pmrId = pr.Id.ToString()!;
-                    //หยิบตัวนี้มาใช้เลย
                     lines.Add($"STEP4 : Success -> Found Satus=[{pr.Status}], BankAccountId=[{pr.PayinBankAccountId}], Amount=[{pr.GeneratedAmount}]");
 
-                    pmr = pr;
-                    break;
+                    pendingMatchCount++; //นับที่เจอ Pending จริง ๆ ที่ยอดเท่ากัน
+                    pmr = pr; //pmr จะเจอตัวสุดท้ายที่เป็น Pending matched
+
+                    //ให้วนไปเรื่อย ๆ เพื่อจะดูว่า match ได้ทั้งหมดกี่รายการโดยที่ไม่ต้อง break ออก
+                    //break;
                 }
             }
+
+            if (pendingMatchCount != 1)
+            {
+                //ทำเสมือนว่า match ไม่เจอไปเลย ถ้าไม่เจอ หรือ เจอมากกว่า 1 รายการ
+                //มันจะกลายเป็น logic เดียวกันกับ UnIdentified ไปเลย
+                pmr = null;
+            }
+
+            lines.Add($"STEP4-1 : Info -> Found [{pendingMatchCount}] pending payment request");
 
             var pt = new MPaymentTransaction()
             {
@@ -490,6 +502,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = paymentNotiLine?.PaymentAmount,
                 FromBankAccountNo = paymentNotiLine?.SourceBankAccountNo,
                 FromBankCode = paymentNotiLine?.SourceBankCode,
+                StatusReason = $"Matched [{pendingMatchCount}] pending payment request",
             };
 
             repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
