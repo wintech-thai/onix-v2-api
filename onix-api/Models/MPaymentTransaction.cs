@@ -168,6 +168,9 @@ namespace Its.Onix.Api.Models
 
         [Column("raw_input")]
         public string? RawInput { get; set; } /* JSON string */
+        
+        [Column("notice_count")]
+        public int? NoticeCount { get; set; }
 
 
         [Column("created_date")]
@@ -196,6 +199,7 @@ namespace Its.Onix.Api.Models
             CreatedDate = DateTime.UtcNow;
             ProcessingSteps = [];
             DiscardCent = false;
+            NoticeCount = 0;
         }
     }
 }

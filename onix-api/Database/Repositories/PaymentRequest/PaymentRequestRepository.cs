@@ -113,6 +113,7 @@ namespace Its.Onix.Api.Database.Repositories
 
                 PayInSlipUploadCount = x.pr.PayInSlipUploadCount,
                 PayInSlipUploads = x.pr.PayInSlipUploads,
+                NoticeCount = x.pr.NoticeCount,
             });
         }
 
