@@ -63,6 +63,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MAuditNotice>? AuditNotices { get; set; }
 
         public DbSet<MDuplicateRecord>? DuplicateRecords { get; set; }
+        public DbSet<MMerchantCurrency>? MerchantCurrencies { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
