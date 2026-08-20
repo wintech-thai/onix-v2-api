@@ -8,7 +8,7 @@ namespace Its.Onix.Api.Services
     {
         public Task<MVPaymentTransaction> GetPaymentTransactionById(string orgId, string paymentTransactionId);
         public Task<MVPaymentTransaction> ProcessLinePaymentTxNotification(string orgId, string bankAccountId, MPaymentNotiLine paymentNotiLine, int previousHour);
-         public Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId);
+         public Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId, MPaymentRequest? payload = null);
         
         public Task<MVPaymentTransaction> ApproveUnidentifiedPaymentTx(string orgId, string paymentTransactionId, string merchantId);
         public Task<MVPaymentTransaction> RejectUnidentifiedPaymentTx(string orgId, string paymentTransactionId, MPaymentTransaction pmt);

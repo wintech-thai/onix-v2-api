@@ -560,7 +560,7 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
-        public async Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId)
+        public async Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId, MPaymentRequest? payload = null)
         {
             Guid id = Guid.Parse(paymentRequestId);
             var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
@@ -568,6 +568,11 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
                 existing.Status = "Approved";
+                if (payload != null)
+                {
+                    existing.StatusReason = payload.StatusReason;
+                    existing.StatusCode = payload.StatusCode;
+                }
             }
 
             await context.SaveChangesAsync();
