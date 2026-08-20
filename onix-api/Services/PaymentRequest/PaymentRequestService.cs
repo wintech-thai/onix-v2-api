@@ -1954,13 +1954,6 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (pr.Status != "Pending")
-            {
-                r.Status = "ERROR_NOT_PENDING";
-                r.Description = "Can only generate upload link for Pending payment requests";
-                return r;
-            }
-
             var slipToken = Guid.NewGuid().ToString();
             var cacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
             _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{slipToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
