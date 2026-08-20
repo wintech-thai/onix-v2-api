@@ -130,24 +130,32 @@ namespace Its.Onix.Api.Services
                 lines = [];
             }
 
-            if (string.IsNullOrEmpty(result.MimeType))
+            if (!string.IsNullOrEmpty(result.ImageBase64))
             {
-                r.Status = "ERROR_MIME_TYPE_IS_REQUIRED";
-                r.Description = "Mime type is required in request body";
-
-                return r;
+                // base64 flow: return as data URI
+                var mimeType = string.IsNullOrEmpty(result.MimeType) ? "image/jpeg" : result.MimeType;
+                result.PreviewUrl = $"data:{mimeType};base64,{result.ImageBase64}";
+                result.ImageBase64 = null; // avoid sending raw base64 twice
             }
-
-            var objectName = result.UploadedFilePath!;
-            if (!string.IsNullOrEmpty(objectName))
+            else
             {
-                var previewUrl = await _storageUtilsS3!.GenerateDownloadUrl(bucket, objectName, TimeSpan.FromMinutes(15), result.MimeType);
+                if (string.IsNullOrEmpty(result.MimeType))
+                {
+                    r.Status = "ERROR_MIME_TYPE_IS_REQUIRED";
+                    r.Description = "Mime type is required in request body";
 
-                var uri = new Uri(previewUrl);
-                // เอาเฉพาะ path + query
-                var relativeUrl = uri.PathAndQuery;
-                // ใส่ placeholder
-                result.PreviewUrl = $"<STORAGE-API-BASE>{relativeUrl}";
+                    return r;
+                }
+
+                var objectName = result.UploadedFilePath!;
+                if (!string.IsNullOrEmpty(objectName))
+                {
+                    var previewUrl = await _storageUtilsS3!.GenerateDownloadUrl(bucket, objectName, TimeSpan.FromMinutes(15), result.MimeType);
+
+                    var uri = new Uri(previewUrl);
+                    var relativeUrl = uri.PathAndQuery;
+                    result.PreviewUrl = $"<STORAGE-API-BASE>{relativeUrl}";
+                }
             }
 
             result.ProcessingSteps = lines;
@@ -164,9 +172,10 @@ namespace Its.Onix.Api.Services
             var result = await repository!.GetPaymentDocuments(param);
 
             // ลบ ResponseData ออกเพื่อลด payload
-            result.ForEach(p => 
-            { 
+            result.ForEach(p =>
+            {
                 p.ProcessingMessages = "";
+                p.ImageBase64 = null;
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น
@@ -197,17 +206,24 @@ namespace Its.Onix.Api.Services
                 Description = "Success"
             };
 
-            var fd = new MFileDocument()
+            if (!string.IsNullOrEmpty(paymentDocument.ImageBase64))
             {
-                ObjectStoragePath = paymentDocument.UploadedFilePath,
-                MimeType = paymentDocument.MimeType,
-                DocumentType = paymentDocument.DocumentType,
-            };
-
-            var newFileDocument = await _fileDocumentService!.AddFileDocument(orgId, fd);
-
-            paymentDocument.FileDocumentId = newFileDocument.FileDocument!.Id!.ToString();
-            paymentDocument.Status = "Pending";
+                // base64 flow: store directly, skip S3 presigned upload
+                paymentDocument.Status = "Pending";
+            }
+            else
+            {
+                // S3 presigned-URL flow
+                var fd = new MFileDocument()
+                {
+                    ObjectStoragePath = paymentDocument.UploadedFilePath,
+                    MimeType = paymentDocument.MimeType,
+                    DocumentType = paymentDocument.DocumentType,
+                };
+                var newFileDocument = await _fileDocumentService!.AddFileDocument(orgId, fd);
+                paymentDocument.FileDocumentId = newFileDocument.FileDocument!.Id!.ToString();
+                paymentDocument.Status = "Pending";
+            }
 
             var result = await repository!.AddPaymentDocument(paymentDocument);
             if (result == null)

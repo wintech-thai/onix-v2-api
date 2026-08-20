@@ -84,6 +84,7 @@ namespace Its.Onix.Api.Database.Repositories
                 MerchantCode = x.merchant.Code,
                 TxAmountStr = x.pd.TxAmountDecimal.ToString(),
 
+                ImageBase64 = x.pd.ImageBase64,
                 MimeType = x.fileDocument.MimeType,
                 DocumentType = x.fileDocument.DocumentType,
                 PayInAccountType = x.bankAccount.AccountType,

@@ -135,12 +135,15 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? TxAmountStr { get; set; } //เอาไว้สำหรับ query
 
+        [Column("image_base64")]
+        public string? ImageBase64 { get; set; }
+
         [NotMapped]
         public string? MimeType { get; set; }
 
         [NotMapped]
         public string? DocumentType { get; set; }
-        
+
         [NotMapped]
         public string? PreviewUrl { get; set; }
 
