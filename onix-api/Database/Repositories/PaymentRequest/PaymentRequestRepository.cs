@@ -515,7 +515,8 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 existing.Status = "Approved";
-                
+                existing.StatusReason = paymentRequest.StatusReason;
+                existing.StatusCode = paymentRequest.StatusCode;
                 existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
                 existing.PayoutBankCode = paymentRequest.PayoutBankCode;
                 existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;
