@@ -362,8 +362,8 @@ namespace Its.Onix.Api.Services
 
             r.Agent = m;
 
-            //สร้าง job ไปยัง Redis, ให้ลบ deployment, service
-            await AddJob(orgId, "Agent.Delete", currentAgent.Agent);
+            //สร้าง job ไปยัง Redis, ให้ลบ deployment, service (ใช้ Agent.Disable แยกจาก Agent.Delete เพื่อให้ Ruby ใช้ explicit kubectl delete)
+            await AddJob(orgId, "Agent.Disable", currentAgent.Agent);
 
             return r;
         }
