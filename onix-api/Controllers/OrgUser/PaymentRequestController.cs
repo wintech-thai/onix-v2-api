@@ -295,11 +295,46 @@ namespace Its.Onix.Api.Controllers
             return Ok(new { Status = "OK", Duplicates = dups });
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{orgId}/action/VerifyPayOutToken/{paymentRequestId}/{token}")]
+        public async Task<IActionResult> VerifyPayOutToken(string orgId, string paymentRequestId, string token)
+        {
+            var result = await _paymentRequestSvc.VerifyPayOutSlipToken(paymentRequestId, token);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("org/{orgId}/action/UploadPayOutSlipById/{paymentRequestId}/{token}")]
+        public async Task<IActionResult> UploadPayOutSlipById(string orgId, string paymentRequestId, string token, [FromBody] VMUploadPayInSlip payload)
+        {
+            var result = await _paymentRequestSvc.UploadPayOutSlipById(paymentRequestId, token, payload.ImageBase64!, payload.First4, payload.Last4, payload.Note);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{orgId}/action/CheckPayOutSlipDup/{paymentRequestId}/{first4}/{last4}")]
+        public IActionResult CheckPayOutSlipDup(string orgId, string paymentRequestId, string first4, string last4)
+        {
+            var dups = _paymentRequestSvc.CheckPayOutSlipDup(first4, last4, paymentRequestId);
+            return Ok(new { Status = "OK", Duplicates = dups });
+        }
+
         [HttpGet]
         [Route("org/{orgId}/action/GetPayInSlipUpload/{paymentRequestId}")]
         public async Task<IActionResult> GetPayInSlipUpload(string orgId, string paymentRequestId)
         {
             var result = await _paymentRequestSvc.GetPayInSlipUploads(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPayOutSlipUpload/{paymentRequestId}")]
+        public async Task<IActionResult> GetPayOutSlipUpload(string orgId, string paymentRequestId)
+        {
+            var result = await _paymentRequestSvc.GetPayOutSlipUploads(orgId, paymentRequestId);
             return Ok(result);
         }
 

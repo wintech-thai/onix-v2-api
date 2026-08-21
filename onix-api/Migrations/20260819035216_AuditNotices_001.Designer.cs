@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260819035216_AuditNotices_001")]
+    partial class AuditNotices_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2014,102 +2017,6 @@ namespace onix.api.Migrations
                     b.ToTable("Merchants");
                 });
 
-            modelBuilder.Entity("Its.Onix.Api.Models.MMerchantCurrency", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("merchant_policy_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Currency")
-                        .HasColumnType("text")
-                        .HasColumnName("currency");
-
-                    b.Property<string>("CurrencyCategory")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_category");
-
-                    b.Property<bool>("IsDefaultCurrency")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_default_currency");
-
-                    b.Property<string>("MerchantId")
-                        .HasColumnType("text")
-                        .HasColumnName("MerchantId");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<decimal?>("PayinDailyTxAmountLimit")
-                        .HasColumnType("numeric")
-                        .HasColumnName("payin_daily_tx_amount_limit");
-
-                    b.Property<decimal?>("PayinDailyTxCountLimit")
-                        .HasColumnType("numeric")
-                        .HasColumnName("payin_daily_tx_count_limit");
-
-                    b.Property<bool>("PayinDiscardCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("pay_indiscard_cent");
-
-                    b.Property<int?>("PayinExpireMinute")
-                        .HasColumnType("integer")
-                        .HasColumnName("payin_expire_minute");
-
-                    b.Property<double?>("PayinFeePct")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payin_fee_pct");
-
-                    b.Property<bool>("PayinIncludeGlobalBankAccount")
-                        .HasColumnType("boolean")
-                        .HasColumnName("payin_include_global_bank_account");
-
-                    b.Property<double?>("PayinMaxAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payin_max_amount");
-
-                    b.Property<double?>("PayinMinAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payin_min_amount");
-
-                    b.Property<bool?>("PayinRandomDecimal")
-                        .HasColumnType("boolean")
-                        .HasColumnName("payin_random_decimal");
-
-                    b.Property<string>("PayinWhitelistBankAccountNames")
-                        .HasColumnType("text")
-                        .HasColumnName("payin_whitelist_bank_account_names");
-
-                    b.Property<double?>("PayoutFeePct")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payout_fee_pct");
-
-                    b.Property<double?>("PayoutMaxAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payout_max_amount");
-
-                    b.Property<double?>("PayoutMinAmount")
-                        .HasColumnType("double precision")
-                        .HasColumnName("payout_min_amount");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Currency");
-
-                    b.HasIndex("CurrencyCategory");
-
-                    b.HasIndex("MerchantId");
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("MerchantCurrencies");
-                });
-
             modelBuilder.Entity("Its.Onix.Api.Models.MNotiChannel", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -2394,10 +2301,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("from_bank_code");
 
-                    b.Property<string>("ImageBase64")
-                        .HasColumnType("text")
-                        .HasColumnName("image_base64");
-
                     b.Property<string>("MerchantId")
                         .HasColumnType("text")
                         .HasColumnName("merchant_id");
@@ -2576,10 +2479,6 @@ namespace onix.api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("merchant_id2");
 
-                    b.Property<int?>("NoticeCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("notice_count");
-
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -2599,14 +2498,6 @@ namespace onix.api.Migrations
                     b.Property<string>("PayInSlipUploads")
                         .HasColumnType("text")
                         .HasColumnName("payin_slip_uploads");
-
-                    b.Property<int>("PayOutSlipUploadCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("payout_slip_upload_count");
-
-                    b.Property<string>("PayOutSlipUploads")
-                        .HasColumnType("text")
-                        .HasColumnName("payout_slip_uploads");
 
                     b.Property<decimal?>("PayOutTotalAmountDecimal")
                         .HasColumnType("numeric")
@@ -2872,10 +2763,6 @@ namespace onix.api.Migrations
                     b.Property<string>("MerchantId")
                         .HasColumnType("text")
                         .HasColumnName("merchant_id");
-
-                    b.Property<int?>("NoticeCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("notice_count");
 
                     b.Property<string>("OrgId")
                         .HasColumnType("text")

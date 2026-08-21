@@ -113,6 +113,9 @@ namespace Its.Onix.Api.Database.Repositories
 
                 PayInSlipUploadCount = x.pr.PayInSlipUploadCount,
                 PayInSlipUploads = x.pr.PayInSlipUploads,
+                PayOutSlipUploadCount = x.pr.PayOutSlipUploadCount,
+                PayOutSlipUploads = x.pr.PayOutSlipUploads,
+                NoticeCount = x.pr.NoticeCount,
             });
         }
 
@@ -512,7 +515,8 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 existing.Status = "Approved";
-                
+                existing.StatusReason = paymentRequest.StatusReason;
+                existing.StatusCode = paymentRequest.StatusCode;
                 existing.PayoutBankAccountId = paymentRequest.PayoutBankAccountId;
                 existing.PayoutBankCode = paymentRequest.PayoutBankCode;
                 existing.PayoutBankAccountNo = paymentRequest.PayoutBankAccountNo;
@@ -556,7 +560,7 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
-        public async Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId)
+        public async Task<MPaymentRequest?> ApprovePaymentRequestById(string paymentRequestId, MPaymentRequest? payload = null)
         {
             Guid id = Guid.Parse(paymentRequestId);
             var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
@@ -564,6 +568,11 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 //Update แต่ฟีลด์ที่จำเป็นเท่านั้น
                 existing.Status = "Approved";
+                if (payload != null)
+                {
+                    existing.StatusReason = payload.StatusReason;
+                    existing.StatusCode = payload.StatusCode;
+                }
             }
 
             await context.SaveChangesAsync();
@@ -664,6 +673,20 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 existing.PayInSlipUploads = slipsJson;
                 existing.PayInSlipUploadCount = uploadCount;
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MPaymentRequest?> UpdatePayOutSlipById(string paymentRequestId, string slipsJson, int uploadCount)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(x => x!.Id == id).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.PayOutSlipUploads = slipsJson;
+                existing.PayOutSlipUploadCount = uploadCount;
             }
 
             await context.SaveChangesAsync();

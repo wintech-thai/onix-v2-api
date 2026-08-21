@@ -77,14 +77,7 @@ namespace Its.Onix.Api.Services
                 jsonStrCfg = "{}";
             }
             var configObj = JsonSerializer.Deserialize<MAgentConfig>(jsonStrCfg);
-            if (arr != null)
-            {
-                result.AgentConfigObj = configObj;
-            }
-            else
-            {
-                result.AgentConfigObj = null;
-            }
+            result.AgentConfigObj = configObj;
 
 
             r.Agent = result;
@@ -210,8 +203,8 @@ namespace Its.Onix.Api.Services
                 return;
             }
 
-            MAgentConfig? agentConfigObj = null;
-            if (!string.IsNullOrEmpty(agent.AgentConfig))
+            var agentConfigObj = agent.AgentConfigObj;
+            if (agentConfigObj == null && !string.IsNullOrEmpty(agent.AgentConfig))
             {
                 agentConfigObj = JsonSerializer.Deserialize<MAgentConfig>(agent.AgentConfig);
             }
@@ -362,8 +355,8 @@ namespace Its.Onix.Api.Services
 
             r.Agent = m;
 
-            //สร้าง job ไปยัง Redis, ให้ลบ deployment, service
-            await AddJob(orgId, "Agent.Delete", currentAgent.Agent);
+            //สร้าง job ไปยัง Redis, ให้ลบ deployment, service (ใช้ Agent.Disable แยกจาก Agent.Delete เพื่อให้ Ruby ใช้ explicit kubectl delete)
+            await AddJob(orgId, "Agent.Disable", currentAgent.Agent);
 
             return r;
         }

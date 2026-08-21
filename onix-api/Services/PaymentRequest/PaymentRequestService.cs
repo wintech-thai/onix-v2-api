@@ -115,6 +115,7 @@ namespace Its.Onix.Api.Services
             result.ProcessingMessages = "";
             result.PartialPayoutHistory = "";
             result.PayInSlipUploads = null; // ข้อมูลใหญ่ ดึงแยกผ่าน GetPayInSlipUploads
+            result.PayOutSlipUploads = null; // ข้อมูลใหญ่ ดึงแยกผ่าน GetPayOutSlipUploads
 
             r.PaymentRequest = result;
 
@@ -202,6 +203,11 @@ namespace Its.Onix.Api.Services
             //ควบคุมการ random decimal จาก bankaccount แทนที่ระดับ merchant 
             if ((bankAccount.IsRandomCent == null) || (bankAccount.IsRandomCent == false))
             {
+                //ดูต่อว่าจะทำ DecimalAction อย่างไร
+                var action = bankAccount.DecimalAction;
+                action ??= "";
+
+                amt = ServiceUtils.GenerateIntAmount(action, amt);
                 return amt;
             }
 
@@ -1197,11 +1203,26 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (bnkAcct.AccountType != "PromptPay")
+            {
+                //ให้ mocked ไว้ก่อนเพื่อไม่ให้มันไปตายที่ CreatePaymentResponse() ตอนสร้าง QR
+                bnkAcct.PromptPayId = "0000000000000";
+            }
+
             paymentRequest.Status = "Pending";
             var pmResponse = await CreatePaymentResponse(paymentRequest, bnkAcct, merchant);
             if (pmResponse.Status != "OK")
             {
                 return pmResponse;
+            }
+
+            if (bnkAcct.AccountType != "PromptPay")
+            {
+                //ไม่ต้องส่งออกไป เพราะว่าบัญชีที่จะรับโอนไมมี PromptPay
+                pmResponse.PaymentResponse!.QrCode = "";
+                pmResponse.PaymentResponse!.QrCodeImage = "";
+                pmResponse.PaymentResponse!.IsQrAvailable = false;
+                bnkAcct.PromptPayId = ""; //reset มันกลับเป็น blank
             }
 
             var existingPayout = await repository!.ProcessPartialPayoutHistory(payoutRequest!, paymentRequest, "Add");
@@ -1417,6 +1438,8 @@ namespace Its.Onix.Api.Services
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
             var pendingPayoutRequests = await repository!.GetPendingPayOutRequests();
 
+            //TODO : ให้ sorting ก่อนโดยเรียกงตามวันที่เก่าขึ้นก่อน แล้วก็ถ้าตัวไหนมี promptpay Id ก็ให้ขึ้นมาก่อนด้วย
+
             lines.Add($"Step0 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
             foreach (var payoutRequest in pendingPayoutRequests)
@@ -1434,20 +1457,29 @@ namespace Its.Onix.Api.Services
                 lines.Add($"Step1.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
                 var promptPayId = payoutRequest.PayinPromptPayId;
-                var isOverride = false;
                 if (!string.IsNullOrEmpty(payoutRequest.PayinPromptPayIdOverride))
                 {
                     lines.Add($"Step1.3 - Request ID=[{org}:{id}], use overrided bank account");
-
                     promptPayId = payoutRequest.PayinPromptPayIdOverride;
+                }
+
+                var isOverride = false;
+                if (!string.IsNullOrEmpty(payoutRequest.PayinBankAccountNoOverride))
+                {
+                    lines.Add($"Step1.3.1 - Request ID=[{org}:{id}], use overrided bank account");
                     isOverride = true;
                 }
 
+                var accountType = "PromptPay";
                 if (string.IsNullOrEmpty(promptPayId))
                 {
-                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because PromptPay ID is empty!!!");
+                    lines.Add($"Step1.4 - Request ID=[{org}:{id}], PromptPay ID is empty!!!");
                     //ไม่ใช่ prompt pay
-                    continue;
+                    accountType = "Native";
+
+
+                    //ให้ match ได้ด้วยถ้าไม่ใช่ promptpay
+                    //continue;
                 }
 
                 var bankCode = payoutRequest.PayinBankCode;
@@ -1465,6 +1497,7 @@ namespace Its.Onix.Api.Services
 
                 if (leftAmount < amt)
                 {
+                    //ยอดไม่พอ
                     lines.Add($"Step1.4 - Request ID=[{org}:{id}], Skip because not enough amount left=[{leftAmount}], required=[{amt}]!!!");
                     continue;
                 }
@@ -1476,7 +1509,7 @@ namespace Its.Onix.Api.Services
                     PromptPayId = promptPayId,
                     AccountNumber = bankAccountNo,
                     AccountName = bankAccountName,
-                    AccountType = "PromptPay",
+                    AccountType = accountType,
                 };
 
                 return (ba, payoutRequest, lines);
@@ -1732,7 +1765,7 @@ namespace Its.Onix.Api.Services
             }
 
             pr.ExpireDate = DateTime.UtcNow.AddMinutes((double) expireMinute); //Payment Request จะหมดอายุใน XX นาที
-            var pmr = new MPaymentResponse()
+            var pmr = new MPaymentResponse
             {
                 CreatedAt = pr.CreatedDate,
                 ExpireAt = pr.ExpireDate,
@@ -1756,7 +1789,13 @@ namespace Its.Onix.Api.Services
                 PayInBankAccountNo = bnkAcct.AccountNumber,
                 PayInBankCode = bnkAcct.BankCode,
                 PayInPromptPayId = bnkAcct.PromptPayId,
+                IsQrAvailable = false
             };
+
+            if (!string.IsNullOrEmpty(pmr.PayInPromptPayId))
+            {
+                pmr.IsQrAvailable = true;
+            }
 
             // สร้าง token สำหรับ upload slip แล้วเก็บใน Redis 1 วัน
             var slipToken = Guid.NewGuid().ToString();
@@ -1915,19 +1954,165 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (pr.Status != "Pending")
-            {
-                r.Status = "ERROR_NOT_PENDING";
-                r.Description = "Can only generate upload link for Pending payment requests";
-                return r;
-            }
-
             var slipToken = Guid.NewGuid().ToString();
             var cacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
             _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{slipToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
 
             r.Description = "Success";
             r.SlipUploadUrl = $"/payin-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
+            return r;
+        }
+
+        public async Task<MVBase> VerifyPayOutSlipToken(string paymentRequestId, string token)
+        {
+            var r = new MVBase() { Status = "OK", Description = "Token is valid" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId("global");
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            var cacheKey = CacheHelper.CreatePayOutSlipUploadTokenKey(pr.OrgId!);
+            var cached = await _redis.GetObjectAsync<string>($"{cacheKey}:{paymentRequestId}:{token}");
+            if (cached == null)
+            {
+                r.Status = "TOKEN_INVALID";
+                r.Description = "Token is invalid or expired";
+            }
+
+            return r;
+        }
+
+        public async Task<MVBase> UploadPayOutSlipById(string paymentRequestId, string token, string base64Image, string? first4 = null, string? last4 = null, string? note = null)
+        {
+            var verify = await VerifyPayOutSlipToken(paymentRequestId, token);
+            if (verify.Status != "OK") return verify;
+
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+                return new MVBase { Status = "NOTFOUND", Description = $"Payment Request ID [{paymentRequestId}] not found" };
+
+            List<MPayOutSlipItem> slips;
+            try
+            {
+                slips = string.IsNullOrEmpty(pr.PayOutSlipUploads)
+                    ? []
+                    : JsonSerializer.Deserialize<List<MPayOutSlipItem>>(pr.PayOutSlipUploads) ?? [];
+            }
+            catch { slips = []; }
+
+            slips.Add(new MPayOutSlipItem { ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow, First4 = first4, Last4 = last4, Note = note });
+
+            var slipsJson = JsonSerializer.Serialize(slips);
+            await repository!.UpdatePayOutSlipById(paymentRequestId, slipsJson, slips.Count);
+
+            if (!string.IsNullOrEmpty(first4) && !string.IsNullOrEmpty(last4))
+            {
+                var dupRecord = new MDuplicateRecord
+                {
+                    DupType = "PayoutSlipId",
+                    First4 = first4.ToUpper(),
+                    Last4 = last4.ToUpper(),
+                    OrgId = pr.OrgId,
+                    DocumentId = paymentRequestId,
+                };
+                context!.DuplicateRecords!.Add(dupRecord);
+                await context.SaveChangesAsync();
+            }
+
+            return new MVBase { Status = "OK", Description = "Slip uploaded successfully" };
+        }
+
+        public List<MDuplicateRecord> CheckPayOutSlipDup(string first4, string last4, string? excludeDocumentId = null)
+        {
+            var f4 = first4.ToUpper();
+            var l4 = last4.ToUpper();
+            var query = context!.DuplicateRecords!
+                .Where(r => r.DupType == "PayoutSlipId" && r.First4 == f4 && r.Last4 == l4);
+            if (!string.IsNullOrEmpty(excludeDocumentId))
+                query = query.Where(r => r.DocumentId != excludeDocumentId);
+            return [.. query];
+        }
+
+        public async Task<MVPayOutSlipUploads> GetPayOutSlipUploads(string orgId, string paymentRequestId)
+        {
+            var r = new MVPayOutSlipUploads() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            if (orgId != "global" && pr.OrgId != orgId)
+            {
+                r.Status = "ERROR_DATA_NOT_OWN_BY_ORG_ID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not owned by org [{orgId}]";
+                return r;
+            }
+
+            List<MPayOutSlipItem> slips;
+            try
+            {
+                slips = string.IsNullOrEmpty(pr.PayOutSlipUploads)
+                    ? []
+                    : JsonSerializer.Deserialize<List<MPayOutSlipItem>>(pr.PayOutSlipUploads) ?? [];
+            }
+            catch { slips = []; }
+
+            slips.Reverse();
+            r.Slips = slips;
+
+            return r;
+        }
+
+        public async Task<MVBase> GeneratePayOutSlipUploadToken(string orgId, string paymentRequestId)
+        {
+            var r = new MVBase() { Status = "OK" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            var slipToken = Guid.NewGuid().ToString();
+            var cacheKey = CacheHelper.CreatePayOutSlipUploadTokenKey(pr.OrgId!);
+            _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{slipToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
+
+            r.Description = "Success";
+            r.SlipUploadUrl = $"/payout-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
             return r;
         }
 
@@ -1943,6 +2128,7 @@ namespace Its.Onix.Api.Services
                 p.ProcessingMessages = "";
                 p.PartialPayoutHistory = "";
                 p.PayInSlipUploads = null; // ข้อมูลใหญ่ ไม่ดึงใน list
+                p.PayOutSlipUploads = null;
             });
 
             // ถ้าไม่ใช่ global ให้เหลือเฉพาะรายการของ orgId นั้น

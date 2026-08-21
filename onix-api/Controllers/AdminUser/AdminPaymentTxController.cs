@@ -178,9 +178,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/CreatePaymentTxByPayInRequestId/{paymentRequestId}")]
-        public async Task<IActionResult> CreatePaymentTxByPayInRequestId(string paymentRequestId)
+        public async Task<IActionResult> CreatePaymentTxByPayInRequestId(string paymentRequestId, [FromBody] MPaymentRequest? payload = null)
         {
-            var result = await svc.CreatePaymentTxByPayInRequestId("global", paymentRequestId);
+            var result = await svc.CreatePaymentTxByPayInRequestId("global", paymentRequestId, payload);
             return Ok(result);
         }
     }

@@ -1127,7 +1127,7 @@ namespace Its.Onix.Api.Services
             return ba;
         }
 
-        public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId)
+        public async Task<MVPaymentTransaction> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId, MPaymentRequest? payload = null)
         {
             repository!.SetCustomOrgId(orgId);
             _paymentRequestRepo!.SetCustomOrgId(orgId);
@@ -1193,7 +1193,7 @@ namespace Its.Onix.Api.Services
             }
 
             //ใช้ status = "Approved" แทนการใช้คำว่า "Paid" เพื่อให้รู้ว่าเป็นการทำแบบ manual ขึ้นมาเอง
-            _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId);
+            _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId, payload);
 
             return pmtVm;
         }
