@@ -77,14 +77,7 @@ namespace Its.Onix.Api.Services
                 jsonStrCfg = "{}";
             }
             var configObj = JsonSerializer.Deserialize<MAgentConfig>(jsonStrCfg);
-            if (arr != null)
-            {
-                result.AgentConfigObj = configObj;
-            }
-            else
-            {
-                result.AgentConfigObj = null;
-            }
+            result.AgentConfigObj = configObj;
 
 
             r.Agent = result;
@@ -210,8 +203,8 @@ namespace Its.Onix.Api.Services
                 return;
             }
 
-            MAgentConfig? agentConfigObj = null;
-            if (!string.IsNullOrEmpty(agent.AgentConfig))
+            var agentConfigObj = agent.AgentConfigObj;
+            if (agentConfigObj == null && !string.IsNullOrEmpty(agent.AgentConfig))
             {
                 agentConfigObj = JsonSerializer.Deserialize<MAgentConfig>(agent.AgentConfig);
             }
