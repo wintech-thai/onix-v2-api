@@ -19,6 +19,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MWallet?> AttachCustomerToWalletById(string walletId, string custId, MEntity customer);
         public Task<MWallet?> GetWalletById(string walletId);
         public Task<MWallet?> GetWalletByCustomerId(string customerId);
+        public Task<MWallet?> GetWalletByRefId(string refId);
         public Task<MWallet?> GetWalletByMerchantId(string merchantId);
         public Task<MWallet?> GetWalletByBankAccountId(string bankAccountId);
         public Task<MWallet?> DeleteWalletById(string walletId);
