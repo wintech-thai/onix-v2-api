@@ -28,12 +28,21 @@ namespace Its.Onix.Api.Models
         [Column("currency")]
         public string? Currency { get; set; } /* THB, USD, USDT */
 
+        [Column("currency_name")]
+        public string? CurrencyName { get; set; }
+
+
         [Column("currency_category")]
         public string? CurrencyCategory { get; set; } /* FIAT, CRYPTO */
 
         [Column("is_default_currency")]
         public bool IsDefaultCurrency { get; set; } /* เป็น true ได้อันเดียวต่อ 1 merchant, ใช้แสดง default */
 
+        [Column("status")]
+        public string? Status { get; set; } /* Active, Disabled */
+
+        [Column("wallet_id")]
+        public string? WalletId { get; set; }
 
 
         [Column("payin_fee_pct")]

@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260822065121_MerchantCurrency_Status_001")]
+    partial class MerchantCurrency_Status_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2033,10 +2036,6 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("currency_category");
 
-                    b.Property<string>("CurrencyName")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_name");
-
                     b.Property<bool>("IsDefaultCurrency")
                         .HasColumnType("boolean")
                         .HasColumnName("is_default_currency");
@@ -2104,10 +2103,6 @@ namespace onix.api.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("status");
-
-                    b.Property<string>("WalletId")
-                        .HasColumnType("text")
-                        .HasColumnName("wallet_id");
 
                     b.HasKey("Id");
 
@@ -4065,10 +4060,6 @@ namespace onix.api.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("point_balance_decimal");
 
-                    b.Property<string>("RefId")
-                        .HasColumnType("text")
-                        .HasColumnName("ref_id");
-
                     b.Property<string>("Tags")
                         .HasColumnType("text")
                         .HasColumnName("tags");
@@ -4082,8 +4073,6 @@ namespace onix.api.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("OrgId");
-
-                    b.HasIndex("RefId");
 
                     b.ToTable("Wallets");
                 });
