@@ -430,5 +430,34 @@ namespace Its.Onix.Api.Controllers
             var dups = svc.CheckPayInSlipDup(first4, last4, paymentRequestId);
             return Ok(new { Status = "OK", Duplicates = dups });
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{orgId}/action/CheckPayOutSlipDup/{paymentRequestId}/{first4}/{last4}")]
+        public IActionResult CheckPayOutSlipDup(string orgId, string paymentRequestId, string first4, string last4)
+        {
+            var dups = svc.CheckPayOutSlipDup(first4, last4, paymentRequestId);
+            return Ok(new { Status = "OK", Duplicates = dups });
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPatch]
+        [Route("org/{orgId}/action/UpdatePayInSlipFirst4Last4/{paymentRequestId}/{slipId}")]
+        public async Task<IActionResult> UpdatePayInSlipFirst4Last4(string orgId, string paymentRequestId, string slipId, [FromBody] UpdateSlipRefRequest req)
+        {
+            var result = await svc.UpdatePayInSlipFirst4Last4(orgId, paymentRequestId, slipId, req.First4, req.Last4, req.Note);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPatch]
+        [Route("org/{orgId}/action/UpdatePayOutSlipFirst4Last4/{paymentRequestId}/{slipId}")]
+        public async Task<IActionResult> UpdatePayOutSlipFirst4Last4(string orgId, string paymentRequestId, string slipId, [FromBody] UpdateSlipRefRequest req)
+        {
+            var result = await svc.UpdatePayOutSlipFirst4Last4(orgId, paymentRequestId, slipId, req.First4, req.Last4, req.Note);
+            return Ok(result);
+        }
     }
+
+    public record UpdateSlipRefRequest(string? First4, string? Last4, string? Note);
 }
