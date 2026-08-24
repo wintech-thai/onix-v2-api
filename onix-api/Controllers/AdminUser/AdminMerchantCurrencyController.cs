@@ -34,7 +34,7 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/global/action/GetAvailableFiatCurrencies")]
+        [Route("org/global/action/GetAvailableCryptoCurrencies")]
         public async Task<IActionResult> GetAvailableCryptoCurrencies()
         {
             var result = svc.GetAvailableCurrencies("CRYPTO");
@@ -82,7 +82,7 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/EnableMerchantCurrency/{merchantCurrencyId}")]
-        public async Task<IActionResult> EnableNotiChannelById(string merchantCurrencyId)
+        public async Task<IActionResult> EnableMerchantCurrency(string merchantCurrencyId)
         {
             var result = await svc.UpdateCurrencyStatusById("global", merchantCurrencyId, "Active");
             return Ok(result);

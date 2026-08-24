@@ -18,13 +18,30 @@ namespace Its.Onix.Api.Services
                 CurrencyCoode = "THB",
                 CurrencyName = "Thai baht",
                 Category = "FIAT",
+                Decimal = 2,
+                IsNative = true,
+                Symbol = "฿"
             },
+
             new()
             {
                 CurrencyCoode = "KAS",
                 CurrencyName = "Kaspa crypto currency",
                 Category = "CRYPTO",
+                Decimal = 8,
+                IsNative = true,
+                Symbol = "KAS"
             },
+
+            new()
+            {
+                CurrencyCoode = "USDT",
+                CurrencyName = "Tether USD",
+                Category = "CRYPTO",
+                Decimal = 6,
+                IsNative = false,
+                Symbol = "USDT"
+            }
         ];
 
         public List<MCurrency> GetAvailableCurrencies(string category)

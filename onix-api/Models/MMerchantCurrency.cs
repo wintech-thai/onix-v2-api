@@ -42,7 +42,7 @@ namespace Its.Onix.Api.Models
         public string? Status { get; set; } /* Active, Disabled */
 
         [Column("wallet_id")]
-        public string? WalletId { get; set; } /* Active, Disabled */
+        public string? WalletId { get; set; }
 
 
         [Column("payin_fee_pct")]
