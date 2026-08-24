@@ -5,6 +5,7 @@ using Its.Onix.Api.ViewsModels;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Services
 {
@@ -2058,11 +2059,57 @@ namespace Its.Onix.Api.Services
             var slip = slips.FirstOrDefault(s => s.SlipId == slipId);
             if (slip == null) return new MVBase { Status = "SLIP_NOT_FOUND", Description = "Slip not found by SlipId" };
 
+            var oldFirst4 = slip.First4;
+            var oldLast4 = slip.Last4;
+
             slip.First4 = first4;
             slip.Last4 = last4;
             slip.Note = note;
             await repository!.UpdatePayInSlipById(paymentRequestId, JsonSerializer.Serialize(slips), slips.Count);
+
+            await SyncDuplicateRecord("PayinSlipId", pr.OrgId, paymentRequestId, oldFirst4, oldLast4, first4, last4);
+
             return new MVBase { Status = "OK", Description = "Updated" };
+        }
+
+        // อัพเดต DuplicateRecords ให้ตรงกับ first4/last4 ที่แก้ไขใหม่ ไม่งั้นการเช็ค dup ครั้งต่อไปจะยังอ้างอิงค่าเดิมที่ผิดอยู่
+        private async Task SyncDuplicateRecord(string dupType, string? orgId, string documentId, string? oldFirst4, string? oldLast4, string? newFirst4, string? newLast4)
+        {
+            var oldF4 = oldFirst4?.ToUpper();
+            var oldL4 = oldLast4?.ToUpper();
+            var newF4 = newFirst4?.ToUpper();
+            var newL4 = newLast4?.ToUpper();
+
+            var existing = !string.IsNullOrEmpty(oldF4) && !string.IsNullOrEmpty(oldL4)
+                ? await context!.DuplicateRecords!
+                    .FirstOrDefaultAsync(r => r.DupType == dupType && r.DocumentId == documentId && r.First4 == oldF4 && r.Last4 == oldL4)
+                : null;
+
+            if (existing != null)
+            {
+                if (string.IsNullOrEmpty(newF4) || string.IsNullOrEmpty(newL4))
+                {
+                    context!.DuplicateRecords!.Remove(existing);
+                }
+                else
+                {
+                    existing.First4 = newF4;
+                    existing.Last4 = newL4;
+                }
+                await context!.SaveChangesAsync();
+            }
+            else if (!string.IsNullOrEmpty(newF4) && !string.IsNullOrEmpty(newL4))
+            {
+                context!.DuplicateRecords!.Add(new MDuplicateRecord
+                {
+                    DupType = dupType,
+                    First4 = newF4,
+                    Last4 = newL4,
+                    OrgId = orgId,
+                    DocumentId = documentId,
+                });
+                await context!.SaveChangesAsync();
+            }
         }
 
         public async Task<MVBase> UpdatePayOutSlipFirst4Last4(string orgId, string paymentRequestId, string slipId, string? first4, string? last4, string? note)
@@ -2078,10 +2125,16 @@ namespace Its.Onix.Api.Services
             var slip = slips.FirstOrDefault(s => s.SlipId == slipId);
             if (slip == null) return new MVBase { Status = "SLIP_NOT_FOUND", Description = "Slip not found by SlipId" };
 
+            var oldFirst4 = slip.First4;
+            var oldLast4 = slip.Last4;
+
             slip.First4 = first4;
             slip.Last4 = last4;
             slip.Note = note;
             await repository!.UpdatePayOutSlipById(paymentRequestId, JsonSerializer.Serialize(slips), slips.Count);
+
+            await SyncDuplicateRecord("PayoutSlipId", pr.OrgId, paymentRequestId, oldFirst4, oldLast4, first4, last4);
+
             return new MVBase { Status = "OK", Description = "Updated" };
         }
 
