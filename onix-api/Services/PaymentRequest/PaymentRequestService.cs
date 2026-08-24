@@ -1858,7 +1858,7 @@ namespace Its.Onix.Api.Services
             }
             catch { slips = []; }
 
-            slips.Add(new MPayInSlipItem { ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow, First4 = first4, Last4 = last4, Note = note });
+            slips.Add(new MPayInSlipItem { SlipId = Guid.NewGuid().ToString(), ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow, First4 = first4, Last4 = last4, Note = note });
 
             var slipsJson = JsonSerializer.Serialize(slips);
             await repository!.UpdatePayInSlipById(paymentRequestId, slipsJson, slips.Count);
@@ -2012,7 +2012,7 @@ namespace Its.Onix.Api.Services
             }
             catch { slips = []; }
 
-            slips.Add(new MPayOutSlipItem { ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow, First4 = first4, Last4 = last4, Note = note });
+            slips.Add(new MPayOutSlipItem { SlipId = Guid.NewGuid().ToString(), ImageBase64 = base64Image, UploadedAt = DateTime.UtcNow, First4 = first4, Last4 = last4, Note = note });
 
             var slipsJson = JsonSerializer.Serialize(slips);
             await repository!.UpdatePayOutSlipById(paymentRequestId, slipsJson, slips.Count);
@@ -2043,6 +2043,46 @@ namespace Its.Onix.Api.Services
             if (!string.IsNullOrEmpty(excludeDocumentId))
                 query = query.Where(r => r.DocumentId != excludeDocumentId);
             return [.. query];
+        }
+
+        public async Task<MVBase> UpdatePayInSlipFirst4Last4(string orgId, string paymentRequestId, string slipId, string? first4, string? last4, string? note)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null) return new MVBase { Status = "NOTFOUND", Description = "Payment request not found" };
+
+            List<MPayInSlipItem> slips;
+            try { slips = string.IsNullOrEmpty(pr.PayInSlipUploads) ? [] : JsonSerializer.Deserialize<List<MPayInSlipItem>>(pr.PayInSlipUploads) ?? []; }
+            catch { slips = []; }
+
+            var slip = slips.FirstOrDefault(s => s.SlipId == slipId);
+            if (slip == null) return new MVBase { Status = "SLIP_NOT_FOUND", Description = "Slip not found by SlipId" };
+
+            slip.First4 = first4;
+            slip.Last4 = last4;
+            slip.Note = note;
+            await repository!.UpdatePayInSlipById(paymentRequestId, JsonSerializer.Serialize(slips), slips.Count);
+            return new MVBase { Status = "OK", Description = "Updated" };
+        }
+
+        public async Task<MVBase> UpdatePayOutSlipFirst4Last4(string orgId, string paymentRequestId, string slipId, string? first4, string? last4, string? note)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null) return new MVBase { Status = "NOTFOUND", Description = "Payment request not found" };
+
+            List<MPayOutSlipItem> slips;
+            try { slips = string.IsNullOrEmpty(pr.PayOutSlipUploads) ? [] : JsonSerializer.Deserialize<List<MPayOutSlipItem>>(pr.PayOutSlipUploads) ?? []; }
+            catch { slips = []; }
+
+            var slip = slips.FirstOrDefault(s => s.SlipId == slipId);
+            if (slip == null) return new MVBase { Status = "SLIP_NOT_FOUND", Description = "Slip not found by SlipId" };
+
+            slip.First4 = first4;
+            slip.Last4 = last4;
+            slip.Note = note;
+            await repository!.UpdatePayOutSlipById(paymentRequestId, JsonSerializer.Serialize(slips), slips.Count);
+            return new MVBase { Status = "OK", Description = "Updated" };
         }
 
         public async Task<MVPayOutSlipUploads> GetPayOutSlipUploads(string orgId, string paymentRequestId)

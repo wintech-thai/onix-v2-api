@@ -630,6 +630,7 @@ namespace Its.Onix.Api.Database.Repositories
                     PartialAmount = amt,
                     Status = "Pending",
                     TxDate = payIn.CreatedDate,
+                    ExpireDate = payIn.ExpireDate,
                 };
 
                 txs.Add(ppo);

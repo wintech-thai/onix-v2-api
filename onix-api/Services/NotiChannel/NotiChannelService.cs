@@ -34,6 +34,8 @@ namespace Its.Onix.Api.Services
                 new() { Name = "Backup.Done", Value = "Backup completed successfully" },
                 new() { Name = "Restore.Success", Value = "Database restore completed successfully" },
                 new() { Name = "Restore.Failed", Value = "Database restore failed" },
+                new() { Name = "Agent.NotReady", Value = "LINE Agent is not ready (login lost or offline)" },
+                new() { Name = "Agent.Ready", Value = "LINE Agent recovered and is ready again" },
             };
 
             return list;

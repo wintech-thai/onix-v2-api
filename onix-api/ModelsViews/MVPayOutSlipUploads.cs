@@ -5,6 +5,7 @@ namespace Its.Onix.Api.ModelsViews
     [ExcludeFromCodeCoverage]
     public class MPayOutSlipItem
     {
+        public string? SlipId { get; set; }
         public string? ImageBase64 { get; set; }
         public DateTime? UploadedAt { get; set; }
         public string? First4 { get; set; }
