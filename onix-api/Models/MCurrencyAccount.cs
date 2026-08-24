@@ -16,6 +16,11 @@ namespace Its.Onix.Api.Models
     [Index(nameof(CryptoWalletNetwork))]
     [Index(nameof(AccountKycName))]
 
+    [Index(nameof(BankCode))]
+    [Index(nameof(BankAccountNo))]
+    [Index(nameof(BankAccountName))]
+    [Index(nameof(CryptoExtendedPublicKey))]
+
     public class MCurrencyAccount
     {
         [Key]
@@ -78,10 +83,10 @@ namespace Its.Onix.Api.Models
         public string? CryptoQrScheme { get; set; } //TRON, ETHEREUM ...
 
         [Column("crypto_address_prefix")]
-        public string? CryptoAddressPrefix { get; set; } //TRON, ETHEREUM ...
+        public string? CryptoAddressPrefix { get; set; }
 
         [Column("crypto_token_contract")]
-        public string? CryptoTokenContract { get; set; } //TRON, ETHEREUM ...
+        public string? CryptoTokenContract { get; set; } 
 
         [Column("crypto_decimal")]
         public int CryptoDecimal { get; set; } //รองรับกี่ digit
@@ -93,7 +98,7 @@ namespace Its.Onix.Api.Models
         public int CryptoNextAddressIndex { get; set; } //ต้องมีการบวกไปเรื่อย ๆ เมื่อสร้างใหม่, ควรทำ record locking การสร้าง address ใหม่สำหรับ wallet หนึ่ง ๆ
 
         [Column("crypto_address_branch")]
-        public int CryptoAddressBranch { get; set; }
+        public int CryptoAddressBranch { get; set; } //m/44'/195'/0'
 
 
         //ข้อมูลเกี่ยวกับบัญชีธนาคาร (fiat)
