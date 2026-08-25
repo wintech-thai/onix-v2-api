@@ -10,6 +10,7 @@ namespace Its.Onix.Api.Models
 
     [Index(nameof(OrgId))]
     [Index(nameof(CustomerId))]
+    [Index(nameof(RefId))]
     public class MWallet : IOrgEntity
     {
         [Key]
@@ -37,6 +38,9 @@ namespace Its.Onix.Api.Models
 
         [Column("bank_account_id")]
         public string? BankAccountId { get; set; }
+
+        [Column("ref_id")]
+        public string? RefId { get; set; } //เป็น generef ID ไปอีก table
 
 
         [Column("point_balance")]

@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260824112102_CurrencyAccount_001")]
+    partial class CurrencyAccount_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1156,14 +1159,6 @@ namespace onix.api.Migrations
 
                     b.HasIndex("AccountType");
 
-                    b.HasIndex("BankAccountName");
-
-                    b.HasIndex("BankAccountNo");
-
-                    b.HasIndex("BankCode");
-
-                    b.HasIndex("CryptoExtendedPublicKey");
-
                     b.HasIndex("CryptoWalletId");
 
                     b.HasIndex("CryptoWalletNetwork");
@@ -1175,53 +1170,6 @@ namespace onix.api.Migrations
                     b.HasIndex("OrgId");
 
                     b.ToTable("CurrencyAccounts");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MCurrencyAccountMerchant", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("account_merchant_id");
-
-                    b.Property<string>("AccountCategory")
-                        .HasColumnType("text")
-                        .HasColumnName("account_category");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Currency")
-                        .HasColumnType("text")
-                        .HasColumnName("currency");
-
-                    b.Property<string>("CurrencyAccountId")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_account_id");
-
-                    b.Property<string>("CurrencyCategory")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_category");
-
-                    b.Property<string>("MerchantId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Currency");
-
-                    b.HasIndex("CurrencyAccountId");
-
-                    b.HasIndex("MerchantId");
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("CurrencyAccountMerchants");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MCustomRole", b =>

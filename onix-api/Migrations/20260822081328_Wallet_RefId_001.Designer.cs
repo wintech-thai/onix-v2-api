@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260822081328_Wallet_RefId_001")]
+    partial class Wallet_RefId_001
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -977,251 +980,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("Configurations");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MCurrencyAccount", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("currency_account_id");
-
-                    b.Property<string>("AccountKycEmail")
-                        .HasColumnType("text")
-                        .HasColumnName("account_kyc_email");
-
-                    b.Property<string>("AccountKycId")
-                        .HasColumnType("text")
-                        .HasColumnName("account_kyc_id");
-
-                    b.Property<string>("AccountKycName")
-                        .HasColumnType("text")
-                        .HasColumnName("account_kyc_name");
-
-                    b.Property<string>("AccountKycPhone")
-                        .HasColumnType("text")
-                        .HasColumnName("account_kyc_phone");
-
-                    b.Property<string>("AccountLevel")
-                        .HasColumnType("text")
-                        .HasColumnName("account_level");
-
-                    b.Property<string>("AccountType")
-                        .HasColumnType("text")
-                        .HasColumnName("account_type");
-
-                    b.Property<string>("BankAccountName")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_name");
-
-                    b.Property<string>("BankAccountNo")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_no");
-
-                    b.Property<string>("BankAccountType")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_account_type");
-
-                    b.Property<string>("BankCode")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_code");
-
-                    b.Property<string>("BankConfig")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_config");
-
-                    b.Property<bool>("BankIsNativeQrSupport")
-                        .HasColumnType("boolean")
-                        .HasColumnName("bank_is_native_qr_support");
-
-                    b.Property<string>("BankName")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_name");
-
-                    b.Property<string>("BankPromptPayId")
-                        .HasColumnType("text")
-                        .HasColumnName("bank_promptpay_id");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<int>("CryptoAddressBranch")
-                        .HasColumnType("integer")
-                        .HasColumnName("crypto_address_branch");
-
-                    b.Property<string>("CryptoAddressPrefix")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_address_prefix");
-
-                    b.Property<int>("CryptoDecimal")
-                        .HasColumnType("integer")
-                        .HasColumnName("crypto_decimal");
-
-                    b.Property<string>("CryptoDerivationPath")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_derivation_path");
-
-                    b.Property<string>("CryptoExtendedPublicKey")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_extended_public_key");
-
-                    b.Property<int>("CryptoNextAddressIndex")
-                        .HasColumnType("integer")
-                        .HasColumnName("crypto_next_address_index");
-
-                    b.Property<string>("CryptoQrScheme")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_qr_scheme");
-
-                    b.Property<string>("CryptoTokenContract")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_token_contract");
-
-                    b.Property<string>("CryptoWalletId")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_wallet_id");
-
-                    b.Property<string>("CryptoWalletNetwork")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_wallet_network");
-
-                    b.Property<string>("CryptoWalletType")
-                        .HasColumnType("text")
-                        .HasColumnName("crypto_wallet_type");
-
-                    b.Property<string>("Currency")
-                        .HasColumnType("text")
-                        .HasColumnName("currency");
-
-                    b.Property<string>("CurrencyCategory")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_category");
-
-                    b.Property<string>("CurrencyName")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_name");
-
-                    b.Property<decimal?>("CurrentBalance")
-                        .HasColumnType("numeric")
-                        .HasColumnName("current_balance");
-
-                    b.Property<int?>("CurrentTotalCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("current_total_count");
-
-                    b.Property<decimal?>("CurrentTotalLimit")
-                        .HasColumnType("numeric")
-                        .HasColumnName("current_total_amount");
-
-                    b.Property<decimal?>("DailyTotalAmountLimit")
-                        .HasColumnType("numeric")
-                        .HasColumnName("daily_total_amount_limit");
-
-                    b.Property<int?>("DailyTotalCountLimit")
-                        .HasColumnType("integer")
-                        .HasColumnName("daily_total_count_limit");
-
-                    b.Property<string>("DecimalAction")
-                        .HasColumnType("text")
-                        .HasColumnName("decimal_action");
-
-                    b.Property<bool?>("IsRandomCent")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_random_cent");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("text")
-                        .HasColumnName("Status");
-
-                    b.Property<string>("Tags")
-                        .HasColumnType("text")
-                        .HasColumnName("tags");
-
-                    b.Property<decimal?>("TxMaxAmount")
-                        .HasColumnType("numeric")
-                        .HasColumnName("tx_max_amount");
-
-                    b.Property<decimal?>("TxMinAmount")
-                        .HasColumnType("numeric")
-                        .HasColumnName("tx_min_amount");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountKycName");
-
-                    b.HasIndex("AccountType");
-
-                    b.HasIndex("BankAccountName");
-
-                    b.HasIndex("BankAccountNo");
-
-                    b.HasIndex("BankCode");
-
-                    b.HasIndex("CryptoExtendedPublicKey");
-
-                    b.HasIndex("CryptoWalletId");
-
-                    b.HasIndex("CryptoWalletNetwork");
-
-                    b.HasIndex("Currency");
-
-                    b.HasIndex("CurrencyCategory");
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("CurrencyAccounts");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MCurrencyAccountMerchant", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("account_merchant_id");
-
-                    b.Property<string>("AccountCategory")
-                        .HasColumnType("text")
-                        .HasColumnName("account_category");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("Currency")
-                        .HasColumnType("text")
-                        .HasColumnName("currency");
-
-                    b.Property<string>("CurrencyAccountId")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_account_id");
-
-                    b.Property<string>("CurrencyCategory")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_category");
-
-                    b.Property<string>("MerchantId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Currency");
-
-                    b.HasIndex("CurrencyAccountId");
-
-                    b.HasIndex("MerchantId");
-
-                    b.HasIndex("OrgId");
-
-                    b.ToTable("CurrencyAccountMerchants");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MCustomRole", b =>
@@ -2277,10 +2035,6 @@ namespace onix.api.Migrations
                     b.Property<string>("CurrencyCategory")
                         .HasColumnType("text")
                         .HasColumnName("currency_category");
-
-                    b.Property<string>("CurrencyName")
-                        .HasColumnType("text")
-                        .HasColumnName("currency_name");
 
                     b.Property<bool>("IsDefaultCurrency")
                         .HasColumnType("boolean")
