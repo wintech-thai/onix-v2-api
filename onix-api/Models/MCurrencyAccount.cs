@@ -169,6 +169,9 @@ namespace Its.Onix.Api.Models
         public decimal? CurrentWalletBalance { get; set; }
 
         [NotMapped]
+        public decimal? CurrentDailyTxAmount { get; set; }
+
+        [NotMapped]
         public MBankAccountConfig? BankConfigObj { get; set; }
 
 

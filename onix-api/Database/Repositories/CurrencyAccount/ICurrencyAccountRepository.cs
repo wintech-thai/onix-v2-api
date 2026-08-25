@@ -3,7 +3,7 @@ using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Database.Repositories
 {
-    public interface ICurrencyAcountRepository
+    public interface ICurrencyAccountRepository
     {
         public void SetCustomOrgId(string customOrgId);
 

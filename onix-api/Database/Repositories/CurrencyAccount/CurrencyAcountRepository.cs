@@ -5,9 +5,9 @@ using System.Data.Entity;
 
 namespace Its.Onix.Api.Database.Repositories
 {
-    public class CurrencyAcountRepository : BaseRepository, ICurrencyAcountRepository
+    public class CurrencyAccountRepository : BaseRepository, ICurrencyAccountRepository
     {
-        public CurrencyAcountRepository(IDataContext ctx)
+        public CurrencyAccountRepository(IDataContext ctx)
         {
             context = ctx;
         }
