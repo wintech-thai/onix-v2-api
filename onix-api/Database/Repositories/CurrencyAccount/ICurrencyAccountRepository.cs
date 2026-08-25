@@ -30,17 +30,14 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> IsCrypotCurrencyEpkExist(string currencyCode, string epk);
         public Task<MCurrencyAccount?> GetCryptoCurrencyAccountByEpk(string currencyCode, string epk);
 
-/*
-        public Task<List<MBankAccountMerchant>> GetMerchantsForBankAccount(string bankAccountId);
-        public Task<List<MBankAccountMerchant>> GetPayInBankAccountsForMerchant(string merchantId);
-        public Task<List<MBankAccountMerchant>> GetPayInBankAccountsAll();
-        public Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string merchantId);
 
-        public Task<List<MBankAccountMerchant>> GetMerchantCountByBankAccountId();
-        public Task<List<MBankAccountMerchant>> GetBankAccountCountByMerchantId();
-
-        public Task<MBankAccountMerchant?> SelectMerchant(string bankAccountId, string merchantId);
-        public Task<MBankAccountMerchant?> UnSelectMerchant(string bankAccountId, string merchantId);
-*/
+        //==== Merchant binding ====
+        public Task<MCurrencyAccountMerchant?> SelectMerchant(string currencyAccountId, string merchantId);
+        public Task<MCurrencyAccountMerchant?> UnSelectMerchant(string currencyAccountId, string merchantId);
+        public Task<List<MCurrencyAccountMerchant>> GetMerchantCountByCurrencyAccountId();
+        public Task<List<MCurrencyAccountMerchant>> GetCurrencyAccountCountByMerchantId();
+        public Task<List<MCurrencyAccountMerchant>> GetCurrencyAccountsForMerchant(string merchantId, string accountType);
+        public Task<List<MCurrencyAccountMerchant>> GetMerchantsForCurrencyAccount(string currencyAccountId);
+        public Task<List<MCurrencyAccountMerchant>> GetSelectedCurrencyAccounts(string accountType);
     }
 }

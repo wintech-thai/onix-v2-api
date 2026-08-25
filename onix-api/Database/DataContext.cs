@@ -76,6 +76,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MDuplicateRecord>? DuplicateRecords { get; set; }
     public DbSet<MMerchantCurrency>? MerchantCurrencies { get; set; }
     public DbSet<MCurrencyAccount>? CurrencyAccounts { get; set; }
+    public DbSet<MCurrencyAccountMerchant>? CurrencyAccountMerchants { get; set; }
+
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -266,5 +268,6 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         modelBuilder.Entity<MAuditNotice>();
         modelBuilder.Entity<MMerchantCurrency>();
         modelBuilder.Entity<MCurrencyAccount>();
+        modelBuilder.Entity<MCurrencyAccountMerchant>();
     }
 }
