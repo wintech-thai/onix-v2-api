@@ -22,6 +22,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(PaymentTxId))]
     [Index(nameof(MerchantId))]
     [Index(nameof(GeneratedAmountStr))]
+    [Index(nameof(PayerName))]
 
     public class MPaymentRequest
     {
@@ -44,6 +45,10 @@ namespace Its.Onix.Api.Models
 
         [Column("ref_id3")]
         public string? RefId3 { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+
+
+        [Column("payer_name")]
+        public string? PayerName { get; set; } //ชื่อผู้โอน เก็บไว้เป้นข้อมูลเฉยๆ
 
 
         [Column("description")]

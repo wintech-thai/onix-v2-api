@@ -44,6 +44,7 @@ namespace Its.Onix.Api.Database.Repositories
                 TxAmount = x.pt.TxAmount,
                 TxAmountDecimal = x.pt.TxAmountDecimal,
                 DiscardCent = x.pt.DiscardCent,
+                PayerName = x.pt.PayerName,
 
                 PayInFeePct = x.pt.PayInFeePct,
                 PayInFee = x.pt.PayInFee,
@@ -184,6 +185,7 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.FromBankCode!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.FromBankAccountNo!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.FromBankAccountName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.PayerName!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
