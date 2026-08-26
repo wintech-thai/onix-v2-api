@@ -58,22 +58,6 @@ namespace Its.Onix.Api.Services
             repository = repo;
             _pointRepo = pointRepo;
             //_redis = redis;
-
-            _currencies = [
-                new()
-                {
-                    CurrencyCoode = "THB", 
-                    CurrencyName = "Thai baht", 
-                    Category = "FIAT",
-                },
-
-                new() 
-                { 
-                    CurrencyCoode = "KAS", 
-                    CurrencyName = "Kaspa crypto currency", 
-                    Category = "CRYPTO",
-                },
-            ];
         }
 
         public async Task<MVMerchantCurrency?> GetCurrencyById(string orgId, string merchantCurrencyId)
