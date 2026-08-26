@@ -1120,15 +1120,15 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
-/*
+
             if (string.IsNullOrEmpty(paymentRequest.PayerName))
             {
                 r.Status = "PAYER_NAME_MISSING";
-                r.Description = $"Payer name is missing!!!";
+                r.Description = $"PayerName field is missing!!!";
 
                 return r;
             }
-*/
+
             var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
@@ -1301,16 +1301,15 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO : เปิดตรงนี้ให้ check PayerName ด้วยนะ
-/*
+            //เปิดตรงนี้ให้ check PayerName ด้วยนะ
             if (string.IsNullOrEmpty(paymentRequest.PayerName))
             {
                 r.Status = "PAYER_NAME_MISSING";
-                r.Description = $"Payer name is missing!!!";
+                r.Description = $"PayerName is missing!!!";
 
                 return r;
             }
-*/
+
             var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
