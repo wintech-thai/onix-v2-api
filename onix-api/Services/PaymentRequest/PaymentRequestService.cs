@@ -978,6 +978,19 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //Validate ว่า amount เกิน range ของ merchant มั้ย
+            var minAmt = merchant.PayoutMinAmount;
+            var maxAmt = merchant.PayoutMaxAmount;
+            var payoutRequestAmt = paymentRequest.RequestedAmount;
+
+            if ((payoutRequestAmt < minAmt) || (payoutRequestAmt > maxAmt))
+            {
+                r.Status = "ERROR_VALUE_NOT_IN_RANGE";
+                r.Description = $"Amount [{payoutRequestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
+
+                return r;
+            }
+
             paymentRequest.ResponseData = "{}";
             paymentRequest.ProcessingMessages = "[]";
 
