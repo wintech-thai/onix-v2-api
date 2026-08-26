@@ -143,7 +143,7 @@ jobs:
         git config --global user.email "cicd-auto@onix.com"
         git config --global user.name "CICD"
 
-        git clone "https://cicd-token:${GH_TOKEN}@github.com/wintech-thai/onix-v2-argocd-apps" deployment1
+        git clone "https://cicd-token:${GH_TOKEN}@github.com/wintech-thai/please-scan-control-plane.git" deployment1
         cd deployment1
         git checkout ${ARGOCD_BRANCH}
         cp ${VALUE_FILE_DIR}/onix-api-02-image-tag-template.yaml ${VALUE_FILE}
