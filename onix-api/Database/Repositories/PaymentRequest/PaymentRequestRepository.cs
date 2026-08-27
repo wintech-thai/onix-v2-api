@@ -319,6 +319,24 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(toDatePd);
             }
 
+            // IsPeerToPeer — PayIn ใช้ PayinIsPeerToPeer, PayOut ใช้ยอด partial-payout เป็นตัวบอกว่าเป็น P2P
+            if (param.IsPeerToPeer.HasValue)
+            {
+                var p2pPd = PredicateBuilder.New<MPaymentRequest>();
+                if (param.IsPeerToPeer.Value)
+                {
+                    p2pPd = p2pPd.Or(p => p.PayinIsPeerToPeer == true);
+                    p2pPd = p2pPd.Or(p => ((p.TotalPayOutPendingPaidAmountDecimal ?? 0) + (p.TotalPayOutPaidAmountDecimal ?? 0)) > 0);
+                }
+                else
+                {
+                    p2pPd = p2pPd.Or(p => (p.PayinIsPeerToPeer == null || p.PayinIsPeerToPeer == false)
+                        && ((p.TotalPayOutPendingPaidAmountDecimal ?? 0) + (p.TotalPayOutPaidAmountDecimal ?? 0)) == 0);
+                }
+
+                pd = pd.And(p2pPd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MPaymentRequest>();
