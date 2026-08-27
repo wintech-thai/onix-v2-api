@@ -332,6 +332,16 @@ namespace Its.Onix.Api.Services
                 promptPayId = pmr?.PayinPromptPayIdOverride;
             }
 
+            var payoutRejectedAmountTotal = pmr?.RequestedAmount;
+            if (pmr?.IsPartialyPayout == true)
+            {
+                //P2P 
+                //ยอดที่เหลือ
+                var amt1 = pmr?.PayOutTotalAmountDecimalP2P!;
+                amt1 ??= 0;
+                payoutRejectedAmountTotal = (double?) amt1;
+            }
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -359,7 +369,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
                     new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
 
-                    new NameValue { Name = "TX_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
+                    new NameValue { Name = "TX_AMOUNT", Value = payoutRejectedAmountTotal.ToString() },
                     new NameValue { Name = "PAYOUT_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYOUT_FEE", Value = pmr?.PayoutFeeDecimal.ToString() },
                     new NameValue { Name = "PAYOUT_FEE_PCT", Value = ((decimal?) pmr?.PayoutFeePct).ToString() },
