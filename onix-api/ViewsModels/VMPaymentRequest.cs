@@ -13,5 +13,6 @@ namespace Its.Onix.Api.ViewsModels
         public string? MerchantId { get; set; }
         public string? RefId1 { get; set; }
         public string? PayinRequestId { get; set; }
+        public bool? IsPeerToPeer { get; set; }
     }
 }

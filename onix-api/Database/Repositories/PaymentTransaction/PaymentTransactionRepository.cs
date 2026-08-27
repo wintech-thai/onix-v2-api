@@ -171,6 +171,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(toDatePd);
             }
 
+            if (param.IsPeerToPeer.HasValue)
+            {
+                var p2pPd = PredicateBuilder.New<MPaymentTransaction>();
+                p2pPd = p2pPd.Or(p => (p.TxIsPeerToPeer ?? false) == param.IsPeerToPeer.Value);
+
+                pd = pd.And(p2pPd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MPaymentTransaction>();
