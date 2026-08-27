@@ -77,6 +77,7 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MMerchantCurrency>? MerchantCurrencies { get; set; }
     public DbSet<MCurrencyAccount>? CurrencyAccounts { get; set; }
     public DbSet<MCurrencyAccountMerchant>? CurrencyAccountMerchants { get; set; }
+    public DbSet<MIoc>? Iocs { get; set; }
 
 
     //=== Admin tables here =====
@@ -269,5 +270,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         modelBuilder.Entity<MMerchantCurrency>();
         modelBuilder.Entity<MCurrencyAccount>();
         modelBuilder.Entity<MCurrencyAccountMerchant>();
+
+        modelBuilder.Entity<MIoc>()
+            .HasIndex(t => new { t.OrgId, t.IocType, t.IocValue }).IsUnique();
     }
 }
