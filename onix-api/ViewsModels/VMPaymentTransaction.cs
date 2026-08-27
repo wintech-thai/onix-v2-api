@@ -8,5 +8,6 @@ namespace Its.Onix.Api.ViewsModels
         public string? FullTextSearch { get; set; }
         public string? Direction { get; set; }
         public string? Status { get; set; }
+        public bool? IsPeerToPeer { get; set; }
     }
 }

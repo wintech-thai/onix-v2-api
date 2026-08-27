@@ -143,7 +143,7 @@ namespace Its.Onix.Api.Services
                 Status = "Success",
                 Message = "Success",
             };
-
+//Console.WriteLine($"DEBUG-A1 user=[{userLogin.UserName}], password=[{userLogin.Password}]");
             var user = await _userManager.FindByNameAsync(userLogin.UserName);
 
             if (user == null)
@@ -157,7 +157,7 @@ namespace Its.Onix.Api.Services
                 user,
                 userLogin.Password
             );
-
+//Console.WriteLine($"DEBUG-A2 user=[{userLogin.UserName}], password=[{userLogin.Password}], valid=[{passwordValid}]");
             if (!passwordValid)
             {
                 userToken.Status = "INVALID_LOGIN2";
@@ -226,7 +226,7 @@ namespace Its.Onix.Api.Services
                 user,
                 orgUser.UserInitialPassword
             );
-
+//Console.WriteLine($"DEBUG-B1 user=[{orgUser.UserName}], password=[{orgUser.UserInitialPassword}]");
             var t = new IdpResult()
             {
                 Success = true,
@@ -240,7 +240,7 @@ namespace Its.Onix.Api.Services
                 t.Success = false;
                 t.Message = msg;
             }
-
+//Console.WriteLine($"DEBUG-B2 user=[{orgUser.UserName}], password=[{orgUser.UserInitialPassword}], [{t.Success}], [{t.Message}]");
             return t;
         }
 

@@ -332,6 +332,16 @@ namespace Its.Onix.Api.Services
                 promptPayId = pmr?.PayinPromptPayIdOverride;
             }
 
+            var payoutRejectedAmountTotal = pmr?.RequestedAmount;
+            if (pmr?.IsPartialyPayout == true)
+            {
+                //P2P 
+                //ยอดที่เหลือ
+                var amt1 = pmr?.PayOutTotalAmountDecimalP2P!;
+                amt1 ??= 0;
+                payoutRejectedAmountTotal = (double?) amt1;
+            }
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -359,7 +369,7 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
                     new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
 
-                    new NameValue { Name = "TX_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
+                    new NameValue { Name = "TX_AMOUNT", Value = payoutRejectedAmountTotal.ToString() },
                     new NameValue { Name = "PAYOUT_REQUEST_AMOUNT", Value = pmr?.RequestedAmount.ToString() },
                     new NameValue { Name = "PAYOUT_FEE", Value = pmr?.PayoutFeeDecimal.ToString() },
                     new NameValue { Name = "PAYOUT_FEE_PCT", Value = ((decimal?) pmr?.PayoutFeePct).ToString() },
@@ -396,6 +406,20 @@ namespace Its.Onix.Api.Services
             }
 
             var isP2P = pmt?.TxIsPeerToPeer ?? false;
+
+            var payoutPaidAmountTotal = pmr?.RequestedAmount;
+            if (pmr?.IsPartialyPayout == true)
+            {
+                //P2P 
+                //ยอดที่จ่ายมาแล้วทั้งหมด
+                var amt1 = pmr?.TotalPayOutPaidAmountDecimal!;
+                amt1 ??= 0;
+
+                var amt2= pmt?.TxAmountDecimal!;
+                amt2 ??= 0;
+
+                payoutPaidAmountTotal = (double?) (amt1 + amt2);
+            }
 
             var job = new MJob()
             {
@@ -434,6 +458,8 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = accountNo },
                     new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = accountName },
                     new NameValue { Name = "PAYOUT_PROMPTPAY_ID", Value = promptPayId },
+
+                    new NameValue { Name = "PAYOUT_PAID_AMOUNT_INCLUSIVE", Value = payoutPaidAmountTotal.ToString() },
 
                     new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = isP2P.ToString() },
                 ]

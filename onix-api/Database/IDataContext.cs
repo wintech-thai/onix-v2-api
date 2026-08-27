@@ -66,6 +66,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MMerchantCurrency>? MerchantCurrencies { get; set; }
         public DbSet<MCurrencyAccount>? CurrencyAccounts { get; set; }
         public DbSet<MCurrencyAccountMerchant>? CurrencyAccountMerchants { get; set; }
+        public DbSet<MIoc>? Iocs { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
