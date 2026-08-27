@@ -20,6 +20,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(CreatedDate))]
     [Index(nameof(MerchantId))]
     [Index(nameof(JobId))]
+    [Index(nameof(PayerName))]
 
     public class MPaymentTransaction : IOrgEntity
     {
@@ -65,7 +66,11 @@ namespace Its.Onix.Api.Models
         public bool? TxIsPeerToPeer { get; set; } //ใช้บอกว่าเป็น transaction จาก peer to peer มั้ย
 
         [Column("payout_fee_payer")]
-        public string? PayoutFeePayer { get; set; } //รหัสอ้างอิงที่ลูกค้ากำหนดเอง
+        public string? PayoutFeePayer { get; set; } 
+
+
+        [Column("payer_name")]
+        public string? PayerName { get; set; } //ชื่อผู้โอน เก็บไว้เป้นข้อมูลเฉยๆ
 
 
         [Column("direction")]

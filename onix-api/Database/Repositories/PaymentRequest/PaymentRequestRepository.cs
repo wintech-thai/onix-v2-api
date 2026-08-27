@@ -76,6 +76,8 @@ namespace Its.Onix.Api.Database.Repositories
                 PayinIsPeerToPeer = x.pr.PayinIsPeerToPeer,
                 PayinPeer2PeerPayoutId = x.pr.PayinPeer2PeerPayoutId,
 
+                PayerName = x.pr.PayerName,
+
                 PayoutBankAccountId = x.pr.PayoutBankAccountId,
                 PayoutBankCode = x.pr.PayoutBankCode,
                 PayoutBankAccountNo = x.pr.PayoutBankAccountNo,
@@ -337,6 +339,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.PayinBankAccountNoOverride!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PayinBankAccountNameOverride!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.PayinPromptPayIdOverride!.Contains(param.FullTextSearch));
+
+                fullTextPd = fullTextPd.Or(p => p.PayerName!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

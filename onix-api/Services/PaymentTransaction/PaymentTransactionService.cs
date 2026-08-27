@@ -523,6 +523,8 @@ namespace Its.Onix.Api.Services
                 pt.RefId3 = pmr.RefId3;
                 pt.TxIsPeerToPeer = pmr.PayinIsPeerToPeer;
 
+                pt.PayerName = pmr.PayerName;
+
                 if (pmr.DiscardCent)
                 {
                     //ที่ merchant มีการ config ไว้ว่าให้หักเศษสตางค์
@@ -936,6 +938,7 @@ namespace Its.Onix.Api.Services
                 RefId1 = payin.RefId1,
                 RefId2 = payin.RefId2,
                 RefId3 = payin.RefId3,
+                PayerName = payin.PayerName,
                 TxIsPeerToPeer = payin.PayinIsPeerToPeer,
             };
 

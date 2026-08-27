@@ -17,18 +17,21 @@ namespace Its.Onix.Api.Controllers
         private readonly IWebhookConfigService _webhookSvc;
         private readonly IPointService _pointSvc;
         private readonly IOrganizationService _orgSvc;
+        private readonly IMerchantCurrencyService _currencySvc;
 
         [ExcludeFromCodeCoverage]
         public MerchantController(
             IMerchantService merchantSvc,
             IWebhookConfigService webhookSvc,
             IPointService pointSvc,
-            IOrganizationService orgSvc)
+            IOrganizationService orgSvc,
+            IMerchantCurrencyService currencySvc)
         {
             _merchantSvc = merchantSvc;
             _webhookSvc = webhookSvc;
             _pointSvc = pointSvc;
             _orgSvc = orgSvc;
+            _currencySvc = currencySvc;
         }
 
         private string? GetCurrentOrgId()
@@ -199,6 +202,21 @@ namespace Its.Onix.Api.Controllers
             }
 
             var result = await _pointSvc.GetWalletByMerchantId(orgId, merchantId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{orgId}/action/GetMerchantCurrencies")]
+        public async Task<IActionResult> GetMerchantCurrencies(string orgId)
+        {
+            var merchantId = await GetCurrentMerchantId(orgId);
+            if (string.IsNullOrEmpty(merchantId))
+            {
+                return Ok(new { Status = "Error", Description = "Merchant not found" });
+            }
+
+            var result = await _currencySvc.GetCurrenciesByMerchantId(orgId, merchantId);
             return Ok(result);
         }
 
