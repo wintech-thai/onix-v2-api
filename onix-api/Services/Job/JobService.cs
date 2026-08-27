@@ -397,6 +397,20 @@ namespace Its.Onix.Api.Services
 
             var isP2P = pmt?.TxIsPeerToPeer ?? false;
 
+            var payoutPaidAmountTotal = pmr?.RequestedAmount;
+            if (pmr?.IsPartialyPayout == true)
+            {
+                //P2P 
+                //ยอดที่จ่ายมาแล้วทั้งหมด
+                var amt1 = pmr?.TotalPayOutPaidAmountDecimal!;
+                amt1 ??= 0;
+
+                var amt2= pmt?.TxAmountDecimal!;
+                amt2 ??= 0;
+
+                payoutPaidAmountTotal = (double?) (amt1 + amt2);
+            }
+
             var job = new MJob()
             {
                 Name = $"{Guid.NewGuid()}",
@@ -434,6 +448,8 @@ namespace Its.Onix.Api.Services
                     new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NO", Value = accountNo },
                     new NameValue { Name = "PAYOUT_BANK_ACCOUNT_NAME", Value = accountName },
                     new NameValue { Name = "PAYOUT_PROMPTPAY_ID", Value = promptPayId },
+
+                    new NameValue { Name = "PAYOUT_PAID_AMOUNT_INCLUSIVE", Value = payoutPaidAmountTotal.ToString() },
 
                     new NameValue { Name = "PAYOUT_IS_PARTIAL", Value = isP2P.ToString() },
                 ]
