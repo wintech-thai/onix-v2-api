@@ -101,6 +101,16 @@ namespace Its.Onix.Api.Database.Repositories
                 .Take(limit)
                 .ToListAsync();
 
+            //Noted อาจมีข้อความยาวมาก ตอน list ตัดให้เหลือแค่ preview พอ ไม่ต้องส่งเต็ม ๆ ออกไป
+            const int notePreviewLength = 200;
+            foreach (var item in arr)
+            {
+                if (!string.IsNullOrEmpty(item.Noted) && item.Noted.Length > notePreviewLength)
+                {
+                    item.Noted = item.Noted.Substring(0, notePreviewLength) + "...";
+                }
+            }
+
             return arr;
         }
 
