@@ -504,6 +504,76 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVAdminUser?> RegenerateInviteLink(string userId)
+        {
+            var r = new MVAdminUser()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (!ServiceUtils.IsGuidValid(userId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"User ID [{userId}] format is invalid";
+
+                return r;
+            }
+
+            var user = await repository!.GetUserByIdLeftJoin(userId);
+            if (user == null)
+            {
+                r.Status = "USER_ID_NOTFOUND";
+                r.Description = $"User ID [{userId}] not found in our database!!!";
+
+                return r;
+            }
+
+            if (user.UserStatus != "Pending")
+            {
+                r.Status = "USER_NOT_PENDING";
+                r.Description = $"User status is [{user.UserStatus}] for user ID [{userId}], only Pending users can regenerate an invite link!!!";
+
+                return r;
+            }
+
+            var email = user.TmpUserEmail;
+            if (string.IsNullOrEmpty(email))
+            {
+                r.Status = "INVALID_EMAIL_EMPTY";
+                r.Description = "Email address is blank, please check TmpUserEmail field!!!";
+
+                return r;
+            }
+
+            var registrationCase = IdentifyRegistrationCase(user);
+            if (registrationCase.Contains("ERROR"))
+            {
+                r.Status = registrationCase;
+                r.Description = "Email or username is being used by another!!!";
+
+                return r;
+            }
+
+            var tmpOrgId = "global";
+            var reg = new MUserRegister()
+            {
+                Email = email,
+                UserName = user.UserName,
+                OrgUserId = userId,
+                InvitedBy = user.InvitedBy,
+            };
+            var url = CreateInvitationLink(tmpOrgId, registrationCase, reg);
+
+            r.RegistrationUrl = url;
+
+            r.AdminUser = user;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.AdminUser.RolesList = "";
+
+            return r;
+        }
+
         public MVAdminUser VerifyUserIsAdmin(string userName)
         {
             var u = userRepository!.GetUserByName(userName);

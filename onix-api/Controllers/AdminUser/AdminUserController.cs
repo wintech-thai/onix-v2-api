@@ -68,6 +68,18 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetInviteLink/{userId}")]
+        public async Task<IActionResult> GetInviteLink(string userId)
+        {
+            var result = await svc.RegenerateInviteLink(userId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            Response.Headers.Append("CUST_DESC", result!.Description);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/global/action/DeleteUserById/{userId}")]
         public async Task<IActionResult> DeleteUserById(string userId)
