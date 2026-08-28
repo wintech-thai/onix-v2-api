@@ -216,6 +216,14 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/UpdatePaymentRequestApiKeyById/{orgId}/{apiKeyId}")]
+        public IActionResult UpdatePaymentRequestApiKeyById(string orgId, string apiKeyId, [FromBody] MApiKey request)
+        {
+            var apiKey = _apiKeySvc.UpdateApiKeyById(orgId, apiKeyId, request);
+            return Ok(apiKey);
+        }
+
+        [HttpPost]
         [Route("org/global/action/EnablePaymentRequestApiKeyById/{orgId}/{apiKeyId}")]
         public IActionResult EnablePaymentRequestApiKeyById(string orgId, string apiKeyId)
         {
