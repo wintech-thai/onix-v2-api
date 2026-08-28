@@ -15,6 +15,7 @@ namespace Its.Onix.Api.Services
         public Task<MVAdminUser?> UpdateUserStatusById(string adminUserId, string userId, string status);
         public Task<MVAdminUser?> InviteUser(MAdminUser user);
         public Task<MVAdminUser?> InviteUserWithLink(MAdminUser user);
+        public Task<MVAdminUser?> RegenerateInviteLink(string userId);
         public MVAdminUser VerifyUserIsAdmin(string userName);
     }
 }
