@@ -2,7 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
-using Its.Onix.Api.ViewsModels;using YamlDotNet.Serialization.BufferedDeserialization.TypeDiscriminators;
+using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.ModelsViews;
+using Its.Onix.Api.Utils;
+using System.Text.Json;
+using System.Text;
+using System.Web;
+using YamlDotNet.Serialization.BufferedDeserialization.TypeDiscriminators;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -14,14 +20,85 @@ namespace Its.Onix.Api.Controllers
         private readonly IOrganizationService _orgSvc;
         private readonly IOrganizationUserService _orgUserSvc;
         private readonly IApiKeyService _apiKeySvc;
+        private readonly IRedisHelper _redis;
 
-        public AdminOrganizationController(IOrganizationService service, 
+        public AdminOrganizationController(IOrganizationService service,
             IOrganizationUserService orgUserSvc,
-            IApiKeyService apiKeySvc)
+            IApiKeyService apiKeySvc,
+            IRedisHelper redis)
         {
             _orgSvc = service;
             _orgUserSvc = orgUserSvc;
             _apiKeySvc = apiKeySvc;
+            _redis = redis;
+        }
+
+        private string CreateForgotPasswordLink(string orgId, MUserRegister reg)
+        {
+            var regType = "forgot-password";
+
+            var jsonString = JsonSerializer.Serialize(reg);
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+            string jsonStringB64 = Convert.ToBase64String(jsonBytes);
+
+            var dataUrlSafe = HttpUtility.UrlEncode(jsonStringB64);
+
+            var registerDomain = "<REGISTER_SERVICE_DOMAIN>"; //คนที่เรียกใช้งานจะต้องเปลี่ยนเป็น domain ของ register service เอง
+
+            var token = Guid.NewGuid().ToString();
+            var registrationUrl = $"https://{registerDomain}/{regType}/{orgId}/{token}?data={dataUrlSafe}";
+
+            //ใส่ data ไปที่ Redis เพื่อให้ register service มาดึงข้อมูลไปใช้ต่อ
+            var cacheKey = CacheHelper.CreateApiOtpKey(orgId, "UserForgotPassword");
+            _ = _redis.SetObjectAsync($"{cacheKey}:{token}", reg, TimeSpan.FromMinutes(60 * 24)); //หมดอายุ 1 วัน
+
+            return registrationUrl;
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetOrgUserForgotPasswordLink/{orgId}/{orgUserId}")]
+        public IActionResult GetOrgUserForgotPasswordLink(string orgId, string orgUserId)
+        {
+            var mv = new MVOrganizationUserRegistration()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var svcStatus = _orgUserSvc.GetUserByIdLeftJoin(orgId, orgUserId);
+            if (svcStatus.Status != "OK")
+            {
+                return Ok(svcStatus);
+            }
+
+            var user = svcStatus.OrgUser!;
+            if (user == null)
+            {
+                mv.Status = "EMPTY_USER_RETURN";
+                mv.Description = $"No user return for org user ID [{orgUserId}] !!!";
+
+                return Ok(mv);
+            }
+
+            if (user.UserStatus != "Active")
+            {
+                mv.Status = "USER_NOT_ACTIVE";
+                mv.Description = $"User status is [{user.UserStatus}] for org user ID [{orgUserId}] !!!";
+
+                return Ok(mv);
+            }
+
+            var reg = new MUserRegister()
+            {
+                Email = user.UserEmail,
+                UserName = user.UserName!,
+                OrgUserId = orgId,
+            };
+
+            var forgotPasswordUrl = CreateForgotPasswordLink(orgId, reg);
+            mv.ForgotPasswordUrl = forgotPasswordUrl;
+
+            return Ok(mv);
         }
 
         [HttpPost]
