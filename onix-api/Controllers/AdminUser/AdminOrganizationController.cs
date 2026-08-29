@@ -101,6 +101,14 @@ namespace Its.Onix.Api.Controllers
             return Ok(mv);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetOrgUserInviteLink/{orgId}/{orgUserId}")]
+        public IActionResult GetOrgUserInviteLink(string orgId, string orgUserId)
+        {
+            var result = _orgUserSvc.RegenerateInviteLink(orgId, orgUserId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/AddOrganization")]
         public IActionResult AddOrganization([FromBody] MOrganization request)

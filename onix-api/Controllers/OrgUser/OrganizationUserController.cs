@@ -258,5 +258,15 @@ namespace Prom.LPR.Api.Controllers
             Response.Headers.Append("CUST_STATUS", mv.Status);
             return Ok(mv);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetInviteLink/{orgUserId}")]
+        public IActionResult GetInviteLink(string id, string orgUserId)
+        {
+            var result = svc.RegenerateInviteLink(id, orgUserId);
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
     }
 }
