@@ -20,5 +20,7 @@ namespace Its.Onix.Api.Services
         public MVPresignedUrl GetLogoImageUploadPresignedUrl(string orgId);
         public IEnumerable<NameValue> GetAllowChannelNames(string orgId);
         public IEnumerable<NameValue> GetAllowAddressTypeNames(string orgId);
+        public Task<MVOrganizationPolicy> GetOrganizationPolicy(string orgId);
+        public Task<MVOrganizationPolicy> SetOrganizationPolicy(string orgId, MOrganizationPolicy policy);
     }
 }

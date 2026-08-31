@@ -186,6 +186,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayinDailyTxAmountLimit = merchant.PayinDailyTxAmountLimit;
                 existing.PayinDailyTxCountLimit = merchant.PayinDailyTxCountLimit;
                 existing.PayinExpireMinute = merchant.PayinExpireMinute;
+                existing.RiskPolicyId = merchant.RiskPolicyId;
             }
 
             await context.SaveChangesAsync();

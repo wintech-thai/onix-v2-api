@@ -39,6 +39,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public MBackupPolicy? BackupPolicy { get; set; }
 
+        [NotMapped]
+        public MClientIpSourceConfig? ClientIpSourceConfig { get; set; }
+
 
         public MConfiguration()
         {

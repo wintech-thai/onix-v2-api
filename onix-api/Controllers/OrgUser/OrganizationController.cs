@@ -89,5 +89,14 @@ namespace Prom.LPR.Api.Controllers
             var result = svc.GetAllowAddressTypeNames(id);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetOrganizationPolicy")]
+        public async Task<IActionResult> GetOrganizationPolicy(string id)
+        {
+            var result = await svc.GetOrganizationPolicy(id);
+            return Ok(result);
+        }
     }
 }

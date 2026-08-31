@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260831032525_AddRiskPolicies")]
+    partial class AddRiskPolicies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2311,10 +2314,6 @@ namespace onix.api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("random_decimal");
 
-                    b.Property<Guid?>("RiskPolicyId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("risk_policy_id");
-
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("Status");
@@ -2336,8 +2335,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.HasIndex("OrgId");
-
-                    b.HasIndex("RiskPolicyId");
 
                     b.ToTable("Merchants");
                 });
@@ -2624,45 +2621,6 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("Organizations");
-                });
-
-            modelBuilder.Entity("Its.Onix.Api.Models.MOrganizationPolicy", b =>
-                {
-                    b.Property<Guid?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("org_policy_id");
-
-                    b.Property<string>("ApiBlacklistIps")
-                        .HasColumnType("text")
-                        .HasColumnName("api_blacklist_ips");
-
-                    b.Property<string>("ApiWhitelistIps")
-                        .HasColumnType("text")
-                        .HasColumnName("api_whitelist_ips");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
-
-                    b.Property<string>("OrgId")
-                        .HasColumnType("text")
-                        .HasColumnName("org_id");
-
-                    b.Property<string>("WebBlacklistIps")
-                        .HasColumnType("text")
-                        .HasColumnName("web_blacklist_ips");
-
-                    b.Property<string>("WebWhitelistIps")
-                        .HasColumnType("text")
-                        .HasColumnName("web_whitelist_ips");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrgId")
-                        .IsUnique();
-
-                    b.ToTable("OrganizationPolicies");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MOrganizationUser", b =>

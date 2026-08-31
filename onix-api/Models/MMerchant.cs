@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("Merchants")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(RiskPolicyId))]
     public class MMerchant : IOrgEntity
     {
         [Key]
@@ -81,6 +82,9 @@ namespace Its.Onix.Api.Models
 
         [Column("payin_expire_minute")]
         public int? PayinExpireMinute { get; set; }
+
+        [Column("risk_policy_id")]
+        public Guid? RiskPolicyId { get; set; }
 
 
         [NotMapped]

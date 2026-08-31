@@ -78,6 +78,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MCurrencyAccount>? CurrencyAccounts { get; set; }
     public DbSet<MCurrencyAccountMerchant>? CurrencyAccountMerchants { get; set; }
     public DbSet<MIoc>? Iocs { get; set; }
+    public DbSet<MRiskPolicy>? RiskPolicies { get; set; }
+    public DbSet<MOrganizationPolicy>? OrganizationPolicies { get; set; }
 
 
     //=== Admin tables here =====

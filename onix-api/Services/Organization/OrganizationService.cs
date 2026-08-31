@@ -468,5 +468,37 @@ namespace Its.Onix.Api.Services
 
             return addresses;
         }
+
+        public async Task<MVOrganizationPolicy> GetOrganizationPolicy(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVOrganizationPolicy()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var result = await repository!.GetOrganizationPolicy();
+            r.OrganizationPolicy = result ?? new MOrganizationPolicy { OrgId = orgId, Id = null, CreatedDate = null };
+
+            return r;
+        }
+
+        public async Task<MVOrganizationPolicy> SetOrganizationPolicy(string orgId, MOrganizationPolicy policy)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVOrganizationPolicy()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            var result = await repository!.UpsertOrganizationPolicy(policy);
+            r.OrganizationPolicy = result;
+
+            return r;
+        }
     }
 }
