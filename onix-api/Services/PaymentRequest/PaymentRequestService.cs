@@ -1467,6 +1467,8 @@ namespace Its.Onix.Api.Services
         {
             //var merchantId = pr.MerchantId!;
             var partialPaidCountLimit = merchant.PayoutPartialCountLimitP2P;
+            partialPaidCountLimit ??= 0;
+
             List<string> lines = [];
 
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
