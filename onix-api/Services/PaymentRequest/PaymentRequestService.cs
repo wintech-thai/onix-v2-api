@@ -1211,10 +1211,12 @@ namespace Its.Onix.Api.Services
             amt ??= 0;
 
             paymentRequest.GeneratedAmount = amt;
+            merchant.PayoutPartialCountLimitP2P ??= 5; //ถ้าเป็น null ให้ default เป็น 5
+            paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
 
             //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
             //บัญชีตรงของ Payout Request ต้องเป็น PromptPay ด้วย
-            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest);
+            var (bnkAcct, payoutRequest, lines) = await GetPeer2PeerBankAccount(paymentRequest, merchant);
             if (bnkAcct == null)
             {
                 r.Status = "ERROR_NO_P2P_ACCOUNT_MATCH";
@@ -1460,9 +1462,10 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr)
+        private async Task<(MBankAccount?, MPaymentRequest?, List<string>)> GetPeer2PeerBankAccount(MPaymentRequest pr, MMerchant merchant)
         {
             //var merchantId = pr.MerchantId!;
+            var partialPaidCountLimit = merchant.PayoutPartialCountLimitP2P;
             List<string> lines = [];
 
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
@@ -1470,7 +1473,8 @@ namespace Its.Onix.Api.Services
 
             //TODO : ให้ sorting ก่อนโดยเรียกงตามวันที่เก่าขึ้นก่อน แล้วก็ถ้าตัวไหนมี promptpay Id ก็ให้ขึ้นมาก่อนด้วย
 
-            lines.Add($"Step0 - Found [{pendingPayoutRequests.Count}] pending payout request");
+            lines.Add($"Step0.1 - Use 1 day old 'Pending' pay-out request for selection, PayoutPartialCountLimitP2P=[{partialPaidCountLimit}]");
+            lines.Add($"Step0.2 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
             foreach (var payoutRequest in pendingPayoutRequests)
             {
@@ -1483,6 +1487,9 @@ namespace Its.Onix.Api.Services
                 var leftAmount = payoutRequest.PayOutTotalAmountDecimal - p2pUsedAmount;
                 leftAmount ??= 0;
 
+                var partialPaidCount = payoutRequest.PayoutPartialCountP2P;
+                partialPaidCount ??= 0;
+                
                 lines.Add($"Step1.1 - ============");
                 lines.Add($"Step1.2 - Request ID=[{org}:{id}], Amount=[{payoutRequest.PayOutTotalAmountDecimal}], Used=[{p2pUsedAmount}], Left=[{leftAmount}]");
 
@@ -1532,7 +1539,16 @@ namespace Its.Onix.Api.Services
                     continue;
                 }
 
-                lines.Add($"Step1.5 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                if (partialPaidCountLimit > 0)
+                {
+                    if (partialPaidCount >= partialPaidCountLimit)
+                    {
+                        lines.Add($"Step1.5 - Request ID=[{org}:{id}], Skip partial paid count [{partialPaidCount}] is >= [{partialPaidCountLimit}]");
+                        continue;
+                    }
+                }
+
+                lines.Add($"Step1.6 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
                 var ba = new MBankAccount()
                 {
                     BankCode = bankCode,
