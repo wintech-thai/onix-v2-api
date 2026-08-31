@@ -1028,7 +1028,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
-            paymentRequest.PayoutPartialCountLimitP2P ??= 5; //ถ้าเป็น null ให้ default เป็น 5
+            paymentRequest.PayoutPartialCountLimitP2P ??= 0; //ถ้าเป็น null ให้ default เป็น 0 คือไม่ต้องเช็ค
 
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
             var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
