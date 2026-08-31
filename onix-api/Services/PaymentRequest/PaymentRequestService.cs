@@ -1027,6 +1027,9 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutFeePct = merchant.PayoutFeePct;
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
+            paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
+            paymentRequest.PayoutPartialCountLimitP2P ??= 5; //ถ้าเป็น null ให้ default เป็น 5
+
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
             var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
 
@@ -1211,8 +1214,6 @@ namespace Its.Onix.Api.Services
             amt ??= 0;
 
             paymentRequest.GeneratedAmount = amt;
-            merchant.PayoutPartialCountLimitP2P ??= 5; //ถ้าเป็น null ให้ default เป็น 5
-            paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
 
             //logic ตรงนี้ให้ไป alocate Payout bank account ที่เป็น pending PayOut Request 
             //บัญชีตรงของ Payout Request ต้องเป็น PromptPay ด้วย
