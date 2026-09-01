@@ -29,6 +29,33 @@ namespace Its.Onix.Api.Utils
             return whiteListedApi.Contains(whiteListedKey);
         }
 
+        public static string GetClientIp(HttpRequest request)
+        {
+            var cfClientIp = "";
+            if (request.Headers.TryGetValue("CF-Connecting-IP", out var cfConnectingIp))
+            {
+                cfClientIp = cfConnectingIp.ToString();
+            }
+
+            var clientIp = "";
+            if (request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
+            {
+                clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(clientIp))
+            {
+                return clientIp;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cfClientIp))
+            {
+                return cfClientIp;
+            }
+
+            return request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+        }
+
         public static bool IsAdminWhiteListedAPI(string controller, string api)
         {
             return false;

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.Utils;
 using System.Security.Claims;
 
 namespace Prom.LPR.Api.Controllers
@@ -96,6 +97,19 @@ namespace Prom.LPR.Api.Controllers
         public async Task<IActionResult> GetOrganizationPolicy(string id)
         {
             var result = await svc.GetOrganizationPolicy(id);
+            return Ok(result);
+        }
+
+        // Public: merchant web frontend calls this (before/without needing GenericRolePolicy)
+        // to check whether the current client IP is blacklisted for this org's web front-end.
+        [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{id}/action/GetIpPolicyStatus")]
+        public async Task<IActionResult> GetIpPolicyStatus(string id)
+        {
+            var clientIp = ServiceUtils.GetClientIp(Request);
+            var result = await svc.CheckIpBlacklist(id, clientIp, isApi: false);
             return Ok(result);
         }
     }

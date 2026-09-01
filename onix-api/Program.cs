@@ -369,6 +369,10 @@ namespace Its.Onix.Api
             app.UseAuthentication();
             app.UseMiddleware<RequestContextMiddleware>();
             app.UseMiddleware<AuditLogMiddleware>();
+            // Registered after AuditLogMiddleware (not before, despite spec suggestion) so that a
+            // blacklist block (422) is still captured by AuditLogMiddleware, which reads the
+            // response status/body only after the inner middleware chain returns.
+            app.UseMiddleware<BlacklistMiddleware>();
             app.UseAuthorization();
 
             app.MapHealthChecks("/health");            

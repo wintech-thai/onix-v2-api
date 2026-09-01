@@ -13,19 +13,22 @@ namespace Its.Onix.Api.Services
         private readonly IUserService userService;
         private readonly IMerchantService merchantService;
         private readonly IStorageUtils _storageUtil;
+        private readonly IRedisHelper _redis;
 
         public OrganizationService(
             IOrganizationRepository repo,
             IOrganizationUserRepository orgUserRepo,
             IUserService userSvc,
             IMerchantService merchantSvc,
-            IStorageUtils storageUtil) : base()
+            IStorageUtils storageUtil,
+            IRedisHelper redis) : base()
         {
             repository = repo;
             userService = userSvc;
             merchantService = merchantSvc;
             _storageUtil = storageUtil;
             _orgUserRepo = orgUserRepo;
+            _redis = redis;
         }
 
         public bool IsOrgIdExist(string orgId)
@@ -479,9 +482,20 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            var result = await repository!.GetOrganizationPolicy();
-            r.OrganizationPolicy = result ?? new MOrganizationPolicy { OrgId = orgId, Id = null, CreatedDate = null };
+            var cacheKey = CacheHelper.CreateOrganizationPolicyKey(orgId);
+            var cached = await _redis.GetObjectAsync<MOrganizationPolicy>(cacheKey);
+            if (cached != null)
+            {
+                r.OrganizationPolicy = cached;
+                return r;
+            }
 
+            var result = await repository!.GetOrganizationPolicy();
+            result ??= new MOrganizationPolicy { OrgId = orgId, Id = null, CreatedDate = null };
+
+            await _redis.SetObjectAsync(cacheKey, result, TimeSpan.FromHours(24));
+
+            r.OrganizationPolicy = result;
             return r;
         }
 
@@ -496,7 +510,53 @@ namespace Its.Onix.Api.Services
             };
 
             var result = await repository!.UpsertOrganizationPolicy(policy);
+
+            var cacheKey = CacheHelper.CreateOrganizationPolicyKey(orgId);
+            await _redis.DeleteAsync(cacheKey);
+
             r.OrganizationPolicy = result;
+            return r;
+        }
+
+        public async Task<MVIpPolicyCheck> CheckIpBlacklist(string orgId, string clientIp, bool isApi)
+        {
+            var r = new MVIpPolicyCheck()
+            {
+                Status = "OK",
+                Description = "Success",
+                ClientIp = clientIp,
+                IsBlacklisted = false,
+            };
+
+            if (string.IsNullOrEmpty(orgId))
+            {
+                return r;
+            }
+
+            var policyResult = await GetOrganizationPolicy(orgId);
+            var policy = policyResult.OrganizationPolicy;
+
+            var whitelist = isApi ? policy?.ApiWhitelistIps : policy?.WebWhitelistIps;
+            var blacklist = isApi ? policy?.ApiBlacklistIps : policy?.WebBlacklistIps;
+
+            r.WhitelistIps = whitelist;
+            r.BlacklistIps = blacklist;
+
+            if (!string.IsNullOrWhiteSpace(whitelist) && !IpMatchUtils.IsIpInList(clientIp, whitelist))
+            {
+                r.IsBlacklisted = true;
+                r.Status = "IP_NOT_WHITELISTED";
+                r.Description = $"Client IP [{clientIp}] is not in the whitelist.";
+                return r;
+            }
+
+            if (!string.IsNullOrWhiteSpace(blacklist) && IpMatchUtils.IsIpInList(clientIp, blacklist))
+            {
+                r.IsBlacklisted = true;
+                r.Status = "IP_BLACKLISTED";
+                r.Description = $"Client IP [{clientIp}] is in the blacklist.";
+                return r;
+            }
 
             return r;
         }
