@@ -21,6 +21,8 @@ namespace Its.Onix.Api.Utils
                 return false;
             }
 
+            clientAddress = Normalize(clientAddress);
+
             var entries = commaSeparatedList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             foreach (var entry in entries)
             {
@@ -43,6 +45,8 @@ namespace Its.Onix.Api.Utils
                 return false;
             }
 
+            entryAddress = Normalize(entryAddress);
+
             if (parts.Length == 1)
             {
                 return clientAddress.Equals(entryAddress);
@@ -54,6 +58,14 @@ namespace Its.Onix.Api.Utils
             }
 
             return IsInCidrRange(clientAddress, entryAddress, prefixLength);
+        }
+
+        // .NET returns IPv4-over-IPv6 sockets (e.g. Connection.RemoteIpAddress) as
+        // "::ffff:x.x.x.x". Collapse those down to plain IPv4 so a blacklist entry
+        // entered as "x.x.x.x" still matches instead of failing on AddressFamily.
+        private static IPAddress Normalize(IPAddress address)
+        {
+            return address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
         }
 
         private static bool IsInCidrRange(IPAddress address, IPAddress networkAddress, int prefixLength)

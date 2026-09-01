@@ -53,7 +53,13 @@ namespace Its.Onix.Api.Utils
                 return cfClientIp;
             }
 
-            return request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+            var remoteAddr = request.HttpContext.Connection.RemoteIpAddress;
+            if (remoteAddr != null && remoteAddr.IsIPv4MappedToIPv6)
+            {
+                remoteAddr = remoteAddr.MapToIPv4();
+            }
+
+            return remoteAddr?.ToString() ?? "";
         }
 
         public static bool IsAdminWhiteListedAPI(string controller, string api)
