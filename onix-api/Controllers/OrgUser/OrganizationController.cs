@@ -14,11 +14,13 @@ namespace Prom.LPR.Api.Controllers
     public class OrganizationController : ControllerBase
     {
         private readonly IOrganizationService svc;
+        private readonly IConfigurationService configSvc;
 
         [ExcludeFromCodeCoverage]
-        public OrganizationController(IOrganizationService service)
+        public OrganizationController(IOrganizationService service, IConfigurationService configService)
         {
             svc = service;
+            configSvc = configService;
         }
 
         private string? GetCurrentOrgId()
@@ -108,7 +110,7 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/{id}/action/GetIpPolicyStatus")]
         public async Task<IActionResult> GetIpPolicyStatus(string id)
         {
-            var clientIp = ServiceUtils.GetClientIp(Request);
+            var clientIp = await ServiceUtils.ResolveConfiguredClientIp(Request, configSvc);
             var result = await svc.CheckIpBlacklist(id, clientIp, isApi: false);
             return Ok(result);
         }

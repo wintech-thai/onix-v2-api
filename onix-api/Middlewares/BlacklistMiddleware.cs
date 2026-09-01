@@ -14,7 +14,8 @@ public class BlacklistMiddleware
     public async Task InvokeAsync(
         HttpContext context,
         RequestContext requestContext,
-        IOrganizationService organizationService)
+        IOrganizationService organizationService,
+        IConfigurationService configurationService)
     {
         var orgId = requestContext.OrgId;
         if (string.IsNullOrEmpty(orgId))
@@ -33,7 +34,7 @@ public class BlacklistMiddleware
             return;
         }
 
-        var clientIp = ServiceUtils.GetClientIp(context.Request);
+        var clientIp = await ServiceUtils.ResolveConfiguredClientIp(context.Request, configurationService);
         var result = await organizationService.CheckIpBlacklist(orgId, clientIp, isApi: true);
 
         if (result.IsBlacklisted)

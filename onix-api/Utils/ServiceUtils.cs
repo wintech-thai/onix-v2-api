@@ -1,6 +1,8 @@
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Microsoft.AspNetCore.Identity;
 using RulesEngine.Models;
@@ -60,6 +62,61 @@ namespace Its.Onix.Api.Utils
             }
 
             return remoteAddr?.ToString() ?? "";
+        }
+
+        /// <summary>
+        /// Resolves the client IP the same way as the admin-configured "Client IP Source"
+        /// setting (Support & Setting > Miscellaneous) — Native reads the raw connection
+        /// address, Header reads a specified header/index. This is the single source of
+        /// truth for client IP resolution; callers that need a value (e.g. blacklist
+        /// checks) should fall back to <see cref="GetClientIp"/> if this returns empty.
+        /// </summary>
+        public static string ResolveClientIp(HttpRequest request, MClientIpSourceConfig? cfg)
+        {
+            if (cfg == null || string.IsNullOrEmpty(cfg.SourceType) || cfg.SourceType == "Native")
+            {
+                var remoteAddr = request.HttpContext.Connection.RemoteIpAddress;
+                if (remoteAddr != null && remoteAddr.IsIPv4MappedToIPv6)
+                {
+                    remoteAddr = remoteAddr.MapToIPv4();
+                }
+
+                return remoteAddr?.ToString() ?? "";
+            }
+
+            if (string.IsNullOrEmpty(cfg.HeaderName))
+            {
+                return "";
+            }
+
+            var headerValue = request.Headers[cfg.HeaderName].ToString();
+            if (string.IsNullOrEmpty(headerValue))
+            {
+                return "";
+            }
+
+            var parts = headerValue.Split(',').Select(p => p.Trim()).ToArray();
+            var index = cfg.HeaderIndex ?? 0;
+            if (index < 0 || index >= parts.Length)
+            {
+                return "";
+            }
+
+            return parts[index];
+        }
+
+        /// <summary>
+        /// Fetches the global Client IP Source configuration and resolves the current
+        /// request's client IP accordingly, falling back to <see cref="GetClientIp"/>
+        /// (CF-Connecting-IP / X-Original-Forwarded-For sniffing) if resolution via the
+        /// configured source yields nothing (e.g. misconfigured header name).
+        /// </summary>
+        public static async Task<string> ResolveConfiguredClientIp(HttpRequest request, Services.IConfigurationService configService)
+        {
+            var cfgResult = await configService.GetClientIpSource("global");
+            var resolved = ResolveClientIp(request, cfgResult?.Configuration?.ClientIpSourceConfig);
+
+            return string.IsNullOrEmpty(resolved) ? GetClientIp(request) : resolved;
         }
 
         public static bool IsAdminWhiteListedAPI(string controller, string api)

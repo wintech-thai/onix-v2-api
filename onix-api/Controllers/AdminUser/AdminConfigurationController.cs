@@ -1,11 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -77,43 +76,10 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetClientIpSource()
         {
             var result = await svc.GetClientIpSource("global");
-            result!.ResolvedIp = ResolveCurrentClientIp(result.Configuration?.ClientIpSourceConfig);
+            var resolved = ServiceUtils.ResolveClientIp(Request, result?.Configuration?.ClientIpSourceConfig);
+            result!.ResolvedIp = string.IsNullOrEmpty(resolved) ? null : resolved;
 
             return Ok(result);
-        }
-
-        private string? ResolveCurrentClientIp(MClientIpSourceConfig? cfg)
-        {
-            if (cfg == null || string.IsNullOrEmpty(cfg.SourceType) || cfg.SourceType == "Native")
-            {
-                var remoteAddr = HttpContext.Connection.RemoteIpAddress;
-                if (remoteAddr != null && remoteAddr.IsIPv4MappedToIPv6)
-                {
-                    remoteAddr = remoteAddr.MapToIPv4();
-                }
-
-                return remoteAddr?.ToString();
-            }
-
-            if (string.IsNullOrEmpty(cfg.HeaderName))
-            {
-                return null;
-            }
-
-            var headerValue = Request.Headers[cfg.HeaderName].ToString();
-            if (string.IsNullOrEmpty(headerValue))
-            {
-                return null;
-            }
-
-            var parts = headerValue.Split(',').Select(p => p.Trim()).ToArray();
-            var index = cfg.HeaderIndex ?? 0;
-            if (index < 0 || index >= parts.Length)
-            {
-                return null;
-            }
-
-            return parts[index];
         }
 
         [ExcludeFromCodeCoverage]
