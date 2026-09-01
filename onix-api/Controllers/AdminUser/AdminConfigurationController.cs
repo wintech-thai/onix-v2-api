@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
@@ -85,7 +86,13 @@ namespace Its.Onix.Api.Controllers
         {
             if (cfg == null || string.IsNullOrEmpty(cfg.SourceType) || cfg.SourceType == "Native")
             {
-                return HttpContext.Connection.RemoteIpAddress?.ToString();
+                var remoteAddr = HttpContext.Connection.RemoteIpAddress;
+                if (remoteAddr != null && remoteAddr.IsIPv4MappedToIPv6)
+                {
+                    remoteAddr = remoteAddr.MapToIPv4();
+                }
+
+                return remoteAddr?.ToString();
             }
 
             if (string.IsNullOrEmpty(cfg.HeaderName))
