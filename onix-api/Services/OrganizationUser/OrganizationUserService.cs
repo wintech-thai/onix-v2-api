@@ -444,6 +444,58 @@ namespace Its.Onix.Api.Services
             return ou;
         }
 
+        public MVOrganizationUser? RegenerateInviteLink(string orgId, string orgUserId)
+        {
+            var r = GetUserByIdLeftJoin(orgId, orgUserId);
+            if (r.Status != "OK")
+            {
+                return r;
+            }
+
+            var user = r.OrgUser!;
+            if (user.UserStatus != "Pending")
+            {
+                r.Status = "USER_NOT_PENDING";
+                r.Description = $"User status is [{user.UserStatus}] for org user ID [{orgUserId}], only Pending users can regenerate an invite link!!!";
+
+                return r;
+            }
+
+            var email = user.TmpUserEmail;
+            if (string.IsNullOrEmpty(email))
+            {
+                r.Status = "INVALID_EMAIL_EMPTY";
+                r.Description = "Email address is blank, please check TmpUserEmail field!!!";
+
+                return r;
+            }
+
+            var registrationCase = IdentifyRegistrationCase(user);
+            if (registrationCase.Contains("ERROR"))
+            {
+                r.Status = registrationCase;
+                r.Description = "Email or username is being used by another!!!";
+
+                return r;
+            }
+
+            var reg = new MUserRegister()
+            {
+                Email = email,
+                UserName = user.UserName!,
+                OrgUserId = orgUserId,
+                InvitedBy = user.InvitedBy,
+            };
+            var registrationUrl = GetInvitationLink(orgId, registrationCase, reg);
+
+            r.RegistrationUrl = registrationUrl;
+            r.OrgUser = user;
+            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
+            r.OrgUser.RolesList = "";
+
+            return r;
+        }
+
         public MVOrganizationUser GetUserByIdLeftJoin(string orgId, string userId)
         {
             var r = new MVOrganizationUser()

@@ -101,6 +101,30 @@ namespace Its.Onix.Api.Controllers
             return Ok(mv);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetOrgUserInviteLink/{orgId}/{orgUserId}")]
+        public IActionResult GetOrgUserInviteLink(string orgId, string orgUserId)
+        {
+            var result = _orgUserSvc.RegenerateInviteLink(orgId, orgUserId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetOrganizationPolicy/{orgId}")]
+        public async Task<IActionResult> GetOrganizationPolicy(string orgId)
+        {
+            var result = await _orgSvc.GetOrganizationPolicy(orgId);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/SetOrganizationPolicy/{orgId}")]
+        public async Task<IActionResult> SetOrganizationPolicy(string orgId, [FromBody] MOrganizationPolicy request)
+        {
+            var result = await _orgSvc.SetOrganizationPolicy(orgId, request);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/AddOrganization")]
         public IActionResult AddOrganization([FromBody] MOrganization request)

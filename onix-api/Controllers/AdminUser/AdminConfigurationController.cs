@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -65,6 +66,28 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> SetBrandConfig([FromBody] MConfiguration cfg)
         {
             var result = await svc.SetBrandConfig("global", cfg);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [AllowAnonymous] //คนที่จะมาเรียก API นี้คือ backend เอง เพื่อดูว่าจะอ่าน client ip จากไหน
+        [Route("org/global/action/GetClientIpSource")]
+        public async Task<IActionResult> GetClientIpSource()
+        {
+            var result = await svc.GetClientIpSource("global");
+            var resolved = ServiceUtils.ResolveClientIp(Request, result?.Configuration?.ClientIpSourceConfig);
+            result!.ResolvedIp = string.IsNullOrEmpty(resolved) ? null : resolved;
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SetClientIpSource")]
+        public async Task<IActionResult> SetClientIpSource([FromBody] MConfiguration cfg)
+        {
+            var result = await svc.SetClientIpSource("global", cfg);
             return Ok(result);
         }
     }

@@ -173,6 +173,12 @@ namespace Its.Onix.Api.Models
         [Column("payout_fee_payer")]
         public string? PayoutFeePayer { get; set; } //ใครคือผู้รับภาระค่าธรรมเนียมการโอน (Merchant, Beneficiary)
 
+        [Column("payout_partial_count_limit_p2p")]
+        public int? PayoutPartialCountLimitP2P { get; set; } /* ยอมให้ตัดจ่าย partial ได้มากสุดกี่ครั้ง */
+
+        [Column("payout_partial_count_p2p")]
+        public int? PayoutPartialCountP2P { get; set; } /* จ่าย partial count เข้ามากี่ครั้งแล้ว */
+
 
         //ยอด TotalPayOutPendingPaidAmountDecimal + TotalPayOutPaidAmountDecimal ต้องน้อยกว่าหรือเท่ากับ PayOutTotalAmountDecimal เสมอ
         [Column("total_payout_pending_paid_amount_decimal")]

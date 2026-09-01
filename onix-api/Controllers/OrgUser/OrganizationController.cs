@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
+using Its.Onix.Api.Utils;
 using System.Security.Claims;
 
 namespace Prom.LPR.Api.Controllers
@@ -13,11 +14,13 @@ namespace Prom.LPR.Api.Controllers
     public class OrganizationController : ControllerBase
     {
         private readonly IOrganizationService svc;
+        private readonly IConfigurationService configSvc;
 
         [ExcludeFromCodeCoverage]
-        public OrganizationController(IOrganizationService service)
+        public OrganizationController(IOrganizationService service, IConfigurationService configService)
         {
             svc = service;
+            configSvc = configService;
         }
 
         private string? GetCurrentOrgId()
@@ -87,6 +90,28 @@ namespace Prom.LPR.Api.Controllers
         public IActionResult GetAllowAddressTypeNames(string id)
         {
             var result = svc.GetAllowAddressTypeNames(id);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetOrganizationPolicy")]
+        public async Task<IActionResult> GetOrganizationPolicy(string id)
+        {
+            var result = await svc.GetOrganizationPolicy(id);
+            return Ok(result);
+        }
+
+        // Public: merchant web frontend calls this (before/without needing GenericRolePolicy)
+        // to check whether the current client IP is blacklisted for this org's web front-end.
+        [ExcludeFromCodeCoverage]
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{id}/action/GetIpPolicyStatus")]
+        public async Task<IActionResult> GetIpPolicyStatus(string id)
+        {
+            var clientIp = await ServiceUtils.ResolveConfiguredClientIp(Request, configSvc);
+            var result = await svc.CheckIpBlacklist(id, clientIp, isApi: false);
             return Ok(result);
         }
     }

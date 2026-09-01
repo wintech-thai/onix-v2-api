@@ -12,15 +12,18 @@ namespace Its.Onix.Api.Services
         private readonly IConfigurationRepository? repository = null;
         private readonly IFileDocumentService? _fileDocumentService = null;
         private readonly IStorageUtilsS3? _storageUtilsS3 = null;
+        private readonly IRedisHelper _redis;
 
         public ConfigurationService(
             IConfigurationRepository repo,
             IFileDocumentService fileDocumentService,
-            IStorageUtilsS3 storageUtilsS3) : base()
+            IStorageUtilsS3 storageUtilsS3,
+            IRedisHelper redis) : base()
         {
             repository = repo;
             _fileDocumentService = fileDocumentService;
             _storageUtilsS3 = storageUtilsS3;
+            _redis = redis;
         }
 
         public async Task<MVConfiguration?> GetBrandConfig(string orgId, bool needDownloadUrl = false)
@@ -32,7 +35,17 @@ namespace Its.Onix.Api.Services
             };
 
             repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetConfigurationByType("Brand");
+
+            var cacheKey = CacheHelper.CreateBrandConfigKey(orgId);
+            var result = await _redis.GetObjectAsync<MConfiguration>(cacheKey);
+            if (result == null)
+            {
+                result = await repository!.GetConfigurationByType("Brand");
+                if (result != null)
+                {
+                    await _redis.SetObjectAsync(cacheKey, result, TimeSpan.FromHours(24));
+                }
+            }
 
             if (result == null)
             {
@@ -133,6 +146,8 @@ namespace Its.Onix.Api.Services
             config.ConfigType = "Brand";
             var c = await repository!.UpsertConfiguration(config);
 
+            await _redis.DeleteAsync(CacheHelper.CreateBrandConfigKey(orgId));
+
             r.Configuration = c;
             r.Configuration.ConfigValue = "";
 
@@ -213,6 +228,73 @@ namespace Its.Onix.Api.Services
             r.Configuration = config;
             r.Configuration.ConfigValue = "";
 
+            return r;
+        }
+
+        public async Task<MVConfiguration?> GetClientIpSource(string orgId)
+        {
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Client IP source configuration retrieved successfully"
+            };
+
+            var cacheKey = CacheHelper.CreateClientIpSourceKey(orgId);
+            var result = await _redis.GetObjectAsync<MConfiguration>(cacheKey);
+            if (result == null)
+            {
+                repository!.SetCustomOrgId(orgId);
+                result = await repository!.GetConfigurationByType("ClientIpSource");
+                if (result != null)
+                {
+                    await _redis.SetObjectAsync(cacheKey, result, TimeSpan.FromHours(24));
+                }
+            }
+
+            if (result == null)
+            {
+                r.Status = "NOT_FOUND";
+                r.Description = "Client IP source configuration not found";
+                return r;
+            }
+
+            if (!string.IsNullOrEmpty(result.ConfigValue))
+            {
+                result.ClientIpSourceConfig = JsonSerializer.Deserialize<MClientIpSourceConfig>(result.ConfigValue);
+                result.ConfigValue = "";
+            }
+
+            r.Configuration = result;
+            return r;
+        }
+
+        public async Task<MVConfiguration> SetClientIpSource(string orgId, MConfiguration config)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Client IP source configuration saved successfully"
+            };
+
+            if (config.ClientIpSourceConfig == null)
+            {
+                r.Status = "CONFIG_VALUE_MISSING";
+                r.Description = "Client IP source configuration data is missing";
+                return r;
+            }
+
+            config.ConfigType = "ClientIpSource";
+            config.ConfigValue = JsonSerializer.Serialize(config.ClientIpSourceConfig);
+            config.Status = "Active";
+
+            var c = await repository!.UpsertConfiguration(config);
+
+            await _redis.DeleteAsync(CacheHelper.CreateClientIpSourceKey(orgId));
+
+            c.ConfigValue = "";
+            r.Configuration = c;
             return r;
         }
 

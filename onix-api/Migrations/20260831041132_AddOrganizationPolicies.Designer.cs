@@ -3,6 +3,7 @@ using System;
 using Its.Onix.Api.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace onix.api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20260831041132_AddOrganizationPolicies")]
+    partial class AddOrganizationPolicies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2307,10 +2310,6 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("payout_min_amount");
 
-                    b.Property<int?>("PayoutPartialCountLimitP2P")
-                        .HasColumnType("integer")
-                        .HasColumnName("payout_partial_count_limit_p2p");
-
                     b.Property<bool?>("RandomDecimal")
                         .HasColumnType("boolean")
                         .HasColumnName("random_decimal");
@@ -3098,14 +3097,6 @@ namespace onix.api.Migrations
                     b.Property<double?>("PayoutFeePct")
                         .HasColumnType("double precision")
                         .HasColumnName("payout_fee_pct");
-
-                    b.Property<int?>("PayoutPartialCountLimitP2P")
-                        .HasColumnType("integer")
-                        .HasColumnName("payout_partial_count_limit_p2p");
-
-                    b.Property<int?>("PayoutPartialCountP2P")
-                        .HasColumnType("integer")
-                        .HasColumnName("payout_partial_count_p2p");
 
                     b.Property<string>("PayoutPromptPayId")
                         .HasColumnType("text")

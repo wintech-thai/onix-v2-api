@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Models
     [Table("Merchants")]
 
     [Index(nameof(OrgId))]
+    [Index(nameof(RiskPolicyId))]
     public class MMerchant : IOrgEntity
     {
         [Key]
@@ -54,6 +55,10 @@ namespace Its.Onix.Api.Models
         [Column("payout_max_amount")]
         public double? PayoutMaxAmount { get; set; }
 
+        [Column("payout_partial_count_limit_p2p")]
+        public int? PayoutPartialCountLimitP2P { get; set; } /* ยอมให้ตัดจ่าย partial ได้มากสุดกี่ครั้ง */
+
+
         [Column("Status")]
         public string? Status { get; set; } //Active, Pending, Disabled
 
@@ -82,6 +87,9 @@ namespace Its.Onix.Api.Models
         [Column("payin_expire_minute")]
         public int? PayinExpireMinute { get; set; }
 
+        [Column("risk_policy_id")]
+        public Guid? RiskPolicyId { get; set; }
+
 
         [NotMapped]
         public List<string>? WhitelistBankAccountNamesArr { get; set; } //deserialize มาจาก WhitelistBankAccountNames
@@ -108,6 +116,7 @@ namespace Its.Onix.Api.Models
             RandomDecimal = true;
             IncludeGlobalBankAccount = true;
             PayinExpireMinute = 30; //Default 30 minutes
+            PayoutPartialCountLimitP2P = 5;
         }
     }
 }

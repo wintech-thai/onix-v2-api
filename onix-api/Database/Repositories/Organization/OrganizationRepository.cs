@@ -171,5 +171,36 @@ namespace Its.Onix.Api.Database.Repositories
 
             return result;
         }
+
+        public async Task<MOrganizationPolicy?> GetOrganizationPolicy()
+        {
+            var result = await context!.OrganizationPolicies!.Where(p => p.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return result;
+        }
+
+        public async Task<MOrganizationPolicy> UpsertOrganizationPolicy(MOrganizationPolicy policy)
+        {
+            var existing = await context!.OrganizationPolicies!.Where(p => p.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing == null)
+            {
+                policy.Id = Guid.NewGuid();
+                policy.OrgId = orgId;
+                policy.CreatedDate = DateTime.UtcNow;
+
+                await context!.OrganizationPolicies!.AddAsync(policy);
+                await context.SaveChangesAsync();
+
+                return policy;
+            }
+
+            existing.WebWhitelistIps = policy.WebWhitelistIps;
+            existing.ApiWhitelistIps = policy.ApiWhitelistIps;
+            existing.WebBlacklistIps = policy.WebBlacklistIps;
+            existing.ApiBlacklistIps = policy.ApiBlacklistIps;
+
+            await context.SaveChangesAsync();
+
+            return existing;
+        }
     }
 }

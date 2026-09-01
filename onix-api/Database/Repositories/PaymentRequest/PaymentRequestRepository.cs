@@ -91,6 +91,8 @@ namespace Its.Onix.Api.Database.Repositories
                 TotalPayOutPaidAmountDecimal = x.pr.TotalPayOutPaidAmountDecimal,
                 PartialPayoutHistory = x.pr.PartialPayoutHistory,
                 PayOutTotalAmountDecimalP2P = x.pr.PayOutTotalAmountDecimalP2P,
+                PayoutPartialCountLimitP2P = x.pr.PayoutPartialCountLimitP2P,
+                PayoutPartialCountP2P = x.pr.PayoutPartialCountP2P,
 
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
                 QrCode = x.pr.QrCode,
@@ -483,6 +485,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.TotalPayOutPaidAmountDecimal = paymentRequest.TotalPayOutPaidAmountDecimal;
                 existing.TotalPayOutPendingPaidAmountDecimal = paymentRequest.TotalPayOutPendingPaidAmountDecimal;
                 existing.PayOutTotalAmountDecimalP2P = paymentRequest.PayOutTotalAmountDecimalP2P;
+                existing.PayoutPartialCountP2P = paymentRequest.PayoutPartialCountP2P;
             }
 
             orgId = oldOrgId;
@@ -683,6 +686,8 @@ namespace Its.Onix.Api.Database.Repositories
             payOut.TotalPayOutPendingPaidAmountDecimal = txs.Where(x => x.Status == "Pending").Sum(x => x.PartialAmount);
             payOut.TotalPayOutPaidAmountDecimal = txs.Where(x => x.Status == "Approved").Sum(x => x.PartialAmount);
             payOut.PayOutTotalAmountDecimalP2P = payOut.PayOutTotalAmountDecimal - payOut.TotalPayOutPaidAmountDecimal;
+            payOut.PayoutPartialCountP2P = txs.Count(/* x => x.Status == "Approved" */); //เอาทุก status ไม่ใช่เฉพาะ Approved
+
 //Console.WriteLine($"DEBUG_X - [{payOut.PayOutTotalAmountDecimalP2P}] [{payOut.PayOutTotalAmountDecimal}] [{payOut.TotalPayOutPaidAmountDecimal}]");
             var result = await UpdatePayOutPeer2PeerHistoryById(payoutRequestId, payOut);
             return result;

@@ -147,6 +147,27 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateBrandConfigKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"BrandConfig:{environment}:{orgId}";
+            return key;
+        }
+
+        public static string CreateClientIpSourceKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"ClientIpSource:{environment}:{orgId}";
+            return key;
+        }
+
+        public static string CreateOrganizationPolicyKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"OrganizationPolicy:{environment}:{orgId}";
+            return key;
+        }
+
         public static string CreateScanItemActionKey(string orgId)
         {
             //TODO : Use environment as key component

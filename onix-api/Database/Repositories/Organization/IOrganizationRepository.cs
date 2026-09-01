@@ -15,5 +15,7 @@ namespace Its.Onix.Api.Database.Repositories
         public MOrganizationUser GetUserInOrganization(string userName);
         public MOrganization AddOrganization(MOrganization org);
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName);
+        public Task<MOrganizationPolicy?> GetOrganizationPolicy();
+        public Task<MOrganizationPolicy> UpsertOrganizationPolicy(MOrganizationPolicy policy);
     }
 }
