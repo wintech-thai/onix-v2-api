@@ -24,6 +24,15 @@ public class BlacklistMiddleware
             return;
         }
 
+        // The merchant web page calls this endpoint to find out whether it is blacklisted.
+        // It must never be blocked by the API-side check itself, or a client blacklisted on
+        // the API list could never learn (and see) their own Web blacklist status.
+        if (string.Equals(requestContext.ApiName, "GetIpPolicyStatus", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context);
+            return;
+        }
+
         var clientIp = ServiceUtils.GetClientIp(context.Request);
         var result = await organizationService.CheckIpBlacklist(orgId, clientIp, isApi: true);
 
