@@ -221,8 +221,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         modelBuilder.Entity<MBankAccount>()
             .HasIndex(t => new { t.OrgId, t.BankCode, t.AccountName }).IsUnique();
 
-        modelBuilder.Entity<MPaymentRequest>()
-            .HasIndex(t => new { t.OrgId, t.RefId }).IsUnique();
+        //modelBuilder.Entity<MPaymentRequest>()
+        //    .HasIndex(t => new { t.OrgId, t.RefId }).IsUnique();
 
         //modelBuilder.Entity<MPaymentTransaction>();
         modelBuilder.Entity<MPaymentTransaction>()

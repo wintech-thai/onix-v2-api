@@ -182,7 +182,7 @@ namespace Its.Onix.Api.Controllers
             if (mc.PayoutNotMatchActionP2P == "UseNative")
             {
                 //ให้ใช้ bank account กลาง
-                var result2 = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc);
+                var result2 = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc, false);
                 result2.PaymentResponse!.QrCodeImage = "";
                 return Ok(result2);
             }
