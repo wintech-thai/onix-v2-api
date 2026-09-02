@@ -12,7 +12,7 @@ namespace Its.Onix.Api.Services
         public Task<MVPresignedUrl> GetBrandLogoUploadPresignedUrl(string orgId, VMUploadDocument param);
         public Task<MVConfiguration?> GetBackupPolicy(string orgId);
         public Task<MVConfiguration> SetBackupPolicy(string orgId, MConfiguration config);
-        public Task<MVConfiguration?> GetClientIpSource(string orgId);
-        public Task<MVConfiguration> SetClientIpSource(string orgId, MConfiguration config);
+        public Task<MVConfiguration?> GetClientIpSource(string orgId, string scope);
+        public Task<MVConfiguration> SetClientIpSource(string orgId, string scope, MConfiguration config);
     }
 }

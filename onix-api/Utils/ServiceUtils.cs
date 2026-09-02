@@ -106,14 +106,16 @@ namespace Its.Onix.Api.Utils
         }
 
         /// <summary>
-        /// Fetches the global Client IP Source configuration and resolves the current
-        /// request's client IP accordingly, falling back to <see cref="GetClientIp"/>
-        /// (CF-Connecting-IP / X-Original-Forwarded-For sniffing) if resolution via the
-        /// configured source yields nothing (e.g. misconfigured header name).
+        /// Fetches the global Client IP Source configuration for the given scope ("Api" —
+        /// onix-api itself is the only scope that should ever drive real enforcement, since
+        /// "Backend" is the Admin/Merchant apps' own separate, independently-configured
+        /// view for diagnostics) and resolves the current request's client IP accordingly,
+        /// falling back to <see cref="GetClientIp"/> (CF-Connecting-IP / X-Original-Forwarded-For
+        /// sniffing) if resolution via the configured source yields nothing.
         /// </summary>
-        public static async Task<string> ResolveConfiguredClientIp(HttpRequest request, Services.IConfigurationService configService)
+        public static async Task<string> ResolveConfiguredClientIp(HttpRequest request, Services.IConfigurationService configService, string scope = "Api")
         {
-            var cfgResult = await configService.GetClientIpSource("global");
+            var cfgResult = await configService.GetClientIpSource("global", scope);
             var resolved = ResolveClientIp(request, cfgResult?.Configuration?.ClientIpSourceConfig);
 
             return string.IsNullOrEmpty(resolved) ? GetClientIp(request) : resolved;

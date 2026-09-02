@@ -69,13 +69,15 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        // scope: "Backend" (the Admin/Merchant Next.js apps) or "Api" (onix-api itself) —
+        // each side can be configured/tested independently.
         [ExcludeFromCodeCoverage]
         [HttpGet]
         [AllowAnonymous] //คนที่จะมาเรียก API นี้คือ backend เอง เพื่อดูว่าจะอ่าน client ip จากไหน
-        [Route("org/global/action/GetClientIpSource")]
-        public async Task<IActionResult> GetClientIpSource()
+        [Route("org/global/action/GetClientIpSource/{scope}")]
+        public async Task<IActionResult> GetClientIpSource(string scope)
         {
-            var result = await svc.GetClientIpSource("global");
+            var result = await svc.GetClientIpSource("global", scope);
             var resolved = ServiceUtils.ResolveClientIp(Request, result?.Configuration?.ClientIpSourceConfig);
             result!.ResolvedIp = string.IsNullOrEmpty(resolved) ? null : resolved;
 
@@ -84,10 +86,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/SetClientIpSource")]
-        public async Task<IActionResult> SetClientIpSource([FromBody] MConfiguration cfg)
+        [Route("org/global/action/SetClientIpSource/{scope}")]
+        public async Task<IActionResult> SetClientIpSource(string scope, [FromBody] MConfiguration cfg)
         {
-            var result = await svc.SetClientIpSource("global", cfg);
+            var result = await svc.SetClientIpSource("global", scope, cfg);
             return Ok(result);
         }
     }
