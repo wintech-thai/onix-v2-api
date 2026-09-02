@@ -231,7 +231,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVConfiguration?> GetClientIpSource(string orgId)
+        public async Task<MVConfiguration?> GetClientIpSource(string orgId, string scope)
         {
             var r = new MVConfiguration()
             {
@@ -239,12 +239,13 @@ namespace Its.Onix.Api.Services
                 Description = "Client IP source configuration retrieved successfully"
             };
 
-            var cacheKey = CacheHelper.CreateClientIpSourceKey(orgId);
+            var configType = $"ClientIpSource_{scope}";
+            var cacheKey = CacheHelper.CreateClientIpSourceKey(orgId, scope);
             var result = await _redis.GetObjectAsync<MConfiguration>(cacheKey);
             if (result == null)
             {
                 repository!.SetCustomOrgId(orgId);
-                result = await repository!.GetConfigurationByType("ClientIpSource");
+                result = await repository!.GetConfigurationByType(configType);
                 if (result != null)
                 {
                     await _redis.SetObjectAsync(cacheKey, result, TimeSpan.FromHours(24));
@@ -268,7 +269,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVConfiguration> SetClientIpSource(string orgId, MConfiguration config)
+        public async Task<MVConfiguration> SetClientIpSource(string orgId, string scope, MConfiguration config)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -285,13 +286,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            config.ConfigType = "ClientIpSource";
+            config.ConfigType = $"ClientIpSource_{scope}";
             config.ConfigValue = JsonSerializer.Serialize(config.ClientIpSourceConfig);
             config.Status = "Active";
 
             var c = await repository!.UpsertConfiguration(config);
 
-            await _redis.DeleteAsync(CacheHelper.CreateClientIpSourceKey(orgId));
+            await _redis.DeleteAsync(CacheHelper.CreateClientIpSourceKey(orgId, scope));
 
             c.ConfigValue = "";
             r.Configuration = c;

@@ -154,10 +154,10 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
-        public static string CreateClientIpSourceKey(string orgId)
+        public static string CreateClientIpSourceKey(string orgId, string scope)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
-            var key = $"ClientIpSource:{environment}:{orgId}";
+            var key = $"ClientIpSource:{environment}:{orgId}:{scope}";
             return key;
         }
 
