@@ -45,6 +45,9 @@ namespace Its.Onix.Api.Models
         [Column("client_ip_cf")]
         public string? CfClientIp { get; set; }
 
+        [Column("remote_ip")]
+        public string? RemoteIp { get; set; }
+
         [Column("environment")]
         public string? Environment { get; set; }
 
