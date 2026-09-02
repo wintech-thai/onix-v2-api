@@ -64,6 +64,8 @@ namespace Its.Onix.Api.AuditLogs
                 clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
             }
 
+            var remoteIp = context.Connection.RemoteIpAddress?.ToString();
+
             await _next(context); // call next middleware
 
             var custStatus = "";
@@ -121,6 +123,7 @@ namespace Its.Onix.Api.AuditLogs
                 Scheme = scheme,
                 ClientIp = clientIp,
                 CfClientIp = cfClientIp,
+                RemoteIp = remoteIp,
                 CustomStatus = custStatus,
                 CustomDesc = statusDesc,
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
