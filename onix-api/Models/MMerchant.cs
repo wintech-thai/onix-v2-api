@@ -58,6 +58,9 @@ namespace Its.Onix.Api.Models
         [Column("payout_partial_count_limit_p2p")]
         public int? PayoutPartialCountLimitP2P { get; set; } /* ยอมให้ตัดจ่าย partial ได้มากสุดกี่ครั้ง */
 
+        [Column("payout_not_match_action_p2p")]
+        public string? PayoutNotMatchActionP2P { get; set; } /* (UseNative, Rejected) action ที่จะทำเมื่อ payin ไม่ match payout */
+
 
         [Column("Status")]
         public string? Status { get; set; } //Active, Pending, Disabled
@@ -117,6 +120,7 @@ namespace Its.Onix.Api.Models
             IncludeGlobalBankAccount = true;
             PayinExpireMinute = 30; //Default 30 minutes
             PayoutPartialCountLimitP2P = 5;
+            PayoutNotMatchActionP2P = "UseNative";
         }
     }
 }

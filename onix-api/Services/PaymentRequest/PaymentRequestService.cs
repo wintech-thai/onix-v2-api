@@ -1283,7 +1283,7 @@ namespace Its.Onix.Api.Services
             return pmResponse;
         }
 
-        public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant)
+        public async Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, bool checkRefIdDuplicate = true)
         {
             repository!.SetCustomOrgId(orgId); //ตรงนี้เป็น orgId ของ Merchant
             _bankAccountRepo!.SetCustomOrgId("global");
@@ -1313,13 +1313,16 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
-            if (isRefIdExist)
+            if (checkRefIdDuplicate)
             {
-                r.Status = "REF_ID1_DUPLICATE";
-                r.Description = $"Ref ID1 [{paymentRequest.RefId1}] is duplicate!!!";
+                var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
+                if (isRefIdExist)
+                {
+                    r.Status = "REF_ID1_DUPLICATE";
+                    r.Description = $"Ref ID1 [{paymentRequest.RefId1}] is duplicate!!!";
 
-                return r;
+                    return r;
+                }
             }
 
             if (paymentRequest.Currency != "THB")

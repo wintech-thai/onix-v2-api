@@ -8,7 +8,7 @@ namespace Its.Onix.Api.Services
     {
         public Task<MVPaymentRequest> GetPaymentRequestById(string orgId, string paymentRequestId);
 
-        public Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant);
+        public Task<MVPaymentResponse> AddPaymentRequestPayIn(string orgId, MPaymentRequest paymentRequest, MMerchant merchant, bool checkRefIdDuplicate = true);
 
         public Task<MVPaymentResponse> AddPaymentRequestPayInP2P(string orgId, MPaymentRequest paymentRequest, MMerchant merchant);
 
