@@ -17,6 +17,27 @@ public class BlacklistMiddleware
         IOrganizationService organizationService,
         IConfigurationService configurationService)
     {
+        // Our own Admin/Merchant backend relay attaches this header (from its own MUTUAL_KEY
+        // env var) on every request it forwards to us. A correct value proves the request
+        // genuinely came from our trusted relay (internal-to-internal), so it can skip the
+        // blacklist check entirely. A present-but-wrong value means someone is trying to
+        // impersonate the relay — treat that as blacklisted outright. No header at all means
+        // this is a direct API call (e.g. a merchant integration hitting onix-api with an API
+        // key) — fall through to the normal blacklist check.
+        var mutualKeyHeader = context.Request.Headers["X-Forward-Mutual-Key"].ToString();
+        if (!string.IsNullOrEmpty(mutualKeyHeader))
+        {
+            var expectedMutualKey = Environment.GetEnvironmentVariable("MUTUAL_KEY");
+            if (!string.IsNullOrEmpty(expectedMutualKey) && mutualKeyHeader == expectedMutualKey)
+            {
+                await _next(context);
+                return;
+            }
+
+            await WriteBlockedResponse(context, "INVALID_MUTUAL_KEY", "X-Forward-Mutual-Key header value does not match.", null, null, null);
+            return;
+        }
+
         var orgId = requestContext.OrgId;
         if (string.IsNullOrEmpty(orgId))
         {
@@ -39,22 +60,32 @@ public class BlacklistMiddleware
 
         if (result.IsBlacklisted)
         {
-            context.Response.StatusCode = 422;
-            context.Response.ContentType = "application/json";
-
-            var body = JsonSerializer.Serialize(new
-            {
-                Status = result.Status,
-                Description = result.Description,
-                ClientIp = result.ClientIp,
-                WhitelistIps = result.WhitelistIps,
-                BlacklistIps = result.BlacklistIps,
-            });
-
-            await context.Response.WriteAsync(body);
+            await WriteBlockedResponse(context, result.Status, result.Description, result.ClientIp, result.WhitelistIps, result.BlacklistIps);
             return;
         }
 
         await _next(context);
+    }
+
+    private static async Task WriteBlockedResponse(
+        HttpContext context, string? status, string? description, string? clientIp, string? whitelistIps, string? blacklistIps)
+    {
+        context.Response.StatusCode = 422;
+        context.Response.ContentType = "application/json";
+
+        // Serialized with explicit camelCase keys — this is a manual JsonSerializer.Serialize
+        // call, not routed through ASP.NET's configured MVC JSON options, so it would
+        // otherwise come out PascalCase and silently mismatch what the frontend's error
+        // parsing (and the rest of this API's camelCase responses) expects.
+        var body = JsonSerializer.Serialize(new
+        {
+            status,
+            description,
+            clientIp,
+            whitelistIps,
+            blacklistIps,
+        });
+
+        await context.Response.WriteAsync(body);
     }
 }

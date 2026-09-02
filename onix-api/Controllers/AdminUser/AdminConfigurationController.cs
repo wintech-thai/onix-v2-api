@@ -78,8 +78,9 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GetClientIpSource(string scope)
         {
             var result = await svc.GetClientIpSource("global", scope);
-            var resolved = ServiceUtils.ResolveClientIp(Request, result?.Configuration?.ClientIpSourceConfig);
+            var (resolved, rawHeaderValue) = ServiceUtils.ResolveClientIpDetailed(Request, result?.Configuration?.ClientIpSourceConfig);
             result!.ResolvedIp = string.IsNullOrEmpty(resolved) ? null : resolved;
+            result.RawHeaderValue = rawHeaderValue;
 
             return Ok(result);
         }
