@@ -73,6 +73,18 @@ namespace Its.Onix.Api.Utils
         /// </summary>
         public static string ResolveClientIp(HttpRequest request, MClientIpSourceConfig? cfg)
         {
+            return ResolveClientIpDetailed(request, cfg).ResolvedIp;
+        }
+
+        /// <summary>
+        /// Same resolution as <see cref="ResolveClientIp"/>, but also returns the raw header
+        /// value (before splitting/indexing) so the UI can show what actually arrived — makes
+        /// it much easier to debug what's really being sent. A negative index means "take the
+        /// last value in the comma-separated list" (e.g. "10.1.49.13,192.168.1.23" with index
+        /// -1 resolves to "192.168.1.23").
+        /// </summary>
+        public static (string ResolvedIp, string? RawHeaderValue) ResolveClientIpDetailed(HttpRequest request, MClientIpSourceConfig? cfg)
+        {
             if (cfg == null || string.IsNullOrEmpty(cfg.SourceType) || cfg.SourceType == "Native")
             {
                 var remoteAddr = request.HttpContext.Connection.RemoteIpAddress;
@@ -81,28 +93,30 @@ namespace Its.Onix.Api.Utils
                     remoteAddr = remoteAddr.MapToIPv4();
                 }
 
-                return remoteAddr?.ToString() ?? "";
+                return (remoteAddr?.ToString() ?? "", null);
             }
 
             if (string.IsNullOrEmpty(cfg.HeaderName))
             {
-                return "";
+                return ("", null);
             }
 
             var headerValue = request.Headers[cfg.HeaderName].ToString();
             if (string.IsNullOrEmpty(headerValue))
             {
-                return "";
+                return ("", null);
             }
 
             var parts = headerValue.Split(',').Select(p => p.Trim()).ToArray();
             var index = cfg.HeaderIndex ?? 0;
-            if (index < 0 || index >= parts.Length)
+
+            if (index >= parts.Length)
             {
-                return "";
+                return ("", headerValue);
             }
 
-            return parts[index];
+            var resolved = index < 0 ? parts[^1] : parts[index];
+            return (resolved, headerValue);
         }
 
         /// <summary>

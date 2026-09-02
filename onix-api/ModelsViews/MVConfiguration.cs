@@ -10,5 +10,6 @@ namespace Its.Onix.Api.ModelsViews
         public string? Description { get; set; }
         public MConfiguration? Configuration { get; set; }
         public string? ResolvedIp { get; set; }
+        public string? RawHeaderValue { get; set; }
     }
 }
