@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Database.Repositories
                 fts = fts.Or(p => p.QueryString!.Contains(param.FullTextSearch));
                 fts = fts.Or(p => p.IdentityType!.Contains(param.FullTextSearch));
                 fts = fts.Or(p => p.UserName!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.StatusCode!.ToString()!.Contains(param.FullTextSearch));
                 pd = pd.And(fts);
             }
 
@@ -68,6 +69,7 @@ namespace Its.Onix.Api.Database.Repositories
                 fts = fts.Or(p => p.QueryString!.Contains(param.FullTextSearch));
                 fts = fts.Or(p => p.IdentityType!.Contains(param.FullTextSearch));
                 fts = fts.Or(p => p.UserName!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.StatusCode!.ToString()!.Contains(param.FullTextSearch));
                 pd = pd.And(fts);
             }
 
