@@ -173,6 +173,20 @@ namespace Its.Onix.Api.Controllers
 
             result.PaymentResponse!.QrCodeImage = "";
 
+            if (result.Status == "OK")
+            {
+                //มี payout ให้ match ได้
+                return Ok(result);
+            }
+
+            if (mc.PayoutNotMatchActionP2P == "UseNative")
+            {
+                //ให้ใช้ bank account กลาง
+                var result2 = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc);
+                result2.PaymentResponse!.QrCodeImage = "";
+                return Ok(result2);
+            }
+
             return Ok(result);
         }
 
