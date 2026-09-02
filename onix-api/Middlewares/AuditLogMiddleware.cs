@@ -63,7 +63,11 @@ namespace Its.Onix.Api.AuditLogs
             {
                 clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
             }
-
+            else if (context.Request.Headers.TryGetValue("X-Forwarded-For", out var forwarded))
+            {
+                clientIp = forwarded.ToString().Split(',')[0].Trim();
+            }
+            
             var remoteIp = context.Connection.RemoteIpAddress?.ToString();
 
             await _next(context); // call next middleware
