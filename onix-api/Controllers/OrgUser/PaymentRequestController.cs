@@ -182,6 +182,7 @@ namespace Its.Onix.Api.Controllers
             if (mc.PayoutNotMatchActionP2P == "UseNative")
             {
                 //ให้ใช้ bank account กลาง
+                request.Id = Guid.NewGuid(); //สร้างใหม่จะได้ไม่ซ้ำกับ request เดิม
                 var result2 = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc, false);
                 result2.PaymentResponse!.QrCodeImage = "";
                 return Ok(result2);
