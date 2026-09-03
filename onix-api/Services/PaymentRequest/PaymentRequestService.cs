@@ -1142,13 +1142,13 @@ namespace Its.Onix.Api.Services
             }
             else
             {
-                var (policyPassed, policyReason) = await ValidatePayInPolicy(orgId, merchant, paymentRequest);
+                var (policyPassed, policyReason, policyLines) = await ValidatePayInPolicy(orgId, merchant, paymentRequest);
                 if (!policyPassed)
                 {
                     r.Status = "REJECTED_BY_RISK_POLICY";
                     r.Description = policyReason;
 
-                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ policyReason! ]);
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, policyLines);
                     return r;
                 }
             }
@@ -1340,13 +1340,13 @@ namespace Its.Onix.Api.Services
             }
             else
             {
-                var (policyPassed, policyReason) = await ValidatePayInPolicy(orgId, merchant, paymentRequest);
+                var (policyPassed, policyReason, policyLines) = await ValidatePayInPolicy(orgId, merchant, paymentRequest);
                 if (!policyPassed)
                 {
                     r.Status = "REJECTED_BY_RISK_POLICY";
                     r.Description = policyReason;
 
-                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, [ policyReason! ]);
+                    var _ = await AddRejectedPaymentRequest(paymentRequest, r, policyLines);
                     return r;
                 }
             }
@@ -1500,31 +1500,49 @@ namespace Its.Onix.Api.Services
         private const string RiskPolicyOrgScope = "global";
 
         //Validate pay-in request กับ Risk Policy ของ merchant (ถ้ามีการเลือกไว้) - เช็ค payer name กับ Allow*PayerName rules
-        private async Task<(bool Passed, string? Reason)> ValidatePayInPolicy(string orgId, MMerchant merchant, MPaymentRequest paymentRequest)
+        //Lines เป็น step-by-step log แบบเดียวกับ GetPeer2PeerBankAccount() เอาไว้โชว์ใน Processing Steps ช่วย debug
+        private async Task<(bool Passed, string? Reason, List<string> Lines)> ValidatePayInPolicy(string orgId, MMerchant merchant, MPaymentRequest paymentRequest)
         {
+            List<string> lines = [];
+
             if (merchant.RiskPolicyId == null || merchant.RiskPolicyId == Guid.Empty)
             {
                 //ไม่มีการเลือก policy ที่ merchant ก็ไม่ต้องทำอะไร
-                return (true, null);
+                lines.Add("PolicyCheck0 - Merchant has no RiskPolicyId set, skip policy check");
+                return (true, null, lines);
             }
 
-            var policy = await GetRiskPolicyCached(RiskPolicyOrgScope, merchant.RiskPolicyId.Value.ToString());
+            var riskPolicyId = merchant.RiskPolicyId.Value.ToString();
+            lines.Add($"PolicyCheck0 - Merchant RiskPolicyId=[{riskPolicyId}], resolving policy (cache-first)...");
+
+            var policy = await GetRiskPolicyCached(RiskPolicyOrgScope, riskPolicyId);
             if (policy == null)
             {
                 //Policy ที่ merchant ผูกไว้หาไม่เจอ (อาจถูกลบไปแล้ว) ไม่ block การทำงาน
-                return (true, null);
+                lines.Add($"PolicyCheck1 - RiskPolicyId=[{riskPolicyId}] not found (may have been deleted), skip policy check");
+                return (true, null, lines);
             }
+
+            lines.Add($"PolicyCheck1 - Policy resolved: Name=[{policy.Name}], Status=[{policy.Status}], " +
+                $"AllowBlankPayerName=[{policy.AllowBlankPayerName}], AllowUnknownPayerName=[{policy.AllowUnknownPayerName}], " +
+                $"AllowSuspiciousPayerName=[{policy.AllowSuspiciousPayerName}], AllowMaliciousPayerName=[{policy.AllowMaliciousPayerName}]");
 
             var payerName = paymentRequest.PayerName?.Trim();
             if (string.IsNullOrEmpty(payerName))
             {
+                lines.Add("PolicyCheck2 - PayerName is blank/null");
                 if (!policy.AllowBlankPayerName)
                 {
-                    return (false, $"Payer name is blank, not allowed by risk policy [{policy.Name}]");
+                    var reason = $"Payer name is blank, not allowed by risk policy [{policy.Name}]";
+                    lines.Add($"PolicyCheck3 - REJECTED: {reason}");
+                    return (false, reason, lines);
                 }
 
-                return (true, null);
+                lines.Add("PolicyCheck3 - Policy allows blank payer name, PASSED");
+                return (true, null, lines);
             }
+
+            lines.Add($"PolicyCheck2 - PayerName=[{payerName}], looking up IoC (Type=PayerName, OrgScope=[{RiskPolicyOrgScope}])...");
 
             _iocRepo!.SetCustomOrgId(RiskPolicyOrgScope);
             var ioc = await _iocRepo!.GetIocByTypeAndValueV2("PayerName", payerName);
@@ -1533,25 +1551,39 @@ namespace Its.Onix.Api.Services
             if (ioc == null || string.IsNullOrEmpty(reputation) || reputation == "Unknown")
             {
                 //ไม่เจอ payer name ใน IoC หรือเจอแต่ reputation เป็น Unknown ก็ถือเป็น unknown
+                lines.Add(ioc == null
+                    ? "PolicyCheck3 - No IoC record found for this PayerName -> treated as Unknown"
+                    : $"PolicyCheck3 - IoC found (IocId=[{ioc.Id}]) but Reputation=[Unknown] -> treated as Unknown");
+
                 if (!policy.AllowUnknownPayerName)
                 {
-                    return (false, $"Payer name [{payerName}] is unknown (not found in IoC), not allowed by risk policy [{policy.Name}]");
+                    var reason = $"Payer name [{payerName}] is unknown (not found in IoC), not allowed by risk policy [{policy.Name}]";
+                    lines.Add($"PolicyCheck4 - REJECTED: {reason}");
+                    return (false, reason, lines);
                 }
 
-                return (true, null);
+                lines.Add("PolicyCheck4 - Policy allows unknown payer name, PASSED");
+                return (true, null, lines);
             }
+
+            lines.Add($"PolicyCheck3 - IoC found (IocId=[{ioc!.Id}]), Reputation=[{reputation}], SeenCount=[{ioc.SeenCount}]");
 
             if (reputation == "Suspicious" && !policy.AllowSuspiciousPayerName)
             {
-                return (false, $"Payer name [{payerName}] matches IoC with Suspicious reputation, not allowed by risk policy [{policy.Name}]");
+                var reason = $"Payer name [{payerName}] matches IoC with Suspicious reputation, not allowed by risk policy [{policy.Name}]";
+                lines.Add($"PolicyCheck4 - REJECTED: {reason}");
+                return (false, reason, lines);
             }
 
             if (reputation == "Malicious" && !policy.AllowMaliciousPayerName)
             {
-                return (false, $"Payer name [{payerName}] matches IoC with Malicious reputation, not allowed by risk policy [{policy.Name}]");
+                var reason = $"Payer name [{payerName}] matches IoC with Malicious reputation, not allowed by risk policy [{policy.Name}]";
+                lines.Add($"PolicyCheck4 - REJECTED: {reason}");
+                return (false, reason, lines);
             }
 
-            return (true, null);
+            lines.Add($"PolicyCheck4 - Reputation=[{reputation}] allowed by policy, PASSED");
+            return (true, null, lines);
         }
 
         //ยิง event PayIn.Requested ไปที่ Redis stream เพื่อให้ job-dispatcher-payment.rb เอา PayerName ไป upsert เข้า IoC table
