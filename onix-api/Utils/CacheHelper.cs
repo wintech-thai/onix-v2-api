@@ -161,6 +161,13 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreateRiskPolicyKey(string orgId, string riskPolicyId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"RiskPolicy:{environment}:{orgId}:{riskPolicyId}";
+            return key;
+        }
+
         public static string CreateOrganizationPolicyKey(string orgId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";

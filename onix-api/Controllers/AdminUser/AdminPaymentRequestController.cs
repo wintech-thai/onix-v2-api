@@ -99,7 +99,10 @@ namespace Its.Onix.Api.Controllers
                 //ให้ใช้ bank account กลาง
                 request.Id = Guid.NewGuid(); //สร้างใหม่จะได้ไม่ซ้ำกับ request เดิม
                 var result2 = await svc.AddPaymentRequestPayIn(mc.OrgId, request, mc, false);
-                result2.PaymentResponse!.QrCodeImage = "";
+                if (result2.Status == "OK" && result2.PaymentResponse != null)
+                {
+                    result2.PaymentResponse.QrCodeImage = "";
+                }
                 return Ok(result2);
             }
 
@@ -183,6 +186,22 @@ namespace Its.Onix.Api.Controllers
 
             var pmt = pmtVm.PaymentRequest!;
             var result = _jobService.GetJobById(pmt.OrgId!, jobId);
+
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/global/action/GetPaymentRequestJobByRefId/{paymentRequestId}")]
+        public async Task<IActionResult> GetPaymentRequestJobByRefId(string paymentRequestId)
+        {
+            var pmtVm = await svc.GetPaymentRequestById("global", paymentRequestId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentRequest!;
+            var result = _jobService.GetJobByRefId(pmt.OrgId!, paymentRequestId);
 
             return Ok(result);
         }
