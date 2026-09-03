@@ -1520,7 +1520,7 @@ namespace Its.Onix.Api.Services
             {
                 if (!policy.AllowBlankPayerName)
                 {
-                    return (false, "Payer name is blank, not allowed by risk policy");
+                    return (false, $"Payer name is blank, not allowed by risk policy [{policy.Name}]");
                 }
 
                 return (true, null);
@@ -1535,7 +1535,7 @@ namespace Its.Onix.Api.Services
                 //ไม่เจอ payer name ใน IoC หรือเจอแต่ reputation เป็น Unknown ก็ถือเป็น unknown
                 if (!policy.AllowUnknownPayerName)
                 {
-                    return (false, $"Payer name [{payerName}] is unknown (not found in IoC), not allowed by risk policy");
+                    return (false, $"Payer name [{payerName}] is unknown (not found in IoC), not allowed by risk policy [{policy.Name}]");
                 }
 
                 return (true, null);
@@ -1543,12 +1543,12 @@ namespace Its.Onix.Api.Services
 
             if (reputation == "Suspicious" && !policy.AllowSuspiciousPayerName)
             {
-                return (false, $"Payer name [{payerName}] matches IoC with Suspicious reputation, not allowed by risk policy");
+                return (false, $"Payer name [{payerName}] matches IoC with Suspicious reputation, not allowed by risk policy [{policy.Name}]");
             }
 
             if (reputation == "Malicious" && !policy.AllowMaliciousPayerName)
             {
-                return (false, $"Payer name [{payerName}] matches IoC with Malicious reputation, not allowed by risk policy");
+                return (false, $"Payer name [{payerName}] matches IoC with Malicious reputation, not allowed by risk policy [{policy.Name}]");
             }
 
             return (true, null);

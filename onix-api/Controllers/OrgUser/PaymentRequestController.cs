@@ -221,7 +221,10 @@ namespace Its.Onix.Api.Controllers
             request.MerchantId2 = Guid.Parse(merchantId);
             var result = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc);
 
-            result.PaymentResponse!.QrCodeImage = "";
+            if (result.Status == "OK" && result.PaymentResponse != null)
+            {
+                result.PaymentResponse.QrCodeImage = "";
+            }
 
             return Ok(result);
         }
