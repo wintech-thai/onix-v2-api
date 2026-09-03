@@ -171,11 +171,10 @@ namespace Its.Onix.Api.Controllers
             request.MerchantId2 = Guid.Parse(merchantId);
             var result = await _paymentRequestSvc.AddPaymentRequestPayInP2P(orgId, request, mc);
 
-            result.PaymentResponse!.QrCodeImage = "";
-
             if (result.Status == "OK")
             {
                 //มี payout ให้ match ได้
+                result.PaymentResponse!.QrCodeImage = "";
                 return Ok(result);
             }
 
@@ -184,7 +183,10 @@ namespace Its.Onix.Api.Controllers
                 //ให้ใช้ bank account กลาง
                 request.Id = Guid.NewGuid(); //สร้างใหม่จะได้ไม่ซ้ำกับ request เดิม
                 var result2 = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc, false);
-                result2.PaymentResponse!.QrCodeImage = "";
+                if (result2.Status == "OK" && result2.PaymentResponse != null)
+                {
+                    result2.PaymentResponse.QrCodeImage = "";
+                }
                 return Ok(result2);
             }
 
