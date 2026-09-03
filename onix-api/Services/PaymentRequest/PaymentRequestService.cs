@@ -1495,6 +1495,10 @@ namespace Its.Onix.Api.Services
             return policy;
         }
 
+        //Risk Policy กับ IoC เป็น feature ระดับ admin จัดการผ่าน AdminRiskPolicyController/AdminIocController
+        //ซึ่ง hardcode OrgId="global" เสมอ (ไม่ผูกกับ orgId ของ merchant แต่ละราย) เลยต้อง lookup ด้วย "global" เท่านั้น
+        private const string RiskPolicyOrgScope = "global";
+
         //Validate pay-in request กับ Risk Policy ของ merchant (ถ้ามีการเลือกไว้) - เช็ค payer name กับ Allow*PayerName rules
         private async Task<(bool Passed, string? Reason)> ValidatePayInPolicy(string orgId, MMerchant merchant, MPaymentRequest paymentRequest)
         {
@@ -1504,7 +1508,7 @@ namespace Its.Onix.Api.Services
                 return (true, null);
             }
 
-            var policy = await GetRiskPolicyCached(orgId, merchant.RiskPolicyId.Value.ToString());
+            var policy = await GetRiskPolicyCached(RiskPolicyOrgScope, merchant.RiskPolicyId.Value.ToString());
             if (policy == null)
             {
                 //Policy ที่ merchant ผูกไว้หาไม่เจอ (อาจถูกลบไปแล้ว) ไม่ block การทำงาน
@@ -1522,7 +1526,7 @@ namespace Its.Onix.Api.Services
                 return (true, null);
             }
 
-            _iocRepo!.SetCustomOrgId(orgId);
+            _iocRepo!.SetCustomOrgId(RiskPolicyOrgScope);
             var ioc = await _iocRepo!.GetIocByTypeAndValueV2("PayerName", payerName);
             var reputation = ioc?.Reputation;
 
