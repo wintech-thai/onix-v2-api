@@ -9,10 +9,12 @@ namespace Its.Onix.Api.Services
     public class RiskPolicyService : BaseService, IRiskPolicyService
     {
         private readonly IRiskPolicyRepository? repository = null;
+        private readonly IRedisHelper _redis;
 
-        public RiskPolicyService(IRiskPolicyRepository repo) : base()
+        public RiskPolicyService(IRiskPolicyRepository repo, IRedisHelper redis) : base()
         {
             repository = repo;
+            _redis = redis;
         }
 
         public async Task<MVRiskPolicy> GetRiskPolicyByIdV2(string orgId, string riskPolicyId)
@@ -110,6 +112,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            await _redis.DeleteAsync(CacheHelper.CreateRiskPolicyKey(orgId, riskPolicyId));
+
             r.RiskPolicy = result;
             return r;
         }
@@ -141,6 +145,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            await _redis.DeleteAsync(CacheHelper.CreateRiskPolicyKey(orgId, riskPolicyId));
+
             r.RiskPolicy = result;
             return r;
         }
@@ -168,6 +174,10 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "NOTFOUND";
                 r.Description = $"Risk Policy ID [{riskPolicyId}] not found";
+            }
+            else
+            {
+                await _redis.DeleteAsync(CacheHelper.CreateRiskPolicyKey(orgId, riskPolicyId));
             }
 
             r.RiskPolicy = m;

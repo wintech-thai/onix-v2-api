@@ -41,6 +41,15 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
+        public MJob? GetJobByRefId(string orgId, string refId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var param = new VMJob { RefId = refId, Limit = 1, Offset = 1 };
+            var result = repository!.GetJobs(param).FirstOrDefault();
+
+            return result;
+        }
+
         public MVJob? DeleteJobById(string orgId, string jobId)
         {
             var r = new MVJob()
@@ -310,6 +319,45 @@ namespace Its.Onix.Api.Services
 
             //ยังไม่ต้อง trigger job ให้ทำงานทันที
             var result = AddJob(orgId, job, triggerJob); 
+            var newJob = result?.Job!;
+
+            return newJob;
+        }
+
+        public MJob CreatePayInRequestedJob(string orgId, string jobType, MPaymentRequest pmr, bool triggerJob = true)
+        {
+            //ยิง event ไปให้ job-dispatcher-payment.rb เอา PayerName ไป upsert เข้า IoC table เพื่อสะสม reputation history
+
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "JobService.CreatePayInRequestedJob()",
+                Type = jobType,
+                Status = "Pending",
+                Tags = jobType,
+                RefId = pmr?.Id.ToString(), //ใช้ Payment Request ID เป็น RefId เพื่อ link กลับมาดู processing log ได้
+
+                Parameters =
+                [
+                    new NameValue { Name = "EVENT_TYPE", Value = "PayIn.Requested" },
+                    new NameValue { Name = "PAYMENT_TYPE", Value = "PayIn" },
+
+                    new NameValue { Name = "ORG_ID", Value = orgId },
+                    new NameValue { Name = "PMR_ID", Value = pmr?.Id.ToString() },
+                    new NameValue { Name = "PMR_REF_ID", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID1", Value = pmr?.RefId1 },
+                    new NameValue { Name = "PMR_REF_ID2", Value = pmr?.RefId2 },
+                    new NameValue { Name = "PMR_REF_ID3", Value = pmr?.RefId3 },
+                    new NameValue { Name = "PMR_STATUS", Value = pmr?.Status },
+                    new NameValue { Name = "PAYER_NAME", Value = pmr?.PayerName },
+
+                    new NameValue { Name = "MERCHANT_ID", Value = pmr?.MerchantId },
+                    new NameValue { Name = "MERCHANT_CODE", Value = pmr?.MerchantCode },
+                    new NameValue { Name = "MERCHANT_NAME", Value = pmr?.MerchantName },
+                ]
+            };
+
+            var result = AddJob(orgId, job, triggerJob);
             var newJob = result?.Job!;
 
             return newJob;

@@ -122,6 +122,15 @@ namespace Its.Onix.Api.Database.Repositories
             return u;
         }
 
+        public async Task<MIoc?> GetIocByTypeAndValueV2(string iocType, string iocValue)
+        {
+            var u = await context!.Iocs!.AsExpandable()
+                .Where(p => p.OrgId!.Equals(orgId) && p.IocType!.Equals(iocType) && p.IocValue!.Equals(iocValue))
+                .FirstOrDefaultAsync();
+
+            return u;
+        }
+
         public async Task<MIoc?> DeleteIocByIdV2(string iocId)
         {
             Guid id = Guid.Parse(iocId);

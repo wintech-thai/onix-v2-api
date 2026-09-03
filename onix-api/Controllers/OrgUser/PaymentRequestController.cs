@@ -283,6 +283,22 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPaymentRequestJobByRefId/{paymentRequestId}")]
+        public async Task<IActionResult> GetPaymentRequestJobByRefId(string orgId, string paymentRequestId)
+        {
+            var pmtVm = await _paymentRequestSvc.GetPaymentRequestById(orgId, paymentRequestId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentRequest!;
+            var result = _jobService.GetJobByRefId(pmt.OrgId!, paymentRequestId);
+
+            return Ok(result);
+        }
+
         [AllowAnonymous]
         [HttpGet]
         [Route("org/{orgId}/action/VerifyPayInToken/{paymentRequestId}/{token}")]

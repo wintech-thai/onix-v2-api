@@ -187,6 +187,22 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [HttpGet]
+        [Route("org/global/action/GetPaymentRequestJobByRefId/{paymentRequestId}")]
+        public async Task<IActionResult> GetPaymentRequestJobByRefId(string paymentRequestId)
+        {
+            var pmtVm = await svc.GetPaymentRequestById("global", paymentRequestId);
+            if (pmtVm.Status != "OK")
+            {
+                return Ok(pmtVm);
+            }
+
+            var pmt = pmtVm.PaymentRequest!;
+            var result = _jobService.GetJobByRefId(pmt.OrgId!, paymentRequestId);
+
+            return Ok(result);
+        }
+
         //เช็คสถานะ payment กับ SCB ตรง ๆ ผ่าน billpayment/inquiry เผื่อ payment confirmation webhook จาก SCB ไม่มาถึงเรา
         [HttpGet]
         [Route("org/global/action/InquireScbPaymentStatus/{paymentRequestId}")]
