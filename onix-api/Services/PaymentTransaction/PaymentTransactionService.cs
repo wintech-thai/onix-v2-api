@@ -441,6 +441,7 @@ namespace Its.Onix.Api.Services
                 
                 GeneratedAmountStr = amtStr, //เอาเลขเศษสตางค์ไป match ด้วย
                 FromDate = fromDate, //ถ้ามาจากการ approve แบบ manual เราจะไม่ระบุช่วงเวลาย้อนหลัง
+                PayinIsPeerToPeer = false, //ให้หาแต่ payin request ที่ไม่ใช่ P2P
             };
 
             paymentNotiLine.PaymentRequestQuery = prParam;

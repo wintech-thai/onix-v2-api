@@ -339,6 +339,21 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(p2pPd);
             }
 
+            if (param.PayinIsPeerToPeer.HasValue)
+            {
+                var p2pPd = PredicateBuilder.New<MPaymentRequest>();
+                if (param.PayinIsPeerToPeer.Value)
+                {
+                    p2pPd = p2pPd.Or(p => p.PayinIsPeerToPeer == true);
+                }
+                else
+                {
+                    p2pPd = p2pPd.Or(p => p.PayinIsPeerToPeer == null || p.PayinIsPeerToPeer == false);
+                }
+
+                pd = pd.And(p2pPd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MPaymentRequest>();
