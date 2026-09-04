@@ -171,9 +171,9 @@ namespace Its.Onix.Api.Controllers
             request.MerchantId2 = Guid.Parse(merchantId);
             var result = await _paymentRequestSvc.AddPaymentRequestPayInP2P(orgId, request, mc);
 
-            if (result.Status == "OK")
+            if (result.Status != "ERROR_NO_P2P_ACCOUNT_MATCH")
             {
-                //มี payout ให้ match ได้
+                //มี payout ให้ match ได้ หรือเป็น error อื่น ๆ ที่ไม่ต้อง fallback ไปใช้ bank account กลาง
                 result.PaymentResponse!.QrCodeImage = "";
                 return Ok(result);
             }
