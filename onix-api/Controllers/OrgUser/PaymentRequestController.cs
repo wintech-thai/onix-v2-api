@@ -174,7 +174,11 @@ namespace Its.Onix.Api.Controllers
             if (result.Status != "ERROR_NO_P2P_ACCOUNT_MATCH")
             {
                 //มี payout ให้ match ได้ หรือเป็น error อื่น ๆ ที่ไม่ต้อง fallback ไปใช้ bank account กลาง
-                result.PaymentResponse!.QrCodeImage = "";
+                //(รวมถึง REJECTED_BY_RISK_POLICY ซึ่งไม่มี PaymentResponse เพราะ request ถูก reject ไปแล้ว)
+                if (result.Status == "OK" && result.PaymentResponse != null)
+                {
+                    result.PaymentResponse.QrCodeImage = "";
+                }
                 return Ok(result);
             }
 

@@ -128,6 +128,7 @@ namespace Its.Onix.Api.Database.Repositories
                     e.UserName,
                     e.ClientIp,
                     e.StatusCode,
+                    e.LatencyMs,
                 })
                 .ToListAsync();
 
@@ -194,6 +195,19 @@ namespace Its.Onix.Api.Database.Repositories
                 .Select(x => new VMAggBucket { Key = x.Key.ToString(), DocCount = x.Count })
                 .ToList();
 
+            var byApiLatency = items
+                .Where(e => !string.IsNullOrEmpty(e.ApiName) && e.LatencyMs.HasValue)
+                .GroupBy(e => e.ApiName!)
+                .Select(g => new VMLatencyBucket
+                {
+                    Key = g.Key,
+                    AvgLatencyMs = g.Average(e => (double)e.LatencyMs!.Value),
+                    DocCount = g.Count(),
+                })
+                .OrderByDescending(x => x.AvgLatencyMs)
+                .Take(10)
+                .ToList();
+
             var bruteforce = items
                 .Where(e => e.StatusCode == 401 && !string.IsNullOrEmpty(e.ClientIp))
                 .GroupBy(e => e.ClientIp!)
@@ -209,6 +223,7 @@ namespace Its.Onix.Api.Database.Repositories
                 ByUser = new VMAggBuckets { Buckets = byUser },
                 ByIp = new VMAggBuckets { Buckets = byIp },
                 ByStatus = new VMAggBuckets { Buckets = byStatus },
+                ByApiLatency = byApiLatency,
                 Bruteforce = new VMBruteforceAgg { ByIp = new VMAggBuckets { Buckets = bruteforce } },
             };
         }
@@ -275,6 +290,7 @@ namespace Its.Onix.Api.Database.Repositories
                     e.UserName,
                     e.ClientIp,
                     e.StatusCode,
+                    e.LatencyMs,
                 })
                 .ToListAsync();
 
@@ -341,6 +357,19 @@ namespace Its.Onix.Api.Database.Repositories
                 .Select(x => new VMAggBucket { Key = x.Key.ToString(), DocCount = x.Count })
                 .ToList();
 
+            var byApiLatency = items
+                .Where(e => !string.IsNullOrEmpty(e.ApiName) && e.LatencyMs.HasValue)
+                .GroupBy(e => e.ApiName!)
+                .Select(g => new VMLatencyBucket
+                {
+                    Key = g.Key,
+                    AvgLatencyMs = g.Average(e => (double)e.LatencyMs!.Value),
+                    DocCount = g.Count(),
+                })
+                .OrderByDescending(x => x.AvgLatencyMs)
+                .Take(10)
+                .ToList();
+
             var bruteforce = items
                 .Where(e => e.StatusCode == 401 && !string.IsNullOrEmpty(e.ClientIp))
                 .GroupBy(e => e.ClientIp!)
@@ -356,6 +385,7 @@ namespace Its.Onix.Api.Database.Repositories
                 ByUser = new VMAggBuckets { Buckets = byUser },
                 ByIp = new VMAggBuckets { Buckets = byIp },
                 ByStatus = new VMAggBuckets { Buckets = byStatus },
+                ByApiLatency = byApiLatency,
                 Bruteforce = new VMBruteforceAgg { ByIp = new VMAggBuckets { Buckets = bruteforce } },
             };
         }

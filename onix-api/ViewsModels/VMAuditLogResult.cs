@@ -37,8 +37,25 @@ namespace Its.Onix.Api.ViewsModels
         [JsonPropertyName("by_status")]
         public VMAggBuckets ByStatus { get; set; } = new();
 
+        [JsonPropertyName("by_api_latency")]
+        public List<VMLatencyBucket> ByApiLatency { get; set; } = new();
+
         [JsonPropertyName("bruteforce")]
         public VMBruteforceAgg Bruteforce { get; set; } = new();
+    }
+
+    //Average latency (ms) grouped by ApiName, sorted highest-first — ใช้ดูว่าควร tune performance API ไหนก่อน
+    [ExcludeFromCodeCoverage]
+    public class VMLatencyBucket
+    {
+        [JsonPropertyName("key")]
+        public string Key { get; set; } = "";
+
+        [JsonPropertyName("avg_latency_ms")]
+        public double AvgLatencyMs { get; set; }
+
+        [JsonPropertyName("doc_count")]
+        public int DocCount { get; set; }
     }
 
     [ExcludeFromCodeCoverage]
