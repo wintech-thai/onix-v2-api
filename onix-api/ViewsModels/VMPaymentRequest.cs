@@ -14,5 +14,6 @@ namespace Its.Onix.Api.ViewsModels
         public string? RefId1 { get; set; }
         public string? PayinRequestId { get; set; }
         public bool? IsPeerToPeer { get; set; }
+        public bool? PayinIsPeerToPeer { get; set; }
     }
 }
