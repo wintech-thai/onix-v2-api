@@ -574,6 +574,31 @@ namespace Its.Onix.Api.Controllers
                         }   
                     }
                 }
+                else if ((title == "KBank Live") && !string.IsNullOrEmpty(text))
+                {
+                    pmt.DestinationBankCode = "KBANK";
+
+                    if (bankTxObj != null)
+                    {
+                        //มาจาก notification การโอนเงินผ่านทาง Line API agent
+                        var evt = bankTxObj["eventType"].ToString();
+                        if (evt == "tx_in")
+                        {
+                            decimal.TryParse(bankTxObj["amount"].ToString(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal amt);
+                            pmt.PaymentAmount = amt;
+                            pmt.DestinationAccountNo = bankTxObj["destinationAccount"].ToString();
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        //Android app
+                        return null;
+                    }
+                }
             }
 
             return pmt;

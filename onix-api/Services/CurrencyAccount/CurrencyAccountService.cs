@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Services
         private readonly ICurrencyAccountRepository? repository = null;
         private readonly IPointRepository? _pointRepo = null;
         private readonly List<MBank> _banks;
+        private readonly List<MCryptoCurrency> _cryptoCurrencies;
         private readonly IRedisHelper _redis;
 
         public CurrencyAccountService(ICurrencyAccountRepository repo, IPointRepository pointRepo, IRedisHelper redis) : base()
@@ -19,6 +20,29 @@ namespace Its.Onix.Api.Services
             repository = repo;
             _pointRepo = pointRepo;
             _redis = redis;
+
+            _cryptoCurrencies = [
+                new() { Code = "BTC", Name = "Bitcoin", DefaultNetwork = "BITCOIN", DefaultDecimal = 8 },
+                new() { Code = "ETH", Name = "Ethereum", DefaultNetwork = "ETHEREUM", DefaultDecimal = 18 },
+                new() { Code = "USDT", Name = "Tether", DefaultNetwork = "TRON", DefaultDecimal = 6, IsToken = true },
+                new() { Code = "USDC", Name = "USD Coin", DefaultNetwork = "ETHEREUM", DefaultDecimal = 6, IsToken = true },
+                new() { Code = "BNB", Name = "BNB", DefaultNetwork = "BSC", DefaultDecimal = 18 },
+                new() { Code = "XRP", Name = "Ripple", DefaultNetwork = "RIPPLE", DefaultDecimal = 6 },
+                new() { Code = "SOL", Name = "Solana", DefaultNetwork = "SOLANA", DefaultDecimal = 9 },
+                new() { Code = "ADA", Name = "Cardano", DefaultNetwork = "CARDANO", DefaultDecimal = 6 },
+                new() { Code = "DOGE", Name = "Dogecoin", DefaultNetwork = "DOGECOIN", DefaultDecimal = 8 },
+                new() { Code = "TRX", Name = "TRON", DefaultNetwork = "TRON", DefaultDecimal = 6 },
+                new() { Code = "TON", Name = "Toncoin", DefaultNetwork = "TON", DefaultDecimal = 9 },
+                new() { Code = "DOT", Name = "Polkadot", DefaultNetwork = "POLKADOT", DefaultDecimal = 10 },
+                new() { Code = "MATIC", Name = "Polygon", DefaultNetwork = "POLYGON", DefaultDecimal = 18 },
+                new() { Code = "LTC", Name = "Litecoin", DefaultNetwork = "LITECOIN", DefaultDecimal = 8 },
+                new() { Code = "KAS", Name = "Kaspa", DefaultNetwork = "KASPA", DefaultDecimal = 8 },
+                new() { Code = "AVAX", Name = "Avalanche", DefaultNetwork = "AVALANCHE", DefaultDecimal = 18 },
+                new() { Code = "SHIB", Name = "Shiba Inu", DefaultNetwork = "ETHEREUM", DefaultDecimal = 18, IsToken = true },
+                new() { Code = "LINK", Name = "Chainlink", DefaultNetwork = "ETHEREUM", DefaultDecimal = 18, IsToken = true },
+                new() { Code = "ATOM", Name = "Cosmos", DefaultNetwork = "COSMOS", DefaultDecimal = 6 },
+                new() { Code = "XLM", Name = "Stellar", DefaultNetwork = "STELLAR", DefaultDecimal = 7 },
+            ];
 
             _banks = [
                 new() 
@@ -356,610 +380,267 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-/*
-
-
-
-        public async Task<MVBankAccount> GetBankAccountById(string orgId, string bankAccountId)
+        public List<MCryptoCurrency> GetAvailableCryptoCurrencies()
         {
-            repository!.SetCustomOrgId(orgId);
-
-            var r = new MVBankAccount()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
-
-                return r;
-            }
-
-            var result = await repository!.GetBankAccountById(bankAccountId);
-            if (result == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-
-            var bc = result.BankConfig;
-            if (!string.IsNullOrEmpty(bc))
-            {
-                var obj = JsonSerializer.Deserialize<MBankAccountConfig>(bc);
-                result.BankConfigObj = obj;                
-            }
-
-            // ดึงข้อมูลจาก cache
-            var currentDailyTxBalance = await GetBankAccountCurrentDailyTxBalance("global", bankAccountId);
-            result.CurrentPayinDailyTxAmount = currentDailyTxBalance.TxAmount;
-            
-            result.IsNativeQrSupport = IsNativeQrSupport(result);
-
-            _pointRepo!.SetCustomOrgId(result.OrgId!); //ตรงนี้จะเป็น global
-            var wallet = await _pointRepo!.GetWalletByBankAccountId(bankAccountId);
-            if (wallet == null)
-            {
-                //ยังไม่เคยสร้าง wallet มาก่อนก็สร้างให้เลย
-                var w = new MWallet()
-                {
-                    Name = $"THB:{bankAccountId}",
-                    BankAccountId = bankAccountId,
-                    PointBalance = 0,
-                    PointBalanceDecimal = 0,
-                    Tags = $"BankCode={result.BankCode}, BankAccountName={result.AccountNumber}, BankAccountName={result.AccountName}",
-                    Description = $"Auto generated wallet for THB currency for [{result.AccountName}]",
-                };
-
-                var _ = await _pointRepo.AddWallet(w);
-            }
-
-            r.BankAccount = result;
-            r.BankAccount.BankConfig = "";
-
-            return r;
+            return _cryptoCurrencies;
         }
 
-        public async Task<MVBankAccount> AddBankAccount(string orgId, MBankAccount bankAccount)
+        public async Task<MVCurrencyAccount> AddCryptoCurrencyAccount(string orgId, MCurrencyAccount currencyAccount)
         {
             repository!.SetCustomOrgId(orgId);
 
-            var r = new MVBankAccount()
+            var r = new MVCurrencyAccount()
             {
                 Status = "OK",
                 Description = "Success",
             };
 
-            if (string.IsNullOrEmpty(bankAccount.BankCode))
+            if (string.IsNullOrEmpty(currencyAccount.Currency))
             {
-                r.Status = "BANK_CODE_MISSING";
-                r.Description = $"Bank Code is missing!!!";
+                r.Status = "CURRENCY_CODE_MISSING";
+                r.Description = $"Currency code is missing!!!";
 
                 return r;
             }
 
-            var cat = bankAccount.AccountCategory;
+            var cat = currencyAccount.AccountType; //PayIn, PayOut, Transit
 
-            if (string.IsNullOrEmpty(bankAccount.AccountCategory))
+            if (string.IsNullOrEmpty(currencyAccount.AccountType))
             {
-                r.Status = "BANK_ACCOUNT_CATEGORY_MISSING";
-                r.Description = $"Bank account category is missing!!!";
+                r.Status = "CURRENCY_ACCOUNT_TYPE_MISSING";
+                r.Description = $"Currency account type is missing!!!";
 
                 return r;
             }
 
             if ((cat != "PayIn") && (cat != "PayOut") && (cat != "Transit"))
             {
-                r.Status = "BANK_ACCOUNT_CATEGORY_INVALID";
-                r.Description = $"Bank account category must be PayIn or PayOut or Transit !!!";
+                r.Status = "CURRENCY_ACCOUNT_TYPE_INVALID";
+                r.Description = $"Currency account type must be PayIn or PayOut or Transit !!!";
 
                 return r;
             }
 
-            if (string.IsNullOrEmpty(bankAccount.AccountName))
+            if (string.IsNullOrEmpty(currencyAccount.AccountLevel))
             {
-                r.Status = "ACCOUNT_NAME_MISSING";
-                r.Description = $"Bank Account name is missing!!!";
+                r.Status = "ACCOUNT_LEVEL_MISSING";
+                r.Description = $"Account level is missing!!!";
 
                 return r;
             }
 
-            if (string.IsNullOrEmpty(bankAccount.AccountNumber))
+            if (string.IsNullOrEmpty(currencyAccount.CryptoWalletNetwork))
             {
-                r.Status = "ACCOUNT_NUMBER_MISSING";
-                r.Description = $"Bank Account number is missing!!!";
+                r.Status = "CRYPTO_WALLET_NETWORK_MISSING";
+                r.Description = $"Crypto wallet network is missing!!!";
 
                 return r;
             }
 
-            var isAccountNoExist = await repository!.IsBankAccountNoExist(bankAccount.AccountNumber);
-            if (isAccountNoExist)
+            if (string.IsNullOrEmpty(currencyAccount.CryptoExtendedPublicKey))
             {
-                r.Status = "ACCOUNT_NUMBER_DUPLICATE";
-                r.Description = $"Bank Account number [{bankAccount.AccountNumber}] already exist!!!";
+                r.Status = "CRYPTO_EXTENDED_PUBLIC_KEY_MISSING";
+                r.Description = $"Crypto extended public key is missing!!!";
 
                 return r;
             }
 
-            var isNameExist = await repository!.IsBankAccountNameExist(bankAccount.BankCode, bankAccount.AccountName);
-            if (isNameExist)
+            var isEpkExist = await repository!.IsCrypotCurrencyEpkExist(currencyAccount.Currency, currencyAccount.CryptoExtendedPublicKey);
+            if (isEpkExist)
             {
-                r.Status = "ACCOUNT_NAME_DUPLICATE";
-                r.Description = $"Bank Account name [{bankAccount.AccountName}] already exist!!!";
+                r.Status = "CRYPTO_EXTENDED_PUBLIC_KEY_DUPLICATE";
+                r.Description = $"Extended public key already exists for currency [{currencyAccount.Currency}]!!!";
 
                 return r;
             }
 
-            bankAccount.Status = "Pending";
-            var result = await repository!.AddBankAccount(bankAccount);
-
+            currencyAccount.CurrencyCategory = "CRYPTO";
+            currencyAccount.Status = "Pending";
+            var result = await repository!.AddCurrencyAccount(currencyAccount);
 
             if (result != null)
             {
-                var bankAccountId = result.Id.ToString()!;
+                var currencyAccountId = result.Id.ToString()!;
 
                 //เพิ่ม wallet ให้อัตโนมัติ
                 _pointRepo!.SetCustomOrgId(result.OrgId!); //ตรงนี้จะเป็น global
-                var wallet = await _pointRepo!.GetWalletByBankAccountId(bankAccountId);
+                var wallet = await _pointRepo!.GetWalletByRefId(currencyAccountId);
                 if (wallet == null)
                 {
                     //ยังไม่เคยสร้าง wallet มาก่อนก็สร้างให้เลย
                     var w = new MWallet()
                     {
-                        Name = $"THB:{bankAccountId}",
-                        BankAccountId = bankAccountId,
+                        Name = $"{currencyAccount.Currency}:{currencyAccountId}",
+                        BankAccountId = currencyAccountId,
                         PointBalance = 0,
                         PointBalanceDecimal = 0,
-                        Tags = $"BankCode={result.BankCode}, BankAccountName={result.AccountNumber}, BankAccountName={result.AccountName}",
-                        Description = $"Auto generated wallet for THB currency for [{result.AccountName}]",
+                        Tags = $"Currency={currencyAccount.Currency}, Id={currencyAccountId}",
+                        Description = $"Auto generated wallet for [{currencyAccount.Currency}] crypto account",
                     };
 
                     var _ = await _pointRepo.AddWallet(w);
                 }
             }
 
-            r.BankAccount = result;
+            r.CurrencyAccount = result;
 
             return r;
         }
 
-        public async Task<MVBankAccount> DeleteBankAccountById(string orgId, string bankAccountId)
+        public async Task<List<MCurrencyAccount>> GetCurrencyAccounts(string orgId, VMCurrencyAccount param)
         {
             repository!.SetCustomOrgId(orgId);
 
-            var r = new MVBankAccount()
+            var merchantCountAggr = await repository.GetMerchantCountByCurrencyAccountId();
+            var merchantCountDict = merchantCountAggr.ToDictionary(g => g.CurrencyAccountId!, g => g.MerchantCount);
+
+            _pointRepo!.SetCustomOrgId(orgId);
+            var balanceAggr = await _pointRepo.GetWalletBalancesGroupByBankAccountId();
+            var balanceDict = balanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
+
+            var accounts = await repository.GetCurrencyAccounts(param);
+
+            foreach (var account in accounts)
             {
-                Status = "OK",
-                Description = "Success"
-            };
+                var id = account.Id.ToString();
 
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
-
-                return r;
-            }
-
-            var m = await repository!.DeleteBankAccountById(bankAccountId);
-            if (m == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-
-            r.BankAccount = m;
-            return r;
-        }
-
-        public async Task<List<MBankAccount>> GetBankAccounts(string orgId, VMBankAccount param)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var bankAccountMerchantAggr = await repository.GetMerchantCountByBankAccountId();
-            var dict1 = bankAccountMerchantAggr.ToDictionary(g => g.BankAccountId!, g => g.MerchantCount);
-
-            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
-            var dict2 = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
-
-            var bankAccounts = await repository!.GetBankAccounts(param);
-
-            foreach (var bankAccount in bankAccounts)
-            {
-                var bankAccountId = bankAccount.Id.ToString();
-
-                if (!string.IsNullOrEmpty(bankAccountId) && dict1.TryGetValue(bankAccountId, out var merchantCount))
+                if (!string.IsNullOrEmpty(id) && merchantCountDict.TryGetValue(id, out var merchantCount))
                 {
-                    bankAccount.MerchantLinkCount = merchantCount;
+                    account.MerchantLinkCount = merchantCount;
                 }
                 else
                 {
-                    bankAccount.MerchantLinkCount = 0;
+                    account.MerchantLinkCount = 0;
                 }
 
-                if (bankAccount.AccountLevel == "Global")
+                if (account.AccountLevel == "Global")
                 {
-                    bankAccount.MerchantLinkCount = 99999; //เป็น global
+                    account.MerchantLinkCount = 99999; //เป็น global
                 }
 
-                bankAccount.CurrentWalletBalance = 0;
-                if (dict2.TryGetValue(bankAccount.Id.ToString()!, out var currentWalletBalance))
+                account.CurrentWalletBalance = 0;
+                if (!string.IsNullOrEmpty(id) && balanceDict.TryGetValue(id, out var currentWalletBalance))
                 {
-                    bankAccount.CurrentWalletBalance = currentWalletBalance;
+                    account.CurrentWalletBalance = currentWalletBalance;
                 }
 
-                bankAccount.IsNativeQrSupport = IsNativeQrSupport(bankAccount);
-                bankAccount.BankConfig = "";
+                account.BankConfig = "";
             }
 
-            return bankAccounts;
+            return accounts;
         }
 
-        public async Task<int> GetBankAccountCount(string orgId, VMBankAccount param)
+        public async Task<int> GetCurrencyAccountCount(string orgId, VMCurrencyAccount param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = await repository!.GetBankAccountCount(param);
+            var result = await repository!.GetCurrencyAccountCount(param);
 
             return result;
         }
 
-        public async Task<MVBankAccount> UpdateBankAccountById(string orgId, string bankAccountId, MBankAccount bankAccount)
+        public async Task<MVCurrencyAccount> UpdateCurrencyAccountById(string orgId, string currencyAccountId, MCurrencyAccount currencyAccount)
         {
             repository!.SetCustomOrgId(orgId);
 
-            var r = new MVBankAccount()
+            var r = new MVCurrencyAccount()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            if (!ServiceUtils.IsGuidValid(currencyAccountId))
             {
                 r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+                r.Description = $"Currency Account ID [{currencyAccountId}] format is invalid";
 
                 return r;
             }
 
-            if (string.IsNullOrEmpty(bankAccount.BankCode))
+            if (string.IsNullOrEmpty(currencyAccount.AccountLevel))
             {
-                r.Status = "BANK_CODE_MISSING";
-                r.Description = $"Bank Code is missing!!!";
+                r.Status = "ACCOUNT_LEVEL_MISSING";
+                r.Description = $"Account level is missing!!!";
 
                 return r;
             }
 
-            if (string.IsNullOrEmpty(bankAccount.AccountName))
-            {
-                r.Status = "ACCOUNT_NAME_MISSING";
-                r.Description = $"Bank Account name is missing!!!";
-
-                return r;
-            }
-
-            if (string.IsNullOrEmpty(bankAccount.AccountNumber))
-            {
-                r.Status = "ACCOUNT_NUMBER_MISSING";
-                r.Description = $"Bank Account number is missing!!!";
-
-                return r;
-            }
-
-            var code = bankAccount.AccountNumber;
-            var br1 = await repository!.GetBankAccountByAccountNo(code!);
-            if ((br1 != null) && (br1.Id.ToString() != bankAccountId))
-            {
-                r.Status = "BANK_ACCOUNT_NUMBER_DUPLICATE";
-                r.Description = $"Bank Account number [{code}] already exist!!!";
-
-                return r;
-            }
-
-            var br2 = await repository!.GetBankAccountByAccountName(bankAccount.BankCode!, bankAccount.AccountName!);
-            if ((br2 != null) && (br2.Id.ToString() != bankAccountId))
-            {
-                r.Status = "BANK_ACCOUNT_NAME_DUPLICATE";
-                r.Description = $"Bank Account name [{bankAccount.AccountName}] already exist!!!";
-
-                return r;
-            }
-
-            var result = await repository!.UpdateBankAccountById(bankAccountId, bankAccount);
+            var result = await repository!.UpdateCurrencyAccountById(currencyAccountId, currencyAccount);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] not found for the organization [{orgId}]";
+                r.Description = $"Currency Account ID [{currencyAccountId}] not found for the organization [{orgId}]";
 
                 return r;
             }
 
-            r.BankAccount = result;
+            r.CurrencyAccount = result;
 
             return r;
         }
 
-        public async Task<MVBankAccount?> UpdateBankAccountConfigById(string orgId, string bankAccountId, MBankAccountConfig bankConfig)
+        public async Task<MVCurrencyAccount?> UpdateCurrencyAccountStatusById(string orgId, string currencyAccountId, string status)
         {
             repository!.SetCustomOrgId(orgId);
-            var r = new MVBankAccount()
+
+            var r = new MVCurrencyAccount()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            if (!ServiceUtils.IsGuidValid(currencyAccountId))
             {
                 r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+                r.Description = $"Currency Account ID [{currencyAccountId}] format is invalid";
 
                 return r;
             }
 
-            var jsonString = "{}";
-            if (bankConfig != null)
-            {
-                jsonString = JsonSerializer.Serialize(bankConfig);
-            }
-
-            var result = await repository!.UpdateBankAccountConfigById(bankAccountId, jsonString);
+            var result = await repository!.UpdateCurrencyAccountStatusById(currencyAccountId, status);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] not found";
+                r.Description = $"Currency Account ID [{currencyAccountId}] not found";
 
                 return r;
             }
 
-            r.BankAccount = result;
-            r.BankAccount.BankConfig = "";
+            r.CurrencyAccount = result;
 
             return r;
         }
 
-        public async Task<MVBankAccount?> UpdateBankAccountStatusById(string orgId, string bankAccountId, string status)
+        public async Task<MVCurrencyAccount> DeleteCurrencyAccountById(string orgId, string currencyAccountId)
         {
             repository!.SetCustomOrgId(orgId);
-            var r = new MVBankAccount()
+
+            var r = new MVCurrencyAccount()
             {
                 Status = "OK",
                 Description = "Success"
             };
 
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            if (!ServiceUtils.IsGuidValid(currencyAccountId))
             {
                 r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+                r.Description = $"Currency Account ID [{currencyAccountId}] format is invalid";
 
                 return r;
             }
 
-            var result = await repository!.UpdateBankAccountStatusById(bankAccountId, status);
+            var result = await repository!.DeleteCurrencyAccountById(currencyAccountId);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] not found";
+                r.Description = $"Currency Account ID [{currencyAccountId}] not found for the organization [{orgId}]";
 
                 return r;
             }
 
-            r.BankAccount = result;
+            r.CurrencyAccount = result;
 
             return r;
         }
 
-        public List<MBank> GetAvailableBanks()
-        {
-            var banks = _banks
-                .Where(b => b.Type.Equals("Native", StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            return banks;
-        }
-
-        public List<MBank> GetAvailableSupportQrBanks()
-        {
-            //PromptPay ใช้สร้าง QR เองได้อยู่แล้ว ส่วนธนาคารแบบ Native ต้องเช็ค QrSupportFlag ว่ารองรับ native QR หรือไม่ (เช่น SCB)
-            var banks = _banks
-                .Where(b => b.Type.Equals("PromptPay", StringComparison.OrdinalIgnoreCase) || b.QrSupportFlag)
-                .ToList();
-
-            return banks;
-        }
-
-        public async Task<List<MBankAccountMerchant>> GetMerchantsForBankAccount(string orgId, string bankAccountId)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var result = await repository.GetMerchantsForBankAccount(bankAccountId);
-            return result;
-        }
-
-        public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsForMerchant(string orgId, string merchantId)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var result = await repository.GetPayInBankAccountsForMerchant(merchantId);
-            return result;
-        }
-
-        public async Task<List<MBankAccount>> GetPayInBankAccountsWithGlobalAll(string orgId)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
-            var dict2 = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
-
-            var param = new VMBankAccount()
-            {
-                AccountCategory = "PayIn",
-            };
-            var allBankAccounts = await repository.GetAllBankAccounts(param);
-
-            foreach (var bankAccount in allBankAccounts)
-            {
-                var bankAccountId = bankAccount.Id.ToString()!;
-                bankAccount.CurrentWalletBalance = 0;
-                if (dict2.TryGetValue(bankAccountId, out var currentWalletBalance))
-                {
-                    bankAccount.CurrentWalletBalance = currentWalletBalance;
-                }
-            }
-
-            return allBankAccounts;
-        }
-
-        public async Task<List<MBankAccount>> GetTransitBankAccountsAll(string orgId)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
-            var dict2 = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
-
-            var param = new VMBankAccount()
-            {
-                AccountCategory = "Transit",
-            };
-            var allBankAccounts = await repository.GetAllBankAccounts(param);
-
-            foreach (var bankAccount in allBankAccounts)
-            {
-                var bankAccountId = bankAccount.Id.ToString()!;
-                bankAccount.CurrentWalletBalance = 0;
-                if (dict2.TryGetValue(bankAccountId, out var currentWalletBalance))
-                {
-                    bankAccount.CurrentWalletBalance = currentWalletBalance;
-                }
-            }
-
-            return allBankAccounts;
-        }
-
-        public async Task<List<MBankAccountMerchant>> GetPayInBankAccountsWithGlobalForMerchant(string orgId, string merchantId)
-        {
-            repository!.SetCustomOrgId(orgId);
-
-            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
-            var balanceDict = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
-
-            var merchantBankAccounts = await repository.GetPayInBankAccountsForMerchant(merchantId);
-            foreach (var ba in merchantBankAccounts)
-            {
-                var baId = ba.BankAccountId ?? ba.Id?.ToString() ?? "";
-                ba.CurrentBalance = balanceDict.TryGetValue(baId, out var bal) ? (double?)bal : 0;
-            }
-
-            var param = new VMBankAccount()
-            {
-                AccountCategory = "PayIn",
-                AccountLevel = "Global",
-            };
-            repository!.SetCustomOrgId("global");
-            var globalBankAccounts = await repository.GetAllBankAccounts(param);
-
-            var combinedBankAccounts = merchantBankAccounts
-                .Concat(
-                    globalBankAccounts
-                        .Where(g => !merchantBankAccounts.Any(m => m.BankAccountId == g.Id.ToString()))
-                        .Select(g => new MBankAccountMerchant
-                        {
-                            Id = g.Id,
-                            BankCode = g.BankCode,
-                            AccountNumber = g.AccountNumber,
-                            AccountName = g.AccountName,
-                            PromptPayId = g.PromptPayId,
-                            AccountType = g.AccountType,
-                            AccountCategory = g.AccountCategory,
-                            AccountLevel = g.AccountLevel,
-                            PayinMinAmount = g.PayinMinAmount,
-                            PayinMaxAmount = g.PayinMaxAmount,
-                            PayoutMinAmount = g.PayoutMinAmount,
-                            PayoutMaxAmount = g.PayoutMaxAmount,
-                            DailyQuota = g.DailyQuota,
-                            CurrentDailyPayinAmount = g.CurrentDailyPayinAmount,
-                            CurrentDailyPayinCount = g.CurrentDailyPayinCount,
-                            CurrentBalance = balanceDict.TryGetValue(g.Id.ToString()!, out var gBal) ? (double?)gBal : 0,
-                            DailyPayinCountQuota = g.DailyPayinCountQuota,
-                            BankAccountStatus = g.Status,
-                        })
-                )
-                .ToList();
-
-            return combinedBankAccounts;
-        }
-
-        public async Task<List<MBankAccountMerchant>> GetPayOutBankAccountsForMerchant(string orgId, string merchantId)
-        {
-            repository!.SetCustomOrgId("global");
-
-            var result = await repository.GetPayOutBankAccountsForMerchant(merchantId);
-            return result;
-        }
-
-        public async Task<MVBankAccountMerchant?> SelectMerchant(string orgId, string bankAccountId, string merchantId)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var r = new MVBankAccountMerchant()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
-
-                return r;
-            }
-
-            var result = await repository.SelectMerchant(bankAccountId, merchantId);
-            if (result == null)            
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] or Merchant ID [{merchantId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-            
-            r.BankAccountMerchant = result;
-            return r;
-        }
-
-        public async Task<MVBankAccountMerchant?> UnSelectMerchant(string orgId,string bankAccountId, string merchantId)
-        {
-            repository!.SetCustomOrgId(orgId);
-            var r = new MVBankAccountMerchant()
-            {
-                Status = "OK",
-                Description = "Success"
-            };
-
-            if (!ServiceUtils.IsGuidValid(bankAccountId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
-
-                return r;
-            }
-
-            var result = await repository.UnSelectMerchant(bankAccountId, merchantId);
-            if (result == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Bank Account ID [{bankAccountId}] or Merchant ID [{merchantId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-
-            r.BankAccountMerchant = result;
-            return r;
-        }
-*/
     }
 }
