@@ -31,14 +31,6 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
-        [HttpGet]
-        [Route("org/global/action/GetAvailableCryptoCurrencies")]
-        public IActionResult GetAvailableCryptoCurrencies()
-        {
-            var result = svc.GetAvailableCryptoCurrencies();
-            return Ok(result);
-        }
-
         [HttpPost]
         [Route("org/global/action/GetCurrencyAccounts")]
         public async Task<IActionResult> GetCurrencyAccounts([FromBody] VMCurrencyAccount param)
