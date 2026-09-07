@@ -173,6 +173,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAgentPolicyService, AgentPolicyService>();
             builder.Services.AddScoped<IMerchantService, MerchantService>();
             builder.Services.AddScoped<IBankAccountService, BankAccountService>();
+            builder.Services.AddScoped<ICurrencyAccountService, CurrencyAccountService>();
             builder.Services.AddScoped<IPaymentRequestService, PaymentRequestService>();
             builder.Services.AddScoped<IPaymentTransactionService, PaymentTransactionService>();
             builder.Services.AddScoped<ISummaryService, SummaryService>();
@@ -228,6 +229,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IBearerAuthenticationCustomerRepo, BearerAuthenticationCustomerRepo>();
             builder.Services.AddScoped<IBearerAuthenticationRepo, BearerAuthenticationRepo>();
             builder.Services.AddScoped<IBankAccountRepository, BankAccountRepository>();
+            builder.Services.AddScoped<ICurrencyAccountRepository, CurrencyAccountRepository>();
             builder.Services.AddScoped<IPaymentRequestRepository, PaymentRequestRepository>();
             builder.Services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
             builder.Services.AddScoped<ISummaryRepository, SummaryRepository>();

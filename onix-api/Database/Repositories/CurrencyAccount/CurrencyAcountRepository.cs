@@ -236,11 +236,6 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.TxMaxAmount = currencyAccount.TxMaxAmount;
                 existing.DailyTotalAmountLimit = currencyAccount.DailyTotalAmountLimit;
                 existing.DailyTotalCountLimit = currencyAccount.DailyTotalCountLimit;
-                existing.DecimalAction = currencyAccount.DecimalAction;
-                existing.DecimalAction = currencyAccount.DecimalAction;
-                existing.DecimalAction = currencyAccount.DecimalAction;
-                existing.DecimalAction = currencyAccount.DecimalAction;
-                
 
                 //existing.CryptoWalletNetwork = currencyAccount.CryptoWalletNetwork;
                 //existing.CryptoWalletType = currencyAccount.CryptoWalletType;
