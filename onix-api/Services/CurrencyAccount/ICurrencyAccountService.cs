@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     public interface ICurrencyAccountService
     {
         public Task<MVCurrencyAccount> GetCurrencyAccountById(string orgId, string currencyAccountId);
+        public List<MCryptoCurrency> GetAvailableCryptoCurrencies();
         public Task<MVCurrencyAccount> AddFiatCurrencyAccount(string orgId, MCurrencyAccount currencyAccount);
         public Task<MVCurrencyAccount> AddCryptoCurrencyAccount(string orgId, MCurrencyAccount currencyAccount);
         public Task<List<MCurrencyAccount>> GetCurrencyAccounts(string orgId, VMCurrencyAccount param);

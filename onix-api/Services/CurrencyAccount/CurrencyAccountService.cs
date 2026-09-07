@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Services
         private readonly ICurrencyAccountRepository? repository = null;
         private readonly IPointRepository? _pointRepo = null;
         private readonly List<MBank> _banks;
+        private readonly List<MCryptoCurrency> _cryptoCurrencies;
         private readonly IRedisHelper _redis;
 
         public CurrencyAccountService(ICurrencyAccountRepository repo, IPointRepository pointRepo, IRedisHelper redis) : base()
@@ -19,6 +20,29 @@ namespace Its.Onix.Api.Services
             repository = repo;
             _pointRepo = pointRepo;
             _redis = redis;
+
+            _cryptoCurrencies = [
+                new() { Code = "BTC", Name = "Bitcoin", DefaultNetwork = "BITCOIN", DefaultDecimal = 8 },
+                new() { Code = "ETH", Name = "Ethereum", DefaultNetwork = "ETHEREUM", DefaultDecimal = 18 },
+                new() { Code = "USDT", Name = "Tether", DefaultNetwork = "TRON", DefaultDecimal = 6, IsToken = true },
+                new() { Code = "USDC", Name = "USD Coin", DefaultNetwork = "ETHEREUM", DefaultDecimal = 6, IsToken = true },
+                new() { Code = "BNB", Name = "BNB", DefaultNetwork = "BSC", DefaultDecimal = 18 },
+                new() { Code = "XRP", Name = "Ripple", DefaultNetwork = "RIPPLE", DefaultDecimal = 6 },
+                new() { Code = "SOL", Name = "Solana", DefaultNetwork = "SOLANA", DefaultDecimal = 9 },
+                new() { Code = "ADA", Name = "Cardano", DefaultNetwork = "CARDANO", DefaultDecimal = 6 },
+                new() { Code = "DOGE", Name = "Dogecoin", DefaultNetwork = "DOGECOIN", DefaultDecimal = 8 },
+                new() { Code = "TRX", Name = "TRON", DefaultNetwork = "TRON", DefaultDecimal = 6 },
+                new() { Code = "TON", Name = "Toncoin", DefaultNetwork = "TON", DefaultDecimal = 9 },
+                new() { Code = "DOT", Name = "Polkadot", DefaultNetwork = "POLKADOT", DefaultDecimal = 10 },
+                new() { Code = "MATIC", Name = "Polygon", DefaultNetwork = "POLYGON", DefaultDecimal = 18 },
+                new() { Code = "LTC", Name = "Litecoin", DefaultNetwork = "LITECOIN", DefaultDecimal = 8 },
+                new() { Code = "KAS", Name = "Kaspa", DefaultNetwork = "KASPA", DefaultDecimal = 8 },
+                new() { Code = "AVAX", Name = "Avalanche", DefaultNetwork = "AVALANCHE", DefaultDecimal = 18 },
+                new() { Code = "SHIB", Name = "Shiba Inu", DefaultNetwork = "ETHEREUM", DefaultDecimal = 18, IsToken = true },
+                new() { Code = "LINK", Name = "Chainlink", DefaultNetwork = "ETHEREUM", DefaultDecimal = 18, IsToken = true },
+                new() { Code = "ATOM", Name = "Cosmos", DefaultNetwork = "COSMOS", DefaultDecimal = 6 },
+                new() { Code = "XLM", Name = "Stellar", DefaultNetwork = "STELLAR", DefaultDecimal = 7 },
+            ];
 
             _banks = [
                 new() 
@@ -354,6 +378,11 @@ namespace Its.Onix.Api.Services
             r.CurrencyAccount = result;
 
             return r;
+        }
+
+        public List<MCryptoCurrency> GetAvailableCryptoCurrencies()
+        {
+            return _cryptoCurrencies;
         }
 
         public async Task<MVCurrencyAccount> AddCryptoCurrencyAccount(string orgId, MCurrencyAccount currencyAccount)
