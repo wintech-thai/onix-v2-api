@@ -1719,7 +1719,13 @@ namespace Its.Onix.Api.Services
                     }
                 }
 
-                lines.Add($"Step1.6 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                if (pr.PayerName == bankAccountName)
+                {
+                    lines.Add($"Step1.6 - Request ID=[{org}:{id}], Payer name matches bank account name, then skip");
+                    continue;
+                }
+
+                lines.Add($"Step1.7 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
                 var ba = new MBankAccount()
                 {
                     BankCode = bankCode,
