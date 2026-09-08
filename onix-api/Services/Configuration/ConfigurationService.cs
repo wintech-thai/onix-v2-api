@@ -201,6 +201,17 @@ namespace Its.Onix.Api.Services
                 return null;
             }
 
+            //Status เปลี่ยนแล้วต้อง invalidate cache ของ config ประเภทนั้น ๆ ไม่งั้น GetBrandConfig/GetClientIpSource จะยังอ่านค่า Status เก่าจาก cache ต่อไปอีกนานสุด 24 ชม.
+            if (config.ConfigType == "Brand")
+            {
+                await _redis.DeleteAsync(CacheHelper.CreateBrandConfigKey(orgId));
+            }
+            else if (!string.IsNullOrEmpty(config.ConfigType) && config.ConfigType.StartsWith("ClientIpSource_"))
+            {
+                var scope = config.ConfigType.Substring("ClientIpSource_".Length);
+                await _redis.DeleteAsync(CacheHelper.CreateClientIpSourceKey(orgId, scope));
+            }
+
             var r = new MVConfiguration()
             {
                 Status = "OK",
