@@ -271,7 +271,7 @@ namespace Its.Onix.Api
                 options.OnRejected = async (context, token) =>
                 {
                     var clientIp = "unknown";
-                    if (context.HttpContext.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
+                    if (context.HttpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var xForwardedFor))
                     {
                         clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
                     }
@@ -284,7 +284,7 @@ namespace Its.Onix.Api
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
                     var clientIp = "unknown";
-                    if (httpContext.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xForwardedFor))
+                    if (httpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var xForwardedFor))
                     {
                         clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
                     }
@@ -293,7 +293,7 @@ namespace Its.Onix.Api
                         partitionKey: clientIp,
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 20, // อนุญาต 20 requests
+                            PermitLimit = 50, // อนุญาต 50 requests
                             Window = TimeSpan.FromSeconds(10), // ต่อ 10 วินาที
                             QueueLimit = 0,
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst
