@@ -62,22 +62,26 @@ namespace Its.Onix.Api.Services
             };
 
             var storagePath = fileDocument.ObjectStoragePath;
+            var hasContent = !string.IsNullOrEmpty(fileDocument.FileContent);
 
-            if (string.IsNullOrEmpty(storagePath))
+            if (string.IsNullOrEmpty(storagePath) && !hasContent)
             {
-                r.Status = "NAME_MISSING";
-                r.Description = $"File document storage path is missing!!!";
+                r.Status = "CONTENT_MISSING";
+                r.Description = $"File document must have either a storage path or file content!!!";
 
                 return r;
             }
 
-            var isExist = await repository!.IsStoragePathExist(storagePath!);
-            if (isExist)
+            if (!string.IsNullOrEmpty(storagePath))
             {
-                r.Status = "NAME_DUPLICATE";
-                r.Description = $"File document storage path [{storagePath}] already exist!!!";
+                var isExist = await repository!.IsStoragePathExist(storagePath!);
+                if (isExist)
+                {
+                    r.Status = "NAME_DUPLICATE";
+                    r.Description = $"File document storage path [{storagePath}] already exist!!!";
 
-                return r;
+                    return r;
+                }
             }
 
             var result = await repository!.AddFileDocument(fileDocument);
@@ -154,13 +158,16 @@ namespace Its.Onix.Api.Services
             }
 
             var newStoragePath = fileDocument.ObjectStoragePath;
-            var cr = await repository!.GetFileDocumentByStoragePath(newStoragePath!);
-            if ((cr != null) && (cr.Id.ToString() != fileDocumentId))
+            if (!string.IsNullOrEmpty(newStoragePath))
             {
-                r.Status = "NAME_DUPLICATE";
-                r.Description = $"File document storage path [{newStoragePath}] already exist!!!";
+                var cr = await repository!.GetFileDocumentByStoragePath(newStoragePath!);
+                if ((cr != null) && (cr.Id.ToString() != fileDocumentId))
+                {
+                    r.Status = "NAME_DUPLICATE";
+                    r.Description = $"File document storage path [{newStoragePath}] already exist!!!";
 
-                return r;
+                    return r;
+                }
             }
 
             var currentDoc = await repository!.GetFileDocumentById(fileDocumentId);

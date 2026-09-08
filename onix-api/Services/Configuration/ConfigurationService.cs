@@ -54,25 +54,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var bucket = Environment.GetEnvironmentVariable("MINIO_BUCKET")!;
-            if (string.IsNullOrEmpty(bucket))
-            {
-                r.Status = "ERROR_BUCKET_NAME_NOT_CONFIGURED";
-                r.Description = "Bucket name is not configured in environment variable [MINIO_BUCKET]";
-
-                return r;
-            }
-
             var bc = JsonSerializer.Deserialize<MBrandConfig>(result.ConfigValue!);
-            if (needDownloadUrl && !string.IsNullOrEmpty(bc!.LogoPath))
+            var hasLogo = !string.IsNullOrEmpty(bc!.DocumentId) || (!string.IsNullOrEmpty(bc.LogoPath) && bc.LogoPath != "DEFAULT");
+            if (needDownloadUrl && hasLogo)
             {
-                var objectName = bc.LogoPath;
-                var previewUrl = await _storageUtilsS3!.GenerateDownloadUrl(bucket, objectName, TimeSpan.FromMinutes(5 * 24 * 60), bc.LogoMimeType);
-                var uri = new Uri(previewUrl);
-                // เอาเฉพาะ path + query
-                var relativeUrl = uri.PathAndQuery;
-                // ใส่ placeholder
-                bc.LogoImageUrl = $"<STORAGE-API-BASE>{relativeUrl}";
+                // Points at our own API instead of MinIO/storage-api now — <API-BASE> is replaced by the frontend,
+                // same convention as the old <STORAGE-API-BASE> placeholder.
+                bc.LogoImageUrl = "<API-BASE>/admin-api/AdminConfiguration/org/global/action/GetBrandLogoImage";
             }
 
             result.BrandConfig = bc;
@@ -100,45 +88,38 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var bucket = Environment.GetEnvironmentVariable("MINIO_BUCKET")!;
-            if (string.IsNullOrEmpty(bucket))
-            {
-                r.Status = "ERROR_BUCKET_NAME_NOT_CONFIGURED";
-                r.Description = "Bucket name is not configured in environment variable [MINIO_BUCKET]";
-
-                return r;
-            }
-
             var mvCfg = await GetBrandConfig(orgId);
+            var existingBc = (mvCfg!.Status == "OK") ? mvCfg.Configuration!.BrandConfig : null;
 
-            var needToCreateDoc = false;
-            if (mvCfg!.Status == "NOT_FOUND")
-            {
-                //ยังไม่มีของเดิมอยู่
-                needToCreateDoc = true;
-            }
-            else
-            {
-                var existingConfig = mvCfg.Configuration!;
-                if (config.BrandConfig.LogoPath != existingConfig.BrandConfig!.LogoPath)
-                {
-                    //มีการเปลี่ยนโลโก้ ต้องสร้าง document ใหม่
-                    needToCreateDoc = true;
-                }
-            }
-
-            if (needToCreateDoc)
+            var hasNewLogo = !string.IsNullOrEmpty(config.BrandConfig.LogoBase64);
+            if (hasNewLogo)
             {
                 var fd = new MFileDocument()
                 {
-                    ObjectStoragePath = config.BrandConfig.LogoPath,
+                    FileContent = config.BrandConfig.LogoBase64,
                     MimeType = config.BrandConfig.LogoMimeType,
                     DocumentType = "BrandLogo",
                 };
 
-                var newFileDocument = await _fileDocumentService!.AddFileDocument(orgId, fd);
-                config.BrandConfig.DocumentId = newFileDocument.FileDocument!.Id!.ToString();
+                if (!string.IsNullOrEmpty(existingBc?.DocumentId))
+                {
+                    //มีโลโก้เดิมอยู่แล้ว ให้ update ทับ document เดิมแทนที่จะสร้างแถวใหม่ทุกครั้ง
+                    var updatedFileDocument = await _fileDocumentService!.UpdateFileDocumentById(orgId, existingBc.DocumentId!, fd);
+                    config.BrandConfig.DocumentId = updatedFileDocument.FileDocument!.Id!.ToString();
+                }
+                else
+                {
+                    var newFileDocument = await _fileDocumentService!.AddFileDocument(orgId, fd);
+                    config.BrandConfig.DocumentId = newFileDocument.FileDocument!.Id!.ToString();
+                }
             }
+            else
+            {
+                //ไม่มีการอัปโหลดโลโก้ใหม่ ให้คงค่า document ของโลโก้เดิมไว้
+                config.BrandConfig.DocumentId = existingBc?.DocumentId;
+            }
+
+            config.BrandConfig.LogoBase64 = null; //ห้ามเก็บ raw base64 ลงใน ConfigValue
 
             var jsonString = JsonSerializer.Serialize(config.BrandConfig);
             config.ConfigValue = jsonString;
@@ -147,6 +128,7 @@ namespace Its.Onix.Api.Services
             var c = await repository!.UpsertConfiguration(config);
 
             await _redis.DeleteAsync(CacheHelper.CreateBrandConfigKey(orgId));
+            await _redis.DeleteAsync(CacheHelper.CreateBrandLogoImageKey(orgId));
 
             r.Configuration = c;
             r.Configuration.ConfigValue = "";
@@ -299,6 +281,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        [Obsolete("Brand logo is now uploaded as base64 directly via SetBrandConfig. Kept only until legacy clients stop calling it.")]
         public async Task<MVPresignedUrl> GetBrandLogoUploadPresignedUrl(string orgId, VMUploadDocument param)
         {
             repository!.SetCustomOrgId(orgId);
@@ -341,6 +324,75 @@ namespace Its.Onix.Api.Services
             r.ObjectName = objectName;
 
             return r;
+        }
+
+        public async Task<(byte[]? Bytes, string? MimeType)> GetBrandLogoImageBytes(string orgId)
+        {
+            var cacheKey = CacheHelper.CreateBrandLogoImageKey(orgId);
+            var cached = await _redis.GetObjectAsync<CachedBrandLogo>(cacheKey);
+            if (cached != null)
+            {
+                if (!cached.Exists) return (null, null);
+                return (Convert.FromBase64String(cached.Base64!), cached.MimeType);
+            }
+
+            string? base64 = null;
+            string? mimeType = null;
+
+            var mvCfg = await GetBrandConfig(orgId);
+            var bc = (mvCfg!.Status == "OK") ? mvCfg.Configuration!.BrandConfig : null;
+
+            if (!string.IsNullOrEmpty(bc?.DocumentId))
+            {
+                var fdResult = await _fileDocumentService!.GetFileDocumentById(orgId, bc.DocumentId!);
+                var fd = fdResult.FileDocument;
+
+                if (!string.IsNullOrEmpty(fd?.FileContent))
+                {
+                    base64 = fd.FileContent;
+                    mimeType = fd.MimeType;
+                }
+                else if (!string.IsNullOrEmpty(fd?.ObjectStoragePath))
+                {
+                    //ยังไม่เคย migrate มาเป็น base64 - โลโก้เดิมยังอยู่ที่ MinIO ให้ดึงมาเก็บเป็น FileContent แทนตอนนี้เลย
+                    var bucket = Environment.GetEnvironmentVariable("MINIO_BUCKET");
+                    if (!string.IsNullOrEmpty(bucket))
+                    {
+                        var bytes = await _storageUtilsS3!.DownloadObjectAsync(bucket, fd.ObjectStoragePath!);
+                        if (bytes != null)
+                        {
+                            base64 = Convert.ToBase64String(bytes);
+                            mimeType = fd.MimeType;
+
+                            var migrated = new MFileDocument()
+                            {
+                                ObjectStoragePath = fd.ObjectStoragePath,
+                                FileContent = base64,
+                                MimeType = mimeType,
+                            };
+                            await _fileDocumentService!.UpdateFileDocumentById(orgId, fd.Id!.ToString()!, migrated);
+                        }
+                    }
+                }
+            }
+
+            var toCache = new CachedBrandLogo()
+            {
+                Exists = base64 != null,
+                Base64 = base64,
+                MimeType = mimeType,
+            };
+            await _redis.SetObjectAsync(cacheKey, toCache, TimeSpan.FromHours(24));
+
+            if (base64 == null) return (null, null);
+            return (Convert.FromBase64String(base64), mimeType);
+        }
+
+        private class CachedBrandLogo
+        {
+            public bool Exists { get; set; }
+            public string? Base64 { get; set; }
+            public string? MimeType { get; set; }
         }
     }
 }

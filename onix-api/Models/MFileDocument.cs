@@ -25,7 +25,10 @@ namespace Its.Onix.Api.Models
         public string? Tags { get; set; }
 
         [Column("object_storage_path")]
-        public string? ObjectStoragePath { get; set; } // Path in object storage
+        public string? ObjectStoragePath { get; set; } // Path in object storage (legacy MinIO)
+
+        [Column("file_content")]
+        public string? FileContent { get; set; } // Base64-encoded content, stored directly in DB instead of object storage
 
         [Column("document_type")]
         public string? DocumentType { get; set; } // Type of the document - Logo, PayInSlip, PayOutSlip

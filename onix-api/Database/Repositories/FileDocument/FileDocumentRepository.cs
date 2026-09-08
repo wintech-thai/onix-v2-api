@@ -77,6 +77,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Id = x.fd.Id,
                 OrgId = x.fd.OrgId,
                 ObjectStoragePath = x.fd.ObjectStoragePath,
+                FileContent = x.fd.FileContent,
                 Tags = x.fd.Tags,
                 DocumentType = x.fd.DocumentType,
                 MimeType = x.fd.MimeType,
@@ -144,6 +145,8 @@ namespace Its.Onix.Api.Database.Repositories
             if (existing != null)
             {
                 existing.ObjectStoragePath = fileDocument.ObjectStoragePath;
+                existing.FileContent = fileDocument.FileContent;
+                existing.MimeType = fileDocument.MimeType;
                 existing.Tags = fileDocument.Tags;
                 existing.Description = fileDocument.Description;
             }
