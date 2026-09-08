@@ -74,38 +74,44 @@ namespace Its.Onix.Api
                 builder.Services.AddSingleton<IStorageUtils, StorageUtilsGCP>();                
             }
 
-            builder.Services.AddSingleton(sp =>
+            //เอาไว้สำหรับเวลาไปติดตั้งแต่ละเครื่องสามาร customize MINIO_ENDPOINT_CUSTOM ได้เอง
+            var minIoEndpointCheck = Environment.GetEnvironmentVariable("MINIO_ENDPOINT_CUSTOM");
+            if (string.IsNullOrEmpty(minIoEndpointCheck))
             {
-                //เอาไว้สำหรับเวลาไปติดตั้งแต่ละเครื่องสามาร customize MINIO_ENDPOINT_CUSTOM ได้เอง
-                var minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT_CUSTOM");
-                if (string.IsNullOrEmpty(minIoEndpoint))
+                minIoEndpointCheck = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+            }
+
+            if (string.IsNullOrWhiteSpace(minIoEndpointCheck))
+            {
+                //Deployment นี้ไม่ได้ใช้ MinIO เลย (เช่น Please Scan) - ห้าม throw ตอน startup,
+                //ให้ใช้ dummy แทนเพื่อไม่ให้ pod ขึ้น CrashLoopBackOff
+                builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3Dummy>();
+            }
+            else
+            {
+                builder.Services.AddSingleton(sp =>
                 {
-                    minIoEndpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
-                }
-                var minIoAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"); //User
-                var minIoSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"); //Password
+                    var minIoEndpoint = minIoEndpointCheck;
+                    var minIoAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY"); //User
+                    var minIoSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY"); //Password
 
-                if (string.IsNullOrWhiteSpace(minIoEndpoint))
-                {
-                    throw new InvalidOperationException("MINIO_ENDPOINT is not configured.");
-                }
+                    var uri = new Uri(minIoEndpoint);
+                    var clientBuilder = new MinioClient()
+                        .WithEndpoint(uri.Host, uri.Port)
+                        .WithCredentials(
+                            minIoAccessKey,
+                            minIoSecretKey);
 
-                var uri = new Uri(minIoEndpoint);
-                var clientBuilder = new MinioClient()
-                    .WithEndpoint(uri.Host, uri.Port)
-                    .WithCredentials(
-                        minIoAccessKey,
-                        minIoSecretKey);
+                    if (uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                    {
+                        clientBuilder = clientBuilder.WithSSL(false);
+                    }
 
-                if (uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
-                {
-                    clientBuilder = clientBuilder.WithSSL(false);
-                }
+                    return clientBuilder.Build();
+                });
 
-                return clientBuilder.Build();
-            });
-
-            builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
+                builder.Services.AddSingleton<IStorageUtilsS3, StorageUtilsS3>();
+            }
             builder.Services.AddSingleton<IRedisHelper, RedisHelper>();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

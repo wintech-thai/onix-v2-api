@@ -27,7 +27,12 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 // Update existing configuration
                 existing.ConfigValue = config.ConfigValue;
-                existing.Status = config.Status;
+                // ถ้าไม่ได้ส่ง Status มา (เช่น SetBrandConfig ที่ไม่แตะ Enable/Disable) ให้คงค่าเดิมไว้
+                // ไม่งั้นจะโดน null ทับทุกครั้งที่ save แล้วดูเหมือน Disabled ทั้งที่เพิ่งกด Enable ไป
+                if (!string.IsNullOrEmpty(config.Status))
+                {
+                    existing.Status = config.Status;
+                }
                 existing.CreatedDate = DateTime.UtcNow;
             }
             else

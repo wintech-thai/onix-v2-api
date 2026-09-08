@@ -4,6 +4,7 @@ namespace Its.Onix.Api.Utils
     {
         public Task<string> GenerateUploadUrl(string bucketName, string objectName, TimeSpan validFor, string? contentType = null);
         public Task<string> GenerateDownloadUrl(string bucketName, string objectName, TimeSpan validFor, string? contentType = null);
+        public Task<byte[]?> DownloadObjectAsync(string bucketName, string objectName);
 /*
         bool IsObjectExist(string objectName);
         public void UpdateMetaData(string bucketName, string objectName, string metaName, string metaValue);

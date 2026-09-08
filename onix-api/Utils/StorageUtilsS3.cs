@@ -33,5 +33,26 @@ namespace Its.Onix.Api.Utils
 
             return await _minioClient.PresignedGetObjectAsync(args);
         }
+
+        // Used for one-time migration of legacy MinIO-hosted files (e.g. brand logo) into DB-stored base64 content.
+        public async Task<byte[]?> DownloadObjectAsync(string bucketName, string objectName)
+        {
+            try
+            {
+                using var ms = new MemoryStream();
+                var args = new GetObjectArgs()
+                    .WithBucket(bucketName)
+                    .WithObject(objectName)
+                    .WithCallbackStream(stream => stream.CopyTo(ms));
+
+                await _minioClient.GetObjectAsync(args);
+                return ms.ToArray();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ERROR - DownloadObjectAsync [{bucketName}/{objectName}] - [{ex.Message}]");
+                return null;
+            }
+        }
     }
 }

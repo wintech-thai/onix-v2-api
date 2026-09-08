@@ -50,14 +50,36 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [Obsolete("Brand logo is now uploaded as base64 directly via SetBrandConfig. Kept only until legacy clients stop calling it.")]
         [HttpPost]
         [Route("org/global/action/GetBrandLogoUploadPresignedUrl")]
         public async Task<IActionResult> GetBrandLogoUploadPresignedUrl([FromBody] VMUploadDocument request)
         {
+#pragma warning disable CS0618 // Obsolete — kept for legacy clients only
             var result = await svc.GetBrandLogoUploadPresignedUrl("global", request);
+#pragma warning restore CS0618
             Response.Headers.Append("CUST_STATUS", result!.Status);
 
             return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [AllowAnonymous] //ยอมให้ web frontend ดึงรูปมาแสดงตรง ๆ ได้เหมือน image URL ทั่วไป
+        [Route("org/global/action/GetBrandLogoImage")]
+        public async Task<IActionResult> GetBrandLogoImage()
+        {
+            var (bytes, mimeType) = await svc.GetBrandLogoImageBytes("global");
+            if (bytes == null)
+            {
+                return NotFound();
+            }
+
+            // URL นี้เป็น static path เดิมตลอด (ไม่มี signature/query แบบ presigned URL เก่า)
+            // ต้องกัน browser/CDN cache ไว้ ไม่งั้นอัปโหลดโลโก้ใหม่แล้วจะยังเห็นรูปเก่าหรือ 404 ค้าง
+            Response.Headers.CacheControl = "no-store";
+
+            return File(bytes, string.IsNullOrEmpty(mimeType) ? "image/png" : mimeType);
         }
 
         [ExcludeFromCodeCoverage]
