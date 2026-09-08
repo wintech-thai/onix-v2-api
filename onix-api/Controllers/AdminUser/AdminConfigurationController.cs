@@ -75,6 +75,10 @@ namespace Its.Onix.Api.Controllers
                 return NotFound();
             }
 
+            // URL นี้เป็น static path เดิมตลอด (ไม่มี signature/query แบบ presigned URL เก่า)
+            // ต้องกัน browser/CDN cache ไว้ ไม่งั้นอัปโหลดโลโก้ใหม่แล้วจะยังเห็นรูปเก่าหรือ 404 ค้าง
+            Response.Headers.CacheControl = "no-store";
+
             return File(bytes, string.IsNullOrEmpty(mimeType) ? "image/png" : mimeType);
         }
 
