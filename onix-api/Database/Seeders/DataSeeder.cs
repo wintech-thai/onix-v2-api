@@ -190,6 +190,7 @@ public class DataSeeder
         AddRole("PAYOUT_REQUEST", "PaymentRequest:SubmitPayOutRequest", "ORGANIZATION", "For merchant to submit pay-out request");
         AddRole("PAYIN_REQUEST", "PaymentRequest:SubmitPayInRequest", "ORGANIZATION", "For merchant to submit pay-in request");
         AddRole("PAYIN_REQUEST_P2P", "PaymentRequest:SubmitPayInRequestP2P", "ORGANIZATION", "For merchant to submit pay-in (P2P) request");
+        AddRole("WITHDRAWAL_REQUEST", "PaymentRequest:SubmitWithdrawalRequest", "ORGANIZATION", "For merchant to submit withdrawal request");
 
         context.SaveChanges();
     }

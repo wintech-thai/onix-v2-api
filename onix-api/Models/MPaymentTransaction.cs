@@ -142,6 +142,8 @@ namespace Its.Onix.Api.Models
         [Column("payout_promptpay_id")]
         public string? PayOutPromptPayId { get; set; }
 
+        [Column("payout_is_withdrawal")]
+        public bool? PayoutIsWithdrawal { get; set; }
 
         [Column("payout_fee_decimal")]
         public decimal? PayoutFeeDecimal { get; set; } //ค่าธรรมเนียมจ่ายออกเป็น decimal
@@ -205,6 +207,7 @@ namespace Its.Onix.Api.Models
             ProcessingSteps = [];
             DiscardCent = false;
             NoticeCount = 0;
+            PayoutIsWithdrawal = null;
         }
     }
 }

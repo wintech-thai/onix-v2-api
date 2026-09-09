@@ -93,6 +93,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayOutTotalAmountDecimalP2P = x.pr.PayOutTotalAmountDecimalP2P,
                 PayoutPartialCountLimitP2P = x.pr.PayoutPartialCountLimitP2P,
                 PayoutPartialCountP2P = x.pr.PayoutPartialCountP2P,
+                PayoutIsWithdrawal = x.pr.PayoutIsWithdrawal,
 
                 PayOutTotalAmountDecimal = x.pr.PayOutTotalAmountDecimal,
                 QrCode = x.pr.QrCode,

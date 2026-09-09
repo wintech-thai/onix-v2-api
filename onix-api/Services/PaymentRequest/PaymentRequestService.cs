@@ -523,6 +523,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
             paymentRequest.PayoutFeePct = existing.PayoutFeePct;
+            paymentRequest.PayoutIsWithdrawal = existing.PayoutIsWithdrawal;
 
             paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
             existing.Status = "Approved";
@@ -582,6 +583,7 @@ namespace Its.Onix.Api.Services
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
+                PayoutIsWithdrawal = existing.PayoutIsWithdrawal,
 
                 RefId1 = existing.RefId1,
                 RefId2 = existing.RefId2,
@@ -1725,7 +1727,13 @@ namespace Its.Onix.Api.Services
                     continue;
                 }
 
-                lines.Add($"Step1.7 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                if (payoutRequest.PayoutIsWithdrawal == true)
+                {
+                    lines.Add($"Step1.7 - Request ID=[{org}:{id}], This is a withdrawal request, then skip");
+                    continue;
+                }
+
+                lines.Add($"Step1.8 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
                 var ba = new MBankAccount()
                 {
                     BankCode = bankCode,

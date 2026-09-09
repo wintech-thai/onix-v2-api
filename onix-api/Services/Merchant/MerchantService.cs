@@ -250,6 +250,7 @@ namespace Its.Onix.Api.Services
                 new() { Name = "Pay-In", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitPayInRequest/{merchantId}" },
                 new() { Name = "Pay-In (P2P)", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitPayInRequestP2P/{merchantId}" },
                 new() { Name = "Pay-Out", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitPayOutRequest/{merchantId}" },
+                new() { Name = "Withdrawal", Value = $"https://<PAYMENT-REQUEST-SERVICE>/api/PaymentRequest/org/{orgId}/action/SubmitWithdrawalRequest/{merchantId}" },
             };
 
             return arr;
