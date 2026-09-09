@@ -283,11 +283,23 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/CreateWithdrawalRequest")]
+        public async Task<IActionResult> CreateWithdrawalRequest([FromBody] MPaymentRequest request)
+        {
+            request.PayoutIsWithdrawal = true;
+            var result = await CreatePayOutRequest(request);
+            return result;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/CreatePayOutRequest")]
         public async Task<IActionResult> CreatePayOutRequest([FromBody] MPaymentRequest request)
         {
             var merchantId = request.MerchantId!;
             var bankAccountId = request.PayinBankAccountId!;
+
+            request.PayoutIsWithdrawal ??= false;
 
             var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
             if (mcVm.Status != "OK")
