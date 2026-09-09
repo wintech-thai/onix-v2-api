@@ -24,6 +24,9 @@ namespace Its.Onix.Api.Models
 
         [Column("tags")]
         public string? Tags { get; set; }
+        
+        [Column("tags2")]
+        public string? Tags2 { get; set; }
 
         [Column("description")]
         public string? Description { get; set; }

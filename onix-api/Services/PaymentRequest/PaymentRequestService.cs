@@ -676,7 +676,7 @@ namespace Its.Onix.Api.Services
                 return mvPt;
             }
 
-            //===== update point wallet ===            
+            //===== Start update point wallet ===            
             var pointTx1 = new MPointTx()
             {
                 WalletId = merchantWallet!.Id.ToString(),
@@ -686,6 +686,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = merchantDeductAmt,
 
                 Tags = $"PayOutRequestId=[{existing.Id}]" + (!string.IsNullOrEmpty(pt.RefId1) ? $", RefId1=[{pt.RefId1}]" : ""),
+                Tags2 = $"IsWithdrawal=[{pt.PayoutIsWithdrawal}]",
             };
             await _pointService!.DeductPoint(orgId, pointTx1);
 
@@ -707,7 +708,7 @@ namespace Its.Onix.Api.Services
                 return mvPt;
             }
 
-            //===== update point wallet ===
+            //===== End update point wallet ===
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType2 = "PaymentOut.Success";
