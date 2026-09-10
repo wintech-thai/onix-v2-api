@@ -1650,6 +1650,8 @@ namespace Its.Onix.Api.Services
             lines.Add($"Step0.1 - Use 1 day old 'Pending' pay-out request for selection, PayoutPartialCountLimitP2P=[{partialPaidCountLimit}]");
             lines.Add($"Step0.2 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
+            Dictionary<string, decimal?> merchantBalances = new();
+
             foreach (var payoutRequest in pendingPayoutRequests)
             {
                 var id = payoutRequest.Id.ToString();
@@ -1734,7 +1736,21 @@ namespace Its.Onix.Api.Services
                     continue;
                 }
 
-                lines.Add($"Step1.8 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                //เช็คว่า merchant ของ payout นั้นมี balance เหลือพอที่จะโอนออกมั้ยถ้าไม่พอก็ skip ไปเลย, ควรจำ cache balance ของ merchant นั้นด้วย
+                //เพราะว่ารอบนี้อาจจะมีหลาย payout request ของ merchant เดียวกันเข้ามาใน list ก็ได้
+                var mcBalance = await GetMerchantCurrentBalance(payoutRequest, merchantBalances);
+                if (mcBalance == null)
+                {
+                    lines.Add($"Step1.8.1 - Request ID=[{org}:{id}], Unable to get merchant current balance of merchant [{payoutRequest.MerchantId}], then skip");
+                    continue;
+                }
+                else if (mcBalance < amt)
+                {
+                    lines.Add($"Step1.8.2 - Request ID=[{org}:{id}], Merchant [{payoutRequest.MerchantId}] current balance [{mcBalance}] is not enough for requested amount [{amt}], then skip");
+                    continue;
+                }
+
+                lines.Add($"Step1.9 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
                 var ba = new MBankAccount()
                 {
                     BankCode = bankCode,
@@ -1751,6 +1767,31 @@ namespace Its.Onix.Api.Services
 
             //ไม่มี bank account ที่ match
             return (null, null, lines);
+        }
+
+        
+        private async Task<decimal?> GetMerchantCurrentBalance(MPaymentRequest pr, Dictionary<string, decimal?> merchantBalances)
+        {
+            var mcId = pr.MerchantId!;
+
+            if (merchantBalances.TryGetValue(mcId, out decimal? value))
+            {
+                return value;
+            }
+
+            var mcWallet = await _pointService!.GetWalletByMerchantId(pr.OrgId!, mcId);
+            if (mcWallet!.Status != "OK")
+            {
+                merchantBalances[mcId] = 0;
+                return null;
+            }
+
+            var wallet = mcWallet.Wallet!;
+            wallet.PointBalanceDecimal ??= 0;
+
+            merchantBalances[mcId] = wallet.PointBalanceDecimal;
+
+            return wallet.PointBalanceDecimal;
         }
 
         private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr, MMerchant merchant)
