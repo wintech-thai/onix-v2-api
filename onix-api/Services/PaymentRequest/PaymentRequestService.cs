@@ -991,11 +991,34 @@ namespace Its.Onix.Api.Services
             var minAmt = merchant.PayoutMinAmount;
             var maxAmt = merchant.PayoutMaxAmount;
             var payoutRequestAmt = paymentRequest.RequestedAmount;
+            var payoutRequestAmtDecimal = (decimal) payoutRequestAmt!;
+            var mcId = merchant.Id.ToString();
 
             if ((payoutRequestAmt < minAmt) || (payoutRequestAmt > maxAmt))
             {
                 r.Status = "ERROR_VALUE_NOT_IN_RANGE";
                 r.Description = $"Amount [{payoutRequestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
+
+                return r;
+            }
+
+            //TODO : Check merchant balance ว่าพอมั้ย ถ้าไม่พอก็ reject ไปเลย
+            var mcWallet = await _pointService!.GetWalletByMerchantId(paymentRequest.OrgId!, mcId!);
+            if (mcWallet!.Status != "OK")
+            {
+                r.Status = "ERROR_WALLET_NOT_FOUND";
+                r.Description = $"Wallet for merchant [{mcId}] [{paymentRequest.OrgId}] not found";
+
+                return r;
+            }
+
+            var wallet = mcWallet.Wallet!;
+            wallet.PointBalanceDecimal ??= 0;
+
+            if (wallet.PointBalanceDecimal < payoutRequestAmtDecimal)
+            {
+                r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                r.Description = $"Merchant wallet has insufficient balance, Merchant=[{paymentRequest.OrgId}], CurrentBalance=[{wallet.PointBalanceDecimal}], RequiredAmount=[{payoutRequestAmt}]";
 
                 return r;
             }
