@@ -47,6 +47,7 @@ namespace Its.Onix.Api.Services
             var totals = await _repo.GetRevenueTotalSummary(param);
             var payIn = totals.FirstOrDefault(x => x.Direction == "PayIn");
             var payOut = totals.FirstOrDefault(x => x.Direction == "PayOut");
+            var withdrawal = totals.FirstOrDefault(x => x.Direction == "Withdrawal");
 
             result.TotalPayInAmount = payIn?.TxAmount ?? 0;
             result.TotalPayOutAmount = payOut?.TxAmount ?? 0;
@@ -54,9 +55,13 @@ namespace Its.Onix.Api.Services
             result.TotalPayOutFee = payOut?.FeeAmount ?? 0;
             result.TotalPayInCount = (int)(payIn?.TxCount ?? 0);
             result.TotalPayOutCount = (int)(payOut?.TxCount ?? 0);
+            result.TotalWithdrawalAmount = withdrawal?.TxAmount ?? 0;
+            result.TotalWithdrawalFee = withdrawal?.FeeAmount ?? 0;
+            result.TotalWithdrawalCount = (int)(withdrawal?.TxCount ?? 0);
 
             result.PayInByMerchant = await _repo.GetMerchantsPayInAmountSummary(param);
             result.PayOutByMerchant = await _repo.GetMerchantsPayOutAmountSummary(param);
+            result.WithdrawalByMerchant = await _repo.GetMerchantsWithdrawalAmountSummary(param);
             result.DailyRevenue = await _repo.GetDailyRevenueSummary(param);
             result.DailyMerchantRevenue = await _repo.GetDailyMerchantRevenueSummary(param);
 

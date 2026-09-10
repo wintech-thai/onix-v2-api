@@ -13,6 +13,9 @@ namespace Its.Onix.Api.Models
         public decimal? PayOutFee { get; set; }
         public int? PayInCount { get; set; }
         public int? PayOutCount { get; set; }
+        public decimal? WithdrawalAmount { get; set; }
+        public decimal? WithdrawalFee { get; set; }
+        public int? WithdrawalCount { get; set; }
 
         public DailyMerchantRevenueSummaryData()
         {
