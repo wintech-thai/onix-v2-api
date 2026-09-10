@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Models
         public DateTime? Date { get; set; }
         public decimal? PayInFee { get; set; }
         public decimal? PayOutFee { get; set; }
+        public decimal? WithdrawalFee { get; set; }
 
         public DailyRevenueSummaryData()
         {

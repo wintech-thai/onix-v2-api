@@ -235,9 +235,21 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/{orgId}/action/SubmitWithdrawalRequest/{merchantId}")]
+        public async Task<IActionResult> SubmitWithdrawalRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
+        {
+            request.PayoutIsWithdrawal = true;
+            var result = await SubmitPayOutRequest(orgId, merchantId, request);
+            return result;
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/{orgId}/action/SubmitPayOutRequest/{merchantId}")]
         public async Task<IActionResult> SubmitPayOutRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
         {
+            request.PayoutIsWithdrawal ??= false;
+
             //เอาไว้ให้ merchant เป็นคนเรียกเพื่อของ pay-out
             var merchantVm = await _merchantSvc.GetMerchantById(orgId, merchantId);
             if (merchantVm.Status != "OK" || merchantVm.Merchant == null)

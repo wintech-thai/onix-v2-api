@@ -523,6 +523,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutPromptPayId = srcBankAccount.PromptPayId;
             paymentRequest.PayoutAccountLevel = srcBankAccount.AccountLevel;
             paymentRequest.PayoutFeePct = existing.PayoutFeePct;
+            paymentRequest.PayoutIsWithdrawal = existing.PayoutIsWithdrawal;
 
             paymentRequest.PayoutFeePayer = existing.PayoutFeePayer;
             existing.Status = "Approved";
@@ -582,6 +583,7 @@ namespace Its.Onix.Api.Services
                 FromBankCode = existing.PayoutBankCode,
                 PayOutFeePct = existing.PayoutFeePct,
                 PaymentRequestId = existing.Id.ToString(),
+                PayoutIsWithdrawal = existing.PayoutIsWithdrawal,
 
                 RefId1 = existing.RefId1,
                 RefId2 = existing.RefId2,
@@ -674,7 +676,7 @@ namespace Its.Onix.Api.Services
                 return mvPt;
             }
 
-            //===== update point wallet ===            
+            //===== Start update point wallet ===            
             var pointTx1 = new MPointTx()
             {
                 WalletId = merchantWallet!.Id.ToString(),
@@ -684,6 +686,7 @@ namespace Its.Onix.Api.Services
                 TxAmountDecimal = merchantDeductAmt,
 
                 Tags = $"PayOutRequestId=[{existing.Id}]" + (!string.IsNullOrEmpty(pt.RefId1) ? $", RefId1=[{pt.RefId1}]" : ""),
+                Tags2 = $"IsWithdrawal=[{pt.PayoutIsWithdrawal}]",
             };
             await _pointService!.DeductPoint(orgId, pointTx1);
 
@@ -705,7 +708,7 @@ namespace Its.Onix.Api.Services
                 return mvPt;
             }
 
-            //===== update point wallet ===
+            //===== End update point wallet ===
 
             //Notify payment.success และ payout.success กลับไปหา merchant ด้วย
             var jobType2 = "PaymentOut.Success";
@@ -988,11 +991,34 @@ namespace Its.Onix.Api.Services
             var minAmt = merchant.PayoutMinAmount;
             var maxAmt = merchant.PayoutMaxAmount;
             var payoutRequestAmt = paymentRequest.RequestedAmount;
+            var payoutRequestAmtDecimal = (decimal) payoutRequestAmt!;
+            var mcId = merchant.Id.ToString();
 
             if ((payoutRequestAmt < minAmt) || (payoutRequestAmt > maxAmt))
             {
                 r.Status = "ERROR_VALUE_NOT_IN_RANGE";
                 r.Description = $"Amount [{payoutRequestAmt}] not in allow range -> [{minAmt}, {maxAmt}]";
+
+                return r;
+            }
+
+            //TODO : Check merchant balance ว่าพอมั้ย ถ้าไม่พอก็ reject ไปเลย
+            var mcWallet = await _pointService!.GetWalletByMerchantId(merchant.OrgId!, mcId!);
+            if (mcWallet!.Status != "OK")
+            {
+                r.Status = "ERROR_WALLET_NOT_FOUND";
+                r.Description = $"Wallet for merchant [{mcId}] [{merchant.OrgId}] not found";
+
+                return r;
+            }
+
+            var wallet = mcWallet.Wallet!;
+            wallet.PointBalanceDecimal ??= 0;
+
+            if (wallet.PointBalanceDecimal < payoutRequestAmtDecimal)
+            {
+                r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                r.Description = $"Merchant wallet has insufficient balance, Merchant=[{merchant.OrgId}], CurrentBalance=[{wallet.PointBalanceDecimal}], RequiredAmount=[{payoutRequestAmt}]";
 
                 return r;
             }
@@ -1647,6 +1673,8 @@ namespace Its.Onix.Api.Services
             lines.Add($"Step0.1 - Use 1 day old 'Pending' pay-out request for selection, PayoutPartialCountLimitP2P=[{partialPaidCountLimit}]");
             lines.Add($"Step0.2 - Found [{pendingPayoutRequests.Count}] pending payout request");
 
+            Dictionary<string, decimal?> merchantBalances = new();
+
             foreach (var payoutRequest in pendingPayoutRequests)
             {
                 var id = payoutRequest.Id.ToString();
@@ -1725,7 +1753,27 @@ namespace Its.Onix.Api.Services
                     continue;
                 }
 
-                lines.Add($"Step1.7 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
+                if (payoutRequest.PayoutIsWithdrawal == true)
+                {
+                    lines.Add($"Step1.7 - Request ID=[{org}:{id}], This is a withdrawal request, then skip");
+                    continue;
+                }
+
+                //เช็คว่า merchant ของ payout นั้นมี balance เหลือพอที่จะโอนออกมั้ยถ้าไม่พอก็ skip ไปเลย, ควรจำ cache balance ของ merchant นั้นด้วย
+                //เพราะว่ารอบนี้อาจจะมีหลาย payout request ของ merchant เดียวกันเข้ามาใน list ก็ได้
+                var mcBalance = await GetMerchantCurrentBalance(payoutRequest, merchantBalances);
+                if (mcBalance == null)
+                {
+                    lines.Add($"Step1.8.1 - Request ID=[{org}:{id}], Unable to get merchant current balance of merchant [{payoutRequest.OrgId}], then skip");
+                    continue;
+                }
+                else if (mcBalance < amt)
+                {
+                    lines.Add($"Step1.8.2 - Request ID=[{org}:{id}], Merchant [{payoutRequest.OrgId}] current balance [{mcBalance}] is not enough for requested amount [{amt}], then skip");
+                    continue;
+                }
+
+                lines.Add($"Step1.9 - Request ID=[{org}:{id}], Found bank account with PromptPay ID=[{promptPayId}], AccountName=[{bankCode}:{bankAccountName}]");
                 var ba = new MBankAccount()
                 {
                     BankCode = bankCode,
@@ -1738,10 +1786,36 @@ namespace Its.Onix.Api.Services
                 return (ba, payoutRequest, lines);
             }
 
-            lines.Add($"Step3 - No PayOut request available!!!");
+            lines.Add($"Step3.1 - ===============");
+            lines.Add($"Step3.2 - No PayOut request available!!!");
 
             //ไม่มี bank account ที่ match
             return (null, null, lines);
+        }
+
+        
+        private async Task<decimal?> GetMerchantCurrentBalance(MPaymentRequest pr, Dictionary<string, decimal?> merchantBalances)
+        {
+            var mcId = pr.MerchantId!;
+
+            if (merchantBalances.TryGetValue(mcId, out decimal? value))
+            {
+                return value;
+            }
+
+            var mcWallet = await _pointService!.GetWalletByMerchantId(pr.OrgId!, mcId);
+            if (mcWallet!.Status != "OK")
+            {
+                merchantBalances[mcId] = 0;
+                return null;
+            }
+
+            var wallet = mcWallet.Wallet!;
+            wallet.PointBalanceDecimal ??= 0;
+
+            merchantBalances[mcId] = wallet.PointBalanceDecimal;
+
+            return wallet.PointBalanceDecimal;
         }
 
         private async Task<(MBankAccount?, List<string>)> GetPayInBankAccount(MPaymentRequest pr, MMerchant merchant)

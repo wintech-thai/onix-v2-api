@@ -10,8 +10,12 @@ namespace Its.Onix.Api.Services
         public decimal TotalPayOutFee { get; set; }
         public int TotalPayInCount { get; set; }
         public int TotalPayOutCount { get; set; }
+        public decimal TotalWithdrawalAmount { get; set; }
+        public decimal TotalWithdrawalFee { get; set; }
+        public int TotalWithdrawalCount { get; set; }
         public List<MerchantSummaryData> PayInByMerchant { get; set; }
         public List<MerchantSummaryData> PayOutByMerchant { get; set; }
+        public List<MerchantSummaryData> WithdrawalByMerchant { get; set; }
         public List<DailyRevenueSummaryData> DailyRevenue { get; set; }
         public List<DailyMerchantRevenueSummaryData> DailyMerchantRevenue { get; set; }
 
@@ -19,6 +23,7 @@ namespace Its.Onix.Api.Services
         {
             PayInByMerchant = [];
             PayOutByMerchant = [];
+            WithdrawalByMerchant = [];
             DailyRevenue = [];
             DailyMerchantRevenue = [];
         }

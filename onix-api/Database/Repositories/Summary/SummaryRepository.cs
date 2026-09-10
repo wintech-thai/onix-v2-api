@@ -106,6 +106,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutFeeDecimal = x.pmt.PayoutFeeDecimal,
                 Direction = x.pmt.Direction,
                 CreatedDate = x.pmt.CreatedDate,
+                PayoutIsWithdrawal = x.pmt.PayoutIsWithdrawal,
             });
         }
 
@@ -160,6 +161,28 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
                 .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.Direction == "PayOut")
+                .Where(x => x.PayoutIsWithdrawal != true)
+                .Where(x => x.MerchantCode != null)
+                .GroupBy(x => x.MerchantCode)
+                .Select(g => new MerchantSummaryData()
+                {
+                    MerchantCode = g.Key,
+                    TxAmount = g.Sum(x => x.TxAmountDecimal),
+                    FeeAmount = g.Sum(x => x.PayoutFeeDecimal)
+                })
+                .OrderByDescending(x => x.TxAmount)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<List<MerchantSummaryData>> GetMerchantsWithdrawalAmountSummary(VMSummary param)
+        {
+            var result = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.Direction == "PayOut")
+                .Where(x => x.PayoutIsWithdrawal == true)
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
                 .Select(g => new MerchantSummaryData()
@@ -185,7 +208,8 @@ namespace Its.Onix.Api.Database.Repositories
                 {
                     Date = g.Key,
                     PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
-                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayoutFeeDecimal)
+                    PayOutFee = g.Where(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal != true).Sum(x => x.PayoutFeeDecimal),
+                    WithdrawalFee = g.Where(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal == true).Sum(x => x.PayoutFeeDecimal)
                 })
                 .OrderBy(x => x.Date)
                 .ToListAsync();
@@ -205,11 +229,14 @@ namespace Its.Onix.Api.Database.Repositories
                     Date = g.Key.Date,
                     MerchantCode = g.Key.MerchantCode,
                     PayInAmount = g.Where(x => x.Direction == "PayIn").Sum(x => x.TxAmountDecimal),
-                    PayOutAmount = g.Where(x => x.Direction == "PayOut").Sum(x => x.TxAmountDecimal),
+                    PayOutAmount = g.Where(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal != true).Sum(x => x.TxAmountDecimal),
                     PayInFee = g.Where(x => x.Direction == "PayIn").Sum(x => x.PayInFeeDecimal),
-                    PayOutFee = g.Where(x => x.Direction == "PayOut").Sum(x => x.PayoutFeeDecimal),
+                    PayOutFee = g.Where(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal != true).Sum(x => x.PayoutFeeDecimal),
                     PayInCount = g.Count(x => x.Direction == "PayIn"),
-                    PayOutCount = g.Count(x => x.Direction == "PayOut")
+                    PayOutCount = g.Count(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal != true),
+                    WithdrawalAmount = g.Where(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal == true).Sum(x => x.TxAmountDecimal),
+                    WithdrawalFee = g.Where(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal == true).Sum(x => x.PayoutFeeDecimal),
+                    WithdrawalCount = g.Count(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal == true)
                 })
                 .OrderBy(x => x.Date)
                 .ThenBy(x => x.MerchantCode)
@@ -220,11 +247,14 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<RevenueSummaryData>> GetRevenueTotalSummary(VMSummary param)
         {
+            // Direction เดิมมีแค่ PayIn / PayOut — ที่นี่แยก PayOut ที่ถูกแฟล็กเป็น
+            // withdrawal (PayoutIsWithdrawal == true) ออกมาเป็นกลุ่ม "Withdrawal"
+            // ต่างหาก ส่วน null/false ยังถูกนับเป็น PayOut ธรรมดาเหมือนเดิม
             var result = await GetSelectionPaymentTx().AsExpandable()
                 .Where(IsOrgMatchPredicate<MPaymentTransaction>())
                 .Where(DateRangePredicate<MPaymentTransaction>(param))
                 .Where(x => x.MerchantCode != null)
-                .GroupBy(x => x.Direction)
+                .GroupBy(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal == true ? "Withdrawal" : x.Direction)
                 .Select(g => new RevenueSummaryData()
                 {
                     Direction = g.Key,

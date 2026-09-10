@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Services
         public List<MerchantSummaryData> MerchantsBalances { get; set; }
         public List<MerchantSummaryData> MerchantsPayInSummary { get; set; }
         public List<MerchantSummaryData> MerchantsPayOutSummary { get; set; }
+        public List<MerchantSummaryData> MerchantsWithdrawalSummary { get; set; }
 
         public MerchantSummary()
         {
@@ -16,6 +17,7 @@ namespace Its.Onix.Api.Services
             MerchantsBalances = [];
             MerchantsPayOutSummary = [];
             MerchantsPayInSummary = [];
+            MerchantsWithdrawalSummary = [];
         }
     }
 }
