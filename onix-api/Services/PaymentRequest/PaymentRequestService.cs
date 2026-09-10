@@ -1741,12 +1741,12 @@ namespace Its.Onix.Api.Services
                 var mcBalance = await GetMerchantCurrentBalance(payoutRequest, merchantBalances);
                 if (mcBalance == null)
                 {
-                    lines.Add($"Step1.8.1 - Request ID=[{org}:{id}], Unable to get merchant current balance of merchant [{payoutRequest.MerchantId}], then skip");
+                    lines.Add($"Step1.8.1 - Request ID=[{org}:{id}], Unable to get merchant current balance of merchant [{payoutRequest.OrgId}], then skip");
                     continue;
                 }
                 else if (mcBalance < amt)
                 {
-                    lines.Add($"Step1.8.2 - Request ID=[{org}:{id}], Merchant [{payoutRequest.MerchantId}] current balance [{mcBalance}] is not enough for requested amount [{amt}], then skip");
+                    lines.Add($"Step1.8.2 - Request ID=[{org}:{id}], Merchant [{payoutRequest.OrgId}] current balance [{mcBalance}] is not enough for requested amount [{amt}], then skip");
                     continue;
                 }
 
@@ -1763,7 +1763,8 @@ namespace Its.Onix.Api.Services
                 return (ba, payoutRequest, lines);
             }
 
-            lines.Add($"Step3 - No PayOut request available!!!");
+            lines.Add($"Step3.1 - ===============");
+            lines.Add($"Step3.2 - No PayOut request available!!!");
 
             //ไม่มี bank account ที่ match
             return (null, null, lines);
