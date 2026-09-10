@@ -1003,11 +1003,11 @@ namespace Its.Onix.Api.Services
             }
 
             //TODO : Check merchant balance ว่าพอมั้ย ถ้าไม่พอก็ reject ไปเลย
-            var mcWallet = await _pointService!.GetWalletByMerchantId(paymentRequest.OrgId!, mcId!);
+            var mcWallet = await _pointService!.GetWalletByMerchantId(merchant.OrgId!, mcId!);
             if (mcWallet!.Status != "OK")
             {
                 r.Status = "ERROR_WALLET_NOT_FOUND";
-                r.Description = $"Wallet for merchant [{mcId}] [{paymentRequest.OrgId}] not found";
+                r.Description = $"Wallet for merchant [{mcId}] [{merchant.OrgId}] not found";
 
                 return r;
             }
@@ -1018,7 +1018,7 @@ namespace Its.Onix.Api.Services
             if (wallet.PointBalanceDecimal < payoutRequestAmtDecimal)
             {
                 r.Status = "ERROR_INSUFFICIENT_BALANCE";
-                r.Description = $"Merchant wallet has insufficient balance, Merchant=[{paymentRequest.OrgId}], CurrentBalance=[{wallet.PointBalanceDecimal}], RequiredAmount=[{payoutRequestAmt}]";
+                r.Description = $"Merchant wallet has insufficient balance, Merchant=[{merchant.OrgId}], CurrentBalance=[{wallet.PointBalanceDecimal}], RequiredAmount=[{payoutRequestAmt}]";
 
                 return r;
             }
