@@ -1,4 +1,5 @@
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -6,6 +7,8 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
         public Task<MOrganization> GetOrganization();
+        public Task<List<MOrganization>> GetOrganizations(VMOrganization param);
+        public Task<int> GetOrganizationCount(VMOrganization param);
         public Task<MOrganization?> UpdateOrganization(MOrganization org);
         public Task<MOrganization?> UpdateOrganizationStatus(string status);
         public MOrganizationUser AddUserToOrganization(MOrganizationUser user);

@@ -2,6 +2,7 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.ViewsModels;
 using System.Text.Json;
 
 namespace Its.Onix.Api.Services
@@ -74,9 +75,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if ((orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-SCAN") && org.Merchant == null)
+            if ((orgType == "PLEASE-PAYMENT") && org.Merchant == null)
             {
-                //ถ้าเป็น PLEASE-PAYMENT หรือ PLEASE-SCAN จะต้องมีข้อมูล Merchant ด้วย
+                //ถ้าเป็น PLEASE-PAYMENT จะต้องมีข้อมูล Merchant ด้วย
                 r.Status = "MERCHANT_INFO_REQUIRED";
                 r.Description = $"Merchant info is required for organization type [{orgType}] !!!";
 
@@ -92,7 +93,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-ERP" || orgType == "PLEASE-SCAN")
+            if (orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-ERP")
             {
                 var merchant = org.Merchant!;
                 merchant.OrgId = customOrgId;
@@ -131,6 +132,18 @@ namespace Its.Onix.Api.Services
             }
                 
             return t;
+        }
+
+        public async Task<List<MOrganization>> GetOrganizations(VMOrganization param)
+        {
+            var result = await repository!.GetOrganizations(param);
+            return result;
+        }
+
+        public async Task<int> GetOrganizationCount(VMOrganization param)
+        {
+            var result = await repository!.GetOrganizationCount(param);
+            return result;
         }
 
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName)

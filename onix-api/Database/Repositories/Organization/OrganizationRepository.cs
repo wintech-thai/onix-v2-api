@@ -1,4 +1,6 @@
+using LinqKit;
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ViewsModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
@@ -14,6 +16,76 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var result = context!.Organizations!.Where(x => x.OrgCustomId!.Equals(orgId)).FirstOrDefaultAsync();
             return result!;
+        }
+
+        private ExpressionStarter<MOrganization> OrganizationPredicate(VMOrganization param)
+        {
+            var pd = PredicateBuilder.New<MOrganization>(true);
+
+            if (!string.IsNullOrEmpty(param.OrgType))
+            {
+                var typePd = PredicateBuilder.New<MOrganization>();
+                typePd = typePd.Or(p => p.OrgType!.Equals(param.OrgType));
+
+                pd = pd.And(typePd);
+            }
+
+            if (!string.IsNullOrEmpty(param.Status))
+            {
+                var statusPd = PredicateBuilder.New<MOrganization>();
+                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
+
+                pd = pd.And(statusPd);
+            }
+
+            if (!string.IsNullOrEmpty(param.FullTextSearch))
+            {
+                var fullTextPd = PredicateBuilder.New<MOrganization>();
+                fullTextPd = fullTextPd.Or(p => p.OrgName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.OrgCustomId!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Email!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Phone!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
+
+                pd = pd.And(fullTextPd);
+            }
+
+            return pd;
+        }
+
+        public async Task<List<MOrganization>> GetOrganizations(VMOrganization param)
+        {
+            var offset = 0;
+            var limit = 0;
+
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset - 1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = OrganizationPredicate(param);
+            var result = await context!.Organizations!.AsExpandable()
+                .Where(predicate)
+                .OrderByDescending(e => e.OrgCreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<int> GetOrganizationCount(VMOrganization param)
+        {
+            var predicate = OrganizationPredicate(param);
+            var result = await context!.Organizations!.Where(predicate).AsExpandable().CountAsync();
+
+            return result;
         }
 
         public MOrganizationUser AddUserToOrganization(MOrganizationUser user)
