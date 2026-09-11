@@ -74,9 +74,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if ((orgType == "PLEASE-PAYMENT") && org.Merchant == null)
+            if ((orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-SCAN") && org.Merchant == null)
             {
-                //ถ้าเป็น PLEASE-PAYMENT จะต้องมีข้อมูล Merchant ด้วย
+                //ถ้าเป็น PLEASE-PAYMENT หรือ PLEASE-SCAN จะต้องมีข้อมูล Merchant ด้วย
                 r.Status = "MERCHANT_INFO_REQUIRED";
                 r.Description = $"Merchant info is required for organization type [{orgType}] !!!";
 
@@ -92,7 +92,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            if (orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-ERP")
+            if (orgType == "PLEASE-PAYMENT" || orgType == "PLEASE-ERP" || orgType == "PLEASE-SCAN")
             {
                 var merchant = org.Merchant!;
                 merchant.OrgId = customOrgId;
