@@ -1,4 +1,3 @@
-using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using Microsoft.EntityFrameworkCore;
@@ -18,39 +17,32 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        private ExpressionStarter<MOrganization> OrganizationPredicate(VMOrganization param)
+        // ไม่ใช้ LinqKit/PredicateBuilder เพราะ AsExpandable() ชนกับ EF Core async operations
+        // ("source 'IQueryable' doesn't implement 'IAsyncEnumerable'") - chain .Where() ตรง ๆ แทน
+        private IQueryable<MOrganization> ApplyOrganizationFilters(IQueryable<MOrganization> query, VMOrganization param)
         {
-            var pd = PredicateBuilder.New<MOrganization>(true);
-
             if (!string.IsNullOrEmpty(param.OrgType))
             {
-                var typePd = PredicateBuilder.New<MOrganization>();
-                typePd = typePd.Or(p => p.OrgType!.Equals(param.OrgType));
-
-                pd = pd.And(typePd);
+                query = query.Where(p => p.OrgType == param.OrgType);
             }
 
             if (!string.IsNullOrEmpty(param.Status))
             {
-                var statusPd = PredicateBuilder.New<MOrganization>();
-                statusPd = statusPd.Or(p => p.Status!.Equals(param.Status));
-
-                pd = pd.And(statusPd);
+                query = query.Where(p => p.Status == param.Status);
             }
 
             if (!string.IsNullOrEmpty(param.FullTextSearch))
             {
-                var fullTextPd = PredicateBuilder.New<MOrganization>();
-                fullTextPd = fullTextPd.Or(p => p.OrgName!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.OrgCustomId!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Email!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Phone!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
-
-                pd = pd.And(fullTextPd);
+                var s = param.FullTextSearch;
+                query = query.Where(p =>
+                    (p.OrgName != null && p.OrgName.Contains(s)) ||
+                    (p.OrgCustomId != null && p.OrgCustomId.Contains(s)) ||
+                    (p.Email != null && p.Email.Contains(s)) ||
+                    (p.Phone != null && p.Phone.Contains(s)) ||
+                    (p.Tags != null && p.Tags.Contains(s)));
             }
 
-            return pd;
+            return query;
         }
 
         // เลือกเฉพาะ field ที่ map จริงมา projection ใหม่ (เหมือน MerchantRepository.GetSelection())
@@ -90,9 +82,8 @@ namespace Its.Onix.Api.Database.Repositories
                 limit = param.Limit;
             }
 
-            var predicate = OrganizationPredicate(param);
-            var result = await GetSelection().AsExpandable()
-                .Where(predicate)
+            var query = ApplyOrganizationFilters(GetSelection(), param);
+            var result = await query
                 .OrderByDescending(e => e.OrgCreatedDate)
                 .Skip(offset)
                 .Take(limit)
@@ -103,8 +94,8 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<int> GetOrganizationCount(VMOrganization param)
         {
-            var predicate = OrganizationPredicate(param);
-            var result = await context!.Organizations!.Where(predicate).AsExpandable().CountAsync();
+            var query = ApplyOrganizationFilters(context!.Organizations!, param);
+            var result = await query.CountAsync();
 
             return result;
         }
