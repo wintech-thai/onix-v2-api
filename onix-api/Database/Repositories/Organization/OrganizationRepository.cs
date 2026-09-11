@@ -53,6 +53,27 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
+        // เลือกเฉพาะ field ที่ map จริงมา projection ใหม่ (เหมือน MerchantRepository.GetSelection())
+        // เพื่อไม่ให้ EF ต้อง materialize field แบบ [NotMapped] เช่น Merchant/AddressesArray/ChannelsArray
+        private IQueryable<MOrganization> GetSelection()
+        {
+            var query =
+                from org in context!.Organizations
+                select new { org };
+            return query.Select(x => new MOrganization
+            {
+                OrgId = x.org.OrgId,
+                OrgCustomId = x.org.OrgCustomId,
+                OrgName = x.org.OrgName,
+                OrgType = x.org.OrgType,
+                Tags = x.org.Tags,
+                Email = x.org.Email,
+                Phone = x.org.Phone,
+                Status = x.org.Status,
+                OrgCreatedDate = x.org.OrgCreatedDate,
+            });
+        }
+
         public async Task<List<MOrganization>> GetOrganizations(VMOrganization param)
         {
             var offset = 0;
@@ -70,7 +91,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = OrganizationPredicate(param);
-            var result = await context!.Organizations!.AsExpandable()
+            var result = await GetSelection().AsExpandable()
                 .Where(predicate)
                 .OrderByDescending(e => e.OrgCreatedDate)
                 .Skip(offset)
