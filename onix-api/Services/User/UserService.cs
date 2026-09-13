@@ -257,13 +257,16 @@ namespace Its.Onix.Api.Services
                 }
             }
 
-            var validatePhoneResult = ValidationUtils.ValidatePhone(user.PhoneNumber!);
-            if (validatePhoneResult.Status != "OK")
+            if (!string.IsNullOrEmpty(user.PhoneNumber))
             {
-                result.Status = validatePhoneResult.Status;
-                result.Description = validatePhoneResult.Description;
+                var validatePhoneResult = ValidationUtils.ValidatePhone(user.PhoneNumber!);
+                if (validatePhoneResult.Status != "OK")
+                {
+                    result.Status = validatePhoneResult.Status;
+                    result.Description = validatePhoneResult.Description;
 
-                return result;
+                    return result;
+                }
             }
 
             var u = repository!.UpdateUserByUserName(userName, user);

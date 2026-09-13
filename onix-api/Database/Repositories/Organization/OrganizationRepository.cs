@@ -1,4 +1,5 @@
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ViewsModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
@@ -14,6 +15,89 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var result = context!.Organizations!.Where(x => x.OrgCustomId!.Equals(orgId)).FirstOrDefaultAsync();
             return result!;
+        }
+
+        // ไม่ใช้ LinqKit/PredicateBuilder เพราะ AsExpandable() ชนกับ EF Core async operations
+        // ("source 'IQueryable' doesn't implement 'IAsyncEnumerable'") - chain .Where() ตรง ๆ แทน
+        private IQueryable<MOrganization> ApplyOrganizationFilters(IQueryable<MOrganization> query, VMOrganization param)
+        {
+            if (!string.IsNullOrEmpty(param.OrgType))
+            {
+                query = query.Where(p => p.OrgType == param.OrgType);
+            }
+
+            if (!string.IsNullOrEmpty(param.Status))
+            {
+                query = query.Where(p => p.Status == param.Status);
+            }
+
+            if (!string.IsNullOrEmpty(param.FullTextSearch))
+            {
+                var s = param.FullTextSearch;
+                query = query.Where(p =>
+                    (p.OrgName != null && p.OrgName.Contains(s)) ||
+                    (p.OrgCustomId != null && p.OrgCustomId.Contains(s)) ||
+                    (p.Email != null && p.Email.Contains(s)) ||
+                    (p.Phone != null && p.Phone.Contains(s)) ||
+                    (p.Tags != null && p.Tags.Contains(s)));
+            }
+
+            return query;
+        }
+
+        // เลือกเฉพาะ field ที่ map จริงมา projection ใหม่ (เหมือน MerchantRepository.GetSelection())
+        // เพื่อไม่ให้ EF ต้อง materialize field แบบ [NotMapped] เช่น Merchant/AddressesArray/ChannelsArray
+        private IQueryable<MOrganization> GetSelection()
+        {
+            var query =
+                from org in context!.Organizations
+                select new { org };
+            return query.Select(x => new MOrganization
+            {
+                OrgId = x.org.OrgId,
+                OrgCustomId = x.org.OrgCustomId,
+                OrgName = x.org.OrgName,
+                OrgType = x.org.OrgType,
+                Tags = x.org.Tags,
+                Email = x.org.Email,
+                Phone = x.org.Phone,
+                Status = x.org.Status,
+                OrgCreatedDate = x.org.OrgCreatedDate,
+            });
+        }
+
+        public async Task<List<MOrganization>> GetOrganizations(VMOrganization param)
+        {
+            var offset = 0;
+            var limit = 0;
+
+            if (param.Offset > 0)
+            {
+                //Convert to zero base
+                offset = param.Offset - 1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var query = ApplyOrganizationFilters(GetSelection(), param);
+            var result = await query
+                .OrderByDescending(e => e.OrgCreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            return result;
+        }
+
+        public async Task<int> GetOrganizationCount(VMOrganization param)
+        {
+            var query = ApplyOrganizationFilters(context!.Organizations!, param);
+            var result = await query.CountAsync();
+
+            return result;
         }
 
         public MOrganizationUser AddUserToOrganization(MOrganizationUser user)

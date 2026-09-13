@@ -186,6 +186,7 @@ namespace Its.Onix.Api.Controllers
             {
                 //ให้ใช้ bank account กลาง
                 request.Id = Guid.NewGuid(); //สร้างใหม่จะได้ไม่ซ้ำกับ request เดิม
+                request.QrProvider = "PP";
                 var result2 = await _paymentRequestSvc.AddPaymentRequestPayIn(orgId, request, mc, false);
                 if (result2.Status == "OK" && result2.PaymentResponse != null)
                 {

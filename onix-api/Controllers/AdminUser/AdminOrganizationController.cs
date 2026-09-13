@@ -133,6 +133,23 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        // list Organizations โดยตรงจากตาราง Organizations ไม่ต้องพึ่ง Merchant
+        // (Merchant เป็น concept ของ PLEASE-PAYMENT/PLEASE-ERP เท่านั้น ไม่มีใน PLEASE-SCAN)
+        [HttpPost]
+        [Route("org/global/action/GetOrganizations")]
+        public async Task<IActionResult> GetOrganizations([FromBody] VMOrganization param)
+        {
+            var result = await _orgSvc.GetOrganizations(param);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetOrganizationCount")]
+        public async Task<IActionResult> GetOrganizationCount([FromBody] VMOrganization param)
+        {
+            var result = await _orgSvc.GetOrganizationCount(param);
+            return Ok(result);
+        }
 
         [HttpPost]
         [Route("org/global/action/CreatePaymentEndpointsApiKey/{orgId}/{roles}")]

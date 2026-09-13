@@ -2,6 +2,7 @@ using Its.Onix.Api.Models;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.Utils;
+using Its.Onix.Api.ViewsModels;
 using System.Text.Json;
 
 namespace Its.Onix.Api.Services
@@ -131,6 +132,18 @@ namespace Its.Onix.Api.Services
             }
                 
             return t;
+        }
+
+        public async Task<List<MOrganization>> GetOrganizations(VMOrganization param)
+        {
+            var result = await repository!.GetOrganizations(param);
+            return result;
+        }
+
+        public async Task<int> GetOrganizationCount(VMOrganization param)
+        {
+            var result = await repository!.GetOrganizationCount(param);
+            return result;
         }
 
         public IEnumerable<MOrganizationUser> GetUserAllowedOrganization(string userName)

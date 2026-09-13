@@ -1,11 +1,14 @@
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
+using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Services
 {
     public interface IOrganizationService
     {
         public Task<MOrganization> GetOrganization(string orgId);
+        public Task<List<MOrganization>> GetOrganizations(VMOrganization param);
+        public Task<int> GetOrganizationCount(VMOrganization param);
         public Task<MVOrganization> UpdateOrganization(string orgId, MOrganization org);
         public Task<MOrganization> GetCompanyProfile(string orgId);
         public Task<MVOrganization> UpdateCompanyProfile(string orgId, MOrganization org);
