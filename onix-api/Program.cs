@@ -139,6 +139,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<ISystemVariableService, SystemVariableService>();
             builder.Services.AddScoped<IOrganizationUserService, OrganizationUserService>();
             builder.Services.AddScoped<IMasterRefService, MasterRefService>();
+            builder.Services.AddScoped<IInventoryLocationService, InventoryLocationService>();
+            builder.Services.AddScoped<IInventoryItemService, InventoryItemService>();
             builder.Services.AddScoped<IIocService, IocService>();
             builder.Services.AddScoped<IRiskPolicyService, RiskPolicyService>();
             builder.Services.AddScoped<ICycleService, CycleService>();
@@ -203,6 +205,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<ISystemVariableRepository, SystemVariableRepository>();
             builder.Services.AddScoped<IOrganizationUserRepository, OrganizationUserRepository>();
             builder.Services.AddScoped<IMasterRefRepository, MasterRefRepository>();
+            builder.Services.AddScoped<IInventoryLocationRepository, InventoryLocationRepository>();
+            builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
             builder.Services.AddScoped<IIocRepository, IocRepository>();
             builder.Services.AddScoped<IRiskPolicyRepository, RiskPolicyRepository>();
             builder.Services.AddScoped<ICycleRepository, CycleRepository>();
