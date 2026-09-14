@@ -23,6 +23,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MOrganizationUser>? OrganizationUsers { get; set; }
     public DbSet<MSystemVariable>? SystemVariables { get; set; }
     public DbSet<MMasterRef>? MasterRefs { get; set; }
+    public DbSet<MInventoryLocation>? InventoryLocations { get; set; }
+    public DbSet<MInventoryItem>? InventoryItems { get; set; }
     public DbSet<MCycle>? Cycles { get; set; }
     public DbSet<MItem>? Items { get; set; }
     public DbSet<MItemImage>? ItemImages { get; set; }
