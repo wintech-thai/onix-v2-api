@@ -106,7 +106,7 @@ namespace Its.Onix.Api.Services
                 registerDomain = "register.please-scan.com";
                 if (environment != "Production")
                 {
-                    registerDomain = "register-dev.please-scan.com";
+                    registerDomain = "register2-dev.please-scan.com";
                 }
 
                 registrationUrl = $"https://{registerDomain}/{orgId}/{regType}/{token}?data={dataUrlSafe}";
