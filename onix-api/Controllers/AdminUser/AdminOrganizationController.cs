@@ -346,6 +346,14 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpPost]
+        [Route("org/global/action/UpdateOrgUserById/{orgId}/{orgUserId}")]
+        public IActionResult UpdateOrgUserById(string orgId, string orgUserId, [FromBody] MOrganizationUser request)
+        {
+            var result = _orgUserSvc.UpdateUserById(orgId, orgUserId, request);
+            return Ok(result);
+        }
+
+        [HttpPost]
         [Route("org/global/action/EnableOrgUserById/{orgId}/{orgUserId}")]
         public IActionResult EnableOrgUserById(string orgId, string orgUserId)
         {

@@ -56,5 +56,23 @@ namespace Its.Onix.Api.Services
         {
             return await repository!.GetAllAuditLogAggregations(param);
         }
+
+        public async Task<int> GetScanHistoryCount(string orgId, VMAuditLog param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetScanHistoryCount(param);
+        }
+
+        public async Task<IEnumerable<MAuditLog>> GetScanHistory(string orgId, VMAuditLog param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetScanHistory(param);
+        }
+
+        public async Task<VMScanTimelineResult> GetScanTimeline(string orgId, VMAuditLog param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetScanTimeline(param);
+        }
     }
 }

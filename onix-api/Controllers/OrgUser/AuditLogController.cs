@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.ViewsModels;
+using Its.Onix.Api.Database.Repositories;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -65,6 +66,77 @@ namespace Its.Onix.Api.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/GetScanItemsHistory")]
+        public async Task<IActionResult> GetScanItemsHistory(string id, [FromBody] VMAuditLog param)
+        {
+            if (param.Limit <= 0) param.Limit = 50;
+
+            var total = await svc.GetScanHistoryCount(id, param);
+            var logs = await svc.GetScanHistory(id, param);
+
+            var result = new
+            {
+                total,
+                limit = param.Limit,
+                offset = param.Offset,
+                items = logs.Select(MapToScanHistoryFormat).ToList(),
+            };
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/GetScanTimeline")]
+        public async Task<IActionResult> GetScanTimeline(string id, [FromBody] VMAuditLog param)
+        {
+            var timeline = await svc.GetScanTimeline(id, param);
+
+            var result = new
+            {
+                data = timeline.Buckets.Select(b => new
+                {
+                    timestamp = b.Timestamp,
+                    total = b.Total,
+                    productCounts = b.ProductCounts,
+                }),
+                interval = timeline.Interval,
+                total = new { value = timeline.Total, relation = "eq" },
+            };
+
+            return Ok(result);
+        }
+
+        private static Dictionary<string, object?> MapToScanHistoryFormat(MAuditLog log)
+        {
+            var data = new Dictionary<string, object?>
+            {
+                ["@timestamp"] = log.CreatedDate?.ToString("O"),
+                ["ContextData"] = new Dictionary<string, object?>
+                {
+                    ["Serial"] = log.Serial ?? AuditLogRepository.ExtractContextField(log.RawData, "Serial"),
+                    ["Pin"] = log.Pin ?? AuditLogRepository.ExtractContextField(log.RawData, "Pin"),
+                    ["CustomerEmail"] = AuditLogRepository.ExtractContextField(log.RawData, "CustomerEmail"),
+                    ["ProductCode"] = AuditLogRepository.ExtractContextField(log.RawData, "ProductCode"),
+                    ["FolderName"] = AuditLogRepository.ExtractContextField(log.RawData, "FolderName"),
+                },
+            };
+
+            return new Dictionary<string, object?>
+            {
+                ["id"] = log.Id?.ToString(),
+                ["index"] = "audit-logs",
+                ["source"] = new Dictionary<string, object?>
+                {
+                    ["data"] = data,
+                    // geoip is not available from Postgres - the frontend already falls back
+                    // to "-" when country/city are missing.
+                    ["geoip"] = new Dictionary<string, object?>(),
+                    ["@timestamp"] = log.CreatedDate?.ToString("O"),
+                },
+            };
         }
 
         private static Dictionary<string, object?> MapToEsFormat(MAuditLog log)

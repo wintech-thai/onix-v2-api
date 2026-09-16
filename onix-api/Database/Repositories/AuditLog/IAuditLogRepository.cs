@@ -14,5 +14,8 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param);
         public Task<MAuditLog> GetAllAuditLogById(string logId);
         public Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param);
+        public Task<int> GetScanHistoryCount(VMAuditLog param);
+        public Task<IEnumerable<MAuditLog>> GetScanHistory(VMAuditLog param);
+        public Task<VMScanTimelineResult> GetScanTimeline(VMAuditLog param);
     }
 }
