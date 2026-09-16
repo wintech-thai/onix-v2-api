@@ -72,6 +72,10 @@ namespace Its.Onix.Api.Database
         public DbSet<MRiskPolicy>? RiskPolicies { get; set; }
         public DbSet<MOrganizationPolicy>? OrganizationPolicies { get; set; }
 
+        public DbSet<MInventoryDoc>? InventoryDocs { get; set; }
+        public DbSet<MInventoryDocItem>? InventoryDocItems { get; set; }
+
+
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
     }
