@@ -17,6 +17,9 @@ namespace Its.Onix.Api.Database.Repositories
             var pd = PredicateBuilder.New<MAuditLog>();
             pd = pd.And(p => p.OrgId!.Equals(orgId));
 
+            if (!string.IsNullOrEmpty(param.Environment))
+                pd = pd.And(p => p.Environment!.Equals(param.Environment));
+
             if (param.FromDate.HasValue)
                 pd = pd.And(p => p.CreatedDate >= param.FromDate);
             if (param.ToDate.HasValue)

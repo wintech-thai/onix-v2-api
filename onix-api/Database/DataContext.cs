@@ -83,6 +83,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MRiskPolicy>? RiskPolicies { get; set; }
     public DbSet<MOrganizationPolicy>? OrganizationPolicies { get; set; }
 
+    public DbSet<MInventoryDoc>? InventoryDocs { get; set; }
+    public DbSet<MInventoryDocItem>? InventoryDocItems { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
@@ -277,5 +279,20 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
         modelBuilder.Entity<MIoc>()
             .HasIndex(t => new { t.OrgId, t.IocType, t.IocValue }).IsUnique();
+
+        modelBuilder.Entity<MInventoryDoc>()
+            .HasIndex(t => new { t.OrgId, t.DocumentNo }).IsUnique();
+
+        modelBuilder.Entity<MInventoryDocItem>()
+            .Property(x => x.ItemQuantity)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<MInventoryDocItem>()
+            .Property(x => x.ItemUnitPrice)
+            .HasPrecision(18, 6);
+
+        modelBuilder.Entity<MInventoryDocItem>()
+            .Property(x => x.ItemAmount)
+            .HasPrecision(18, 4);
     }
 }
