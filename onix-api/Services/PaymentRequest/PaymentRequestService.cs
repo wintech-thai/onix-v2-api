@@ -953,6 +953,22 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (string.IsNullOrEmpty(bankAccount.AccountNumber))
+            {
+                r.Status = "BANK_ACCOUNT_NUMBER_MISSING";
+                r.Description = $"Bank account number [BankAccountNo] is missing!!!";
+
+                return r;
+            }
+
+            if (string.IsNullOrEmpty(bankAccount.AccountName))
+            {
+                r.Status = "BANK_ACCOUNT_NAME_MISSING";
+                r.Description = $"Bank account name [BankAccountName] is missing!!!";
+
+                return r;
+            }
+
             var isRefIdExist = await repository!.IsRefIdExist(paymentRequest.RefId1);
             if (isRefIdExist)
             {
