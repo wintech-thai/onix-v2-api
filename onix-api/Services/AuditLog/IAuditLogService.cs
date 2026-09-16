@@ -13,5 +13,8 @@ namespace Its.Onix.Api.Services
         public Task<IEnumerable<MAuditLog>> GetAllAuditLogs(VMAuditLog param);
         public Task<int> GetAllAuditLogCount(VMAuditLog param);
         public Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param);
+        public Task<int> GetScanHistoryCount(string orgId, VMAuditLog param);
+        public Task<IEnumerable<MAuditLog>> GetScanHistory(string orgId, VMAuditLog param);
+        public Task<VMScanTimelineResult> GetScanTimeline(string orgId, VMAuditLog param);
     }
 }

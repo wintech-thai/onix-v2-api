@@ -1,5 +1,6 @@
 using LinqKit;
 using System.Data.Entity;
+using System.Text.Json;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 
@@ -228,6 +229,128 @@ namespace Its.Onix.Api.Database.Repositories
                 ByStatus = new VMAggBuckets { Buckets = byStatus },
                 ByApiLatency = byApiLatency,
                 Bruteforce = new VMBruteforceAgg { ByIp = new VMAggBuckets { Buckets = bruteforce } },
+            };
+        }
+
+        // ── Scan history (please-scan "who scanned the QR sticker" tracking) ───
+        // Tracks hits to VerifyScanItemController.Verify specifically (ApiName == "Verify",
+        // derived from the URL's action segment) - ContextData there is the MScanItem being
+        // scanned (Serial/Pin/ProductCode/ProductDesc/CustomerEmail/FolderName), persisted
+        // verbatim as JSON in RawData since those fields have no dedicated columns here.
+
+        private ExpressionStarter<MAuditLog> ScanHistoryPredicate(VMAuditLog param)
+        {
+            var pd = PredicateBuilder.New<MAuditLog>();
+            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            pd = pd.And(p => p.ApiName!.Equals("Verify"));
+
+            if (!string.IsNullOrEmpty(param.Environment))
+                pd = pd.And(p => p.Environment!.Equals(param.Environment));
+
+            if (param.FromDate.HasValue)
+                pd = pd.And(p => p.CreatedDate >= param.FromDate);
+            if (param.ToDate.HasValue)
+                pd = pd.And(p => p.CreatedDate <= param.ToDate);
+
+            if (!string.IsNullOrEmpty(param.FullTextSearch))
+            {
+                var fts = PredicateBuilder.New<MAuditLog>();
+                fts = fts.Or(p => p.Serial!.Contains(param.FullTextSearch));
+                fts = fts.Or(p => p.Pin!.Contains(param.FullTextSearch));
+                // Covers ProductCode/CustomerEmail/FolderName - not dedicated columns,
+                // only present inside the RawData JSON blob.
+                fts = fts.Or(p => p.RawData!.Contains(param.FullTextSearch));
+                pd = pd.And(fts);
+            }
+
+            return pd;
+        }
+
+        public static string? ExtractContextField(string? rawData, string field)
+        {
+            if (string.IsNullOrEmpty(rawData)) return null;
+            try
+            {
+                using var doc = JsonDocument.Parse(rawData);
+                if (doc.RootElement.TryGetProperty("ContextData", out var ctx) &&
+                    ctx.ValueKind == JsonValueKind.Object &&
+                    ctx.TryGetProperty(field, out var val) &&
+                    val.ValueKind == JsonValueKind.String)
+                {
+                    return val.GetString();
+                }
+            }
+            catch
+            {
+                // RawData missing/malformed for this row - just treat the field as absent
+            }
+            return null;
+        }
+
+        public async Task<int> GetScanHistoryCount(VMAuditLog param)
+        {
+            return await context!.AuditLogs!.AsExpandable().Where(ScanHistoryPredicate(param)).CountAsync();
+        }
+
+        public async Task<IEnumerable<MAuditLog>> GetScanHistory(VMAuditLog param)
+        {
+            var offset = param.Offset > 0 ? param.Offset : 0;
+            var limit = param.Limit > 0 ? param.Limit : 50;
+
+            return await context!.AuditLogs!
+                .AsExpandable()
+                .Where(ScanHistoryPredicate(param))
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+        }
+
+        private static string DetermineScanTimelineInterval(DateTime? from, DateTime? to)
+        {
+            if (!from.HasValue || !to.HasValue) return "1h";
+
+            var days = (to.Value - from.Value).TotalDays;
+            if (days <= 2) return "1h";
+            if (days <= 7) return "3h";
+            if (days <= 30) return "6h";
+            return "1d";
+        }
+
+        public async Task<VMScanTimelineResult> GetScanTimeline(VMAuditLog param)
+        {
+            var items = await context!.AuditLogs!
+                .AsExpandable()
+                .Where(ScanHistoryPredicate(param))
+                .Select(e => new { e.CreatedDate, e.RawData })
+                .ToListAsync();
+
+            var interval = DetermineScanTimelineInterval(param.FromDate, param.ToDate);
+
+            var buckets = items
+                .Where(e => e.CreatedDate.HasValue)
+                .Select(e => new
+                {
+                    e.CreatedDate,
+                    ProductCode = ExtractContextField(e.RawData, "ProductCode") ?? "Unknown",
+                })
+                .GroupBy(e => TruncateToInterval(e.CreatedDate!.Value, interval))
+                .OrderBy(g => g.Key)
+                .Select(g => new VMScanTimelineBucket
+                {
+                    Timestamp = g.Key.ToString("O"),
+                    Total = g.Count(),
+                    ProductCounts = g
+                        .GroupBy(x => x.ProductCode)
+                        .ToDictionary(pg => pg.Key, pg => pg.Count()),
+                })
+                .ToList();
+
+            return new VMScanTimelineResult
+            {
+                Buckets = buckets,
+                Interval = interval,
+                Total = items.Count,
             };
         }
 
