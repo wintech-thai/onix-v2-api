@@ -61,7 +61,7 @@ namespace Its.Onix.Api.Controllers
                 registerDomain = "register.please-scan.com";
                 if (environment != "Production")
                 {
-                    registerDomain = "register2-dev.please-scan.com";
+                    registerDomain = "register-dev.please-scan.com";
                 }
 
                 registrationUrl = $"https://{registerDomain}/{orgId}/{regType}/{token}?data={dataUrlSafe}";
@@ -122,7 +122,7 @@ namespace Its.Onix.Api.Controllers
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             if (environment != "Production")
             {
-                registerDomain = "register2-dev";
+                registerDomain = "register-dev";
             }
 
             var token = Guid.NewGuid().ToString();

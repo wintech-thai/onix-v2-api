@@ -92,7 +92,7 @@ namespace Its.Onix.Api.Services
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             if (environment != "Production")
             {
-                registerDomain = "register2-dev";
+                registerDomain = "register-dev";
             }
 
             var token = Guid.NewGuid().ToString();
@@ -142,7 +142,7 @@ namespace Its.Onix.Api.Services
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             if (environment != "Production")
             {
-                registerDomain = "register2-dev";
+                registerDomain = "register-dev";
             }
 
             var token = Guid.NewGuid().ToString();
@@ -192,7 +192,7 @@ namespace Its.Onix.Api.Services
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
             if (environment != "Production")
             {
-                registerDomain = "register2-dev";
+                registerDomain = "register-dev";
             }
 
             var token = Guid.NewGuid().ToString();
