@@ -43,5 +43,21 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.GetExpenseSummary("global", request);
             return Ok(result);
         }
+
+        [HttpPost]
+        [Route("org/global/action/GetBankSummary")]
+        public async Task<IActionResult> GetBankSummary([FromBody] VMBankSummary request)
+        {
+            var result = await svc.GetBankSummary("global", request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/GetPayerSummary")]
+        public async Task<IActionResult> GetPayerSummary([FromBody] VMPayerSummary request)
+        {
+            var result = await svc.GetPayerSummary("global", request);
+            return Ok(result);
+        }
     }
 }

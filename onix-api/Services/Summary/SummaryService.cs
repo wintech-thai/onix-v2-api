@@ -81,5 +81,38 @@ namespace Its.Onix.Api.Services
 
             return result;
         }
+
+        public async Task<BankSummary> GetBankSummary(string orgId, VMBankSummary param)
+        {
+            _repo.SetCustomOrgId(orgId);
+
+            var daily = await _repo.GetDailyBankSummary(param);
+
+            return new BankSummary
+            {
+                DailyBankSummary = daily,
+                TotalPayInAmount = daily.Sum(x => x.PayInAmount),
+                TotalPayOutAmount = daily.Sum(x => x.PayOutAmount),
+                TotalWithdrawalAmount = daily.Sum(x => x.WithdrawalAmount),
+                TotalPayInCount = daily.Sum(x => x.PayInCount),
+                TotalPayOutCount = daily.Sum(x => x.PayOutCount),
+                TotalWithdrawalCount = daily.Sum(x => x.WithdrawalCount),
+            };
+        }
+
+        public async Task<PayerSummary> GetPayerSummary(string orgId, VMPayerSummary param)
+        {
+            _repo.SetCustomOrgId(orgId);
+
+            var payers = await _repo.GetPayerSummary(param);
+
+            return new PayerSummary
+            {
+                Payers = payers,
+                TotalPayers = payers.Count,
+                TotalAmount = payers.Sum(x => x.TotalAmount),
+                TotalTransactionCount = payers.Sum(x => x.TransactionCount),
+            };
+        }
     }
 }

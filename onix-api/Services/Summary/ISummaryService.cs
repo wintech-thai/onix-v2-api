@@ -8,5 +8,7 @@ namespace Its.Onix.Api.Services
         public Task<MerchantSummary> GetMerchantSummary(string orgId, VMSummary param);
         public Task<RevenueSummary> GetRevenueSummary(string orgId, VMSummary param);
         public Task<ExpenseSummary> GetExpenseSummary(string orgId, VMSummary param);
+        public Task<BankSummary> GetBankSummary(string orgId, VMBankSummary param);
+        public Task<PayerSummary> GetPayerSummary(string orgId, VMPayerSummary param);
     }
 }

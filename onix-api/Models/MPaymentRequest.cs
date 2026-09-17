@@ -24,7 +24,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(GeneratedAmountStr))]
     [Index(nameof(PayerName))]
 
-    public class MPaymentRequest
+    public class MPaymentRequest : IOrgEntity
     {
         [Key]
         [Column("request_id")]
