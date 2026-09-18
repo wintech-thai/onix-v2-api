@@ -59,8 +59,9 @@ namespace Its.Onix.Api.Services
             if (needDownloadUrl && hasLogo)
             {
                 // Points at our own API instead of MinIO/storage-api now — <API-BASE> is replaced by the frontend,
-                // same convention as the old <STORAGE-API-BASE> placeholder.
-                bc.LogoImageUrl = "<API-BASE>/admin-api/AdminConfiguration/org/global/action/GetBrandLogoImage";
+                // same convention as the old <STORAGE-API-BASE> placeholder. Uses the /public-api/* route (not
+                // /admin-api/*) so serving the logo is never subject to the admin's own IP blacklist policy.
+                bc.LogoImageUrl = "<API-BASE>/public-api/PublicBranding/action/GetBrandLogoImage";
             }
 
             result.BrandConfig = bc;
