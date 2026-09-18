@@ -18,24 +18,23 @@ public class BlacklistMiddleware
         IConfigurationService configurationService)
     {
         // Our own Admin/Merchant backend relay attaches this header (from its own MUTUAL_KEY
-        // env var) on every request it forwards to us. A correct value proves the request
-        // genuinely came from our trusted relay (internal-to-internal), so it can skip the
-        // blacklist check entirely. A present-but-wrong value means someone is trying to
-        // impersonate the relay — treat that as blacklisted outright. No header at all means
-        // this is a direct API call (e.g. a merchant integration hitting onix-api with an API
-        // key) — fall through to the normal blacklist check.
+        // env var) on every request it forwards to us — including every real end-user browser
+        // request, since the relay is how 100% of web traffic reaches onix-api. A correct value
+        // only proves the request's forwarded client-IP headers are genuine (not spoofed by some
+        // other direct caller) — it must NOT also skip the blacklist check below, or the entire
+        // web-facing enforcement becomes a no-op (real end users always carry a valid key). A
+        // present-but-wrong value means someone is trying to impersonate the relay — treat that
+        // as blacklisted outright. No header at all means this is a direct API call (e.g. a
+        // merchant integration hitting onix-api with an API key) — same normal check applies.
         var mutualKeyHeader = context.Request.Headers["X-Forward-Mutual-Key"].ToString();
         if (!string.IsNullOrEmpty(mutualKeyHeader))
         {
             var expectedMutualKey = Environment.GetEnvironmentVariable("MUTUAL_KEY");
-            if (!string.IsNullOrEmpty(expectedMutualKey) && mutualKeyHeader == expectedMutualKey)
+            if (string.IsNullOrEmpty(expectedMutualKey) || mutualKeyHeader != expectedMutualKey)
             {
-                await _next(context);
+                await WriteBlockedResponse(context, "INVALID_MUTUAL_KEY", "X-Forward-Mutual-Key header value does not match.", null, null, null);
                 return;
             }
-
-            await WriteBlockedResponse(context, "INVALID_MUTUAL_KEY", "X-Forward-Mutual-Key header value does not match.", null, null, null);
-            return;
         }
 
         var orgId = requestContext.OrgId;
@@ -46,10 +45,11 @@ public class BlacklistMiddleware
             return;
         }
 
-        // The merchant web page calls this endpoint to find out whether it is blacklisted.
-        // It must never be blocked by the API-side check itself, or a client blacklisted on
-        // the API list could never learn (and see) their own Web blacklist status.
-        if (string.Equals(requestContext.ApiName, "GetIpPolicyStatus", StringComparison.OrdinalIgnoreCase))
+        // These IP-policy management endpoints must never be blocked by the check they
+        // themselves gate — otherwise an admin/org who blacklists their own current IP by
+        // mistake would have no way left to view or undo it through the web UI.
+        var alwaysAllowedApiNames = new[] { "GetIpPolicyStatus", "GetOrganizationPolicy", "SetOrganizationPolicy" };
+        if (alwaysAllowedApiNames.Any(name => string.Equals(requestContext.ApiName, name, StringComparison.OrdinalIgnoreCase)))
         {
             await _next(context);
             return;
