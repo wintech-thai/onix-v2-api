@@ -75,5 +75,19 @@ namespace Its.Onix.Api.Controllers
             var result = await _summarySvc.GetRevenueSummary(orgId, param);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/GetPayerSummary")]
+        public async Task<IActionResult> GetPayerSummary(string orgId, [FromBody] VMPayerSummary param)
+        {
+            if (param.Limit <= 0)
+            {
+                param.Limit = 100;
+            }
+
+            var result = await _summarySvc.GetPayerSummary(orgId, param);
+            return Ok(result);
+        }
     }
 }

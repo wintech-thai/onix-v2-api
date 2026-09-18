@@ -19,5 +19,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<int> GetExpenseTotalCount(VMSummary param);
         public Task<List<DailyExpenseSummaryData>> GetDailyExpenseSummary(VMSummary param);
         public Task<List<ExpenseByCategoryData>> GetExpenseByCategorySummary(VMSummary param);
+        public Task<List<DailyBankSummaryData>> GetDailyBankSummary(VMBankSummary param);
+        public Task<List<PayerSummaryData>> GetPayerSummary(VMPayerSummary param);
     }
 }

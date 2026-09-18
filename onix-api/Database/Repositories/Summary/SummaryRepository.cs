@@ -107,10 +107,37 @@ namespace Its.Onix.Api.Database.Repositories
                 Direction = x.pmt.Direction,
                 CreatedDate = x.pmt.CreatedDate,
                 PayoutIsWithdrawal = x.pmt.PayoutIsWithdrawal,
+                PayInBankCode = x.pmt.PayInBankCode,
+                PayInBankAccountNo = x.pmt.PayInBankAccountNo,
+                PayOutBankCode = x.pmt.PayOutBankCode,
+                PayOutBankAccountNo = x.pmt.PayOutBankAccountNo,
+                TxIsPeerToPeer = x.pmt.TxIsPeerToPeer,
             });
         }
 
-        private ExpressionStarter<T> DateRangePredicate<T>(VMSummary param) where T : IOrgEntity
+        public IQueryable<MPaymentRequest> GetSelectionPaymentRequest()
+        {
+            var query =
+                from req in context!.PaymentRequests
+
+                join mc in context.Merchants!
+                    on req.MerchantId equals mc.Id.ToString() into merchants
+                from merchant in merchants.DefaultIfEmpty()
+
+                select new { req, merchant };
+            return query.Select(x => new MPaymentRequest
+            {
+                OrgId = x.req.OrgId,
+                MerchantCode = x.merchant.Code,
+                PayerName = x.req.PayerName,
+                Direction = x.req.Direction,
+                Status = x.req.Status,
+                GeneratedAmount = x.req.GeneratedAmount,
+                CreatedDate = x.req.CreatedDate,
+            });
+        }
+
+        private ExpressionStarter<T> DateRangePredicate<T>(VMQueryBase param) where T : IOrgEntity
         {
             var pd = PredicateBuilder.New<T>(true);
 
@@ -320,6 +347,126 @@ namespace Its.Onix.Api.Database.Repositories
                 })
                 .OrderByDescending(x => x.Amount)
                 .ToListAsync();
+        }
+
+        public async Task<List<DailyBankSummaryData>> GetDailyBankSummary(VMBankSummary param)
+        {
+            // PayIn and PayOut/Withdrawal legs of a transaction land in two different bank
+            // accounts (PayInBankAccountNo vs PayOutBankAccountNo), so they're grouped
+            // separately here then merged in-memory by (Date, BankCode, AccountNumber, MerchantCode).
+            var payInRows = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.Direction == "PayIn" && x.PayInBankAccountNo != null)
+                .Where(x => param.IncludeP2P || x.TxIsPeerToPeer != true)
+                .Where(x => string.IsNullOrEmpty(param.BankCode) || x.PayInBankCode == param.BankCode)
+                .Where(x => string.IsNullOrEmpty(param.AccountNumber) || x.PayInBankAccountNo == param.AccountNumber)
+                .Where(x => string.IsNullOrEmpty(param.MerchantCode) || x.MerchantCode == param.MerchantCode)
+                .GroupBy(x => new { x.CreatedDate!.Value.Date, BankCode = x.PayInBankCode, AccountNumber = x.PayInBankAccountNo, x.MerchantCode })
+                .Select(g => new
+                {
+                    g.Key.Date,
+                    g.Key.BankCode,
+                    g.Key.AccountNumber,
+                    g.Key.MerchantCode,
+                    Amount = g.Sum(x => x.TxAmountDecimal),
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            var payOutRows = await GetSelectionPaymentTx().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
+                .Where(DateRangePredicate<MPaymentTransaction>(param))
+                .Where(x => x.Direction == "PayOut" && x.PayOutBankAccountNo != null)
+                .Where(x => param.IncludeP2P || x.TxIsPeerToPeer != true)
+                .Where(x => string.IsNullOrEmpty(param.BankCode) || x.PayOutBankCode == param.BankCode)
+                .Where(x => string.IsNullOrEmpty(param.AccountNumber) || x.PayOutBankAccountNo == param.AccountNumber)
+                .Where(x => string.IsNullOrEmpty(param.MerchantCode) || x.MerchantCode == param.MerchantCode)
+                .GroupBy(x => new { x.CreatedDate!.Value.Date, BankCode = x.PayOutBankCode, AccountNumber = x.PayOutBankAccountNo, x.MerchantCode, x.PayoutIsWithdrawal })
+                .Select(g => new
+                {
+                    g.Key.Date,
+                    g.Key.BankCode,
+                    g.Key.AccountNumber,
+                    g.Key.MerchantCode,
+                    g.Key.PayoutIsWithdrawal,
+                    Amount = g.Sum(x => x.TxAmountDecimal),
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            var merged = new Dictionary<(DateTime, string, string, string), DailyBankSummaryData>();
+
+            DailyBankSummaryData GetOrAdd(DateTime date, string? bankCode, string? accountNumber, string? merchantCode)
+            {
+                var key = (date, bankCode ?? "", accountNumber ?? "", merchantCode ?? "");
+                if (!merged.TryGetValue(key, out var row))
+                {
+                    row = new DailyBankSummaryData { Date = date, BankCode = bankCode, AccountNumber = accountNumber, MerchantCode = merchantCode };
+                    merged[key] = row;
+                }
+                return row;
+            }
+
+            foreach (var r in payInRows)
+            {
+                var row = GetOrAdd(r.Date, r.BankCode, r.AccountNumber, r.MerchantCode);
+                row.PayInAmount += r.Amount ?? 0;
+                row.PayInCount += r.Count;
+            }
+
+            foreach (var r in payOutRows)
+            {
+                var row = GetOrAdd(r.Date, r.BankCode, r.AccountNumber, r.MerchantCode);
+                if (r.PayoutIsWithdrawal == true)
+                {
+                    row.WithdrawalAmount += r.Amount ?? 0;
+                    row.WithdrawalCount += r.Count;
+                }
+                else
+                {
+                    row.PayOutAmount += r.Amount ?? 0;
+                    row.PayOutCount += r.Count;
+                }
+            }
+
+            return merged.Values
+                .OrderBy(x => x.Date)
+                .ThenBy(x => x.BankCode)
+                .ThenBy(x => x.AccountNumber)
+                .ToList();
+        }
+
+        public async Task<List<PayerSummaryData>> GetPayerSummary(VMPayerSummary param)
+        {
+            var raw = await GetSelectionPaymentRequest().AsExpandable()
+                .Where(IsOrgMatchPredicate<MPaymentRequest>())
+                .Where(DateRangePredicate<MPaymentRequest>(param))
+                .Where(x => x.Direction == "PayIn" && x.PayerName != null && x.PayerName != "")
+                .Where(x => string.IsNullOrEmpty(param.MerchantCode) || x.MerchantCode == param.MerchantCode)
+                .Where(x => string.IsNullOrEmpty(param.PayerName) || x.PayerName!.Contains(param.PayerName))
+                .GroupBy(x => new { x.PayerName, x.MerchantCode })
+                .Select(g => new
+                {
+                    g.Key.PayerName,
+                    g.Key.MerchantCode,
+                    Count = g.Count(),
+                    Amount = g.Sum(x => x.GeneratedAmount ?? 0),
+                    FirstSeen = g.Min(x => x.CreatedDate),
+                    LastSeen = g.Max(x => x.CreatedDate),
+                })
+                .OrderByDescending(x => x.Amount)
+                .ToListAsync();
+
+            return raw.Select(r => new PayerSummaryData
+            {
+                PayerName = r.PayerName,
+                MerchantCode = r.MerchantCode,
+                TransactionCount = r.Count,
+                TotalAmount = (decimal)r.Amount,
+                FirstSeenDate = r.FirstSeen,
+                LastSeenDate = r.LastSeen,
+            }).ToList();
         }
     }
 }

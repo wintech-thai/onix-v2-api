@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Its.Onix.Api.Services;
 using Its.Onix.Api.Utils;
 
 public class RequestContextMiddleware
@@ -23,7 +24,8 @@ public class RequestContextMiddleware
 
     public async Task InvokeAsync(
         HttpContext context,
-        RequestContext requestContext)
+        RequestContext requestContext,
+        IConfigurationService configurationService)
     {
         var cfClientIp = "";
         if (context.Request.Headers.TryGetValue("CF-Connecting-IP", out var cfConnectingIp))
@@ -37,12 +39,12 @@ public class RequestContextMiddleware
             clientIp = xForwardedFor.ToString().Split(',')[0].Trim();
         }
 
-        var remoteAddr = context.Connection.RemoteIpAddress?.ToString();
-
         requestContext.IpAddress = string.Join(",",
             new[] { cfClientIp, clientIp }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
-        requestContext.IpAddress2 = remoteAddr;
+        // Same IP resolution the blacklist feature uses (admin-configurable ClientIpSource, scope "Api"),
+        // so audit trails show the same IP that actually drove any blacklist decision.
+        requestContext.IpAddress2 = await ServiceUtils.ResolveConfiguredClientIp(context.Request, configurationService);
 
         var pc = ServiceUtils.GetPathComponent(context.Request);
 
