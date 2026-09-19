@@ -287,6 +287,34 @@ namespace Its.Onix.Api.Database.Repositories
             return null;
         }
 
+        // The audit-log producer already resolves GeoIP (CountryCode/Country/City/Latitude/
+        // Longitude) and embeds it at RawData.data.GeoIP, but Postgres has no dedicated column
+        // for it — this pulls it back out for display instead of the caller returning an
+        // always-empty dictionary.
+        public static Dictionary<string, object?> ExtractGeoIp(string? rawData)
+        {
+            if (!string.IsNullOrEmpty(rawData))
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(rawData);
+                    if (doc.RootElement.TryGetProperty("data", out var data) &&
+                        data.ValueKind == JsonValueKind.Object &&
+                        data.TryGetProperty("GeoIP", out var geoIp) &&
+                        geoIp.ValueKind == JsonValueKind.Object)
+                    {
+                        var result = JsonSerializer.Deserialize<Dictionary<string, object?>>(geoIp.GetRawText());
+                        if (result != null) return result;
+                    }
+                }
+                catch
+                {
+                    // RawData missing/malformed for this row - just treat geoip as absent
+                }
+            }
+            return new Dictionary<string, object?>();
+        }
+
         public async Task<int> GetScanHistoryCount(VMAuditLog param)
         {
             return await context!.AuditLogs!.AsExpandable().Where(ScanHistoryPredicate(param)).CountAsync();
