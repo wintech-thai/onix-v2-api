@@ -188,7 +188,7 @@ namespace Its.Onix.Api.Controllers
                 ["resource"] = log.ControllerName,
                 ["status_code"] = log.StatusCode,
                 ["client_ip"] = log.ClientIp,
-                ["geoip"] = new Dictionary<string, object?>(),
+                ["geoip"] = AuditLogRepository.ExtractGeoIp(log.RawData),
                 ["raw_data"] = log.RawData,
                 ["data"] = data,
             };
