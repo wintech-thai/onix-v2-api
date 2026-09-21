@@ -36,6 +36,13 @@ namespace Its.Onix.Api.AuditLogs
 
         public async Task InvokeAsync(HttpContext context)
         {
+            // Wrapping Response.Body below would break a WebSocket upgrade (e.g. terminal exec).
+            if (context.WebSockets.IsWebSocketRequest)
+            {
+                await _next(context);
+                return;
+            }
+
             var stopwatch = Stopwatch.StartNew();
 
             var originalBodyStream = context.Response.Body;

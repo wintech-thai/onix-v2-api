@@ -314,6 +314,18 @@ namespace Its.Onix.Api
             });
 
             builder.Services.AddHttpClient();
+
+            // Prometheus is installed cluster-wide already (see please-protect-api's identical
+            // "prom-proxy" client) — default matches the real in-cluster service/port so this
+            // works without needing a values-file change first; PROM_URL still overrides it.
+            builder.Services.AddHttpClient("prom-proxy", c =>
+            {
+                var url = Environment.GetEnvironmentVariable("PROM_URL")
+                    ?? "http://prometheus-prometheus.monitoring.svc.cluster.local:9090";
+                c.BaseAddress = new Uri(url);
+                c.Timeout = TimeSpan.FromSeconds(30);
+            });
+
             builder.Services.AddHealthChecks();
             builder.Services.AddSignalR();
 
@@ -377,6 +389,7 @@ namespace Its.Onix.Api
 
             app.UseRateLimiter();
             app.UseHttpsRedirection();
+            app.UseWebSockets();
 
             app.UseAuthentication();
             app.UseMiddleware<RequestContextMiddleware>();

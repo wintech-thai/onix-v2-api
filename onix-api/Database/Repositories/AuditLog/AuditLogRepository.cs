@@ -430,6 +430,25 @@ namespace Its.Onix.Api.Database.Repositories
             };
         }
 
+        // 30 วินาที เดี๋ยวจนถึง 1 วัน — เกินกว่านี้ (เช่น interval วินาทีเดียวคร่อมช่วงเวลานานๆ)
+        // จะสร้าง bucket ว่างเปล่ามากเกินไปโดยไม่มีประโยชน์ จึงจำกัดจำนวนไว้กันเผื่อ
+        private const int MaxTimelineSlots = 5000;
+
+        private static TimeSpan ParseIntervalSpan(string? interval)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(interval ?? "1h", @"(\d+)([smhd])");
+            var val = match.Success ? int.Parse(match.Groups[1].Value) : 1;
+            var unit = match.Success ? match.Groups[2].Value : "h";
+            return unit switch
+            {
+                "s" => TimeSpan.FromSeconds(val),
+                "m" => TimeSpan.FromMinutes(val),
+                "h" => TimeSpan.FromHours(val),
+                "d" => TimeSpan.FromDays(val),
+                _ => TimeSpan.FromHours(1),
+            };
+        }
+
         public async Task<VMAuditLogAggregations> GetAllAuditLogAggregations(VMAuditLog param)
         {
             var pd = AllAuditLogPredicate(param);
@@ -448,34 +467,76 @@ namespace Its.Onix.Api.Database.Repositories
                 })
                 .ToListAsync();
 
-            var timeline = items
+            var groupedByInterval = items
                 .Where(e => e.CreatedDate.HasValue)
                 .GroupBy(e => TruncateToInterval(e.CreatedDate!.Value, param.Interval))
-                .OrderBy(g => g.Key)
-                .Select(g => new VMAggBucket
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // ต้องสร้าง bucket ว่าง (doc_count = 0) ให้ครบทุกช่วงเวลาตลอดทั้งช่วงที่ query
+            // ไม่ใช่แค่ช่วงที่มีข้อมูลจริง — ไม่งั้นกราฟฝั่ง frontend (ที่ให้แต่ละ bar กว้างเท่ากันเสมอ)
+            // จะเอา bar ที่มีข้อมูลบางๆ มาเรียงติดกันเต็มความกว้าง ทำให้ดูเหมือนข้อมูลกระจายเต็ม
+            // ช่วงเวลา ทั้งที่จริงอาจกระจุกอยู่ไม่กี่ช่วงเวลา
+            var slots = new List<DateTime>();
+            if (param.FromDate.HasValue && param.ToDate.HasValue)
+            {
+                var step = ParseIntervalSpan(param.Interval);
+                var cursor = TruncateToInterval(param.FromDate.Value, param.Interval);
+                var endTrunc = TruncateToInterval(param.ToDate.Value, param.Interval);
+                var count = 0;
+                while (cursor <= endTrunc && count < MaxTimelineSlots)
                 {
-                    Key = new DateTimeOffset(g.Key).ToUnixTimeMilliseconds(),
-                    KeyAsString = g.Key.ToString("O"),
-                    DocCount = g.Count(),
-                    GroupByApi = new VMAggBuckets
+                    slots.Add(cursor);
+                    cursor = cursor.Add(step);
+                    count++;
+                }
+            }
+            foreach (var k in groupedByInterval.Keys)
+            {
+                if (!slots.Contains(k)) slots.Add(k);
+            }
+
+            var timeline = slots
+                .OrderBy(k => k)
+                .Select(k =>
+                {
+                    groupedByInterval.TryGetValue(k, out var bucketItems);
+                    var list = bucketItems ?? new();
+
+                    var subBuckets = (param.GroupBy?.ToLower() switch
                     {
-                        Buckets = (param.GroupBy?.ToLower() switch
-                        {
-                            "user" => g.Where(e => !string.IsNullOrEmpty(e.UserName))
-                                       .GroupBy(e => e.UserName!),
-                            "ip"   => g.Where(e => !string.IsNullOrEmpty(e.ClientIp))
-                                       .GroupBy(e => e.ClientIp!),
-                            "status" => g.Where(e => e.StatusCode.HasValue)
-                                         .GroupBy(e => e.StatusCode!.Value.ToString()),
-                            _      => g.Where(e => !string.IsNullOrEmpty(e.ApiName))
-                                       .GroupBy(e => e.ApiName!),
-                        })
-                        .Select(ag => new { Key = ag.Key, Count = ag.Count() })
-                        .OrderByDescending(x => x.Count)
-                        .Take(10)
-                        .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
-                        .ToList(),
-                    },
+                        "user" => list.Where(e => !string.IsNullOrEmpty(e.UserName))
+                                   .GroupBy(e => e.UserName!),
+                        "ip" => list.Where(e => !string.IsNullOrEmpty(e.ClientIp))
+                                   .GroupBy(e => e.ClientIp!),
+                        "status" => list.Where(e => e.StatusCode.HasValue)
+                                     .GroupBy(e => e.StatusCode!.Value.ToString()),
+                        _ => list.Where(e => !string.IsNullOrEmpty(e.ApiName))
+                                   .GroupBy(e => e.ApiName!),
+                    })
+                    .Select(ag => new { Key = ag.Key, Count = ag.Count() })
+                    .OrderByDescending(x => x.Count)
+                    .Take(10)
+                    .Select(x => new VMAggBucket { Key = x.Key, DocCount = x.Count })
+                    .ToList();
+
+                    // ส่วนต่างระหว่าง doc_count รวมกับผลรวมของ sub-bucket ที่แสดง — เกิดได้ 2 กรณี
+                    // คือแถวนั้นไม่มีค่า group-by field (เช่น ApiName ว่าง) จริงๆ หรือถูกตัดออกเพราะ
+                    // ไม่ติด Top 10 — ไม่ว่ากรณีไหนก็ควรแสดงให้เห็นว่ายอดรวมมาจากไหนบ้าง แทนที่จะ
+                    // ปล่อยให้ tooltip ดูเหมือนไม่มีข้อมูลย่อยทั้งที่ doc_count ไม่ใช่ศูนย์
+                    var accountedFor = subBuckets.Sum(b => b.DocCount);
+                    var unresolved = list.Count - accountedFor;
+                    if (unresolved > 0)
+                    {
+                        subBuckets.Add(new VMAggBucket { Key = "(other)", DocCount = unresolved });
+                    }
+
+                    return new VMAggBucket
+                    {
+                        Key = new DateTimeOffset(k).ToUnixTimeMilliseconds(),
+                        KeyAsString = k.ToString("O"),
+                        DocCount = list.Count,
+                        GroupByApi = new VMAggBuckets { Buckets = subBuckets },
+                    };
                 })
                 .ToList();
 
