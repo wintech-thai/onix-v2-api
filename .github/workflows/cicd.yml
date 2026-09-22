@@ -108,7 +108,7 @@ jobs:
         file: ${{ steps.prep.outputs.dockerFile }}
         push: true
         load: false
-        tags: ${{ steps.prep.outputs.gcr_tags }},${{ steps.prep.outputs.tags }}
+        tags: ${{ steps.prep.outputs.tags }}
         build-args: version=0.0.1
 
     - name: Slack notification end
