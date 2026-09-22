@@ -1,9 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using k8s;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Its.Onix.Api.AuditLogs;
+using Its.Onix.Api.Utils;
 
 namespace Its.Onix.Api.Controllers
 {
@@ -15,10 +18,51 @@ namespace Its.Onix.Api.Controllers
     {
         private const string TerminalNamespace = "terminal";
         private const string TerminalPodLabelSelector = "app=terminal";
+        private readonly IRedisHelper _redis;
 
         [ExcludeFromCodeCoverage]
-        public AdminTerminalController()
+        public AdminTerminalController(IRedisHelper redis)
         {
+            _redis = redis;
+        }
+
+        // AuditLogMiddleware skips WebSocket upgrades entirely (it can't wrap Response.Body for one),
+        // so TerminalConnect has to publish its own audit event manually.
+        [ExcludeFromCodeCoverage]
+        private void PublishAuditLog(int statusCode)
+        {
+            var cfClientIp = HttpContext.Request.Headers.TryGetValue("CF-Connecting-IP", out var cf) ? cf.ToString() : "";
+            var clientIp = HttpContext.Request.Headers.TryGetValue("X-Original-Forwarded-For", out var xff)
+                ? xff.ToString().Split(',')[0].Trim()
+                : HttpContext.Request.Headers.TryGetValue("X-Forwarded-For", out var fwd) ? fwd.ToString().Split(',')[0].Trim() : "";
+
+            var log = new AuditLog
+            {
+                Host = HttpContext.Request.Headers["X-Forwarded-Host"].ToString(),
+                HttpMethod = HttpContext.Request.Method,
+                StatusCode = statusCode,
+                Path = HttpContext.Request.Path,
+                QueryString = HttpContext.Request.QueryString.ToString(),
+                UserAgent = HttpContext.Request.Headers["User-Agent"].ToString(),
+                Scheme = HttpContext.Request.Scheme,
+                ClientIp = clientIp,
+                CfClientIp = cfClientIp,
+                RemoteIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                Environment = System.Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                ApplicationType = HttpContext.Request.Headers["Onix-Application-Type"].ToString(),
+                userInfo = new UserInfo
+                {
+                    Role = HttpContext.Items["Temp-Authorized-Role"]?.ToString(),
+                    CustomRole = HttpContext.Items["Temp-Authorized-CustomRole"]?.ToString(),
+                    IdentityType = HttpContext.Items["Temp-Identity-Type"]?.ToString(),
+                    UserId = HttpContext.Items["Temp-Identity-Id"]?.ToString(),
+                    UserName = HttpContext.Items["Temp-Identity-Name"]?.ToString(),
+                },
+            };
+
+            var stream = CacheHelper.CreateAuditLogStreamKey();
+            var message = JsonSerializer.Serialize(log);
+            _ = _redis.PublishMessageAsync(stream!, message);
         }
 
         [ExcludeFromCodeCoverage]
@@ -138,8 +182,8 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
-        [Route("org/global/action/Connect")]
-        public async Task Connect()
+        [Route("org/global/action/TerminalConnect")]
+        public async Task TerminalConnect()
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
             {
@@ -148,6 +192,7 @@ namespace Its.Onix.Api.Controllers
             }
 
             using var clientSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            PublishAuditLog(StatusCodes.Status101SwitchingProtocols);
             await HandleTerminal(clientSocket, HttpContext.RequestAborted);
         }
     }

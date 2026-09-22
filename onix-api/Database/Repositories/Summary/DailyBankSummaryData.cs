@@ -8,6 +8,7 @@ namespace Its.Onix.Api.Models
         public DateTime? Date { get; set; }
         public string? BankCode { get; set; }
         public string? AccountNumber { get; set; }
+        public string? AccountName { get; set; }
         public string? MerchantCode { get; set; }
         public decimal PayInAmount { get; set; }
         public decimal PayOutAmount { get; set; }
