@@ -109,8 +109,10 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutIsWithdrawal = x.pmt.PayoutIsWithdrawal,
                 PayInBankCode = x.pmt.PayInBankCode,
                 PayInBankAccountNo = x.pmt.PayInBankAccountNo,
+                PayInBankAccountName = x.pmt.PayInBankAccountName,
                 PayOutBankCode = x.pmt.PayOutBankCode,
                 PayOutBankAccountNo = x.pmt.PayOutBankAccountNo,
+                PayOutBankAccountName = x.pmt.PayOutBankAccountName,
                 TxIsPeerToPeer = x.pmt.TxIsPeerToPeer,
             });
         }
