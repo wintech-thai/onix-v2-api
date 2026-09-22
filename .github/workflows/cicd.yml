@@ -68,15 +68,16 @@ jobs:
         echo ::set-output name=autoDeployBranch::${DEPLOYMENT_BRANCH}
         echo ::set-output name=dockerFile::${DOCKERFILE}
 
-    - name: Slack notification start
+    - name: Discord notification start
       if: always()
-      uses: slackapi/slack-github-action@v2
+      uses: tsickert/discord-webhook@v7.0.0
       with:
-        webhook: ${{ secrets.SLACK_URL }}
-        webhook-type: incoming-webhook
-        payload: |
-          text: |
-            🚀 "Start building [${{matrix.service}}] [${{ steps.prep.outputs.version }}]..."
+        webhook-url: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+        embed-title: '🚀 CI/CD Build Started'
+        embed-description: |
+          Service: `${{ matrix.service }}`
+          Version: `${{ steps.prep.outputs.version }}`
+        embed-color: 16776960
 
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
@@ -111,23 +112,23 @@ jobs:
         tags: ${{ steps.prep.outputs.tags }}
         build-args: version=0.0.1
 
-    - name: Slack notification end
-      if: always()
-      uses: slackapi/slack-github-action@v2
+    - name: Discord notification success
+      if: success()
+      uses: tsickert/discord-webhook@v7.0.0
       with:
-        webhook: ${{ secrets.SLACK_URL }}
-        webhook-type: incoming-webhook
-        payload: |
-          text: |
-            🚀 "Done building [${{matrix.service}}] [${{ steps.prep.outputs.version }}]..."
-
+        webhook-url: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+        embed-title: '✅ CI/CD Build Completed'
+        embed-description: |
+          Service: `${{ matrix.service }}`
+          Version: `${{ steps.prep.outputs.version }}`
+        embed-color: 5763719
 
   deploy:
     needs: [ build1 ]
     runs-on: ubuntu-latest
     steps:
 
-    - name: Slack notification start
+    - name: Discord notification start
       if: always()
       uses: slackapi/slack-github-action@v2
       with:
@@ -136,6 +137,17 @@ jobs:
         payload: |
           text: |
             🚀 "Start deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
+
+    - name: Discord notification start
+      if: always()
+      uses: tsickert/discord-webhook@v7.0.0
+      with:
+        webhook-url: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+        embed-title: '🚀 CI/CD Deployment Started'
+        embed-description: |
+          Service: `${{ matrix.service }}`
+          Version: `${{ needs.build1.outputs.imageTag }}`
+        embed-color: 16776960
 
     # Auto deploy
     - name: Deploy1
@@ -224,12 +236,13 @@ jobs:
         git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
 
 
-    - name: Slack notification end
+    - name: Discord notification end
       if: always()
-      uses: slackapi/slack-github-action@v2
+      uses: tsickert/discord-webhook@v7.0.0
       with:
-        webhook: ${{ secrets.SLACK_URL }}
-        webhook-type: incoming-webhook
-        payload: |
-          text: |
-            🚀 "Done deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
+        webhook-url: ${{ secrets.DISCORD_CICD_WEBHOOK }}
+        embed-title: '🚀 CI/CD Deployment Completed'
+        embed-description: |
+          Service: `${{ matrix.service }}`
+          Version: `${{ needs.build1.outputs.imageTag }}`
+        embed-color: 16776960
