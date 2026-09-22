@@ -109,8 +109,10 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutIsWithdrawal = x.pmt.PayoutIsWithdrawal,
                 PayInBankCode = x.pmt.PayInBankCode,
                 PayInBankAccountNo = x.pmt.PayInBankAccountNo,
+                PayInBankAccountName = x.pmt.PayInBankAccountName,
                 PayOutBankCode = x.pmt.PayOutBankCode,
                 PayOutBankAccountNo = x.pmt.PayOutBankAccountNo,
+                PayOutBankAccountName = x.pmt.PayOutBankAccountName,
                 TxIsPeerToPeer = x.pmt.TxIsPeerToPeer,
             });
         }
@@ -362,12 +364,13 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(x => string.IsNullOrEmpty(param.BankCode) || x.PayInBankCode == param.BankCode)
                 .Where(x => string.IsNullOrEmpty(param.AccountNumber) || x.PayInBankAccountNo == param.AccountNumber)
                 .Where(x => string.IsNullOrEmpty(param.MerchantCode) || x.MerchantCode == param.MerchantCode)
-                .GroupBy(x => new { x.CreatedDate!.Value.Date, BankCode = x.PayInBankCode, AccountNumber = x.PayInBankAccountNo, x.MerchantCode })
+                .GroupBy(x => new { x.CreatedDate!.Value.Date, BankCode = x.PayInBankCode, AccountNumber = x.PayInBankAccountNo, AccountName = x.PayInBankAccountName, x.MerchantCode })
                 .Select(g => new
                 {
                     g.Key.Date,
                     g.Key.BankCode,
                     g.Key.AccountNumber,
+                    g.Key.AccountName,
                     g.Key.MerchantCode,
                     Amount = g.Sum(x => x.TxAmountDecimal),
                     Count = g.Count()
@@ -382,12 +385,13 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(x => string.IsNullOrEmpty(param.BankCode) || x.PayOutBankCode == param.BankCode)
                 .Where(x => string.IsNullOrEmpty(param.AccountNumber) || x.PayOutBankAccountNo == param.AccountNumber)
                 .Where(x => string.IsNullOrEmpty(param.MerchantCode) || x.MerchantCode == param.MerchantCode)
-                .GroupBy(x => new { x.CreatedDate!.Value.Date, BankCode = x.PayOutBankCode, AccountNumber = x.PayOutBankAccountNo, x.MerchantCode, x.PayoutIsWithdrawal })
+                .GroupBy(x => new { x.CreatedDate!.Value.Date, BankCode = x.PayOutBankCode, AccountNumber = x.PayOutBankAccountNo, AccountName = x.PayOutBankAccountName, x.MerchantCode, x.PayoutIsWithdrawal })
                 .Select(g => new
                 {
                     g.Key.Date,
                     g.Key.BankCode,
                     g.Key.AccountNumber,
+                    g.Key.AccountName,
                     g.Key.MerchantCode,
                     g.Key.PayoutIsWithdrawal,
                     Amount = g.Sum(x => x.TxAmountDecimal),
@@ -397,27 +401,31 @@ namespace Its.Onix.Api.Database.Repositories
 
             var merged = new Dictionary<(DateTime, string, string, string), DailyBankSummaryData>();
 
-            DailyBankSummaryData GetOrAdd(DateTime date, string? bankCode, string? accountNumber, string? merchantCode)
+            DailyBankSummaryData GetOrAdd(DateTime date, string? bankCode, string? accountNumber, string? accountName, string? merchantCode)
             {
                 var key = (date, bankCode ?? "", accountNumber ?? "", merchantCode ?? "");
                 if (!merged.TryGetValue(key, out var row))
                 {
-                    row = new DailyBankSummaryData { Date = date, BankCode = bankCode, AccountNumber = accountNumber, MerchantCode = merchantCode };
+                    row = new DailyBankSummaryData { Date = date, BankCode = bankCode, AccountNumber = accountNumber, AccountName = accountName, MerchantCode = merchantCode };
                     merged[key] = row;
+                }
+                else if (string.IsNullOrEmpty(row.AccountName) && !string.IsNullOrEmpty(accountName))
+                {
+                    row.AccountName = accountName;
                 }
                 return row;
             }
 
             foreach (var r in payInRows)
             {
-                var row = GetOrAdd(r.Date, r.BankCode, r.AccountNumber, r.MerchantCode);
+                var row = GetOrAdd(r.Date, r.BankCode, r.AccountNumber, r.AccountName, r.MerchantCode);
                 row.PayInAmount += r.Amount ?? 0;
                 row.PayInCount += r.Count;
             }
 
             foreach (var r in payOutRows)
             {
-                var row = GetOrAdd(r.Date, r.BankCode, r.AccountNumber, r.MerchantCode);
+                var row = GetOrAdd(r.Date, r.BankCode, r.AccountNumber, r.AccountName, r.MerchantCode);
                 if (r.PayoutIsWithdrawal == true)
                 {
                     row.WithdrawalAmount += r.Amount ?? 0;
