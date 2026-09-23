@@ -36,6 +36,9 @@ namespace Its.Onix.Api.Models
         [Column("lot_id")]
         public string? LotId { get; set; }
 
+        [Column("project")]
+        public string? Project { get; set; } /* Ref to MasterRef RefType=Project */
+
 
         // ให้ copy มาจาก InventoryDocument เพื่อให้สามารถใช้ข้อมูลของ Location ได้โดยไม่ต้อง join table
         [Column("from_location_id")]
