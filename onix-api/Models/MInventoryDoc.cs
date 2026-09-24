@@ -64,6 +64,16 @@ namespace Its.Onix.Api.Models
         [Column("approved_date")]
         public DateTime? ApprovedDate { get; set; }
 
+        // Set whenever DocumentStatus transitions (Approved/Cancelled) so the search screen
+        // can show "as of when" without guessing from ApprovedDate alone (e.g. Cancelled has none).
+        [Column("status_date")]
+        public DateTime? StatusDate { get; set; }
+
+        // Carries the item rows for Add/Update requests and GetById responses — never persisted
+        // on this table itself, see MInventoryDocItem/InventoryDocItems for the real storage.
+        [NotMapped]
+        public List<MInventoryDocItem>? Items { get; set; }
+
 
         public MInventoryDoc()
         {

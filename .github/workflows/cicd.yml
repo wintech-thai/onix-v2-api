@@ -130,16 +130,6 @@ jobs:
 
     - name: Discord notification start
       if: always()
-      uses: slackapi/slack-github-action@v2
-      with:
-        webhook: ${{ secrets.SLACK_URL }}
-        webhook-type: incoming-webhook
-        payload: |
-          text: |
-            🚀 "Start deploying [${{matrix.service}}] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
-
-    - name: Discord notification start
-      if: always()
       uses: tsickert/discord-webhook@v7.0.0
       with:
         webhook-url: ${{ secrets.DISCORD_CICD_WEBHOOK }}
