@@ -1,5 +1,4 @@
 using Its.Onix.Api.Models;
-using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Database.Repositories
@@ -8,9 +7,10 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
         public MInventoryDoc AddInventoryDocStockIn(MInventoryDoc doc);
-        public MVInventoryDoc UpdateInventoryDocStockIn(string inventoryDocId, MInventoryDoc doc);
-        public MVInventoryDoc ApproveInventoryDocStockIn(string inventoryDocId);
-        public MVInventoryDoc CancelInventoryDocStockIn(string inventoryDocId);
+        public MInventoryDoc? UpdateInventoryDocStockIn(string inventoryDocId, MInventoryDoc doc);
+        public MInventoryDoc? ApproveInventoryDocStockIn(string inventoryDocId);
+        public MInventoryDoc? CancelInventoryDocStockIn(string inventoryDocId);
+        public bool IsInventoryDocPending(string inventoryDocId);
         public MInventoryDoc? GetInventoryDocById(string inventoryDocId);
         public int GetInventoryDocCount(VMInventoryDoc param);
         public IEnumerable<MInventoryDoc> GetInventoryDocs(VMInventoryDoc param);

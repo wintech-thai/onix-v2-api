@@ -1,12 +1,16 @@
 using LinqKit;
 using Its.Onix.Api.Models;
-using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Database.Repositories
 {
     // Handles both MInventoryDoc and MInventoryDocItem — same repository will back
     // StockOut/StockTransfer later on, keyed by DocumentType.
+    //
+    // Only ever returns plain model classes (never MVInventoryDoc) — matching the
+    // convention used by the other Inventory* repositories. Status/description
+    // messages for the caller are built at the service layer, which validates by
+    // calling the check methods below (e.g. IsInventoryDocPending) before mutating.
     public class InventoryDocRepository : BaseRepository, IInventoryDocRepository
     {
         public InventoryDocRepository(IDataContext ctx)
@@ -94,42 +98,15 @@ namespace Its.Onix.Api.Database.Repositories
             return doc;
         }
 
-        // Shared by Update/Approve/Cancel — all three require the doc to still be Pending.
-        // Returns the loaded doc plus, when the check fails, the MVInventoryDoc the caller
-        // should return as-is (null means the doc is Pending and safe to mutate).
-        private (MInventoryDoc? doc, MVInventoryDoc? failure) FindPendingDoc(string inventoryDocId, string statusMessageSuffix)
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? UpdateInventoryDocStockIn(string inventoryDocId, MInventoryDoc doc)
         {
             var id = Guid.Parse(inventoryDocId);
             var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
 
-            if (existing == null)
-            {
-                return (null, new MVInventoryDoc
-                {
-                    Status = "NOTFOUND",
-                    Description = $"Inventory Document ID [{inventoryDocId}] not found for the organization [{orgId}]",
-                });
-            }
-
-            if (existing.DocumentStatus != "Pending")
-            {
-                return (existing, new MVInventoryDoc
-                {
-                    Status = "INVALID_STATUS",
-                    Description = $"Inventory Document [{existing.DocumentNo}] is already [{existing.DocumentStatus}]{statusMessageSuffix}",
-                    InventoryDoc = existing,
-                });
-            }
-
-            return (existing, null);
-        }
-
-        public MVInventoryDoc UpdateInventoryDocStockIn(string inventoryDocId, MInventoryDoc doc)
-        {
-            var (existing, failure) = FindPendingDoc(inventoryDocId, " and can no longer be edited");
-            if (failure != null) return failure;
-
-            existing!.Description = doc.Description;
+            existing.Description = doc.Description;
             existing.ToLocationId = doc.ToLocationId;
             existing.ToLocationCode = doc.ToLocationCode;
             existing.ToLocationName = doc.ToLocationName;
@@ -141,33 +118,46 @@ namespace Its.Onix.Api.Database.Repositories
                 .Where(i => i.DocumentId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
                 .ToList();
 
-            return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = existing };
+            return existing;
         }
 
-        public MVInventoryDoc ApproveInventoryDocStockIn(string inventoryDocId)
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? ApproveInventoryDocStockIn(string inventoryDocId)
         {
-            var (existing, failure) = FindPendingDoc(inventoryDocId, "");
-            if (failure != null) return failure;
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
 
             var now = DateTime.UtcNow;
-            existing!.DocumentStatus = "Approved";
+            existing.DocumentStatus = "Approved";
             existing.ApprovedDate = now;
             existing.StatusDate = now;
             context!.SaveChanges();
 
-            return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = existing };
+            return existing;
         }
 
-        public MVInventoryDoc CancelInventoryDocStockIn(string inventoryDocId)
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? CancelInventoryDocStockIn(string inventoryDocId)
         {
-            var (existing, failure) = FindPendingDoc(inventoryDocId, "");
-            if (failure != null) return failure;
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
 
-            existing!.DocumentStatus = "Cancelled";
+            existing.DocumentStatus = "Cancelled";
             existing.StatusDate = DateTime.UtcNow;
             context!.SaveChanges();
 
-            return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = existing };
+            return existing;
+        }
+
+        public bool IsInventoryDocPending(string inventoryDocId)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var doc = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            return doc != null && doc.DocumentStatus == "Pending";
         }
 
         public MInventoryDoc? GetInventoryDocById(string inventoryDocId)
