@@ -35,6 +35,11 @@ namespace Its.Onix.Api.Models
         [Column("secondary_email_verified")]
         public string? SecondaryEmailVerified { get; set; } /* YES or NO */
 
+        // IANA timezone name (e.g. "Asia/Bangkok"). Null/empty means "follow browser" —
+        // the default for new registrations and for existing users who never set this.
+        [Column("timezone")]
+        public string? Timezone { get; set; }
+
         [Column("birth_date")]
         public DateTime? BirthDate { get; set; }
 
