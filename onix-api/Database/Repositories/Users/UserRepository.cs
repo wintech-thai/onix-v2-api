@@ -73,6 +73,7 @@ namespace Its.Onix.Api.Database.Repositories
                 u.SecondaryEmail = user.SecondaryEmail;
                 u.PhoneNumber = user.PhoneNumber;
                 u.BirthDate = user.BirthDate;
+                u.Timezone = user.Timezone;
 
                 context!.SaveChanges();
             }
