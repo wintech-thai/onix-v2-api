@@ -101,6 +101,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutMaxAmount = x.merchant.PayoutMaxAmount,
                 PayoutPartialCountLimitP2P = x.merchant.PayoutPartialCountLimitP2P,
                 PayoutNotMatchActionP2P = x.merchant.PayoutNotMatchActionP2P,
+                PayoutSelectionTypeP2P = x.merchant.PayoutSelectionTypeP2P,
 
                 Status = x.merchant.Status,
                 Description = x.merchant.Description,
@@ -185,7 +186,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayoutMaxAmount = merchant.PayoutMaxAmount;
                 existing.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
                 existing.PayoutNotMatchActionP2P = merchant.PayoutNotMatchActionP2P;
-                
+                existing.PayoutSelectionTypeP2P = merchant.PayoutSelectionTypeP2P;
+
                 existing.DiscardCent = merchant.DiscardCent;
                 existing.IncludeGlobalBankAccount = merchant.IncludeGlobalBankAccount;
                 existing.WhitelistBankAccountNames = merchant.WhitelistBankAccountNames;

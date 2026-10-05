@@ -176,6 +176,9 @@ namespace Its.Onix.Api.Models
         [Column("payout_partial_count_limit_p2p")]
         public int? PayoutPartialCountLimitP2P { get; set; } /* ยอมให้ตัดจ่าย partial ได้มากสุดกี่ครั้ง */
 
+        [Column("payout_selection_type_p2p")]
+        public string? PayoutSelectionTypeP2P { get; set; } /* copy มาจาก merchant ตอนสร้าง payout request (AllowAll, AllowForSameMerchant, NotAllow) */
+
         [Column("payout_partial_count_p2p")]
         public int? PayoutPartialCountP2P { get; set; } /* จ่าย partial count เข้ามากี่ครั้งแล้ว */
 
