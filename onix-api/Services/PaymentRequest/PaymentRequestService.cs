@@ -1078,6 +1078,12 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
             paymentRequest.PayoutPartialCountLimitP2P ??= 0; //ถ้าเป็น null ให้ default เป็น 0 คือไม่ต้องเช็ค
 
+            paymentRequest.PayoutSelectionTypeP2P = merchant.PayoutSelectionTypeP2P;
+            if (string.IsNullOrEmpty(paymentRequest.PayoutSelectionTypeP2P))
+            {
+                paymentRequest.PayoutSelectionTypeP2P = "AllowAll"; //ถ้าไม่เลือก ถือเป็น Allow All
+            }
+
             var requestAmt = paymentRequest.RequestedAmount ?? 0;
             var payoutFee = Math.Round((decimal) (requestAmt * paymentRequest.PayoutFeePct! / 100.0), 2, MidpointRounding.AwayFromZero);
 
@@ -1773,6 +1779,27 @@ namespace Its.Onix.Api.Services
                 {
                     lines.Add($"Step1.7 - Request ID=[{org}:{id}], This is a withdrawal request, then skip");
                     continue;
+                }
+
+                var payoutSelectionType = payoutRequest.PayoutSelectionTypeP2P;
+                if (string.IsNullOrEmpty(payoutSelectionType))
+                {
+                    payoutSelectionType = "AllowAll"; //ถ้าไม่เลือก ถือเป็น Allow All
+                }
+
+                if (payoutSelectionType == "NotAllow")
+                {
+                    lines.Add($"Step1.7.1 - Request ID=[{org}:{id}], PayoutSelectionTypeP2P=[NotAllow], then skip");
+                    continue;
+                }
+
+                if (payoutSelectionType == "AllowForSameMerchant")
+                {
+                    if (payoutRequest.MerchantId != pr.MerchantId)
+                    {
+                        lines.Add($"Step1.7.2 - Request ID=[{org}:{id}], PayoutSelectionTypeP2P=[AllowForSameMerchant] but merchant [{payoutRequest.MerchantId}] != payin merchant [{pr.MerchantId}], then skip");
+                        continue;
+                    }
                 }
 
                 //เช็คว่า merchant ของ payout นั้นมี balance เหลือพอที่จะโอนออกมั้ยถ้าไม่พอก็ skip ไปเลย, ควรจำ cache balance ของ merchant นั้นด้วย
