@@ -4,8 +4,8 @@ using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Database.Repositories
 {
-    // Handles both MInventoryDoc and MInventoryDocItem — same repository will back
-    // StockOut/StockTransfer later on, keyed by DocumentType.
+    // Handles both MInventoryDoc and MInventoryDocItem — one repository backs StockIn,
+    // StockOut, and StockTransfer, keyed by DocumentType (set by each Add* method below).
     //
     // Only ever returns plain model classes (never MVInventoryDoc) — matching the
     // convention used by the other Inventory* repositories. Status/description
@@ -153,6 +153,182 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        public MInventoryDoc AddInventoryDocStockOut(MInventoryDoc doc)
+        {
+            var items = doc.Items;
+            doc.Items = null;
+
+            doc.Id = Guid.NewGuid();
+            doc.OrgId = orgId;
+            doc.DocumentType = "StockOut";
+            doc.DocumentStatus = "Pending";
+            doc.CreatedDate = DateTime.UtcNow;
+            doc.ApprovedDate = null;
+            doc.StatusDate = null;
+
+            context!.InventoryDocs!.Add(doc);
+            context.SaveChanges();
+
+            SyncInventoryDocItems(doc.Id!.Value, doc.DocumentNo, doc.DocumentType, items);
+
+            doc.Items = items;
+            return doc;
+        }
+
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? UpdateInventoryDocStockOut(string inventoryDocId, MInventoryDoc doc)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            existing.Description = doc.Description;
+            existing.FromLocationId = doc.FromLocationId;
+            existing.FromLocationCode = doc.FromLocationCode;
+            existing.FromLocationName = doc.FromLocationName;
+            context!.SaveChanges();
+
+            SyncInventoryDocItems(existing.Id!.Value, existing.DocumentNo, existing.DocumentType, doc.Items);
+
+            existing.Items = context!.InventoryDocItems!
+                .Where(i => i.DocumentId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToList();
+
+            return existing;
+        }
+
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened. Unlike StockIn's
+        // approve, this also fills in each item's unit price/amount (computed by the service
+        // from InventoryItem.Price at approve time, per spec — price is never entered manually
+        // for Stock-Out).
+        public MInventoryDoc? ApproveInventoryDocStockOut(string inventoryDocId, Dictionary<Guid, decimal> itemUnitPrices)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            var items = context!.InventoryDocItems!
+                .Where(i => i.DocumentId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToList();
+
+            foreach (var item in items)
+            {
+                if (item.Id.HasValue && itemUnitPrices.TryGetValue(item.Id.Value, out var unitPrice))
+                {
+                    item.ItemUnitPrice = unitPrice;
+                    item.ItemAmount = unitPrice * (item.ItemQuantity ?? 0);
+                }
+            }
+
+            var now = DateTime.UtcNow;
+            existing.DocumentStatus = "Approved";
+            existing.ApprovedDate = now;
+            existing.StatusDate = now;
+            context!.SaveChanges();
+
+            existing.Items = items;
+            return existing;
+        }
+
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? CancelInventoryDocStockOut(string inventoryDocId)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            existing.DocumentStatus = "Cancelled";
+            existing.StatusDate = DateTime.UtcNow;
+            context!.SaveChanges();
+
+            return existing;
+        }
+
+        public MInventoryDoc AddInventoryDocTransfer(MInventoryDoc doc)
+        {
+            var items = doc.Items;
+            doc.Items = null;
+
+            doc.Id = Guid.NewGuid();
+            doc.OrgId = orgId;
+            doc.DocumentType = "StockTransfer";
+            doc.DocumentStatus = "Pending";
+            doc.CreatedDate = DateTime.UtcNow;
+            doc.ApprovedDate = null;
+            doc.StatusDate = null;
+
+            context!.InventoryDocs!.Add(doc);
+            context.SaveChanges();
+
+            SyncInventoryDocItems(doc.Id!.Value, doc.DocumentNo, doc.DocumentType, items);
+
+            doc.Items = items;
+            return doc;
+        }
+
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? UpdateInventoryDocTransfer(string inventoryDocId, MInventoryDoc doc)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            existing.Description = doc.Description;
+            existing.FromLocationId = doc.FromLocationId;
+            existing.FromLocationCode = doc.FromLocationCode;
+            existing.FromLocationName = doc.FromLocationName;
+            existing.ToLocationId = doc.ToLocationId;
+            existing.ToLocationCode = doc.ToLocationCode;
+            existing.ToLocationName = doc.ToLocationName;
+            context!.SaveChanges();
+
+            SyncInventoryDocItems(existing.Id!.Value, existing.DocumentNo, existing.DocumentType, doc.Items);
+
+            existing.Items = context!.InventoryDocItems!
+                .Where(i => i.DocumentId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToList();
+
+            return existing;
+        }
+
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened. Item unit
+        // price/amount are kept as entered (unlike Stock-Out, Transfer doesn't claim an
+        // auto-calculated cost in the spec).
+        public MInventoryDoc? ApproveInventoryDocTransfer(string inventoryDocId)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            var now = DateTime.UtcNow;
+            existing.DocumentStatus = "Approved";
+            existing.ApprovedDate = now;
+            existing.StatusDate = now;
+            context!.SaveChanges();
+
+            return existing;
+        }
+
+        // Callers (the service layer) must check IsInventoryDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public MInventoryDoc? CancelInventoryDocTransfer(string inventoryDocId)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            existing.DocumentStatus = "Cancelled";
+            existing.StatusDate = DateTime.UtcNow;
+            context!.SaveChanges();
+
+            return existing;
+        }
+
         public bool IsInventoryDocPending(string inventoryDocId)
         {
             var id = Guid.Parse(inventoryDocId);
@@ -205,6 +381,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ToLocationName!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.ToLocationCode!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.FromLocationName!.Contains(param.FullTextSearch));
+                fullTextPd = fullTextPd.Or(p => p.FromLocationCode!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }

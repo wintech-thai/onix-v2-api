@@ -7,8 +7,9 @@ using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
 {
-    // Backs StockIn today; StockOut/StockTransfer will reuse the same actions later,
-    // switching on VMInventoryDoc.DocumentType / MInventoryDoc.DocumentType.
+    // Backs StockIn, StockOut, and StockTransfer — each gets its own Add/Update/Approve/Cancel
+    // actions (same shape, different DocumentType set by the service layer) but shares the
+    // read-side actions (GetInventoryDoc*), which filter by VMInventoryDoc.DocumentType.
     [Authorize(Policy = "GenericRolePolicy")]
     [ApiController]
     [Route("/api/[controller]")]
@@ -55,6 +56,78 @@ namespace Its.Onix.Api.Controllers
         public IActionResult CancelInventoryDocStockIn(string id, string inventoryDocId)
         {
             var result = svc.CancelInventoryDocStockIn(id, inventoryDocId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddInventoryDocStockOut")]
+        public async Task<IActionResult> AddInventoryDocStockOut(string id, [FromBody] MInventoryDoc request)
+        {
+            var result = await svc.AddInventoryDocStockOut(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/UpdateInventoryDocStockOut/{inventoryDocId}")]
+        public IActionResult UpdateInventoryDocStockOut(string id, string inventoryDocId, [FromBody] MInventoryDoc request)
+        {
+            var result = svc.UpdateInventoryDocStockOut(id, inventoryDocId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/ApproveInventoryDocStockOut/{inventoryDocId}")]
+        public IActionResult ApproveInventoryDocStockOut(string id, string inventoryDocId)
+        {
+            var result = svc.ApproveInventoryDocStockOut(id, inventoryDocId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/CancelInventoryDocStockOut/{inventoryDocId}")]
+        public IActionResult CancelInventoryDocStockOut(string id, string inventoryDocId)
+        {
+            var result = svc.CancelInventoryDocStockOut(id, inventoryDocId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddInventoryDocTransfer")]
+        public async Task<IActionResult> AddInventoryDocTransfer(string id, [FromBody] MInventoryDoc request)
+        {
+            var result = await svc.AddInventoryDocTransfer(id, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/UpdateInventoryDocTransfer/{inventoryDocId}")]
+        public IActionResult UpdateInventoryDocTransfer(string id, string inventoryDocId, [FromBody] MInventoryDoc request)
+        {
+            var result = svc.UpdateInventoryDocTransfer(id, inventoryDocId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/ApproveInventoryDocTransfer/{inventoryDocId}")]
+        public IActionResult ApproveInventoryDocTransfer(string id, string inventoryDocId)
+        {
+            var result = svc.ApproveInventoryDocTransfer(id, inventoryDocId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/CancelInventoryDocTransfer/{inventoryDocId}")]
+        public IActionResult CancelInventoryDocTransfer(string id, string inventoryDocId)
+        {
+            var result = svc.CancelInventoryDocTransfer(id, inventoryDocId);
             return Ok(result);
         }
 
