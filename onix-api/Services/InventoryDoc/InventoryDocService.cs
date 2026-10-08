@@ -166,11 +166,21 @@ namespace Its.Onix.Api.Services
         public MVInventoryDoc ApproveInventoryDocTransfer(string orgId, string inventoryDocId)
         {
             repository.SetCustomOrgId(orgId);
+            itemRepository.SetCustomOrgId(orgId);
 
             var failure = ValidatePendingOrNull(inventoryDocId, "");
             if (failure != null) return failure;
 
-            var result = repository.ApproveInventoryDocTransfer(inventoryDocId);
+            var doc = repository.GetInventoryDocById(inventoryDocId);
+            var itemUnitPrices = new Dictionary<Guid, decimal>();
+            foreach (var item in doc?.Items ?? new List<MInventoryDocItem>())
+            {
+                if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId)) continue;
+                var masterItem = itemRepository.GetInventoryItemById(item.ItemId);
+                itemUnitPrices[item.Id.Value] = masterItem?.Price ?? 0;
+            }
+
+            var result = repository.ApproveInventoryDocTransfer(inventoryDocId, itemUnitPrices);
             return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = result };
         }
 

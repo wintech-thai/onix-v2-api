@@ -296,14 +296,27 @@ namespace Its.Onix.Api.Database.Repositories
         }
 
         // Callers (the service layer) must check IsInventoryDocPending first — this method
-        // mutates unconditionally and assumes that validation already happened. Item unit
-        // price/amount are kept as entered (unlike Stock-Out, Transfer doesn't claim an
-        // auto-calculated cost in the spec).
-        public MInventoryDoc? ApproveInventoryDocTransfer(string inventoryDocId)
+        // mutates unconditionally and assumes that validation already happened. Same as
+        // Stock-Out's approve: item unit price/amount are never entered manually, filled in
+        // here from values the service computed via InventoryItem.Price lookup.
+        public MInventoryDoc? ApproveInventoryDocTransfer(string inventoryDocId, Dictionary<Guid, decimal> itemUnitPrices)
         {
             var id = Guid.Parse(inventoryDocId);
             var existing = context!.InventoryDocs!.FirstOrDefault(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
             if (existing == null) return null;
+
+            var items = context!.InventoryDocItems!
+                .Where(i => i.DocumentId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToList();
+
+            foreach (var item in items)
+            {
+                if (item.Id.HasValue && itemUnitPrices.TryGetValue(item.Id.Value, out var unitPrice))
+                {
+                    item.ItemUnitPrice = unitPrice;
+                    item.ItemAmount = unitPrice * (item.ItemQuantity ?? 0);
+                }
+            }
 
             var now = DateTime.UtcNow;
             existing.DocumentStatus = "Approved";
@@ -311,6 +324,7 @@ namespace Its.Onix.Api.Database.Repositories
             existing.StatusDate = now;
             context!.SaveChanges();
 
+            existing.Items = items;
             return existing;
         }
 

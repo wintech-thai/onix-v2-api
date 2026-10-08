@@ -21,7 +21,9 @@ namespace Its.Onix.Api.Database.Repositories
 
         public MInventoryDoc AddInventoryDocTransfer(MInventoryDoc doc);
         public MInventoryDoc? UpdateInventoryDocTransfer(string inventoryDocId, MInventoryDoc doc);
-        public MInventoryDoc? ApproveInventoryDocTransfer(string inventoryDocId);
+        // Same as Stock-Out's approve — unit price/amount are never entered manually for a
+        // transfer either (per spec), filled in here from the item master's current price.
+        public MInventoryDoc? ApproveInventoryDocTransfer(string inventoryDocId, Dictionary<Guid, decimal> itemUnitPrices);
         public MInventoryDoc? CancelInventoryDocTransfer(string inventoryDocId);
 
         public bool IsInventoryDocPending(string inventoryDocId);
