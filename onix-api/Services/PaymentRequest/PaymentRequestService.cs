@@ -1335,7 +1335,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.ProcessingMessages = messageString;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
-            paymentRequest.QrCode = pmResponse.PaymentResponse?.QrCode; //persist ไว้ด้วยเพื่อให้ดึงมาโชว์ซ้ำได้ทีหลัง (payin-status page)
+            paymentRequest.QrCode = pmResponse.PaymentResponse?.QrCode; //เก็บไว้ใช้ที่ payin-status page
             paymentRequest.PayinPeer2PeerPayoutId = payoutRequest?.Id.ToString(); //เอาไว้บอกว่าทำ P2P กับ payout request อันไหน
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
@@ -1506,7 +1506,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.ProcessingMessages = messageString;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
-            paymentRequest.QrCode = pmResponse.PaymentResponse?.QrCode; //persist ไว้ด้วยเพื่อให้ดึงมาโชว์ซ้ำได้ทีหลัง (payin-status page)
+            paymentRequest.QrCode = pmResponse.PaymentResponse?.QrCode; //เก็บไว้ใช้ที่ payin-status page
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
             paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
@@ -2352,11 +2352,21 @@ namespace Its.Onix.Api.Services
             var mc = await context!.Merchants!.FirstOrDefaultAsync(m => m.Id == pr.MerchantId2);
             var merchantName = mc?.Name;
 
+            // fallback ไป ResponseData สำหรับ record เก่าที่ยังไม่มี pr.QrCode
+            var qrCode = pr.QrCode;
+            if (string.IsNullOrEmpty(qrCode) && !string.IsNullOrEmpty(pr.ResponseData))
+            {
+                try
+                {
+                    qrCode = JsonSerializer.Deserialize<MPaymentResponse>(pr.ResponseData)?.QrCode;
+                }
+                catch { }
+            }
+
             var slipUrl = $"/payin-slip-upload/{pr.OrgId}/{pr.Id}";
             if (issueFreshSlipToken)
             {
-                // ออก slip-upload link ใหม่ให้ด้วย (สำหรับปุ่ม "Upload Slip" ในหน้า status) — ไม่ต้องเหมือนเดิมกับ
-                // ตอนสร้าง payment request เพราะเป็นแค่ access token ไม่ใช่ข้อมูล QR ที่ต้องคงที่
+                // ออก slip token ใหม่สำหรับปุ่ม "Upload Slip" ในหน้า status
                 var slipToken = Guid.NewGuid().ToString();
                 var slipCacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
                 _ = _redis.SetObjectAsync($"{slipCacheKey}:{pr.Id}:{slipToken}", pr.Id!.ToString(), TimeSpan.FromMinutes(60 * 24));
@@ -2373,8 +2383,8 @@ namespace Its.Onix.Api.Services
             r.Currency = pr.Currency;
             r.CreatedAt = pr.CreatedDate;
             r.ExpireAt = pr.ExpireDate;
-            r.QrCode = pr.QrCode;
-            r.IsQrAvailable = !string.IsNullOrEmpty(pr.QrCode);
+            r.QrCode = qrCode;
+            r.IsQrAvailable = !string.IsNullOrEmpty(qrCode);
             r.PayInBankAccountName = pr.PayinBankAccountName;
             r.PayInBankAccountNo = pr.PayinBankAccountNo;
             r.PayInBankCode = pr.PayinBankCode;
