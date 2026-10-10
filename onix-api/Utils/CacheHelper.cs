@@ -147,6 +147,13 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        public static string CreatePayInStatusTokenKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"{orgId}:{environment}:PayInStatus";
+            return key;
+        }
+
         public static string CreateBrandConfigKey(string orgId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";

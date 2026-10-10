@@ -39,6 +39,9 @@ namespace Its.Onix.Api.Services
         public Task<MVBase> UpdatePayInSlipFirst4Last4(string orgId, string paymentRequestId, string slipId, string? first4, string? last4, string? note);
         public Task<MVPayInSlipUploads> GetPayInSlipUploads(string orgId, string paymentRequestId);
         public Task<MVBase> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId);
+        public Task<MVBase> GeneratePayInStatusToken(string orgId, string paymentRequestId);
+        public Task<MVPaymentStatus> GetPayInStatusByToken(string paymentRequestId, string token);
+        public Task<MVPaymentStatus> GetPayInInfoBySlipToken(string paymentRequestId, string token);
         public Task<MVBase> VerifyPayOutSlipToken(string paymentRequestId, string token);
         public Task<MVBase> UploadPayOutSlipById(string paymentRequestId, string token, string base64Image, string? first4 = null, string? last4 = null, string? note = null);
         public List<MDuplicateRecord> CheckPayOutSlipDup(string first4, string last4, string? excludeDocumentId = null);

@@ -444,6 +444,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/global/action/GeneratePayInStatusToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayInStatusToken(string paymentRequestId)
+        {
+            var result = await svc.GeneratePayInStatusToken("global", paymentRequestId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/global/action/GetPayInSlipUpload/{paymentRequestId}")]
         public async Task<IActionResult> GetPayInSlipUpload(string paymentRequestId)
         {
