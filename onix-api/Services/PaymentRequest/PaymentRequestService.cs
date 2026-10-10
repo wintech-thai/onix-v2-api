@@ -1335,6 +1335,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.ProcessingMessages = messageString;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
+            paymentRequest.QrCode = pmResponse.PaymentResponse?.QrCode; //persist ไว้ด้วยเพื่อให้ดึงมาโชว์ซ้ำได้ทีหลัง (payin-status page)
             paymentRequest.PayinPeer2PeerPayoutId = payoutRequest?.Id.ToString(); //เอาไว้บอกว่าทำ P2P กับ payout request อันไหน
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
@@ -1505,6 +1506,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.ProcessingMessages = messageString;
 
             //Logic สำหรับการสร้าง QR payment ตรงนี้
+            paymentRequest.QrCode = pmResponse.PaymentResponse?.QrCode; //persist ไว้ด้วยเพื่อให้ดึงมาโชว์ซ้ำได้ทีหลัง (payin-status page)
             paymentRequest.Status = "Pending";
             paymentRequest.Direction = "PayIn";
             paymentRequest.PayinBankAccountName = bnkAcct.AccountName;
