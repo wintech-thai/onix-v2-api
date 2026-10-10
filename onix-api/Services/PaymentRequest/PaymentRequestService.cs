@@ -2143,6 +2143,12 @@ namespace Its.Onix.Api.Services
             _ = _redis.SetObjectAsync($"{slipCacheKey}:{pr.Id}:{slipToken}", pr.Id!.ToString(), TimeSpan.FromMinutes(60 * 24));
             pmr.SlipUploadUrl = $"/payin-slip-upload/{pr.OrgId}/{pr.Id}/{slipToken}";
 
+            // สร้าง token สำหรับดู payment status แล้วเก็บใน Redis 1 วัน (แยกจาก slip token)
+            var statusToken = Guid.NewGuid().ToString();
+            var statusCacheKey = CacheHelper.CreatePayInStatusTokenKey(pr.OrgId!);
+            _ = _redis.SetObjectAsync($"{statusCacheKey}:{pr.Id}:{statusToken}", pr.Id!.ToString(), TimeSpan.FromMinutes(60 * 24));
+            pmr.PaymentStatusUrl = $"/payin-status/{pr.OrgId}/{pr.Id}/{statusToken}";
+
             mvResponse.PaymentResponse = pmr;
 
             return mvResponse;
@@ -2301,6 +2307,151 @@ namespace Its.Onix.Api.Services
             r.Description = "Success";
             r.SlipUploadUrl = $"/payin-slip-upload/{pr.OrgId}/{paymentRequestId}/{slipToken}";
             return r;
+        }
+
+        public async Task<MVBase> GeneratePayInStatusToken(string orgId, string paymentRequestId)
+        {
+            var r = new MVBase() { Status = "OK" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            var statusToken = Guid.NewGuid().ToString();
+            var cacheKey = CacheHelper.CreatePayInStatusTokenKey(pr.OrgId!);
+            _ = _redis.SetObjectAsync($"{cacheKey}:{paymentRequestId}:{statusToken}", paymentRequestId, TimeSpan.FromMinutes(60 * 24));
+
+            r.Description = "Success";
+            r.PaymentStatusUrl = $"/payin-status/{pr.OrgId}/{paymentRequestId}/{statusToken}";
+            return r;
+        }
+
+        // Shared by GetPayInStatusByToken (status link) and GetPayInInfoBySlipToken (slip-upload
+        // link) — both are no-auth, token-gated reads of the same payment request, they just
+        // validate against different Redis token namespaces. QrCode here is the SAME payload
+        // persisted on the payment request at creation time — never re-generated, per spec
+        // ("เอา QR ของ request เดิมนั้นแหละ").
+        private async Task<MVPaymentStatus> BuildPaymentStatus(MPaymentRequest pr, bool issueFreshSlipToken)
+        {
+            var r = new MVPaymentStatus() { Status = "OK", Description = "Success" };
+
+            var mc = await context!.Merchants!.FirstOrDefaultAsync(m => m.Id == pr.MerchantId2);
+            var merchantName = mc?.Name;
+
+            var slipUrl = $"/payin-slip-upload/{pr.OrgId}/{pr.Id}";
+            if (issueFreshSlipToken)
+            {
+                // ออก slip-upload link ใหม่ให้ด้วย (สำหรับปุ่ม "Upload Slip" ในหน้า status) — ไม่ต้องเหมือนเดิมกับ
+                // ตอนสร้าง payment request เพราะเป็นแค่ access token ไม่ใช่ข้อมูล QR ที่ต้องคงที่
+                var slipToken = Guid.NewGuid().ToString();
+                var slipCacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
+                _ = _redis.SetObjectAsync($"{slipCacheKey}:{pr.Id}:{slipToken}", pr.Id!.ToString(), TimeSpan.FromMinutes(60 * 24));
+                slipUrl = $"{slipUrl}/{slipToken}";
+            }
+
+            r.PaymentRequestId = pr.Id.ToString();
+            r.PaymentStatus = pr.Status;
+            r.RefId1 = pr.RefId1;
+            r.RefId2 = pr.RefId2;
+            r.RefId3 = pr.RefId3;
+            r.PayerName = pr.PayerName;
+            r.Amount = pr.GeneratedAmount ?? pr.RequestedAmount;
+            r.Currency = pr.Currency;
+            r.CreatedAt = pr.CreatedDate;
+            r.ExpireAt = pr.ExpireDate;
+            r.QrCode = pr.QrCode;
+            r.IsQrAvailable = !string.IsNullOrEmpty(pr.QrCode);
+            r.PayInBankAccountName = pr.PayinBankAccountName;
+            r.PayInBankAccountNo = pr.PayinBankAccountNo;
+            r.PayInBankCode = pr.PayinBankCode;
+            r.PayInPromptPayId = pr.PayinPromptPayId;
+            r.MerchantName = merchantName;
+            r.SlipUploadUrl = issueFreshSlipToken ? slipUrl : null;
+
+            return r;
+        }
+
+        // No-auth endpoint behind the PaymentStatusUrl link — page re-calls this on refresh
+        // (no SignalR, per spec).
+        public async Task<MVPaymentStatus> GetPayInStatusByToken(string paymentRequestId, string token)
+        {
+            var r = new MVPaymentStatus() { Status = "OK" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            // AllowAnonymous endpoint — no JWT so orgId defaults to reserved value; bypass org filter
+            repository!.SetCustomOrgId("global");
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            var cacheKey = CacheHelper.CreatePayInStatusTokenKey(pr.OrgId!);
+            var cached = await _redis.GetObjectAsync<string>($"{cacheKey}:{paymentRequestId}:{token}");
+            if (cached == null)
+            {
+                r.Status = "TOKEN_INVALID";
+                r.Description = "Token is invalid or expired";
+                return r;
+            }
+
+            return await BuildPaymentStatus(pr, issueFreshSlipToken: true);
+        }
+
+        // No-auth endpoint behind the SlipUploadUrl link — lets the slip-upload page show
+        // merchant/amount/payer context so whoever uploads the slip can confirm they're
+        // uploading to the right place (item 6 of the spec). Validates against the SAME slip
+        // token already in the URL, no new token issued.
+        public async Task<MVPaymentStatus> GetPayInInfoBySlipToken(string paymentRequestId, string token)
+        {
+            var r = new MVPaymentStatus() { Status = "OK" };
+
+            if (!ServiceUtils.IsGuidValid(paymentRequestId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Payment Request ID [{paymentRequestId}] format is invalid";
+                return r;
+            }
+
+            repository!.SetCustomOrgId("global");
+            var pr = await repository!.GetPaymentRequestById(paymentRequestId);
+            if (pr == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Payment Request ID [{paymentRequestId}] not found";
+                return r;
+            }
+
+            var cacheKey = CacheHelper.CreatePayInSlipUploadTokenKey(pr.OrgId!);
+            var cached = await _redis.GetObjectAsync<string>($"{cacheKey}:{paymentRequestId}:{token}");
+            if (cached == null)
+            {
+                r.Status = "TOKEN_INVALID";
+                r.Description = "Token is invalid or expired";
+                return r;
+            }
+
+            return await BuildPaymentStatus(pr, issueFreshSlipToken: false);
         }
 
         public async Task<MVBase> VerifyPayOutSlipToken(string paymentRequestId, string token)

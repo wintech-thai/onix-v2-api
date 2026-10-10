@@ -350,6 +350,24 @@ namespace Its.Onix.Api.Controllers
 
         [AllowAnonymous]
         [HttpGet]
+        [Route("org/{orgId}/action/GetPayInStatusByToken/{paymentRequestId}/{token}")]
+        public async Task<IActionResult> GetPayInStatusByToken(string orgId, string paymentRequestId, string token)
+        {
+            var result = await _paymentRequestSvc.GetPayInStatusByToken(paymentRequestId, token);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("org/{orgId}/action/GetPayInInfoBySlipToken/{paymentRequestId}/{token}")]
+        public async Task<IActionResult> GetPayInInfoBySlipToken(string orgId, string paymentRequestId, string token)
+        {
+            var result = await _paymentRequestSvc.GetPayInInfoBySlipToken(paymentRequestId, token);
+            return Ok(result);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
         [Route("org/{orgId}/action/VerifyPayOutToken/{paymentRequestId}/{token}")]
         public async Task<IActionResult> VerifyPayOutToken(string orgId, string paymentRequestId, string token)
         {
@@ -396,6 +414,14 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId)
         {
             var result = await _paymentRequestSvc.GeneratePayInSlipUploadToken(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{orgId}/action/GeneratePayInStatusToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayInStatusToken(string orgId, string paymentRequestId)
+        {
+            var result = await _paymentRequestSvc.GeneratePayInStatusToken(orgId, paymentRequestId);
             return Ok(result);
         }
     }

@@ -8,5 +8,6 @@ namespace Its.Onix.Api.ModelsViews
         public string? Status { get; set; }
         public string? Description { get; set; }
         public string? SlipUploadUrl { get; set; }
+        public string? PaymentStatusUrl { get; set; }
     }
 }
