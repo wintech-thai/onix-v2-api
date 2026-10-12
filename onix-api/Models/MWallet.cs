@@ -40,7 +40,10 @@ namespace Its.Onix.Api.Models
         public string? BankAccountId { get; set; }
 
         [Column("ref_id")]
-        public string? RefId { get; set; } //เป็น generef ID ไปอีก table
+        public string? RefId { get; set; } //เป็น general ID ไปอีก table
+
+        [Column("wallet_type")]
+        public string? WalletType { get; set; } /* MerchantPoint */
 
 
         [Column("point_balance")]

@@ -97,6 +97,24 @@ namespace Its.Onix.Api.Services
                 var _ = await _pointRepo.AddWallet(w);
             }
 
+            var pointWallet = await _pointRepo!.GetWalletByRefIdAndType(merchantId, "MerchantPoint");
+            if (pointWallet == null)
+            {
+                //ยังไม่เคยสร้าง point wallet มาก่อนก็สร้างให้เลย
+                var pw = new MWallet()
+                {
+                    Name = $"THB:PointWallet:{merchantId}",
+                    RefId = merchantId,
+                    WalletType = "MerchantPoint",
+                    PointBalance = 0,
+                    PointBalanceDecimal = 0,
+                    Tags = $"MerchantName={result.Name}",
+                    Description = $"Auto generated wallet for THB point for [{result.Name}]",
+                };
+
+                var _ = await _pointRepo.AddWallet(pw);
+            }
+
             DeserializeWhitelistBankAccountNames(result);
 
             r.Merchant = result;
@@ -186,6 +204,7 @@ namespace Its.Onix.Api.Services
 
                 //เพิ่ม wallet ให้อัตโนมัติ
                 _pointRepo!.SetCustomOrgId(result.OrgId!); //เอา OrgId ของ merchant มาใช้ได้เลย
+
                 var wallet = await _pointRepo!.GetWalletByMerchantId(merchantId);
                 if (wallet == null)
                 {
@@ -201,6 +220,25 @@ namespace Its.Onix.Api.Services
                     };
 
                     var _ = await _pointRepo.AddWallet(w);
+                }
+
+                //เพิ่ม point wallet ให้อัตโนมัติ
+                var pointWallet = await _pointRepo!.GetWalletByRefIdAndType(merchantId, "MerchantPoint");
+                if (pointWallet == null)
+                {
+                    //ยังไม่เคยสร้าง point wallet มาก่อนก็สร้างให้เลย
+                    var pw = new MWallet()
+                    {
+                        Name = $"THB:PointWallet:{merchantId}",
+                        RefId = merchantId,
+                        WalletType = "MerchantPoint",
+                        PointBalance = 0,
+                        PointBalanceDecimal = 0,
+                        Tags = $"MerchantName={result.Name}",
+                        Description = $"Auto generated wallet for THB currency for [{result.Name}]",
+                    };
+
+                    var _ = await _pointRepo.AddWallet(pw);
                 }
 
                 DeserializeWhitelistBankAccountNames(result);

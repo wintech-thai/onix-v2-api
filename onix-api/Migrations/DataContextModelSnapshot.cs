@@ -4907,6 +4907,10 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
 
+                    b.Property<string>("WalletType")
+                        .HasColumnType("text")
+                        .HasColumnName("wallet_type");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
