@@ -1,4 +1,3 @@
-using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
@@ -6,6 +5,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
+    // NOTE: deliberately avoids LinqKit's .AsExpandable()/PredicateBuilder throughout this file.
+    // In this project's LinqKit/EF Core combo, .AsExpandable() intermittently produces a query
+    // whose .Provider does NOT implement IAsyncQueryProvider — confirmed broken even with a
+    // single combined PredicateBuilder predicate (not just when chaining a second .Where()).
+    // Plain sequential .Where() calls on a vanilla IQueryable<T> never leave EF Core's own
+    // provider, so they're always safe for async. None of the queries here actually need
+    // LinqKit's Expression-combining power (just a couple of ANDed/ORed conditions) — use plain
+    // LINQ instead of reaching for PredicateBuilder again in this file.
     public class AgentRepository : BaseRepository, IAgentRepository
     {
         public AgentRepository(IDataContext ctx)
@@ -13,30 +20,24 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
-        // chain .Where() ซ้อนกันหลังจาก .AsExpandable() ทำให้ provider ที่ LinqKit ห่อไว้
-        // ไม่ forward เป็น IAsyncQueryProvider ของ EF Core ต่อ (runtime exception) — ต้องรวม predicate
-        // เป็นตัวเดียวด้วย PredicateBuilder แล้ว .Where() แค่ครั้งเดียวเท่านั้น
-        private ExpressionStarter<MAgent> CodePredicate(string code)
-        {
-            var pd = PredicateBuilder.New<MAgent>(true);
-            pd = pd.And(p => p.Code!.Equals(code));
-            if (orgId != "global")
-            {
-                pd = pd.And(p => p.OrgId!.Equals(orgId));
-            }
-            return pd;
-        }
-
         public async Task<bool> IsAgentCodeExist(string code)
         {
-            var exists = await context!.Agents!.AsExpandable().Where(CodePredicate(code)).AnyAsync();
-            return exists;
+            IQueryable<MAgent> query = context!.Agents!.Where(p => p.Code!.Equals(code));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            return await query.AnyAsync();
         }
 
         public async Task<MAgent?> GetAgentByCode(string code)
         {
-            var exists = await context!.Agents!.AsExpandable().Where(CodePredicate(code)).FirstOrDefaultAsync();
-            return exists;
+            IQueryable<MAgent> query = context!.Agents!.Where(p => p.Code!.Equals(code));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<List<MAgent>> GetAgents(VMAgent param)
@@ -56,9 +57,8 @@ namespace Its.Onix.Api.Database.Repositories
                 limit = param.Limit;
             }
 
-            var predicate = AgentPredicate(param!);
-            var result = await GetSelection().AsExpandable()
-            .Where(predicate)
+            var query = ApplyAgentFilters(GetSelection(), param);
+            var result = await query
             .OrderByDescending(e => e.LastSeenDate)
             .Skip(offset)
             .Take(limit)
@@ -69,27 +69,21 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<int> GetAgentCount(VMAgent param)
         {
-            var predicate = AgentPredicate(param!);
-            var result = await context!.Agents!.Where(predicate).AsExpandable().CountAsync();
+            var query = ApplyAgentFilters(context!.Agents!, param);
+            var result = await query.CountAsync();
 
             return result;
-        }
-
-        private ExpressionStarter<MAgent> IdPredicate(Guid id)
-        {
-            var pd = PredicateBuilder.New<MAgent>(true);
-            pd = pd.And(p => p.Id!.Equals(id));
-            if (orgId != "global")
-            {
-                pd = pd.And(p => p.OrgId!.Equals(orgId));
-            }
-            return pd;
         }
 
         public async Task<MAgent?> GetAgentById(string agentId)
         {
             Guid id = Guid.Parse(agentId);
-            var u = await GetSelection().AsExpandable().Where(IdPredicate(id)).FirstOrDefaultAsync();
+            IQueryable<MAgent> query = GetSelection().Where(p => p.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            var u = await query.FirstOrDefaultAsync();
             return u;
         }
 
@@ -115,34 +109,25 @@ namespace Its.Onix.Api.Database.Repositories
             });
         }
 
-        private ExpressionStarter<MAgent> AgentPredicate(VMAgent param)
+        private IQueryable<MAgent> ApplyAgentFilters(IQueryable<MAgent> query, VMAgent param)
         {
-            var pd = PredicateBuilder.New<MAgent>();
-
             if (orgId != "global")
             {
-                pd = pd.And(p => p.OrgId!.Equals(orgId));
+                query = query.Where(p => p.OrgId!.Equals(orgId));
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
-                var fullTextPd = PredicateBuilder.New<MAgent>();
-                fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Code!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
-
-                pd = pd.And(fullTextPd);
+                var fts = param.FullTextSearch;
+                query = query.Where(p => p.Description!.Contains(fts) || p.Code!.Contains(fts) || p.Tags!.Contains(fts));
             }
 
             if ((param.AgentType != "") && (param.AgentType != null))
             {
-                var agentTypePd = PredicateBuilder.New<MAgent>();
-                agentTypePd = agentTypePd.Or(p => p.AgentType!.Equals(param.AgentType));
-
-                pd = pd.And(agentTypePd);
+                query = query.Where(p => p.AgentType!.Equals(param.AgentType));
             }
 
-            return pd;
+            return query;
         }
 
         public async Task<MAgent> AddAgent(MAgent agent)
@@ -159,7 +144,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> DeleteAgentById(string agentId)
         {
             Guid id = Guid.Parse(agentId);
-            var existing = await context!.Agents!.AsExpandable().Where(IdPredicate(id)).FirstOrDefaultAsync();
+            IQueryable<MAgent> query = context!.Agents!.Where(p => p.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            var existing = await query.FirstOrDefaultAsync();
             if (existing != null)
             {
                 context.Agents!.Remove(existing);
@@ -172,7 +162,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> UpdateAgentById(string agentId, MAgent agent)
         {
             Guid id = Guid.Parse(agentId);
-            var existing = await context!.Agents!.AsExpandable().Where(IdPredicate(id)).FirstOrDefaultAsync();
+            IQueryable<MAgent> query = context!.Agents!.Where(p => p.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            var existing = await query.FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.Code = agent.Code;
@@ -195,7 +190,12 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             Guid id = Guid.Parse(agentId);
-            var existing = await context!.Agents!.AsExpandable().Where(IdPredicate(id)).FirstOrDefaultAsync();
+            IQueryable<MAgent> query = context!.Agents!.Where(p => p.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            var existing = await query.FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.LastSeenDate = DateTime.UtcNow;
@@ -226,71 +226,53 @@ namespace Its.Onix.Api.Database.Repositories
             return agentEvent;
         }
 
-        private ExpressionStarter<MAgentEvent> AgentEventPredicate(VMAgentEvent param)
+        private IQueryable<MAgentEvent> ApplyAgentEventFilters(IQueryable<MAgentEvent> query, VMAgentEvent param)
         {
-            var pd = PredicateBuilder.New<MAgentEvent>(true);
-
             if (orgId != "global")
             {
-                pd = pd.And(p => p.OrgId!.Equals(orgId));
+                query = query.Where(p => p.OrgId!.Equals(orgId));
             }
 
             if ((param.AgentId != null) && (param.AgentId != ""))
             {
-                var agentIdPd = PredicateBuilder.New<MAgentEvent>();
-                agentIdPd = agentIdPd.Or(p => p.AgentId!.Equals(param.AgentId));
-
-                pd = pd.And(agentIdPd);
+                query = query.Where(p => p.AgentId!.Equals(param.AgentId));
             }
 
             if ((param.EventType != null) && (param.EventType != ""))
             {
-                var eventTypePd = PredicateBuilder.New<MAgentEvent>();
-                eventTypePd = eventTypePd.Or(p => p.EventType!.Equals(param.EventType));
-
-                pd = pd.And(eventTypePd);
+                query = query.Where(p => p.EventType!.Equals(param.EventType));
             }
 
             if ((param.Channel != null) && (param.Channel != ""))
             {
-                var channelPd = PredicateBuilder.New<MAgentEvent>();
-                channelPd = channelPd.Or(p => p.Channel!.Equals(param.Channel));
-
-                pd = pd.And(channelPd);
+                query = query.Where(p => p.Channel!.Equals(param.Channel));
             }
 
             if (param.FromDate.HasValue)
             {
-                var fromDatePd = PredicateBuilder.New<MAgentEvent>();
-                fromDatePd = fromDatePd.Or(p => p.CreatedDate >= param.FromDate.Value);
-
-                pd = pd.And(fromDatePd);
+                var fromDate = param.FromDate.Value;
+                query = query.Where(p => p.CreatedDate >= fromDate);
             }
 
-            // ToDate
             if (param.ToDate.HasValue)
             {
-                var toDatePd = PredicateBuilder.New<MAgentEvent>();
-                toDatePd = toDatePd.Or(p => p.CreatedDate <= param.ToDate.Value);
-
-                pd = pd.And(toDatePd);
+                var toDate = param.ToDate.Value;
+                query = query.Where(p => p.CreatedDate <= toDate);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
-                var fullTextPd = PredicateBuilder.New<MAgentEvent>();
-                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
-
-                pd = pd.And(fullTextPd);
+                var fts = param.FullTextSearch;
+                query = query.Where(p => p.Tags!.Contains(fts));
             }
 
-            return pd;
+            return query;
         }
 
         public async Task<int> GetAgentEventCount(VMAgentEvent param)
         {
-            var predicate = AgentEventPredicate(param!);
-            var result = await context!.AgentEvents!.Where(predicate).AsExpandable().CountAsync();
+            var query = ApplyAgentEventFilters(context!.AgentEvents!, param);
+            var result = await query.CountAsync();
 
             return result;
         }
@@ -332,9 +314,8 @@ namespace Its.Onix.Api.Database.Repositories
                 limit = param.Limit;
             }
 
-            var predicate = AgentEventPredicate(param!);
-            var result = await GetSelection2().AsExpandable()
-            .Where(predicate)
+            var query = ApplyAgentEventFilters(GetSelection2(), param);
+            var result = await query
             .OrderByDescending(e => e.CreatedDate)
             .Skip(offset)
             .Take(limit)
@@ -343,29 +324,22 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
-        private ExpressionStarter<MAgentEvent> EventIdPredicate(Guid id)
-        {
-            var pd = PredicateBuilder.New<MAgentEvent>(true);
-            pd = pd.And(p => p.Id!.Equals(id));
-            if (orgId != "global")
-            {
-                pd = pd.And(p => p.OrgId!.Equals(orgId));
-            }
-            return pd;
-        }
-
         public async Task<MAgentEvent?> GetAgentEventById(string agentEventId)
         {
             Guid id = Guid.Parse(agentEventId);
-            var u = await GetSelection2().AsExpandable().Where(EventIdPredicate(id)).FirstOrDefaultAsync();
+            IQueryable<MAgentEvent> query = GetSelection2().Where(p => p.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            var u = await query.FirstOrDefaultAsync();
             return u;
         }
 
         public async Task<List<MVAgentEventTimeSeries>> GetAgentEventTimeSeries(VMAgentEvent param)
         {
-            var predicate = AgentEventPredicate(param!);
-            var events = await GetSelection2().AsExpandable()
-                .Where(predicate)
+            var query = ApplyAgentEventFilters(GetSelection2(), param);
+            var events = await query
                 .OrderBy(e => e.CreatedDate)
                 .ToListAsync();
 
@@ -405,7 +379,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> UpdateAgentStatusById(string agentId, string status)
         {
             Guid id = Guid.Parse(agentId);
-            var result = await context!.Agents!.AsExpandable().Where(IdPredicate(id)).FirstOrDefaultAsync();
+            IQueryable<MAgent> query = context!.Agents!.Where(p => p.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p.OrgId!.Equals(orgId));
+            }
+            var result = await query.FirstOrDefaultAsync();
 
             if (result != null)
             {

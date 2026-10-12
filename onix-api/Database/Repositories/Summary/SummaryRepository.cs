@@ -296,27 +296,24 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
-        // ห้าม reassign ด้วย .Where() ซ้อนกันหลัง .AsExpandable() — provider ที่ LinqKit ห่อไว้จะไม่
-        // forward เป็น IAsyncQueryProvider ของ EF Core ต่อ ทำให้ terminal Async method ทุกตัว throw ตอน
-        // runtime (compile ผ่านปกติ) ต้องรวม predicate เป็นตัวเดียวด้วย PredicateBuilder ก่อน
-        private ExpressionStarter<MFinancialDocItemExpense> ExpenseBasePredicate(VMSummary param)
-        {
-            var pd = PredicateBuilder.New<MFinancialDocItemExpense>(true);
-
-            if (orgId != "global")
-                pd = pd.And(x => x.OrgId == orgId);
-
-            if (param.FromDate.HasValue)
-                pd = pd.And(x => x.ExpenseDate >= param.FromDate.Value);
-            if (param.ToDate.HasValue)
-                pd = pd.And(x => x.ExpenseDate <= param.ToDate.Value);
-
-            return pd;
-        }
-
+        // .AsExpandable() (แม้รวม predicate เดียวด้วย PredicateBuilder แล้ว) ยังพบว่า provider
+        // ไม่ forward เป็น IAsyncQueryProvider ของ EF Core อยู่ดีในบางเคส (ยืนยันจริงจาก x083
+        // incident — AgentRepository.IsAgentCodeExist พังแม้แก้เป็น single-predicate แล้ว) ปลอดภัย
+        // สุดคือเลี่ยง LinqKit ไปเลยสำหรับ query ง่ายๆ แบบนี้ ใช้ .Where() ธรรมดา chain ต่อกันแทน
+        // (ไม่หลุดจาก EF Core provider เดิมไม่ว่ากรณีไหน)
         private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
         {
-            return context!.FinancialDocItemExpenses!.AsExpandable().Where(ExpenseBasePredicate(param));
+            IQueryable<MFinancialDocItemExpense> query = context!.FinancialDocItemExpenses!;
+
+            if (orgId != "global")
+                query = query.Where(x => x.OrgId == orgId);
+
+            if (param.FromDate.HasValue)
+                query = query.Where(x => x.ExpenseDate >= param.FromDate.Value);
+            if (param.ToDate.HasValue)
+                query = query.Where(x => x.ExpenseDate <= param.ToDate.Value);
+
+            return query;
         }
 
         public async Task<decimal> GetExpenseTotalAmount(VMSummary param)
