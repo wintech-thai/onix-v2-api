@@ -74,6 +74,9 @@ namespace Its.Onix.Api.Models
         [Column("include_global_bank_account")]
         public bool IncludeGlobalBankAccount { get; set; } //true = สามารถใช้ global pay-in bank account ได้ตอนสร้าง QR
 
+        [Column("payin_bank_custody_type")]
+        public string? PayInBankCustodyType { get; set; } //(MerchantOwn, PlatformOwn) กำหนดได้แค่ตอน Add เท่านั้น, null = merchant เก่าก่อนมี field นี้ ให้ถือเป็น PlatformOwn
+
         [Column("whitelist_bank_account_names")]
         public string? WhitelistBankAccountNames { get; set; } //serialize มาจาก List<string> WhitelistBankAccountNamesArr ห้าม return ออกไปตรง ๆ
 

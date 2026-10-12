@@ -147,6 +147,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if ((merchant.PayInBankCustodyType != "MerchantOwn") && (merchant.PayInBankCustodyType != "PlatformOwn"))
+            {
+                r.Status = "PAYIN_BANK_CUSTODY_TYPE_INVALID";
+                r.Description = $"PayInBankCustodyType must be either 'MerchantOwn' or 'PlatformOwn'!!!";
+
+                return r;
+            }
+
             var isCodeExist = await repository!.IsMerchantCodeExist(merchant.Code);
             if (isCodeExist)
             {

@@ -2623,6 +2623,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
+                    b.Property<string>("PayInBankCustodyType")
+                        .HasColumnType("text")
+                        .HasColumnName("payin_bank_custody_type");
+
                     b.Property<decimal?>("PayinDailyTxAmountLimit")
                         .HasColumnType("numeric")
                         .HasColumnName("payin_daily_tx_amount_limit");

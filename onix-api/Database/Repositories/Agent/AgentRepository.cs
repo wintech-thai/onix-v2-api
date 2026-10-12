@@ -2,7 +2,7 @@ using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -15,13 +15,23 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<bool> IsAgentCodeExist(string code)
         {
-            var exists = await context!.Agents!.AsExpandable().AnyAsync(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId));
+            var query = context!.Agents!.AsExpandable().Where(p => p!.Code!.Equals(code));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var exists = await query.AnyAsync();
             return exists;
         }
 
         public async Task<MAgent?> GetAgentByCode(string code)
         {
-            var exists = await context!.Agents!.AsExpandable().Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var query = context!.Agents!.AsExpandable().Where(p => p!.Code!.Equals(code));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var exists = await query.FirstOrDefaultAsync();
             return exists;
         }
 
@@ -64,7 +74,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> GetAgentById(string agentId)
         {
             Guid id = Guid.Parse(agentId);
-            var u = await GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var query = GetSelection().AsExpandable().Where(p => p!.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var u = await query.FirstOrDefaultAsync();
             return u;
         }
 
@@ -94,7 +109,10 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var pd = PredicateBuilder.New<MAgent>();
 
-            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            if (orgId != "global")
+            {
+                pd = pd.And(p => p.OrgId!.Equals(orgId));
+            }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
@@ -131,7 +149,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> DeleteAgentById(string agentId)
         {
             Guid id = Guid.Parse(agentId);
-            var existing = await context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var query = context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var existing = await query.FirstOrDefaultAsync();
             if (existing != null)
             {
                 context.Agents!.Remove(existing);
@@ -144,7 +167,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> UpdateAgentById(string agentId, MAgent agent)
         {
             Guid id = Guid.Parse(agentId);
-            var existing = await context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var query = context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var existing = await query.FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.Code = agent.Code;
@@ -167,7 +195,12 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             Guid id = Guid.Parse(agentId);
-            var existing = await context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var lastSeenQuery = context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                lastSeenQuery = lastSeenQuery.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var existing = await lastSeenQuery.FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.LastSeenDate = DateTime.UtcNow;
@@ -202,7 +235,10 @@ namespace Its.Onix.Api.Database.Repositories
         {
             var pd = PredicateBuilder.New<MAgentEvent>(true);
 
-            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            if (orgId != "global")
+            {
+                pd = pd.And(p => p.OrgId!.Equals(orgId));
+            }
 
             if ((param.AgentId != null) && (param.AgentId != ""))
             {
@@ -315,7 +351,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgentEvent?> GetAgentEventById(string agentEventId)
         {
             Guid id = Guid.Parse(agentEventId);
-            var u = await GetSelection2().AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var query = GetSelection2().AsExpandable().Where(p => p!.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var u = await query.FirstOrDefaultAsync();
             return u;
         }
 
@@ -363,7 +404,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAgent?> UpdateAgentStatusById(string agentId, string status)
         {
             Guid id = Guid.Parse(agentId);
-            var result = await context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var statusQuery = context!.Agents!.AsExpandable().Where(p => p!.Id!.Equals(id));
+            if (orgId != "global")
+            {
+                statusQuery = statusQuery.Where(p => p!.OrgId!.Equals(orgId));
+            }
+            var result = await statusQuery.FirstOrDefaultAsync();
 
             if (result != null)
             {
