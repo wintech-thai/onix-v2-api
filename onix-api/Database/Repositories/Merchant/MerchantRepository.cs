@@ -108,6 +108,7 @@ namespace Its.Onix.Api.Database.Repositories
                 CreatedDate = x.merchant.CreatedDate,
                 DiscardCent = x.merchant.DiscardCent,
                 IncludeGlobalBankAccount = x.merchant.IncludeGlobalBankAccount,
+                PayInBankCustodyType = x.merchant.PayInBankCustodyType,
                 PayinDailyTxAmountLimit = x.merchant.PayinDailyTxAmountLimit,
                 PayinDailyTxCountLimit = x.merchant.PayinDailyTxCountLimit,
                 PayinExpireMinute = x.merchant.PayinExpireMinute,

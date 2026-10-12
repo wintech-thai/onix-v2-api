@@ -296,11 +296,7 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
-        // .AsExpandable() (แม้รวม predicate เดียวด้วย PredicateBuilder แล้ว) ยังพบว่า provider
-        // ไม่ forward เป็น IAsyncQueryProvider ของ EF Core อยู่ดีในบางเคส (ยืนยันจริงจาก x083
-        // incident — AgentRepository.IsAgentCodeExist พังแม้แก้เป็น single-predicate แล้ว) ปลอดภัย
-        // สุดคือเลี่ยง LinqKit ไปเลยสำหรับ query ง่ายๆ แบบนี้ ใช้ .Where() ธรรมดา chain ต่อกันแทน
-        // (ไม่หลุดจาก EF Core provider เดิมไม่ว่ากรณีไหน)
+        // เลี่ยง .AsExpandable() ตรงนี้ — พังกับ EF Core async แม้รวม predicate เดียวแล้วก็ตาม
         private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
         {
             IQueryable<MFinancialDocItemExpense> query = context!.FinancialDocItemExpenses!;

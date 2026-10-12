@@ -5,14 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
-    // NOTE: deliberately avoids LinqKit's .AsExpandable()/PredicateBuilder throughout this file.
-    // In this project's LinqKit/EF Core combo, .AsExpandable() intermittently produces a query
-    // whose .Provider does NOT implement IAsyncQueryProvider — confirmed broken even with a
-    // single combined PredicateBuilder predicate (not just when chaining a second .Where()).
-    // Plain sequential .Where() calls on a vanilla IQueryable<T> never leave EF Core's own
-    // provider, so they're always safe for async. None of the queries here actually need
-    // LinqKit's Expression-combining power (just a couple of ANDed/ORed conditions) — use plain
-    // LINQ instead of reaching for PredicateBuilder again in this file.
+    // NOTE: avoid LinqKit's .AsExpandable()/PredicateBuilder here — it breaks EF Core async
+    // in this project even with a single combined predicate. Plain .Where() chains instead.
     public class AgentRepository : BaseRepository, IAgentRepository
     {
         public AgentRepository(IDataContext ctx)
