@@ -1,7 +1,7 @@
 using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -296,19 +296,27 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
-        private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
+        // ห้าม reassign ด้วย .Where() ซ้อนกันหลัง .AsExpandable() — provider ที่ LinqKit ห่อไว้จะไม่
+        // forward เป็น IAsyncQueryProvider ของ EF Core ต่อ ทำให้ terminal Async method ทุกตัว throw ตอน
+        // runtime (compile ผ่านปกติ) ต้องรวม predicate เป็นตัวเดียวด้วย PredicateBuilder ก่อน
+        private ExpressionStarter<MFinancialDocItemExpense> ExpenseBasePredicate(VMSummary param)
         {
-            var query = context!.FinancialDocItemExpenses!.AsExpandable();
+            var pd = PredicateBuilder.New<MFinancialDocItemExpense>(true);
 
             if (orgId != "global")
-                query = query.Where(x => x.OrgId == orgId);
+                pd = pd.And(x => x.OrgId == orgId);
 
             if (param.FromDate.HasValue)
-                query = query.Where(x => x.ExpenseDate >= param.FromDate.Value);
+                pd = pd.And(x => x.ExpenseDate >= param.FromDate.Value);
             if (param.ToDate.HasValue)
-                query = query.Where(x => x.ExpenseDate <= param.ToDate.Value);
+                pd = pd.And(x => x.ExpenseDate <= param.ToDate.Value);
 
-            return query;
+            return pd;
+        }
+
+        private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
+        {
+            return context!.FinancialDocItemExpenses!.AsExpandable().Where(ExpenseBasePredicate(param));
         }
 
         public async Task<decimal> GetExpenseTotalAmount(VMSummary param)
