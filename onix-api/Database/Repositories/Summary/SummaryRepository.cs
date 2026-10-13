@@ -1,10 +1,12 @@
-using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
+    // เลี่ยง LinqKit .AsExpandable()/PredicateBuilder ทั้งไฟล์ — พังกับ EF Core async
+    // แม้รวม predicate เดียวแล้วก็ตาม (ยืนยันจริงจาก incident x083) ใช้ .Where() ธรรมดา
+    // chain ต่อกันแทน ไม่มีทางหลุดจาก EF Core provider เดิม
     public class SummaryRepository : BaseRepository, ISummaryRepository
     {
         public SummaryRepository(IDataContext ctx)
@@ -12,24 +14,36 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
-        private ExpressionStarter<T> IsOrgMatchPredicate<T>() where T : IOrgEntity
+        private IQueryable<T> ApplyOrgFilter<T>(IQueryable<T> query) where T : IOrgEntity
         {
-            var pd = PredicateBuilder.New<T>(true);
             if (orgId != "global")
             {
-                //ต้องเอา orgId มา where ด้วย
-                var orgPd = PredicateBuilder.New<T>(true);
-                orgPd = orgPd.And(p => p.OrgId!.Equals(orgId));
-                pd = pd.And(orgPd);
+                query = query.Where(p => p.OrgId!.Equals(orgId));
             }
 
-            return pd;
+            return query;
+        }
+
+        private IQueryable<T> ApplyDateRangeFilter<T>(IQueryable<T> query, VMQueryBase param) where T : IOrgEntity
+        {
+            if (param.FromDate.HasValue)
+            {
+                var fromDate = param.FromDate.Value;
+                query = query.Where(p => p.CreatedDate >= fromDate);
+            }
+
+            if (param.ToDate.HasValue)
+            {
+                var toDate = param.ToDate.Value;
+                query = query.Where(p => p.CreatedDate <= toDate);
+            }
+
+            return query;
         }
 
         public async Task<List<MerchantSummaryData>> GetMerchantCountByStatus(VMSummary param)
         {
-            var result = await context!.Merchants!.AsExpandable()
-                .Where(IsOrgMatchPredicate<MMerchant>())
+            var result = await ApplyOrgFilter(context!.Merchants!)
                 .GroupBy(x => x.Status)
                 .Select(g => new MerchantSummaryData()
                 {
@@ -42,8 +56,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MerchantSummaryData>> GetMerchantCount(VMSummary param)
         {
-            var result = await context!.Merchants!.AsExpandable()
-                .Where(IsOrgMatchPredicate<MMerchant>())
+            var result = await ApplyOrgFilter(context!.Merchants!)
                 .GroupBy(x => 1)
                 .Select(g => new MerchantSummaryData()
                 {
@@ -72,8 +85,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MerchantSummaryData>> GetMerchantsBalance()
         {
-            var result = await GetSelectionWallet().AsExpandable()
-                .Where(IsOrgMatchPredicate<MWallet>())
+            var result = await ApplyOrgFilter(GetSelectionWallet())
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
                 .Select(g => new MerchantSummaryData()
@@ -139,36 +151,9 @@ namespace Its.Onix.Api.Database.Repositories
             });
         }
 
-        private ExpressionStarter<T> DateRangePredicate<T>(VMQueryBase param) where T : IOrgEntity
-        {
-            var pd = PredicateBuilder.New<T>(true);
-
-            // FromDate
-            if (param.FromDate.HasValue)
-            {
-                var fromDatePd = PredicateBuilder.New<T>(true);
-                fromDatePd = fromDatePd.And(p => p.CreatedDate >= param.FromDate.Value);
-
-                pd = pd.And(fromDatePd);
-            }
-
-            // ToDate
-            if (param.ToDate.HasValue)
-            {
-                var toDatePd = PredicateBuilder.New<T>(true);
-                toDatePd = toDatePd.And(p => p.CreatedDate <= param.ToDate.Value);
-
-                pd = pd.And(toDatePd);
-            }
-
-            return pd;
-        }
-
         public async Task<List<MerchantSummaryData>> GetMerchantsPayInAmountSummary(VMSummary param)
         {
-            var result = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var result = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.Direction == "PayIn")
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.MerchantCode)
@@ -186,9 +171,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MerchantSummaryData>> GetMerchantsPayOutAmountSummary(VMSummary param)
         {
-            var result = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var result = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.Direction == "PayOut")
                 .Where(x => x.PayoutIsWithdrawal != true)
                 .Where(x => x.MerchantCode != null)
@@ -207,9 +190,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<MerchantSummaryData>> GetMerchantsWithdrawalAmountSummary(VMSummary param)
         {
-            var result = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var result = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.Direction == "PayOut")
                 .Where(x => x.PayoutIsWithdrawal == true)
                 .Where(x => x.MerchantCode != null)
@@ -228,9 +209,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<DailyRevenueSummaryData>> GetDailyRevenueSummary(VMSummary param)
         {
-            var result = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var result = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.CreatedDate!.Value.Date)
                 .Select(g => new DailyRevenueSummaryData
@@ -248,9 +227,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<DailyMerchantRevenueSummaryData>> GetDailyMerchantRevenueSummary(VMSummary param)
         {
-            var result = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var result = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => new { x.CreatedDate!.Value.Date, x.MerchantCode })
                 .Select(g => new DailyMerchantRevenueSummaryData
@@ -279,9 +256,7 @@ namespace Its.Onix.Api.Database.Repositories
             // Direction เดิมมีแค่ PayIn / PayOut — ที่นี่แยก PayOut ที่ถูกแฟล็กเป็น
             // withdrawal (PayoutIsWithdrawal == true) ออกมาเป็นกลุ่ม "Withdrawal"
             // ต่างหาก ส่วน null/false ยังถูกนับเป็น PayOut ธรรมดาเหมือนเดิม
-            var result = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var result = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.MerchantCode != null)
                 .GroupBy(x => x.Direction == "PayOut" && x.PayoutIsWithdrawal == true ? "Withdrawal" : x.Direction)
                 .Select(g => new RevenueSummaryData()
@@ -298,7 +273,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         private IQueryable<MFinancialDocItemExpense> GetExpenseBaseQuery(VMSummary param)
         {
-            var query = context!.FinancialDocItemExpenses!.AsExpandable();
+            IQueryable<MFinancialDocItemExpense> query = context!.FinancialDocItemExpenses!;
 
             if (orgId != "global")
                 query = query.Where(x => x.OrgId == orgId);
@@ -356,9 +331,7 @@ namespace Its.Onix.Api.Database.Repositories
             // PayIn and PayOut/Withdrawal legs of a transaction land in two different bank
             // accounts (PayInBankAccountNo vs PayOutBankAccountNo), so they're grouped
             // separately here then merged in-memory by (Date, BankCode, AccountNumber, MerchantCode).
-            var payInRows = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var payInRows = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.Direction == "PayIn" && x.PayInBankAccountNo != null)
                 .Where(x => param.IncludeP2P || x.TxIsPeerToPeer != true)
                 .Where(x => string.IsNullOrEmpty(param.BankCode) || x.PayInBankCode == param.BankCode)
@@ -377,9 +350,7 @@ namespace Its.Onix.Api.Database.Repositories
                 })
                 .ToListAsync();
 
-            var payOutRows = await GetSelectionPaymentTx().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentTransaction>())
-                .Where(DateRangePredicate<MPaymentTransaction>(param))
+            var payOutRows = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentTx()), param)
                 .Where(x => x.Direction == "PayOut" && x.PayOutBankAccountNo != null)
                 .Where(x => param.IncludeP2P || x.TxIsPeerToPeer != true)
                 .Where(x => string.IsNullOrEmpty(param.BankCode) || x.PayOutBankCode == param.BankCode)
@@ -447,9 +418,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<List<PayerSummaryData>> GetPayerSummary(VMPayerSummary param)
         {
-            var raw = await GetSelectionPaymentRequest().AsExpandable()
-                .Where(IsOrgMatchPredicate<MPaymentRequest>())
-                .Where(DateRangePredicate<MPaymentRequest>(param))
+            var raw = await ApplyDateRangeFilter(ApplyOrgFilter(GetSelectionPaymentRequest()), param)
                 .Where(x => x.Direction == "PayIn" && x.PayerName != null && x.PayerName != "")
                 .Where(x => string.IsNullOrEmpty(param.MerchantCode) || x.MerchantCode == param.MerchantCode)
                 .Where(x => string.IsNullOrEmpty(param.PayerName) || x.PayerName!.Contains(param.PayerName))

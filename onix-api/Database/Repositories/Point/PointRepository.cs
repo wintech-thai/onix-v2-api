@@ -246,6 +246,15 @@ namespace Its.Onix.Api.Database.Repositories
             return u;
         }
 
+        public async Task<MWallet?> GetWalletByRefIdAndType(string refId, string walletType)
+        {
+            var u = await context!.Wallets!.Where(
+                p => p!.RefId!.Equals(refId) && 
+                p!.WalletType!.Equals(walletType) && 
+                p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
         public async Task<MWallet?> GetWalletByMerchantId(string merchantId)
         {
             var u = await context!.Wallets!.Where(p => p!.MerchantId!.Equals(merchantId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();

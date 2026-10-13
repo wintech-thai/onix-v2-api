@@ -89,10 +89,10 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/AddLineApiAgent")]
-        public async Task<IActionResult> AddLineApiAgent([FromBody] MAgent request)
+        [Route("org/{orgId}/action/AddLineApiAgent")]
+        public async Task<IActionResult> AddLineApiAgent(string orgId, [FromBody] MAgent request)
         {
-            var result = await svc.AddLineApiAgent("global", request);
+            var result = await svc.AddLineApiAgent(orgId, request);
             return Ok(result);
         }
 
@@ -322,7 +322,11 @@ namespace Its.Onix.Api.Controllers
                 StatusDesc = "Success",
             };
 
-            var result = await svc.AddAgentEvent("global", evt);
+            // event ต้องผูกกับ OrgId ของ agent ตัวจริง — อาจเป็นของ merchant เอง ไม่ใช่ "global" เสมอไป
+            var mvAgent = await svc.GetAgentById("global", agentId);
+            var agentOrgId = mvAgent.Agent?.OrgId ?? "global";
+
+            var result = await svc.AddAgentEvent(agentOrgId, evt);
             return Ok(result);
         }
 
@@ -667,6 +671,10 @@ namespace Its.Onix.Api.Controllers
             var mvBa = await GetBankAccount(pmtLineNoti!, agentId);
             var ba = mvBa.BankAccount;
 
+            // event ต้องผูกกับ OrgId ของ agent ตัวจริง — อาจเป็นของ merchant เอง ไม่ใช่ "global" เสมอไป
+            var mvAgent = await svc.GetAgentById("global", agentId);
+            var agentOrgId = mvAgent.Agent?.OrgId ?? "global";
+
             wrapData.Add("InputData", body);
             wrapData.Add("PaymentNoti", pmtLineNoti!);
             wrapData.Add("BankAccount", mvBa.BankAccount!);
@@ -711,7 +719,7 @@ namespace Its.Onix.Api.Controllers
                 evt.StatusDesc = mvTx.Description;
             }
 
-            var result = await svc.AddAgentEvent("global", evt);
+            var result = await svc.AddAgentEvent(agentOrgId, evt);
 
             return Ok(result);
         }
