@@ -201,6 +201,14 @@ namespace Its.Onix.Api.Controllers
             return new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", credentials);
         }
 
+        [HttpGet]
+        [Route("org/{id}/action/GetAgentEventById/{agentEventId}")]
+        public async Task<IActionResult> GetAgentEventById(string id, string agentEventId)
+        {
+            var result = await svc.GetAgentEventById(id, agentEventId);
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/{id}/action/GetAgentEvents/{agentId}")]
         public async Task<IActionResult> GetAgentEvents(string id, string agentId, [FromBody] VMAgentEvent request)
