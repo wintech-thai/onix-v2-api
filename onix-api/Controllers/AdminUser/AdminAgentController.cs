@@ -322,7 +322,11 @@ namespace Its.Onix.Api.Controllers
                 StatusDesc = "Success",
             };
 
-            var result = await svc.AddAgentEvent("global", evt);
+            // event ต้องผูกกับ OrgId ของ agent ตัวจริง — อาจเป็นของ merchant เอง ไม่ใช่ "global" เสมอไป
+            var mvAgent = await svc.GetAgentById("global", agentId);
+            var agentOrgId = mvAgent.Agent?.OrgId ?? "global";
+
+            var result = await svc.AddAgentEvent(agentOrgId, evt);
             return Ok(result);
         }
 
