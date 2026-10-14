@@ -44,6 +44,9 @@ namespace Its.Onix.Api.Models
         [Column("account_level")]
         public string? AccountLevel { get; set; } // Global, Selected - ใช้ได้ทุก merchant หรือใช้ได้เฉพาะบาง merchant
 
+        [Column("custody_type")]
+        public string? CustodyType { get; set; } //(MerchantOwn, PlatformOwn) กำหนดได้แค่ตอน Add เท่านั้น, null = บัญชีเก่าก่อนมี field นี้ ให้ถือเป็น PlatformOwn
+
         [Column("payin_min_amount")]
         public double? PayinMinAmount { get; set; }
 

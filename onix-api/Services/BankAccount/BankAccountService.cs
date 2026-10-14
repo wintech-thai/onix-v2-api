@@ -315,6 +315,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if ((cat == "PayIn") && (bankAccount.CustodyType != "MerchantOwn") && (bankAccount.CustodyType != "PlatformOwn"))
+            {
+                r.Status = "CUSTODY_TYPE_INVALID";
+                r.Description = $"Custody Type must be MerchantOwn or PlatformOwn!!!";
+
+                return r;
+            }
+
             var isAccountNoExist = await repository!.IsBankAccountNoExist(bankAccount.AccountNumber);
             if (isAccountNoExist)
             {
@@ -766,6 +774,36 @@ namespace Its.Onix.Api.Services
                 return r;
             }
             
+            r.BankAccountMerchant = result;
+            return r;
+        }
+
+        public async Task<MVBankAccountMerchant?> SelectSingleMerchant(string orgId, string bankAccountId, string merchantId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var r = new MVBankAccountMerchant()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository.SelectSingleMerchant(bankAccountId, merchantId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank Account ID [{bankAccountId}] or Merchant ID [{merchantId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
             r.BankAccountMerchant = result;
             return r;
         }

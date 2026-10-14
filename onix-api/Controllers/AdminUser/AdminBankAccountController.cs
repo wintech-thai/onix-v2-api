@@ -195,6 +195,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/SelectSingleMerchantById/{bankAccountId}/{merchantId}")]
+        public async Task<IActionResult> SelectSingleMerchantById(string bankAccountId, string merchantId)
+        {
+            var result = await svc.SelectSingleMerchant("global", bankAccountId, merchantId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/UnSelectMerchantById/{bankAccountId}/{merchantId}")]
         public async Task<IActionResult> UnSelectMerchantById(string bankAccountId, string merchantId)
         {
