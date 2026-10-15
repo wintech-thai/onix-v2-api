@@ -254,8 +254,10 @@ namespace Its.Onix.Api.Services
                     Description = $"Auto generated wallet for THB currency for [{result.AccountName}]",
                 };
 
-                var _ = await _pointRepo.AddWallet(w);
+                wallet = await _pointRepo.AddWallet(w);
             }
+
+            result.CurrentWalletBalance = wallet?.PointBalanceDecimal ?? (decimal?)wallet?.PointBalance ?? 0;
 
             r.BankAccount = result;
             r.BankAccount.BankConfig = "";
