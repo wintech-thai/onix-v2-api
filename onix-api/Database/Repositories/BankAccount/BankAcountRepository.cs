@@ -73,6 +73,11 @@ namespace Its.Onix.Api.Database.Repositories
                 AccountLevel = x.bankaccount != null ? x.bankaccount.AccountLevel : null,
                 CustodyType = x.bankaccount != null ? x.bankaccount.CustodyType : null,
                 BankAccountStatus = x.bankaccount != null ? x.bankaccount.Status : null,
+                PayinMinAmount = x.bankaccount != null ? x.bankaccount.PayinMinAmount : null,
+                PayinMaxAmount = x.bankaccount != null ? x.bankaccount.PayinMaxAmount : null,
+                PayoutMinAmount = x.bankaccount != null ? x.bankaccount.PayoutMinAmount : null,
+                PayoutMaxAmount = x.bankaccount != null ? x.bankaccount.PayoutMaxAmount : null,
+                DailyQuota = x.bankaccount != null ? x.bankaccount.DailyQuota : null,
 
                 //ข้อมูลของ Merchant
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
