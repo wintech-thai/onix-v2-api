@@ -631,7 +631,15 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
 
+            var bankAccountBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByBankAccountId();
+            var balanceDict = bankAccountBalanceAggr.ToDictionary(g => $"{g.BankAccountId!}", g => g.PointBalanceDecimal);
+
             var result = await repository.GetPayInBankAccountsForMerchant(merchantId);
+            foreach (var ba in result)
+            {
+                var baId = ba.BankAccountId ?? ba.Id?.ToString() ?? "";
+                ba.CurrentBalance = balanceDict.TryGetValue(baId, out var bal) ? (double?)bal : 0;
+            }
             return result;
         }
 

@@ -102,6 +102,21 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/{orgId}/action/GetMyBankAccountById/{bankAccountId}")]
+        public async Task<IActionResult> GetMyBankAccountById(string orgId, string bankAccountId)
+        {
+            var isLinked = await IsBankAccountLinkedToMerchant(orgId, bankAccountId);
+            if (!isLinked)
+            {
+                return Ok(new { Status = "FORBIDDEN", Description = "Bank account is not linked to this merchant" });
+            }
+
+            var result = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/{orgId}/action/GetMyBankAccountWallet/{bankAccountId}")]
         public async Task<IActionResult> GetMyBankAccountWallet(string orgId, string bankAccountId)
         {
