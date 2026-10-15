@@ -728,6 +728,10 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("current_daily_payin_count");
 
+                    b.Property<string>("CustodyType")
+                        .HasColumnType("text")
+                        .HasColumnName("custody_type");
+
                     b.Property<double?>("DailyPayinCountQuota")
                         .HasColumnType("double precision")
                         .HasColumnName("daily_payin_count_quota");

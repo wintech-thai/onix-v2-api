@@ -71,7 +71,13 @@ namespace Its.Onix.Api.Database.Repositories
                 AccountType = x.bankaccount != null ? x.bankaccount.AccountType : null,
                 AccountCategory = x.bankaccount != null ? x.bankaccount.AccountCategory : null,
                 AccountLevel = x.bankaccount != null ? x.bankaccount.AccountLevel : null,
+                CustodyType = x.bankaccount != null ? x.bankaccount.CustodyType : null,
                 BankAccountStatus = x.bankaccount != null ? x.bankaccount.Status : null,
+                PayinMinAmount = x.bankaccount != null ? x.bankaccount.PayinMinAmount : null,
+                PayinMaxAmount = x.bankaccount != null ? x.bankaccount.PayinMaxAmount : null,
+                PayoutMinAmount = x.bankaccount != null ? x.bankaccount.PayoutMinAmount : null,
+                PayoutMaxAmount = x.bankaccount != null ? x.bankaccount.PayoutMaxAmount : null,
+                DailyQuota = x.bankaccount != null ? x.bankaccount.DailyQuota : null,
 
                 //ข้อมูลของ Merchant
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
@@ -164,6 +170,38 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             // ถ้าไม่มีอยู่ ให้สร้างใหม่
+            var newMerchant = new MBankAccountMerchant
+            {
+                Id = Guid.NewGuid(),
+                BankAccountId = bankAccountId,
+                MerchantId = merchantId,
+                OrgId = orgId
+            };
+
+            context.BankAccountMerchants!.Add(newMerchant);
+            await context.SaveChangesAsync();
+
+            return newMerchant;
+        }
+
+        public async Task<MBankAccountMerchant?> SelectSingleMerchant(string bankAccountId, string merchantId)
+        {
+            //สำหรับ bank account ที่เป็น MerchantOwn — เลือกได้ทีละ merchant เดียว
+            //ให้ลบ link เดิมทั้งหมดของ bank account นี้ก่อน แล้วค่อยเพิ่ม link ใหม่
+            var existingLinks = await context!.BankAccountMerchants!.AsExpandable()
+                .Where(p => p!.BankAccountId!.Equals(bankAccountId) && p!.OrgId!.Equals(orgId))
+                .ToListAsync();
+
+            if (existingLinks.Count == 1 && existingLinks[0].MerchantId == merchantId)
+            {
+                return existingLinks[0];
+            }
+
+            if (existingLinks.Count > 0)
+            {
+                context.BankAccountMerchants!.RemoveRange(existingLinks);
+            }
+
             var newMerchant = new MBankAccountMerchant
             {
                 Id = Guid.NewGuid(),
@@ -278,6 +316,7 @@ namespace Its.Onix.Api.Database.Repositories
                 AccountType = x.ba.AccountType,
                 AccountCategory = x.ba.AccountCategory,
                 AccountLevel = x.ba.AccountLevel,
+                CustodyType = x.ba.CustodyType,
                 PayinMinAmount = x.ba.PayinMinAmount,
                 PayinMaxAmount = x.ba.PayinMaxAmount,
                 PayoutMinAmount = x.ba.PayoutMinAmount,

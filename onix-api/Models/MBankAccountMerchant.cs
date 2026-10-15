@@ -61,6 +61,9 @@ namespace Its.Onix.Api.Models
         public string? AccountLevel { get; set; } // Global, Selected - ใช้ได้ทุก merchant หรือใช้ได้เฉพาะบาง merchant
 
         [NotMapped]
+        public string? CustodyType { get; set; } // MerchantOwn, PlatformOwn
+
+        [NotMapped]
         public double? PayinMinAmount { get; set; }
 
         [NotMapped]
