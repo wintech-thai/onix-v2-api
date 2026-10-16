@@ -112,14 +112,38 @@ namespace Its.Onix.Api.Services
                     Description = $"Auto generated wallet for THB point for [{result.Name}]",
                 };
 
-                var _ = await _pointRepo.AddWallet(pw);
+                pointWallet = await _pointRepo.AddWallet(pw);
             }
+
+            result.CurrentPointBalance = pointWallet.PointBalanceDecimal ?? (decimal?)pointWallet.PointBalance ?? 0;
 
             DeserializeWhitelistBankAccountNames(result);
 
             r.Merchant = result;
 
             return r;
+        }
+
+        private static void NormalizeFeeWalletSource(MMerchant merchant)
+        {
+            var isMerchantOwn = merchant.PayInBankCustodyType == "MerchantOwn";
+            if (isMerchantOwn)
+            {
+                //merchant ที่มีบัญชีธนาคารของตัวเอง (MerchantOwn) ต้องหักค่าธรรมเนียมจาก Point Wallet เท่านั้น
+                merchant.PayInFeeWalletSource = "PointWallet";
+                merchant.PayOutFeeWalletSource = "PointWallet";
+                return;
+            }
+
+            if ((merchant.PayInFeeWalletSource != "PointWallet") && (merchant.PayInFeeWalletSource != "MerchantWallet"))
+            {
+                merchant.PayInFeeWalletSource = "MerchantWallet";
+            }
+
+            if ((merchant.PayOutFeeWalletSource != "PointWallet") && (merchant.PayOutFeeWalletSource != "MerchantWallet"))
+            {
+                merchant.PayOutFeeWalletSource = "MerchantWallet";
+            }
         }
 
         private static void DeserializeWhitelistBankAccountNames(MMerchant merchant)
@@ -172,6 +196,8 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            NormalizeFeeWalletSource(merchant);
 
             var isCodeExist = await repository!.IsMerchantCodeExist(merchant.Code);
             if (isCodeExist)
@@ -313,6 +339,9 @@ namespace Its.Onix.Api.Services
             var merchantBalanceAggr = await _pointRepo!.GetWalletBalancesGroupByMerchantId();
             var dict2 = merchantBalanceAggr.ToDictionary(g => $"{g.MerchantId!}", g => g.PointBalanceDecimal);
 
+            var merchantPointBalanceAggr = await _pointRepo!.GetPointWalletBalancesGroupByRefId("MerchantPoint");
+            var dict3 = merchantPointBalanceAggr.ToDictionary(g => $"{g.RefId!}", g => g.PointBalanceDecimal);
+
             var merchants = await repository!.GetMerchants(param);
 
 
@@ -337,6 +366,12 @@ namespace Its.Onix.Api.Services
                 if (dict2.TryGetValue(merchant.Id.ToString()!, out var currentWalletBalance))
                 {
                     merchant.CurrentBalance = currentWalletBalance;
+                }
+
+                merchant.CurrentPointBalance = 0;
+                if (dict3.TryGetValue(merchant.Id.ToString()!, out var currentPointBalance))
+                {
+                    merchant.CurrentPointBalance = currentPointBalance;
                 }
             }
 
@@ -388,6 +423,18 @@ namespace Its.Onix.Api.Services
 
                 return r;
             }
+
+            var existingMerchant = await repository!.GetMerchantById(merchantId);
+            if (existingMerchant == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Merchant ID [{merchantId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            merchant.PayInBankCustodyType = existingMerchant.PayInBankCustodyType; //กำหนดได้แค่ตอน Add เท่านั้น, แก้ตอน Update ไม่ได้
+            NormalizeFeeWalletSource(merchant);
 
             if (merchant.WhitelistBankAccountNamesArr != null)
             {

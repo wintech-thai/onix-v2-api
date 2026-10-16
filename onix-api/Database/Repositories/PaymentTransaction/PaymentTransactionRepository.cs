@@ -85,6 +85,7 @@ namespace Its.Onix.Api.Database.Repositories
                 CreatedDate = x.pt.CreatedDate,
                 MerchantName = x.merchant.Name,
                 MerchantCode = x.merchant.Code,
+                PayInBankCustodyType = x.merchant.PayInBankCustodyType,
                 TxAmountStr = x.pt.TxAmountDecimal.ToString(),
                 JobId = x.pt.JobId,
                 NoticeCount = x.pt.NoticeCount,

@@ -280,6 +280,8 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? MerchantCode { get; set; }
         [NotMapped]
+        public string? PayInBankCustodyType { get; set; } //(MerchantOwn, PlatformOwn) เอามาจาก merchant ที่ left join ไว้
+        [NotMapped]
         public double? MerchantMinPayout { get; set; }
         [NotMapped]
         public double? MerchantMaxPayout { get; set; }

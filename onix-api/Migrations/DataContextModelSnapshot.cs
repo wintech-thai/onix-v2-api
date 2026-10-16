@@ -2631,6 +2631,14 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("payin_bank_custody_type");
 
+                    b.Property<string>("PayInFeeWalletSource")
+                        .HasColumnType("text")
+                        .HasColumnName("payin_fee_wallet_source");
+
+                    b.Property<string>("PayOutFeeWalletSource")
+                        .HasColumnType("text")
+                        .HasColumnName("payout_fee_wallet_source");
+
                     b.Property<decimal?>("PayinDailyTxAmountLimit")
                         .HasColumnType("numeric")
                         .HasColumnName("payin_daily_tx_amount_limit");

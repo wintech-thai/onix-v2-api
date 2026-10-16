@@ -110,6 +110,7 @@ namespace Its.Onix.Api.Database.Repositories
 
                 MerchantName = x.merchant != null ? x.merchant.Name : null,
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
+                PayInBankCustodyType = x.merchant != null ? x.merchant.PayInBankCustodyType : null,
                 MerchantMinPayout = x.merchant != null ? x.merchant.PayoutMinAmount : null,
                 MerchantMaxPayout = x.merchant != null ? x.merchant.PayoutMaxAmount : null,
                 DiscardCent = x.merchant != null && x.merchant.DiscardCent,
@@ -235,7 +236,7 @@ namespace Its.Onix.Api.Database.Repositories
             return pd;
         }
 
-        public async Task<List<MPaymentRequest>> GetPendingPayOutRequests()
+        public async Task<List<MPaymentRequest>> GetPendingPayOutRequests(string? merchantId = null)
         {
             var oldOrgId = orgId;
 
@@ -244,6 +245,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Direction = "PayOut",
                 Status = "Pending",
                 FromDate = DateTime.UtcNow.AddDays(-1), //ให้ย้อนหลังแค่ 1 วันพอ เพราะอยากให้เคลียร์ payment out request ทุกวันอยู่แล้ว
+                MerchantId = merchantId, //ถ้าส่งมา จะจำกัดให้เอาเฉพาะ payout request ของ merchant นี้เท่านั้น (ใช้ตอน P2P ของ merchant แบบ MerchantOwn)
             };
 
             orgId = "global"; //เอามาหมดทุก merchant

@@ -9,7 +9,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> IsRefIdExist(string refId);
         public Task<List<MPaymentRequest>> GetPaymentRequestsForPaymentTx(VMPaymentRequest param);
         public Task<List<MPaymentRequest>> GetPaymentRequests(VMPaymentRequest param);
-        public Task<List<MPaymentRequest>> GetPendingPayOutRequests();
+        public Task<List<MPaymentRequest>> GetPendingPayOutRequests(string? merchantId = null);
 
         public Task<int> GetPaymentRequestCount(VMPaymentRequest param);
         public Task<MPaymentRequest?> GetPaymentRequestById(string paymentRequestId);
