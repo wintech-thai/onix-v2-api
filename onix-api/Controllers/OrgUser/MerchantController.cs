@@ -207,6 +207,21 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/{orgId}/action/GetMerchantPointWallet")]
+        public async Task<IActionResult> GetMerchantPointWallet(string orgId)
+        {
+            var merchantId = await GetCurrentMerchantId(orgId);
+            if (string.IsNullOrEmpty(merchantId))
+            {
+                return Ok(new { Status = "Error", Description = "Merchant not found" });
+            }
+
+            var result = await _pointSvc.GetWalletByRefIdAndType(orgId, merchantId, "MerchantPoint");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/{orgId}/action/GetMerchantCurrencies")]
         public async Task<IActionResult> GetMerchantCurrencies(string orgId)
         {

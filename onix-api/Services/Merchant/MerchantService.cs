@@ -117,6 +117,8 @@ namespace Its.Onix.Api.Services
 
             result.CurrentPointBalance = pointWallet.PointBalanceDecimal ?? (decimal?)pointWallet.PointBalance ?? 0;
 
+            NormalizeFeeWalletSource(result); //เผื่อ record เก่าที่ยังไม่เคย Update หลังมี field นี้ ให้ fee wallet source แสดงถูกต้องตาม custody type เสมอ
+
             DeserializeWhitelistBankAccountNames(result);
 
             r.Merchant = result;
