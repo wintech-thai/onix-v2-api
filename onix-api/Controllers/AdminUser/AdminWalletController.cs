@@ -107,6 +107,25 @@ namespace Prom.LPR.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/global/action/GetPointWalletByMerchantId/{merchantId}")]
+        public async Task<IActionResult> GetPointWalletByMerchantId(string merchantId)
+        {
+            var vmMerchant = await _merchantSvc.GetMerchantById("global", merchantId);
+            if (vmMerchant.Status != "OK")
+            {
+                return Ok(vmMerchant);
+            }
+
+            var mc = vmMerchant.Merchant!;
+
+            var merchantOrgId = mc.OrgId!;
+            var result = await svc.GetWalletByRefIdAndType(merchantOrgId, merchantId, "MerchantPoint");
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/global/action/GetWalletByBankAccountId/{bankAccountId}")]
         public async Task<IActionResult> GetWalletByBankAccountId(string bankAccountId)
         {

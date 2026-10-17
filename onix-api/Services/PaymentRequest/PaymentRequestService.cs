@@ -1689,8 +1689,14 @@ namespace Its.Onix.Api.Services
 
             List<string> lines = [];
 
+            //ถ้า PayIn เป็นของ merchant แบบ MerchantOwn ต้อง match กับ payout ของ merchant เดียวกันเท่านั้น
+            var isPayInMerchantOwn = merchant.PayInBankCustodyType == "MerchantOwn";
+            lines.Add($"Step0.0 - PayIn merchant [{pr.MerchantId}] custody type=[{merchant.PayInBankCustodyType ?? "PlatformOwn"}]");
+
             //1. อ่านค่า Payout Request ที่ pending อยู่เก็บใส่ใน list เรียงตามตัวที่เกิดก่อนขึ้นมาก่อน
-            var pendingPayoutRequests = await repository!.GetPendingPayOutRequests();
+            var pendingPayoutRequests = isPayInMerchantOwn
+                ? await repository!.GetPendingPayOutRequests(pr.MerchantId)
+                : await repository!.GetPendingPayOutRequests();
 
             //TODO : ให้ sorting ก่อนโดยเรียกงตามวันที่เก่าขึ้นก่อน แล้วก็ถ้าตัวไหนมี promptpay Id ก็ให้ขึ้นมาก่อนด้วย
 
@@ -1780,6 +1786,13 @@ namespace Its.Onix.Api.Services
                 if (payoutRequest.PayoutIsWithdrawal == true)
                 {
                     lines.Add($"Step1.7 - Request ID=[{org}:{id}], This is a withdrawal request, then skip");
+                    continue;
+                }
+
+                if (!isPayInMerchantOwn && payoutRequest.PayInBankCustodyType == "MerchantOwn")
+                {
+                    //PayIn เป็น PlatformOwn ห้ามหยิบ payout ของ merchant แบบ MerchantOwn มาใช้ (สงวนไว้ P2P เฉพาะ merchant เดียวกันเท่านั้น)
+                    lines.Add($"Step1.7.3 - Request ID=[{org}:{id}], PayIn is PlatformOwn but payout merchant [{payoutRequest.MerchantId}] is MerchantOwn, then skip");
                     continue;
                 }
 

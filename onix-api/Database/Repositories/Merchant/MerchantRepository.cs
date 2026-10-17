@@ -188,6 +188,8 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
                 existing.PayoutNotMatchActionP2P = merchant.PayoutNotMatchActionP2P;
                 existing.PayoutSelectionTypeP2P = merchant.PayoutSelectionTypeP2P;
+                existing.PayInFeeWalletSource = merchant.PayInFeeWalletSource;
+                existing.PayOutFeeWalletSource = merchant.PayOutFeeWalletSource;
 
                 existing.DiscardCent = merchant.DiscardCent;
                 existing.IncludeGlobalBankAccount = merchant.IncludeGlobalBankAccount;

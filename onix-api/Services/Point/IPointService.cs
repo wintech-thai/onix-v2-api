@@ -21,6 +21,7 @@ namespace Its.Onix.Api.Services
         public Task<MVWallet?> GetWalletByCustomerId(string orgId, string customerId);
         public Task<MVWallet?> GetWalletByMerchantId(string orgId, string merchantId);
         public Task<MVWallet?> GetWalletByBankAccountId(string orgId, string bankAccountId);
+        public Task<MVWallet?> GetWalletByRefIdAndType(string orgId, string refId, string walletType);
 
         public Task<MVWallet?> UpdateWalletById(string orgId, string walletId, MWallet wallet);
         public Task<MVWallet?> AttachCustomerToWalletById(string orgId, string walletId, string custId);

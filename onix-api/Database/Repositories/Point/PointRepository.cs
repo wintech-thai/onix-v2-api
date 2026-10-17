@@ -333,6 +333,22 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public async Task<List<MWallet>> GetPointWalletBalancesGroupByRefId(string walletType)
+        {
+            var result = await context!.Wallets!
+                .Where(x => x.RefId != null && x.WalletType!.Equals(walletType))
+                .GroupBy(x => new{ x.RefId })
+                .Select(g => new MWallet()
+                {
+                    RefId = g.Key.RefId,
+                    PointBalance = g.Sum(x => x.PointBalance),
+                    PointBalanceDecimal = g.Sum(x => x.PointBalanceDecimal),
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
         public async Task<List<MWallet>> GetWalletBalancesGroupByBankAccountId()
         {
             var result = await context!.Wallets!

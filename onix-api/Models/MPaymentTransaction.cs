@@ -191,6 +191,9 @@ namespace Its.Onix.Api.Models
         public string? MerchantCode { get; set; }
 
         [NotMapped]
+        public string? PayInBankCustodyType { get; set; } //(MerchantOwn, PlatformOwn) เอามาจาก merchant ที่ left join ไว้
+
+        [NotMapped]
         public List<string>? ProcessingSteps { get; set; }
 
         [NotMapped]

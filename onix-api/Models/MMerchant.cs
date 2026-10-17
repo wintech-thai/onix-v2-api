@@ -77,6 +77,12 @@ namespace Its.Onix.Api.Models
         [Column("payin_bank_custody_type")]
         public string? PayInBankCustodyType { get; set; } //(MerchantOwn, PlatformOwn) กำหนดได้แค่ตอน Add เท่านั้น, null = merchant เก่าก่อนมี field นี้ ให้ถือเป็น PlatformOwn
 
+        [Column("payin_fee_wallet_source")]
+        public string? PayInFeeWalletSource { get; set; } //(PointWallet, MerchantWallet) หักค่าธรรมเนียม payin จาก wallet ไหน, null = MerchantWallet, เปลี่ยนได้ทีหลัง แต่ถ้า PayInBankCustodyType=MerchantOwn ต้องเป็น PointWallet เท่านั้น
+
+        [Column("payout_fee_wallet_source")]
+        public string? PayOutFeeWalletSource { get; set; } //(PointWallet, MerchantWallet) หักค่าธรรมเนียม payout จาก wallet ไหน, null = MerchantWallet, เปลี่ยนได้ทีหลัง แต่ถ้า PayInBankCustodyType=MerchantOwn ต้องเป็น PointWallet เท่านั้น
+
         [Column("whitelist_bank_account_names")]
         public string? WhitelistBankAccountNames { get; set; } //serialize มาจาก List<string> WhitelistBankAccountNamesArr ห้าม return ออกไปตรง ๆ
 
@@ -111,6 +117,9 @@ namespace Its.Onix.Api.Models
 
         [NotMapped]
         public decimal? CurrentBalance { get; set; }
+
+        [NotMapped]
+        public decimal? CurrentPointBalance { get; set; } //ยอดคงเหลือใน Point Wallet
 
         [NotMapped]
         public decimal? CurrentPayinDailyTxAmount { get; set; }

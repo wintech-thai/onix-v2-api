@@ -461,6 +461,35 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVWallet?> GetWalletByRefIdAndType(string orgId, string refId, string walletType)
+        {
+            var r = new MVWallet()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(refId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Ref ID [{refId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetWalletByRefIdAndType(refId, walletType);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Wallet not found for Ref ID [{refId}], Wallet Type [{walletType}], organization [{orgId}]";
+            }
+
+            r.Wallet = result;
+            return r;
+        }
+
         public async Task<MVWallet?> GetWalletById(string orgId, string walletId)
         {
             var r = new MVWallet()
