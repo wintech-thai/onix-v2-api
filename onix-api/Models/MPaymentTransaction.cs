@@ -66,7 +66,10 @@ namespace Its.Onix.Api.Models
         public bool? TxIsPeerToPeer { get; set; } //ใช้บอกว่าเป็น transaction จาก peer to peer มั้ย
 
         [Column("payout_fee_payer")]
-        public string? PayoutFeePayer { get; set; } 
+        public string? PayoutFeePayer { get; set; }
+
+        [Column("fee_deduction_source")]
+        public string? FeeDeductionSource { get; set; } /* copy มาจาก PaymentRequest.FeeDeductionSource (MerchantWallet, PointWallet) */
 
 
         [Column("payer_name")]

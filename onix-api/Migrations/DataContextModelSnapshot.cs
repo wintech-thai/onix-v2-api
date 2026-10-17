@@ -2663,6 +2663,10 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("payin_min_amount");
 
+                    b.Property<Guid?>("PaymentGatewayId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_gateway_id");
+
                     b.Property<double?>("PayoutFeePct")
                         .HasColumnType("double precision")
                         .HasColumnName("payout_fee_pct");
@@ -3260,6 +3264,60 @@ namespace onix.api.Migrations
                     b.ToTable("PaymentDocuments");
                 });
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MPaymentGateway", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_gateway_id");
+
+                    b.Property<string>("ApiKey")
+                        .HasColumnType("text")
+                        .HasColumnName("api_key");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("EndpointBaseUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("endpoint_base_url");
+
+                    b.Property<string>("EndpointMerchantId")
+                        .HasColumnType("text")
+                        .HasColumnName("endpoint_merchant_id");
+
+                    b.Property<string>("EndpointOrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("endpoint_org_id");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("Scheme")
+                        .HasColumnType("text")
+                        .HasColumnName("scheme");
+
+                    b.Property<string>("Tags")
+                        .HasColumnType("text")
+                        .HasColumnName("tags");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrgId");
+
+                    b.ToTable("PaymentGateways");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MPaymentRequest", b =>
                 {
                     b.Property<Guid?>("Id")
@@ -3310,6 +3368,10 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("ExpireDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expire_date");
+
+                    b.Property<string>("FeeDeductionSource")
+                        .HasColumnType("text")
+                        .HasColumnName("fee_deduction_source");
 
                     b.Property<double?>("GeneratedAmount")
                         .HasColumnType("double precision")
@@ -3630,6 +3692,10 @@ namespace onix.api.Migrations
                     b.Property<bool>("DiscardCent")
                         .HasColumnType("boolean")
                         .HasColumnName("discard_cent");
+
+                    b.Property<string>("FeeDeductionSource")
+                        .HasColumnType("text")
+                        .HasColumnName("fee_deduction_source");
 
                     b.Property<string>("FromBankAccountName")
                         .HasColumnType("text")

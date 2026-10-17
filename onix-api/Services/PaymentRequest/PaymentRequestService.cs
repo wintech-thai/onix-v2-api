@@ -633,6 +633,7 @@ namespace Its.Onix.Api.Services
             }
 
             pt.MerchantId = existing.MerchantId;
+            pt.FeeDeductionSource = existing.FeeDeductionSource;
 
             var srcBankAccountId = paymentRequest.PayoutBankAccountId!; //อันนี้คือ bank account ที่เป็น pool กลาง
             var dstBankAccountId = paymentRequest.PayinBankAccountId!; //อันนี้คือ bank account ของ merchant ที่จะเอาเงินเข้าไปให้
@@ -656,16 +657,38 @@ namespace Its.Onix.Api.Services
             var merchantWallet = mcWallet.Wallet;
             var bankWallet = baWallet.Wallet;
 
-            var merchantDeductAmt = pt.TxAmountDecimal + merchantDeductFee;
+            //ถ้ามีค่าธรรมเนียมและตั้งค่า FeeDeductionSource เป็น PointWallet ให้แยกหักค่าธรรมเนียมออกจาก Point Wallet
+            //เงินต้นของ payout ยังคงหักจาก Merchant Wallet เหมือนเดิมเสมอ (ไม่เกี่ยวกับ FeeDeductionSource)
+            var useFeePointWallet = (merchantDeductFee > 0) && (existing.FeeDeductionSource == "PointWallet");
+            var merchantDeductAmt = useFeePointWallet ? pt.TxAmountDecimal : pt.TxAmountDecimal + merchantDeductFee;
             var merchantCurrentBalance = merchantWallet!.PointBalanceDecimal;
             var bankAccountDeductAmt = pt.PayOutTotalAmountDecimal;
             var bankAccountCurrentBalance = bankWallet!.PointBalanceDecimal;
+
+            MVWallet? feeWallet = null;
+            if (useFeePointWallet)
+            {
+                feeWallet = await _pointService!.GetWalletByRefIdAndType(orgId, existing.MerchantId!, "MerchantPoint");
+                if (feeWallet!.Status != "OK")
+                {
+                    mvPt.Status = feeWallet.Status;
+                    mvPt.Description = $"Failed to get point wallet, MerchantId=[{existing.MerchantId}]";
+                    return mvPt;
+                }
+            }
 
             //ทำการเช็ค ยอด balance ของ merchant และ bank account ที่โอนออกด้วยว่าพอหรือไม่ ถ้าไม่พอก็ต้อง reject การจ่ายเงินออกครั้งนี้ไปเลย
             if (merchantCurrentBalance < merchantDeductAmt)
             {
                 mvPt.Status = "ERROR_INSUFFICIENT_BALANCE";
                 mvPt.Description = $"Merchant wallet has insufficient balance, MerchantId=[{existing.MerchantId}], WalletId=[{merchantWallet.Id}], CurrentBalance=[{merchantCurrentBalance}], RequiredAmount=[{merchantDeductAmt}]";
+                return mvPt;
+            }
+
+            if (useFeePointWallet && (feeWallet!.Wallet!.PointBalanceDecimal < merchantDeductFee))
+            {
+                mvPt.Status = "ERROR_INSUFFICIENT_BALANCE";
+                mvPt.Description = $"Point wallet has insufficient balance for fee, MerchantId=[{existing.MerchantId}], WalletId=[{feeWallet.Wallet.Id}], CurrentBalance=[{feeWallet.Wallet.PointBalanceDecimal}], RequiredAmount=[{merchantDeductFee}]";
                 return mvPt;
             }
 
@@ -676,7 +699,7 @@ namespace Its.Onix.Api.Services
                 return mvPt;
             }
 
-            //===== Start update point wallet ===            
+            //===== Start update point wallet ===
             var pointTx1 = new MPointTx()
             {
                 WalletId = merchantWallet!.Id.ToString(),
@@ -689,6 +712,25 @@ namespace Its.Onix.Api.Services
                 Tags2 = $"IsWithdrawal=[{pt.PayoutIsWithdrawal}]",
             };
             await _pointService!.DeductPoint(orgId, pointTx1);
+
+            if (useFeePointWallet)
+            {
+                //หักค่าธรรมเนียมแยกออกจาก Point Wallet ของ merchant
+                var pointTxFee = new MPointTx()
+                {
+                    WalletId = feeWallet!.Wallet!.Id.ToString(),
+                    TxAmount = (long) Math.Floor((decimal) merchantDeductFee!),
+                    TxAmountDecimal = merchantDeductFee,
+                    Tags = $"PayOutRequestId=[{existing.Id}], FeeDeduction=[true]" + (!string.IsNullOrEmpty(pt.RefId1) ? $", RefId1=[{pt.RefId1}]" : ""),
+                };
+                var feeDeductVm = await _pointService!.DeductPoint(orgId, pointTxFee);
+                if (feeDeductVm.Status != "OK")
+                {
+                    mvPt.Status = feeDeductVm.Status;
+                    mvPt.Description = $"Failed to deduct fee from Point Wallet, MerchantId=[{existing.MerchantId}], {feeDeductVm.Description}";
+                    return mvPt;
+                }
+            }
 
             var pointTx2 = new MPointTx()
             {
@@ -1073,6 +1115,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
             paymentRequest.PayoutFeePct = merchant.PayoutFeePct;
+            paymentRequest.FeeDeductionSource = merchant.PayOutFeeWalletSource; //MerchantWallet, PointWallet - ไว้ใช้ตอนหักค่าธรรมเนียม payout
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
@@ -1099,6 +1142,20 @@ namespace Its.Onix.Api.Services
             }
 
             paymentRequest.PayoutFeeDecimal = payoutFee;
+
+            //ต่อให้ยังไม่หักค่าธรรมเนียมจริง ๆ ตอนนี้ ก็ควรเช็คไว้ก่อนว่ามียอด balance พอหรือไม่ ถ้าหักค่าธรรมเนียมจาก Point Wallet
+            if ((paymentRequest.PayoutFeePayer == "Merchant") && (payoutFee > 0) && (merchant.PayOutFeeWalletSource == "PointWallet"))
+            {
+                var merchantId = merchant.Id.ToString()!;
+                var feeWallet = await _pointService!.GetWalletByRefIdAndType(orgId, merchantId, "MerchantPoint");
+                var feeWalletBalance = feeWallet?.Wallet?.PointBalanceDecimal ?? 0;
+                if ((feeWallet!.Status != "OK") || (feeWalletBalance < payoutFee))
+                {
+                    r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                    r.Description = $"Point wallet has insufficient balance for fee, MerchantId=[{merchantId}], CurrentBalance=[{feeWalletBalance}], RequiredAmount=[{payoutFee}]";
+                    return r;
+                }
+            }
 
             //สร้าง QR
             IQrGenerator qrGenerator;
@@ -1347,6 +1404,27 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinAccountLevel = bnkAcct.AccountLevel;
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bnkAcct.Id.ToString();
+            paymentRequest.FeeDeductionSource = merchant.PayInFeeWalletSource; //MerchantWallet, PointWallet - ไว้ใช้ตอนหักค่าธรรมเนียม payin
+
+            //ต่อให้ยังไม่หักค่าธรรมเนียมจริง ๆ ตอนนี้ ก็ควรเช็คไว้ก่อนว่ามียอด balance พอหรือไม่ ถ้าหักค่าธรรมเนียมจาก Point Wallet
+            if (merchant.PayInFeeWalletSource == "PointWallet")
+            {
+                var payinFee = Math.Round((decimal) ((paymentRequest.GeneratedAmount ?? 0) * (merchant.PayinFeePct ?? 0) / 100.0), 2, MidpointRounding.AwayFromZero);
+                if (payinFee > 0)
+                {
+                    var merchantId = merchant.Id.ToString()!;
+                    var feeWallet = await _pointService!.GetWalletByRefIdAndType(orgId, merchantId, "MerchantPoint");
+                    var feeWalletBalance = feeWallet?.Wallet?.PointBalanceDecimal ?? 0;
+                    if ((feeWallet!.Status != "OK") || (feeWalletBalance < payinFee))
+                    {
+                        r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                        r.Description = $"Point wallet has insufficient balance for fee, MerchantId=[{merchantId}], CurrentBalance=[{feeWalletBalance}], RequiredAmount=[{payinFee}]";
+
+                        var _rej = await AddRejectedPaymentRequest(paymentRequest, r, lines);
+                        return r;
+                    }
+                }
+            }
 
             _ = await repository!.AddPaymentRequest(paymentRequest);
 
@@ -1517,6 +1595,27 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayinAccountLevel = bnkAcct.AccountLevel;
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bnkAcct.Id.ToString();
+            paymentRequest.FeeDeductionSource = merchant.PayInFeeWalletSource; //MerchantWallet, PointWallet - ไว้ใช้ตอนหักค่าธรรมเนียม payin
+
+            //ต่อให้ยังไม่หักค่าธรรมเนียมจริง ๆ ตอนนี้ ก็ควรเช็คไว้ก่อนว่ามียอด balance พอหรือไม่ ถ้าหักค่าธรรมเนียมจาก Point Wallet
+            if (merchant.PayInFeeWalletSource == "PointWallet")
+            {
+                var payinFee = Math.Round((decimal) ((paymentRequest.GeneratedAmount ?? 0) * (merchant.PayinFeePct ?? 0) / 100.0), 2, MidpointRounding.AwayFromZero);
+                if (payinFee > 0)
+                {
+                    var merchantId = merchant.Id.ToString()!;
+                    var feeWallet = await _pointService!.GetWalletByRefIdAndType(orgId, merchantId, "MerchantPoint");
+                    var feeWalletBalance = feeWallet?.Wallet?.PointBalanceDecimal ?? 0;
+                    if ((feeWallet!.Status != "OK") || (feeWalletBalance < payinFee))
+                    {
+                        r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                        r.Description = $"Point wallet has insufficient balance for fee, MerchantId=[{merchantId}], CurrentBalance=[{feeWalletBalance}], RequiredAmount=[{payinFee}]";
+
+                        var _rej = await AddRejectedPaymentRequest(paymentRequest, r, lines);
+                        return r;
+                    }
+                }
+            }
 
             _ = await repository!.AddPaymentRequest(paymentRequest);
 

@@ -133,6 +133,7 @@ namespace Its.Onix.Api
             builder.Services.AddTransient<DataSeeder>();
             builder.Services.AddScoped<IDataContext, DataContext>();
             builder.Services.AddScoped<IApiKeyService, ApiKeyService>();
+            builder.Services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
             builder.Services.AddScoped<IOrganizationService, OrganizationService>();
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IUserService, UserService>();
@@ -201,6 +202,7 @@ namespace Its.Onix.Api
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             builder.Services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
+            builder.Services.AddScoped<IPaymentGatewayRepository, PaymentGatewayRepository>();
             builder.Services.AddScoped<IRoleRepository, RoleRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ISystemVariableRepository, SystemVariableRepository>();

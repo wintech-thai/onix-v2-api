@@ -314,6 +314,7 @@ namespace Its.Onix.Api.Services
             pmt.PayInFeeDecimal = (decimal) pmt.PayInFee!;
             pmt.PayInTotalAmountDecimal = pmt.TxAmountDecimal - pmt.PayInFeeDecimal;
             pmt.PaymentRequestId = null; //เป็น Unidentified Payment Tx ที่ถูก Approve ให้เป็นของ merchant โดยตรง ไม่ได้ match กับ Payment Request ใด ๆ
+            pmt.FeeDeductionSource = mc.PayInFeeWalletSource; //ไม่มี Payment Request ให้ copy มา เลยอ่านจาก merchant โดยตรง
 
 
             //UPdate cache - daily tx balance ของ merchant แต่ของ bank account ได้อัพเดตไปก่อนหน้าแล้วตอนที่สร้าง Payment Tx
@@ -328,19 +329,40 @@ namespace Its.Onix.Api.Services
             var mcWallet = await _pointService!.GetWalletByMerchantId(merchantOrgId, merchantId);
             if (mcWallet!.Status == "OK")
             {
+                //ถ้าตั้งค่า FeeDeductionSource เป็น PointWallet ให้ credit เต็มจำนวนเข้า Merchant Wallet
+                //แล้วแยกหักค่าธรรมเนียมออกจาก Point Wallet ต่างหาก (ปกติ fee จะถูกหักออกจากยอด credit ไปเลย)
+                var useFeePointWalletPayin = (pmt.PayInFeeDecimal > 0) && (pmt.FeeDeductionSource == "PointWallet");
+
                 var wallet = mcWallet.Wallet;
                 var pointTx = new MPointTx()
                 {
                     WalletId = wallet!.Id.ToString(),
 
-                    TxAmount =  (long)Math.Floor((decimal) pmt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
-                    //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
-                    TxAmountDecimal = pmt.PayInTotalAmountDecimal,
+                    TxAmount =  useFeePointWalletPayin ? (long) Math.Floor((decimal) pmt.TxAmount!) : (long)Math.Floor((decimal) pmt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                    //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet (ยกเว้นหักค่าธรรมเนียมจาก Point Wallet ให้ credit เต็ม)
+                    TxAmountDecimal = useFeePointWalletPayin ? pmt.TxAmountDecimal : pmt.PayInTotalAmountDecimal,
 
                     Tags = $"PaymentTxId=[{pmt.Id}]",
                 };
 
                 await _pointService!.AddPoint(merchantOrgId, pointTx);
+
+                if (useFeePointWalletPayin)
+                {
+                    var payinFeeWallet = await _pointService!.GetWalletByRefIdAndType(merchantOrgId, merchantId, "MerchantPoint");
+                    if (payinFeeWallet!.Status == "OK")
+                    {
+                        var pointTxFee = new MPointTx()
+                        {
+                            WalletId = payinFeeWallet.Wallet!.Id.ToString(),
+                            TxAmount = (long) Math.Floor((decimal) pmt.PayInFeeDecimal!),
+                            TxAmountDecimal = pmt.PayInFeeDecimal,
+                            Description = $"Unidentified payin fee ({pmt.PayInFeePct}%)",
+                            Tags = $"PaymentTxId=[{pmt.Id}], FeeDeduction=[true]",
+                        };
+                        await _pointService!.DeductPoint(merchantOrgId, pointTxFee);
+                    }
+                }
             }
 
             var baWallet = await _pointService!.GetWalletByBankAccountId(orgId, pmt.PayInBankAccountId!);
@@ -550,6 +572,7 @@ namespace Its.Onix.Api.Services
                 pt.PaymentRequestId = pmr.Id.ToString();
 
                 pt.MerchantId = pmr.MerchantId;
+                pt.FeeDeductionSource = pmr.FeeDeductionSource;
 
                 lines.Add($"STEP5 : Info -> Found TxAmount=[{pt.TxAmountDecimal}], PayInFeePct=[{pmr.PayInFeePct}], PayInFee=[{pt.PayInFeeDecimal}], PayInTotal=[{pt.PayInTotalAmountDecimal}]");
             }
@@ -639,19 +662,40 @@ namespace Its.Onix.Api.Services
 
                 if (mcWallet != null)
                 {
+                    //ถ้าตั้งค่า FeeDeductionSource เป็น PointWallet ให้ credit เต็มจำนวนเข้า Merchant Wallet
+                    //แล้วแยกหักค่าธรรมเนียมออกจาก Point Wallet ต่างหาก (ปกติ fee จะถูกหักออกจากยอด credit ไปเลย)
+                    var useFeePointWalletPayin = (pt.PayInFeeDecimal > 0) && (pt.FeeDeductionSource == "PointWallet");
+
                     var wallet = mcWallet.Wallet;
                     var pointTx = new MPointTx()
                     {
                         WalletId = wallet!.Id.ToString(),
 
-                        TxAmount =  (long)Math.Floor((decimal) pt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
-                        //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet
-                        TxAmountDecimal = pt.PayInTotalAmountDecimal,
+                        TxAmount =  useFeePointWalletPayin ? (long) Math.Floor((decimal) pt.TxAmount!) : (long)Math.Floor((decimal) pt.PayInTotalAmount!), //เอาส่วนจำนวนเต็มมาเท่านั้น
+                        //TxAmountDecimal ตรงนี้จะเป็นค่าที่หัก commission แล้ว เพื่อนำไปเป็นยอดที่เข้า wallet (ยกเว้นหักค่าธรรมเนียมจาก Point Wallet ให้ credit เต็ม)
+                        TxAmountDecimal = useFeePointWalletPayin ? pt.TxAmountDecimal : pt.PayInTotalAmountDecimal,
 
                         Tags = $"PaymentTxId=[{paymentTxId}], RefId1=[{pt.RefId1}]",
                     };
 
                     await _pointService!.AddPoint(merchantOrgId, pointTx);
+
+                    if (useFeePointWalletPayin)
+                    {
+                        var payinFeeWallet = await _pointService!.GetWalletByRefIdAndType(merchantOrgId, pmr.MerchantId!, "MerchantPoint");
+                        if (payinFeeWallet!.Status == "OK")
+                        {
+                            var pointTxFee = new MPointTx()
+                            {
+                                WalletId = payinFeeWallet.Wallet!.Id.ToString(),
+                                TxAmount = (long) Math.Floor((decimal) pt.PayInFeeDecimal!),
+                                TxAmountDecimal = pt.PayInFeeDecimal,
+                                Description = $"Line payin fee ({pt.PayInFeePct}%)",
+                                Tags = $"PaymentTxId=[{paymentTxId}], FeeDeduction=[true], RefId1=[{pt.RefId1}]",
+                            };
+                            await _pointService!.DeductPoint(merchantOrgId, pointTxFee);
+                        }
+                    }
                 }
 
                 if (baWallet != null)
@@ -897,8 +941,46 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var payinMcTopupAmt = requestAmt - payinFee;
-            var payoutMcDeductAmt = requestAmt + payoutFee;
+            //ถ้าตั้งค่า FeeDeductionSource เป็น PointWallet ให้แยกหักค่าธรรมเนียมออกจาก Point Wallet ของ merchant นั้น ๆ
+            //เงินต้นยังคงเข้า/ออกที่ Merchant Wallet เหมือนเดิมเสมอ (ไม่เกี่ยวกับ FeeDeductionSource)
+            var useFeePointWalletPayin = (payinFee > 0) && (payin.FeeDeductionSource == "PointWallet");
+            var useFeePointWalletPayout = (payoutFee > 0) && (payoutRequest.FeeDeductionSource == "PointWallet");
+
+            var payinMcTopupAmt = useFeePointWalletPayin ? requestAmt : requestAmt - payinFee;
+            var payoutMcDeductAmt = useFeePointWalletPayout ? requestAmt : requestAmt + payoutFee;
+
+            MVWallet? payinFeeWallet = null;
+            if (useFeePointWalletPayin)
+            {
+                payinFeeWallet = await _pointService!.GetWalletByRefIdAndType(payin.OrgId!, payin.MerchantId!, "MerchantPoint");
+                if (payinFeeWallet!.Status != "OK")
+                {
+                    r.Status = payinFeeWallet.Status;
+                    r.Description = $"Failed to get point wallet, MerchantId=[{payin.MerchantId}]";
+                    return r;
+                }
+            }
+
+            MVWallet? payoutFeeWallet = null;
+            if (useFeePointWalletPayout)
+            {
+                payoutFeeWallet = await _pointService!.GetWalletByRefIdAndType(payoutRequest.OrgId!, payoutRequest.MerchantId!, "MerchantPoint");
+                if (payoutFeeWallet!.Status != "OK")
+                {
+                    r.Status = payoutFeeWallet.Status;
+                    r.Description = $"Failed to get point wallet, MerchantId=[{payoutRequest.MerchantId}]";
+                    return r;
+                }
+
+                var payoutFeeCurrentBalance = payoutFeeWallet.Wallet?.PointBalanceDecimal;
+                payoutFeeCurrentBalance ??= 0;
+                if (payoutFeeCurrentBalance < payoutFee)
+                {
+                    r.Status = "ERROR_INSUFFICIENT_BALANCE";
+                    r.Description = $"Point wallet has insufficient balance for fee, MerchantId=[{payoutRequest.MerchantId}], CurrentBalance=[{payoutFeeCurrentBalance}], RequiredAmount=[{payoutFee}]";
+                    return r;
+                }
+            }
 
             var payoutMcCurrentBalance = payoutWallet.Wallet?.PointBalanceDecimal;
             payoutMcCurrentBalance ??= 0;
@@ -935,6 +1017,7 @@ namespace Its.Onix.Api.Services
                 PayInPromptPayId = payin.PayinPromptPayId,
                 PaymentRequestId = payinId,
                 MerchantId = payin.MerchantId,
+                FeeDeductionSource = payin.FeeDeductionSource,
 
                 RefId1 = payin.RefId1,
                 RefId2 = payin.RefId2,
@@ -969,6 +1052,7 @@ namespace Its.Onix.Api.Services
                 PaymentRequestId = payoutId,
 
                 MerchantId = payoutRequest.MerchantId,
+                FeeDeductionSource = payoutRequest.FeeDeductionSource,
 
                 PayOutFeePct = (double) payoutFeePct,
                 PayoutFeeDecimal = payoutFee,
@@ -1044,6 +1128,27 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            if (useFeePointWalletPayin)
+            {
+                //หักค่าธรรมเนียม payin แยกออกจาก Point Wallet ของ merchant ที่เอาเงินเข้า
+                var pointTxPayinFee = new MPointTx()
+                {
+                    WalletId = payinFeeWallet!.Wallet!.Id.ToString(),
+                    TxAmount = (long) Math.Floor((decimal) payinFee),
+                    TxAmountDecimal = payinFee,
+                    Description = $"P2P payin fee ({payinFeePct}%)",
+                    Tags = $"PaymentTxId=[{payInPmt.Id}], FeeDeduction=[true], RefId1=[{payInPmt.RefId1}]",
+                };
+                var payinFeeDeductResult = await _pointService!.DeductPoint(payin.OrgId!, pointTxPayinFee);
+                if (payinFeeDeductResult.Status != "OK")
+                {
+                    r.Status = payinFeeDeductResult.Status;
+                    r.Description = $"Failed to deduct payin fee from Point Wallet, {payinFeeDeductResult.Description}";
+
+                    return r;
+                }
+            }
+
             //==== Deduct ยอดเงิน (include payout fee) ออกจาก merchant ที่เอาเงินออก
             var pointTx1 = new MPointTx()
             {
@@ -1062,6 +1167,27 @@ namespace Its.Onix.Api.Services
                 r.Description = deductResult.Description;
 
                 return r;
+            }
+
+            if (useFeePointWalletPayout)
+            {
+                //หักค่าธรรมเนียม payout แยกออกจาก Point Wallet ของ merchant ที่เอาเงินออก
+                var pointTxPayoutFee = new MPointTx()
+                {
+                    WalletId = payoutFeeWallet!.Wallet!.Id.ToString(),
+                    TxAmount = (long) Math.Floor((decimal) payoutFee),
+                    TxAmountDecimal = payoutFee,
+                    Description = $"P2P payout fee ({payoutFeePct}%)",
+                    Tags = $"PayOutRequestId=[{payoutRequest.Id}], FeeDeduction=[true], RefId1=[{payOutPmt.RefId1}]",
+                };
+                var payoutFeeDeductResult = await _pointService!.DeductPoint(payoutRequest.OrgId!, pointTxPayoutFee);
+                if (payoutFeeDeductResult.Status != "OK")
+                {
+                    r.Status = payoutFeeDeductResult.Status;
+                    r.Description = $"Failed to deduct payout fee from Point Wallet, {payoutFeeDeductResult.Description}";
+
+                    return r;
+                }
             }
 
             _paymentRequestRepo!.SetCustomOrgId("global"); //ส่งเป็น global เพราะว่าให้ดึง payout request ที่อยู่ต่าง merchant ออกมาได้ด้วย

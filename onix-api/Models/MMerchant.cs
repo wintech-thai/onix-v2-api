@@ -83,6 +83,9 @@ namespace Its.Onix.Api.Models
         [Column("payout_fee_wallet_source")]
         public string? PayOutFeeWalletSource { get; set; } //(PointWallet, MerchantWallet) หักค่าธรรมเนียม payout จาก wallet ไหน, null = MerchantWallet, เปลี่ยนได้ทีหลัง แต่ถ้า PayInBankCustodyType=MerchantOwn ต้องเป็น PointWallet เท่านั้น
 
+        [Column("payment_gateway_id")]
+        public Guid? PaymentGatewayId { get; set; } //ผูกกับ MPaymentGateway สำหรับไว้เติม Point, null = ยังไม่ได้ผูก
+
         [Column("whitelist_bank_account_names")]
         public string? WhitelistBankAccountNames { get; set; } //serialize มาจาก List<string> WhitelistBankAccountNamesArr ห้าม return ออกไปตรง ๆ
 
