@@ -458,6 +458,22 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVMerchant> GetMerchantByCode(string orgId, string merchantCode)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVMerchant()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var merchant = await repository!.GetMerchantByCode(merchantCode);
+            r.Merchant = merchant;
+
+            return r;
+        }
+
         public async Task<MVMerchant> AddMerchantStat(string orgId, MMerchant merchant)
         {
            repository!.SetCustomOrgId(orgId);
