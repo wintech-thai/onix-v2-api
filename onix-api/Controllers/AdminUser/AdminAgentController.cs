@@ -20,13 +20,15 @@ namespace Its.Onix.Api.Controllers
         private readonly IAgentService svc;
         private readonly IApiKeyService _apiKeySvc;
         private readonly IPaymentTransactionService _paymentTxSvc;
+        private readonly IMerchantService _merchantSvc;
 
         [ExcludeFromCodeCoverage]
-        public AdminAgentController(IAgentService service, IApiKeyService apiKeySvc, IPaymentTransactionService paymentTxSvc)
+        public AdminAgentController(IAgentService service, IApiKeyService apiKeySvc, IPaymentTransactionService paymentTxSvc, IMerchantService merchantSvc)
         {
             svc = service;
             _apiKeySvc = apiKeySvc;
             _paymentTxSvc = paymentTxSvc;
+            _merchantSvc = merchantSvc;
         }
 
 
@@ -674,6 +676,17 @@ namespace Its.Onix.Api.Controllers
             // event ต้องผูกกับ OrgId ของ agent ตัวจริง — อาจเป็นของ merchant เอง ไม่ใช่ "global" เสมอไป
             var mvAgent = await svc.GetAgentById("global", agentId);
             var agentOrgId = mvAgent.Agent?.OrgId ?? "global";
+
+            string? merchantId = null;
+            if (agentOrgId != "global")
+            {
+                //Get merchantId from OrgId
+                var mvMerchant = await _merchantSvc.GetMerchantByCode("global", agentOrgId);
+                merchantId = mvMerchant.Merchant?.Id.ToString() ?? "";
+            }
+
+            pmtLineNoti!.AgentOrgId = agentOrgId;
+            pmtLineNoti!.MerchantId = merchantId;
 
             wrapData.Add("InputData", body);
             wrapData.Add("PaymentNoti", pmtLineNoti!);

@@ -526,9 +526,16 @@ namespace Its.Onix.Api.Services
                 FromBankAccountNo = paymentNotiLine?.SourceBankAccountNo,
                 FromBankCode = paymentNotiLine?.SourceBankCode,
                 StatusReason = $"Matched [{pendingMatchCount}] pending payment request",
+                MerchantId = paymentNotiLine?.MerchantId, //เป็น null ได้ถ้า agent ไม่ได้ match กับ merchant ใด ๆ
             };
 
-            repository!.SetCustomOrgId("global"); //ให้เป็นของ global ไปก่อนถ้า match payment request ไม่ได้
+            var tmpOrgId = "global"; //ให้เป็น global ไปก่อนเพราะว่าเรายังไม่รู้ว่า transaction นี้เป็นของ merchant ไหน
+            if (paymentNotiLine?.AgentOrgId! != null)
+            {
+                tmpOrgId = paymentNotiLine?.AgentOrgId!;
+            }
+
+            repository!.SetCustomOrgId(tmpOrgId); //ให้เป็นของ OrgId ของ agent ไปถ้า match pament request ไม่ได้
             var bankAccount = await _bankAccountRepo.GetBankAccountById(bankAccountId);
 
             if (pmr != null)

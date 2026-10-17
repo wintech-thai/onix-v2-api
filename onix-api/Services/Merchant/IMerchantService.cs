@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     public interface IMerchantService
     {
         public Task<MVMerchant> GetMerchantById(string orgId, string merchantId);
+        public Task<MVMerchant> GetMerchantByCode(string orgId, string merchantCode);
         public Task<MVMerchant> AddMerchant(string orgId, MMerchant merchant);
         public Task<MVMerchant> DeleteMerchantById(string orgId, string merchantId);
         public Task<List<MMerchant>> GetMerchants(string orgId, VMMerchant param);
