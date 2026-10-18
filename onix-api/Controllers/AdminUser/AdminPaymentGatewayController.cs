@@ -23,36 +23,36 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/AddPaymentGateway")]
-        public IActionResult AddPaymentGateway([FromBody] MPaymentGateway request)
+        public async Task<IActionResult> AddPaymentGateway([FromBody] MPaymentGateway request)
         {
-            var result = svc.AddPaymentGateway("global", request);
+            var result = await svc.AddPaymentGateway("global", request);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/global/action/DeletePaymentGatewayById/{paymentGatewayId}")]
-        public IActionResult DeletePaymentGatewayById(string paymentGatewayId)
+        public async Task<IActionResult> DeletePaymentGatewayById(string paymentGatewayId)
         {
-            var result = svc.DeletePaymentGatewayById("global", paymentGatewayId);
+            var result = await svc.DeletePaymentGatewayById("global", paymentGatewayId);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/GetPaymentGateways")]
-        public IActionResult GetPaymentGateways([FromBody] VMPaymentGateway param)
+        public async Task<IActionResult> GetPaymentGateways([FromBody] VMPaymentGateway param)
         {
-            var result = svc.GetPaymentGateways("global", param);
+            var result = await svc.GetPaymentGateways("global", param);
             return Ok(result);
         }
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/GetPaymentGatewayCount")]
-        public IActionResult GetPaymentGatewayCount([FromBody] VMPaymentGateway param)
+        public async Task<IActionResult> GetPaymentGatewayCount([FromBody] VMPaymentGateway param)
         {
-            var result = svc.GetPaymentGatewayCount("global", param);
+            var result = await svc.GetPaymentGatewayCount("global", param);
             return Ok(result);
         }
 

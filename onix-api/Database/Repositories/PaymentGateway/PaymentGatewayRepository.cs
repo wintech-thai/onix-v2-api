@@ -1,7 +1,6 @@
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
 using Microsoft.EntityFrameworkCore;
-using LinqKit;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -12,66 +11,59 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
-        public Task<MPaymentGateway?> GetPaymentGatewayByCode(string code)
+        public async Task<MPaymentGateway?> GetPaymentGatewayByCode(string code)
         {
-            var result = context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Code!.Equals(code)).FirstOrDefaultAsync();
-            return result!;
+            var result = await context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Code!.Equals(code)).FirstOrDefaultAsync();
+            return result;
         }
 
-        public MPaymentGateway AddPaymentGateway(MPaymentGateway paymentGateway)
+        public async Task<MPaymentGateway> AddPaymentGateway(MPaymentGateway paymentGateway)
         {
             paymentGateway.Id = Guid.NewGuid();
             paymentGateway.CreatedDate = DateTime.UtcNow;
             paymentGateway.OrgId = orgId;
 
             context!.PaymentGateways!.Add(paymentGateway);
-            context.SaveChanges();
+            await context.SaveChangesAsync();
 
             return paymentGateway;
         }
 
-        public MPaymentGateway? DeletePaymentGatewayById(string paymentGatewayId)
+        public async Task<MPaymentGateway?> DeletePaymentGatewayById(string paymentGatewayId)
         {
             Guid id = Guid.Parse(paymentGatewayId);
 
-            var r = context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefault();
+            var r = await context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
             if (r != null)
             {
                 context!.PaymentGateways!.Remove(r);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
 
             return r;
         }
 
-        private ExpressionStarter<MPaymentGateway> PaymentGatewayPredicate(VMPaymentGateway param)
+        private IQueryable<MPaymentGateway> PaymentGatewayQuery(VMPaymentGateway param)
         {
-            var pd = PredicateBuilder.New<MPaymentGateway>();
-
-            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            IQueryable<MPaymentGateway> query = context!.PaymentGateways!.Where(p => p.OrgId!.Equals(orgId));
 
             if ((param.Scheme != null) && (param.Scheme != ""))
             {
-                var schemePd = PredicateBuilder.New<MPaymentGateway>();
-                schemePd = schemePd.Or(p => p.Scheme!.Equals(param.Scheme));
-
-                pd = pd.And(schemePd);
+                query = query.Where(p => p.Scheme!.Equals(param.Scheme));
             }
 
             if ((param.FullTextSearch != null) && (param.FullTextSearch != ""))
             {
-                var fullTextPd = PredicateBuilder.New<MPaymentGateway>();
-                fullTextPd = fullTextPd.Or(p => p.Code!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
-                fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
-
-                pd = pd.And(fullTextPd);
+                query = query.Where(p =>
+                    p.Code!.Contains(param.FullTextSearch) ||
+                    p.Description!.Contains(param.FullTextSearch) ||
+                    p.Tags!.Contains(param.FullTextSearch));
             }
 
-            return pd;
+            return query;
         }
 
-        public IEnumerable<MPaymentGateway> GetPaymentGateways(VMPaymentGateway param)
+        public async Task<IEnumerable<MPaymentGateway>> GetPaymentGateways(VMPaymentGateway param)
         {
             var limit = 0;
             var offset = 0;
@@ -86,36 +78,34 @@ namespace Its.Onix.Api.Database.Repositories
                 limit = param.Limit;
             }
 
-            var predicate = PaymentGatewayPredicate(param!);
-            var arr = context!.PaymentGateways!.AsExpandable().Where(predicate)
+            var arr = await PaymentGatewayQuery(param)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
-                .ToList();
+                .ToListAsync();
 
             return arr;
         }
 
-        public Task<MPaymentGateway?> GetPaymentGatewayById(string paymentGatewayId)
+        public async Task<MPaymentGateway?> GetPaymentGatewayById(string paymentGatewayId)
         {
             Guid id = Guid.Parse(paymentGatewayId);
-            var result = context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+            var result = await context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
-            return result!;
+            return result;
         }
 
-        public int GetPaymentGatewayCount(VMPaymentGateway param)
+        public async Task<int> GetPaymentGatewayCount(VMPaymentGateway param)
         {
-            var predicate = PaymentGatewayPredicate(param);
-            var cnt = context!.PaymentGateways!.AsExpandable().Where(predicate).Count();
+            var cnt = await PaymentGatewayQuery(param).CountAsync();
 
             return cnt;
         }
 
-        public MPaymentGateway? UpdatePaymentGatewayById(string paymentGatewayId, MPaymentGateway paymentGateway)
+        public async Task<MPaymentGateway?> UpdatePaymentGatewayById(string paymentGatewayId, MPaymentGateway paymentGateway)
         {
             Guid id = Guid.Parse(paymentGatewayId);
-            var result = context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefault();
+            var result = await context!.PaymentGateways!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
@@ -128,10 +118,10 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Tags = paymentGateway.Tags;
                 //Scheme กำหนดได้แค่ตอน Add เท่านั้น แก้ไขทีหลังไม่ได้ จึงไม่แก้ตรงนี้
 
-                context!.SaveChanges();
+                await context!.SaveChangesAsync();
             }
 
-            return result!;
+            return result;
         }
     }
 }

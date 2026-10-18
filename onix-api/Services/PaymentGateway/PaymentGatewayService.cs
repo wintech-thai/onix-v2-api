@@ -15,7 +15,7 @@ namespace Its.Onix.Api.Services
             repository = repo;
         }
 
-        public MVPaymentGateway AddPaymentGateway(string orgId, MPaymentGateway paymentGateway)
+        public async Task<MVPaymentGateway> AddPaymentGateway(string orgId, MPaymentGateway paymentGateway)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -41,7 +41,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var existing = repository!.GetPaymentGatewayByCode(paymentGateway.Code).Result;
+            var existing = await repository!.GetPaymentGatewayByCode(paymentGateway.Code);
             if (existing != null)
             {
                 r.Status = "CODE_DUPLICATE";
@@ -50,13 +50,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.AddPaymentGateway(paymentGateway);
+            var result = await repository!.AddPaymentGateway(paymentGateway);
 
             r.PaymentGateway = result;
             return r;
         }
 
-        public MVPaymentGateway DeletePaymentGatewayById(string orgId, string paymentGatewayId)
+        public async Task<MVPaymentGateway> DeletePaymentGatewayById(string orgId, string paymentGatewayId)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -74,7 +74,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.DeletePaymentGatewayById(paymentGatewayId);
+            var result = await repository!.DeletePaymentGatewayById(paymentGatewayId);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
@@ -87,10 +87,10 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public IEnumerable<MPaymentGateway> GetPaymentGateways(string orgId, VMPaymentGateway param)
+        public async Task<IEnumerable<MPaymentGateway>> GetPaymentGateways(string orgId, VMPaymentGateway param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetPaymentGateways(param);
+            var result = await repository!.GetPaymentGateways(param);
 
             foreach (var pg in result)
             {
@@ -100,10 +100,10 @@ namespace Its.Onix.Api.Services
             return result;
         }
 
-        public int GetPaymentGatewayCount(string orgId, VMPaymentGateway param)
+        public async Task<int> GetPaymentGatewayCount(string orgId, VMPaymentGateway param)
         {
             repository!.SetCustomOrgId(orgId);
-            var result = repository!.GetPaymentGatewayCount(param);
+            var result = await repository!.GetPaymentGatewayCount(param);
 
             return result;
         }
@@ -174,7 +174,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var result = repository!.UpdatePaymentGatewayById(paymentGatewayId, paymentGateway);
+            var result = await repository!.UpdatePaymentGatewayById(paymentGatewayId, paymentGateway);
             if (result == null)
             {
                 r.Status = "NOTFOUND";
