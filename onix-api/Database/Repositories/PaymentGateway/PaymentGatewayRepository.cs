@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
+    // x087 payment gateway
     public class PaymentGatewayRepository : BaseRepository, IPaymentGatewayRepository
     {
         public PaymentGatewayRepository(IDataContext ctx)
