@@ -190,6 +190,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.PayoutSelectionTypeP2P = merchant.PayoutSelectionTypeP2P;
                 existing.PayInFeeWalletSource = merchant.PayInFeeWalletSource;
                 existing.PayOutFeeWalletSource = merchant.PayOutFeeWalletSource;
+                existing.PaymentGatewayId = merchant.PaymentGatewayId;
 
                 existing.DiscardCent = merchant.DiscardCent;
                 existing.IncludeGlobalBankAccount = merchant.IncludeGlobalBankAccount;

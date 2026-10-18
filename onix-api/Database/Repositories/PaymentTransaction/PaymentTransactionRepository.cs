@@ -89,6 +89,8 @@ namespace Its.Onix.Api.Database.Repositories
                 TxAmountStr = x.pt.TxAmountDecimal.ToString(),
                 JobId = x.pt.JobId,
                 NoticeCount = x.pt.NoticeCount,
+
+                FeeDeductionSource = x.pt.FeeDeductionSource,
             });
         }
 

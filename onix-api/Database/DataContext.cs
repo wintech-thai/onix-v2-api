@@ -18,6 +18,7 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
     public DbSet<MOrganization>? Organizations { get; set; }
     public DbSet<MApiKey>? ApiKeys { get; set; }
+    public DbSet<MPaymentGateway>? PaymentGateways { get; set; }
     public new DbSet<MRole>? Roles { get; set; }
     public new DbSet<MUser>? Users { get; set; }
     public DbSet<MOrganizationUser>? OrganizationUsers { get; set; }

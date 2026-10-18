@@ -75,6 +75,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpGet]
+        [Route("org/{orgId}/action/GetAvailableSupportQrBanks")]
+        public IActionResult GetAvailableSupportQrBanks(string orgId)
+        {
+            var result = _bankAccountSvc.GetAvailableSupportQrBanks();
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
         [Route("org/{orgId}/action/GetMyBankAccounts")]
         public async Task<IActionResult> GetMyBankAccounts(string orgId)
         {

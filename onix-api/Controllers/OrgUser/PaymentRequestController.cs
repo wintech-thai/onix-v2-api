@@ -236,6 +236,16 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/{orgId}/action/RejectPendingPayInRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> RejectPendingPayInRequestById(string orgId, string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            //orgId มาจาก route ของ OrgUser เอง จึงจำกัดได้แค่ payment request ของ org ตัวเองเท่านั้น (เหมือนกับ endpoint อื่น ๆ ของ OrgUser)
+            var result = await _paymentRequestSvc.RejectPendingPayInRequestById(orgId, paymentRequestId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/{orgId}/action/SubmitWithdrawalRequest/{merchantId}")]
         public async Task<IActionResult> SubmitWithdrawalRequest(string orgId, string merchantId, [FromBody] MPaymentRequest request)
         {

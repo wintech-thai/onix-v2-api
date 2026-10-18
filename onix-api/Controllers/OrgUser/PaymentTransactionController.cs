@@ -73,6 +73,16 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/{orgId}/action/CreatePaymentTxByPayInRequestId/{paymentRequestId}")]
+        public async Task<IActionResult> CreatePaymentTxByPayInRequestId(string orgId, string paymentRequestId, [FromBody] MPaymentRequest? payload = null)
+        {
+            //orgId มาจาก route ของ OrgUser เอง จึงจำกัดได้แค่ payment request ของ org ตัวเองเท่านั้น (เหมือนกับ endpoint อื่น ๆ ของ OrgUser)
+            var result = await _paymentTransactionSvc.CreatePaymentTxByPayInRequestId(orgId, paymentRequestId, payload);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/{orgId}/action/GetPendingPayInRequestsForPaymentTx")]
         public async Task<IActionResult> GetPendingPayInRequestsForPaymentTx(string orgId, [FromBody] VMPaymentRequest request)
         {
