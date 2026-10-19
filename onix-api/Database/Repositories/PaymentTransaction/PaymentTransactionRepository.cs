@@ -139,7 +139,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         private ExpressionStarter<MPaymentTransaction> PaymentTransactionPredicate(VMPaymentTransaction param)
         {
-            var pd = IsOrgMatchPredicate(null);
+            var pd = IsOrgMatchPredicate(null, param.IncludeUnidentifiedForBankAccountIds);
 
             if ((param.Direction != null) && (param.Direction != ""))
             {
@@ -216,14 +216,21 @@ namespace Its.Onix.Api.Database.Repositories
             return paymentTransaction;
         }
 
-        private ExpressionStarter<MPaymentTransaction> IsOrgMatchPredicate(Guid? pmrId)
+        private ExpressionStarter<MPaymentTransaction> IsOrgMatchPredicate(Guid? pmrId, List<string>? includeUnidentifiedForBankAccountIds = null)
         {
             var pd = PredicateBuilder.New<MPaymentTransaction>(true);
             if (orgId != "global")
             {
                 //ต้องเอา orgId มา where ด้วย
-                var orgPd = PredicateBuilder.New<MPaymentTransaction>(true);
-                orgPd = orgPd.And(p => p.OrgId!.Equals(orgId));
+                var orgPd = PredicateBuilder.New<MPaymentTransaction>(false);
+                orgPd = orgPd.Or(p => p.OrgId!.Equals(orgId));
+
+                if (includeUnidentifiedForBankAccountIds != null && includeUnidentifiedForBankAccountIds.Count > 0)
+                {
+                    //x088 : merchant แบบ MerchantOwn ให้เห็น Unidentified tx ของ bank account ตัวเองได้ด้วย แม้ OrgId ยังเป็น global อยู่ (ยังไม่ได้ approve)
+                    orgPd = orgPd.Or(p => p.Status!.Equals("UnIdentified") && includeUnidentifiedForBankAccountIds.Contains(p.PayInBankAccountId!));
+                }
+
                 pd = pd.And(orgPd);
             }
 

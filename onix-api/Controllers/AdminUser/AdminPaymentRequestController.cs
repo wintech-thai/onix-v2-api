@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
@@ -30,6 +31,50 @@ namespace Its.Onix.Api.Controllers
             _jobService = jobService;
         }
 
+        //x088 : merchant แบบ MerchantOwn สร้าง/approve/reject/edit payment request เองที่โปรแกรม Merchant เท่านั้น
+        //Admin ทำได้แค่ view only ห้าม approve/reject/edit/create ให้
+        private static MVPaymentRequest? DenyIfMerchantIsOwn(MMerchant? mc, string? merchantId)
+        {
+            if (mc == null)
+            {
+                return new MVPaymentRequest { Status = "ERROR_MERCHANT_NOT_FOUND", Description = $"Merchant ID [{merchantId}] not found" };
+            }
+
+            if (mc.PayInBankCustodyType == "MerchantOwn")
+            {
+                return new MVPaymentRequest
+                {
+                    Status = "ERROR_MERCHANT_OWN_NOT_ALLOWED",
+                    Description = $"Merchant ID [{merchantId}] is MerchantOwn custody type, this action is only allowed from the Merchant app"
+                };
+            }
+
+            return null;
+        }
+
+        private async Task<MVPaymentRequest?> DenyIfPaymentRequestMerchantIsOwn(string paymentRequestId)
+        {
+            var pmtVm = await svc.GetPaymentRequestById("global", paymentRequestId);
+            if (pmtVm.Status != "OK")
+            {
+                return pmtVm;
+            }
+
+            var merchantId = pmtVm.PaymentRequest!.MerchantId;
+            if (string.IsNullOrEmpty(merchantId))
+            {
+                return null;
+            }
+
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return new MVPaymentRequest { Status = mcVm.Status, Description = mcVm.Description };
+            }
+
+            return DenyIfMerchantIsOwn(mcVm.Merchant, merchantId);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/SubmitPaymentRequestByMerchantId/{merchantId}")]
@@ -45,6 +90,12 @@ namespace Its.Onix.Api.Controllers
             if (mc == null)
             {
                 return Ok(mcVm);
+            }
+
+            var denyResult = DenyIfMerchantIsOwn(mc, merchantId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
             }
 
             if (string.IsNullOrEmpty(mc.OrgId))
@@ -75,6 +126,12 @@ namespace Its.Onix.Api.Controllers
             if (mc == null)
             {
                 return Ok(mcVm);
+            }
+
+            var denyResult = DenyIfMerchantIsOwn(mc, merchantId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
             }
 
             if (string.IsNullOrEmpty(mc.OrgId))
@@ -313,6 +370,12 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mcVm);
             }
 
+            var denyResult = DenyIfMerchantIsOwn(mc, merchantId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             if (string.IsNullOrEmpty(mc.OrgId))
             {
                 mcVm.Status = "ERROR_ORG_ID_EMPTY";
@@ -361,6 +424,12 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mcVm);
             }
 
+            var denyResult = DenyIfMerchantIsOwn(mc, merchantId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             if (string.IsNullOrEmpty(mc.OrgId))
             {
                 mcVm.Status = "ERROR_ORG_ID_EMPTY";
@@ -392,6 +461,12 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/RejectPayOutRequestById/{paymentRequestId}")]
         public async Task<IActionResult> RejectPayOutRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
         {
+            var denyResult = await DenyIfPaymentRequestMerchantIsOwn(paymentRequestId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             var result = await svc.RejectPaymentRequestPayOut("global", paymentRequestId, request);
             return Ok(result);
         }
@@ -401,6 +476,12 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/ApprovePayOutRequestById/{paymentRequestId}")]
         public async Task<IActionResult> ApprovePayOutRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
         {
+            var denyResult = await DenyIfPaymentRequestMerchantIsOwn(paymentRequestId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             var result = await svc.ApprovePaymentRequestPayOut("global", paymentRequestId, request);
             return Ok(result);
         }
@@ -429,6 +510,12 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/RejectPendingPayInRequestById/{paymentRequestId}")]
         public async Task<IActionResult> RejectPendingPayInRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
         {
+            var denyResult = await DenyIfPaymentRequestMerchantIsOwn(paymentRequestId);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             var result = await svc.RejectPendingPayInRequestById("global", paymentRequestId, request);
             return Ok(result);
         }

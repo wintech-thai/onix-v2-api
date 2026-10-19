@@ -21,5 +21,15 @@ namespace Its.Onix.Api.Database.Repositories
                 .OrderByDescending(p => p.CreatedDate)
                 .ToListAsync();
         }
+
+        //x088 : merchant ดู audit trail ได้เฉพาะของ org ตัวเองเท่านั้น (ต่างจาก Admin ที่ดูได้ทุก org)
+        public async Task<List<MAuditTrack>> GetByRowId(string orgId, string rowId)
+        {
+            return await context!.AuditTracks!
+                .AsExpandable()
+                .Where(p => p.RowId == rowId && p.OrgId == orgId)
+                .OrderByDescending(p => p.CreatedDate)
+                .ToListAsync();
+        }
     }
 }
