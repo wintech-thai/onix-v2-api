@@ -279,6 +279,7 @@ namespace Its.Onix.Api.Database.Repositories
                 existing.DiscardCent = paymentTransaction.DiscardCent;
                 existing.PaymentRequestId = paymentTransaction.PaymentRequestId;
                 existing.JobId = paymentTransaction.JobId;
+                existing.FeeDeductionSource = paymentTransaction.FeeDeductionSource; //x088 : bug เดิมไม่ copy field นี้ ทำให้ approve unidentified tx แล้ว FeeDeductionSource หายทุกครั้ง
             }
 
             await context.SaveChangesAsync();
