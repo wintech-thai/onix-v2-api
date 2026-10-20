@@ -510,10 +510,16 @@ namespace Its.Onix.Api.Controllers
         [Route("org/global/action/RejectPendingPayInRequestById/{paymentRequestId}")]
         public async Task<IActionResult> RejectPendingPayInRequestById(string paymentRequestId, [FromBody] MPaymentRequest request)
         {
-            var denyResult = await DenyIfPaymentRequestMerchantIsOwn(paymentRequestId);
-            if (denyResult != null)
+            //x088 : payment-cleanup คือ system job ที่คอยมา reject payment request ที่ expire อัตโนมัติ (ดู onix-v2-jobs/payment-cleanup.rb)
+            //ไม่ใช่ admin คนกด ไม่งั้น request ของ merchant แบบ MerchantOwn จะค้างสถานะ Pending ตลอดไปเพราะ custody check บล็อกไว้
+            var isSystemCleanupJob = User.FindFirst("ApiKeyName")?.Value == "payment-cleanup";
+            if (!isSystemCleanupJob)
             {
-                return Ok(denyResult);
+                var denyResult = await DenyIfPaymentRequestMerchantIsOwn(paymentRequestId);
+                if (denyResult != null)
+                {
+                    return Ok(denyResult);
+                }
             }
 
             var result = await svc.RejectPendingPayInRequestById("global", paymentRequestId, request);

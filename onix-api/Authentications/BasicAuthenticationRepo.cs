@@ -76,6 +76,7 @@ namespace Its.Onix.Api.Authentications
                 new Claim(ClaimTypes.Uri, request.Path),
                 new Claim(ClaimTypes.GroupSid, u.OrgId!),
                 new Claim(ClaimTypes.System, $"OrgType:{u.OrgType}"),
+                new Claim("ApiKeyName", m.ApiKey.KeyName ?? ""), //x088 : ให้ controller เช็คได้ว่า system job ตัวไหนเรียกมา (เช่น payment-cleanup) เพื่อยกเว้น custody check ของ Admin UI
             ];
 
             return u;
