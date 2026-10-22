@@ -29,6 +29,10 @@ namespace onix.api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("doc_id");
 
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_date");
+
                     b.Property<string>("Code")
                         .HasColumnType("text")
                         .HasColumnName("code");
@@ -45,6 +49,10 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("document_date");
 
+                    b.Property<string>("DocumentNo")
+                        .HasColumnType("text")
+                        .HasColumnName("document_no");
+
                     b.Property<string>("DocumentParams")
                         .HasColumnType("text")
                         .HasColumnName("document_params");
@@ -52,6 +60,10 @@ namespace onix.api.Migrations
                     b.Property<string>("DocumentType")
                         .HasColumnType("text")
                         .HasColumnName("document_type");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_date");
 
                     b.Property<string>("EntityId")
                         .HasColumnType("text")
@@ -61,6 +73,14 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
+                    b.Property<double?>("PaidAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("paid_amount");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("text")
+                        .HasColumnName("payment_method");
+
                     b.Property<string>("ProductType")
                         .HasColumnType("text")
                         .HasColumnName("product_type");
@@ -68,6 +88,10 @@ namespace onix.api.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("status");
+
+                    b.Property<DateTime?>("StatusDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("status_date");
 
                     b.Property<string>("Tags")
                         .HasColumnType("text")
@@ -130,9 +154,21 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
+                    b.Property<string>("ProductCode")
+                        .HasColumnType("text")
+                        .HasColumnName("product_code");
+
+                    b.Property<string>("ProductDesc")
+                        .HasColumnType("text")
+                        .HasColumnName("product_desc");
+
                     b.Property<string>("ProductId")
                         .HasColumnType("text")
                         .HasColumnName("product_id");
+
+                    b.Property<string>("ProductType")
+                        .HasColumnType("text")
+                        .HasColumnName("product_type");
 
                     b.Property<double?>("Quantity")
                         .HasColumnType("double precision")
@@ -1456,6 +1492,14 @@ namespace onix.api.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("credit_term_day");
 
+                    b.Property<string>("CustomerGroupId")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_group_id");
+
+                    b.Property<string>("CustomerTypeId")
+                        .HasColumnType("text")
+                        .HasColumnName("customer_type_id");
+
                     b.Property<int?>("EntityCategory")
                         .HasColumnType("integer")
                         .HasColumnName("entity_category");
@@ -1534,6 +1578,46 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("Entities");
+                });
+
+            modelBuilder.Entity("Its.Onix.Api.Models.MEntityAddress", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_address_id");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<string>("AddressType")
+                        .HasColumnType("text")
+                        .HasColumnName("address_type");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("EntityId")
+                        .HasColumnType("text")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntityId");
+
+                    b.HasIndex("OrgId");
+
+                    b.ToTable("EntityAddresses");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MFileDocument", b =>

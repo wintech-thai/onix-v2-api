@@ -33,7 +33,14 @@ namespace Its.Onix.Api.Models
         [Column("entity_category")] /* 1=Personal, 2=Company */
         public int? EntityCategory { get; set; }
 
-        [Column("credit_term_day")] 
+        //เก็บ master ref id (ไม่ใช่ ref code) เพราะ code แก้ไขได้ ดู MMasterRef (RefType=CustomerType/CustomerGroup)
+        [Column("customer_type_id")]
+        public string? CustomerTypeId { get; set; }
+
+        [Column("customer_group_id")]
+        public string? CustomerGroupId { get; set; }
+
+        [Column("credit_term_day")]
         public int? CreditTermDay { get; set; }
 
         [Column("credit_amount")] 
@@ -76,6 +83,15 @@ namespace Its.Onix.Api.Models
 
         //Navigation Properties
         public ICollection<MPricingPlan> PricingPlans { get; set; } = new List<MPricingPlan>();
+
+        //Populated by the repository at read time (joined from MasterRefs), never persisted here
+        [NotMapped]
+        public string? CustomerTypeCode { get; set; }
+        [NotMapped]
+        public string? CustomerGroupCode { get; set; }
+
+        [NotMapped]
+        public List<MEntityAddress>? Addresses { get; set; }
 
         //System fields
         [Column("created_date")]

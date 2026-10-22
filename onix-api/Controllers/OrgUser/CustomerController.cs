@@ -49,7 +49,7 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{id}/action/DeleteCustomerCascadeById/{entityId}")]
         public IActionResult DeleteCustomerCascadeById(string id, string entityId)
         {
-            //TODO : Change the implementiation here...
+            //x011 : DeleteEntityById ลบ table ลูก (addresses) ให้แล้วใน repository
             var result = svc.DeleteEntityById(id, entityId);
 
             Response.Headers.Append("CUST_STATUS", result!.Status);
@@ -159,6 +159,44 @@ namespace Its.Onix.Api.Controllers
         public IActionResult EnableCustomerUserById(string id, string entityId)
         {
             var result = svc.UpdateUserStatusById(id, entityId, "Active");
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{id}/action/GetCustomerAddressesByEntityId/{entityId}")]
+        public IActionResult GetCustomerAddressesByEntityId(string id, string entityId)
+        {
+            var result = svc.GetEntityAddressesByEntityId(id, entityId);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/AddCustomerAddress/{entityId}")]
+        public IActionResult AddCustomerAddress(string id, string entityId, [FromBody] MEntityAddress request)
+        {
+            var result = svc.AddEntityAddress(id, entityId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/UpdateCustomerAddressById/{entityId}/{addressId}")]
+        public IActionResult UpdateCustomerAddressById(string id, string entityId, string addressId, [FromBody] MEntityAddress request)
+        {
+            var result = svc.UpdateEntityAddressById(id, entityId, addressId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteCustomerAddressById/{entityId}/{addressId}")]
+        public IActionResult DeleteCustomerAddressById(string id, string entityId, string addressId)
+        {
+            var result = svc.DeleteEntityAddressById(id, entityId, addressId);
+
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }

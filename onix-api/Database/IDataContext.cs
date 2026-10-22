@@ -21,6 +21,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MItem>? Items { get; set; }
         public DbSet<MItemImage>? ItemImages { get; set; }
         public DbSet<MEntity>? Entities { get; set; }
+        public DbSet<MEntityAddress>? EntityAddresses { get; set; }
         public DbSet<MPricingPlan>? PricingPlans { get; set; }
         public DbSet<MPricingPlanItem>? PricingPlanItems { get; set; }
         public DbSet<MScanItem>? ScanItems { get; set; }

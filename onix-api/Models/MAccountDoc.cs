@@ -26,6 +26,10 @@ namespace Its.Onix.Api.Models
         [Column("code")]
         public string? Code { get; set; }
 
+        //x011 : เลขที่เอกสารจริงที่ auto-gen จาก IDocumentNumberService ตอนสร้าง (ดูไอเดียจาก MInventoryDoc.DocumentNo)
+        [Column("document_no")]
+        public string? DocumentNo { get; set; }
+
         [Column("description")]
         public string? Description { get; set; }
 
@@ -35,7 +39,7 @@ namespace Its.Onix.Api.Models
         [Column("tags")]
         public string? Tags { get; set; }
 
-        [Column("document_type")] /* CashInvoice */
+        [Column("document_type")] /* CashInvoice, CreditInvoice */
         public string? DocumentType { get; set; }
 
         [Column("product_type")] /* Privilege, Item */
@@ -44,10 +48,19 @@ namespace Its.Onix.Api.Models
         [Column("document_date")]
         public DateTime? DocumentDate { get; set; }
 
+        [Column("due_date")]
+        public DateTime? DueDate { get; set; } /* ขายเชื่อ: วันครบกำหนดชำระ = document_date + credit term ของลูกค้า */
+
         [Column("total_price")]
         public double? TotalPrice { get; set; } /* ยอดรวมทุกรายการ ก่อนส่วนลด ก่อน vat */
 
-        [Column("status")] /* Pending, Approved */
+        [Column("payment_method")]
+        public string? PaymentMethod { get; set; } /* ขายสด: Cash, Transfer, QR ฯลฯ */
+
+        [Column("paid_amount")]
+        public double? PaidAmount { get; set; } /* ขายสด: จำนวนเงินที่รับชำระ */
+
+        [Column("status")] /* Pending, Approved, Cancelled */
         public string? Status { get; set; }
 
         [Column("document_params")]
@@ -59,6 +72,24 @@ namespace Its.Onix.Api.Models
 
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
+
+        [Column("approved_date")]
+        public DateTime? ApprovedDate { get; set; }
+
+        [Column("status_date")]
+        public DateTime? StatusDate { get; set; }
+
+        // Carries line items for Add/Update requests and GetById responses — never persisted on
+        // this table itself, see MAccountDocItem/AccountDocItems for the real storage (same
+        // pattern as MInventoryDoc.Items).
+        [NotMapped]
+        public List<MAccountDocItem>? Items { get; set; }
+
+        //Populated by the repository at read time (joined from Entities), never persisted here
+        [NotMapped]
+        public string? EntityCode { get; set; }
+        [NotMapped]
+        public string? EntityName { get; set; }
 
         public MAccountDoc()
         {

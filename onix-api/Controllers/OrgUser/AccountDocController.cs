@@ -54,6 +54,39 @@ namespace Prom.LPR.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetAccountDocCreditInvoices")]
+        public async Task<IActionResult> GetAccountDocCreditInvoices(string id, [FromBody] VMAccountDoc request)
+        {
+            request.DocumentType = "CreditInvoice";
+            var result = await svc.GetAccountDocs(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetAccountDocCreditInvoiceCount")]
+        public async Task<IActionResult> GetAccountDocCreditInvoiceCount(string id, [FromBody] VMAccountDoc request)
+        {
+            request.DocumentType = "CreditInvoice";
+            var result = await svc.GetAccountDocCount(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/AddAccountDocCreditInvoice")]
+        public async Task<IActionResult> AddAccountDocCreditInvoice(string id, [FromBody] MAccountDoc request)
+        {
+            request.DocumentType = "CreditInvoice";
+            var result = await svc.AddAccountDoc(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetAccountDocById/{accountDocId}")]
         public async Task<IActionResult> GetAccountDocById(string id, string accountDocId)
@@ -78,6 +111,16 @@ namespace Prom.LPR.Api.Controllers
         public async Task<IActionResult> ApproveAccountDocById(string id, string accountDocId)
         {
             var result = await svc.ApproveAccountDocById(id, accountDocId);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/CancelAccountDocById/{accountDocId}")]
+        public async Task<IActionResult> CancelAccountDocById(string id, string accountDocId)
+        {
+            var result = await svc.CancelAccountDocById(id, accountDocId);
 
             return Ok(result);
         }

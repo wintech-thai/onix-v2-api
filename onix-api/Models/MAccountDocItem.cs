@@ -25,7 +25,17 @@ namespace Its.Onix.Api.Models
         public string? AccountDocId { get; set; }
 
         [Column("product_id")]
-        public string? ProductId { get; set; }
+        public string? ProductId { get; set; } /* MasterRef(RefType=Service).Id หรือ InventoryItem.Id แล้วแต่ ProductType, ว่างได้ถ้า Custom */
+
+        [Column("product_type")]
+        public string? ProductType { get; set; } /* Service, InventoryItem, Custom */
+
+        // คัดลอกมาเก็บตอนบันทึก (ไม่ join สดเพราะแถวแบบ Custom ไม่มี master ให้ join อยู่แล้ว)
+        [Column("product_code")]
+        public string? ProductCode { get; set; }
+
+        [Column("product_desc")]
+        public string? ProductDesc { get; set; }
 
         [Column("tags")]
         public string? Tags { get; set; }
@@ -56,10 +66,6 @@ namespace Its.Onix.Api.Models
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
 
-        [NotMapped]
-        public string? ProductCode { get; set; }
-        [NotMapped]
-        public string? ProductDesc { get; set; }
         [NotMapped]
         public string? CustomerCode { get; set; }
         [NotMapped]

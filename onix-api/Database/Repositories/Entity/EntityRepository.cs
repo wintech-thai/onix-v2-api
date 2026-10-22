@@ -88,7 +88,44 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(categoryPd);
             }
 
+            if (!string.IsNullOrEmpty(param.CustomerTypeId))
+            {
+                pd = pd.And(p => p.CustomerTypeId!.Equals(param.CustomerTypeId));
+            }
+
+            if (!string.IsNullOrEmpty(param.CustomerGroupId))
+            {
+                pd = pd.And(p => p.CustomerGroupId!.Equals(param.CustomerGroupId));
+            }
+
             return pd;
+        }
+
+        // Entity list/detail reads only ever carry the ref id (see MEntity.CustomerTypeId/CustomerGroupId
+        // comment) — join against MasterRefs here so the UI can show the code without a second round trip.
+        private void PopulateCustomerRefCodes(IEnumerable<MEntity> entities)
+        {
+            var list = entities.ToList();
+            var refIds = list
+                .SelectMany(e => new[] { e.CustomerTypeId, e.CustomerGroupId })
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Select(id => Guid.Parse(id!))
+                .Distinct()
+                .ToList();
+
+            if (refIds.Count == 0) return;
+
+            var refs = context!.MasterRefs!
+                .Where(r => r.OrgId!.Equals(orgId) && refIds.Contains(r.Id!.Value))
+                .ToDictionary(r => r.Id!.Value, r => r.Code);
+
+            foreach (var e in list)
+            {
+                if (!string.IsNullOrEmpty(e.CustomerTypeId) && refs.TryGetValue(Guid.Parse(e.CustomerTypeId), out var typeCode))
+                    e.CustomerTypeCode = typeCode;
+                if (!string.IsNullOrEmpty(e.CustomerGroupId) && refs.TryGetValue(Guid.Parse(e.CustomerGroupId), out var groupCode))
+                    e.CustomerGroupCode = groupCode;
+            }
         }
 
         public int GetEntityCount(VMEntity param)
@@ -123,6 +160,8 @@ namespace Its.Onix.Api.Database.Repositories
                 .Take(limit)
                 .ToList();
 
+            PopulateCustomerRefCodes(arr);
+
             return arr;
         }
 
@@ -137,6 +176,15 @@ namespace Its.Onix.Api.Database.Repositories
             Guid id = Guid.Parse(itemId);
 
             var u = context!.Entities!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefault();
+            if (u != null)
+            {
+                PopulateCustomerRefCodes([u]);
+                u.Addresses = context!.EntityAddresses!
+                    .Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(itemId))
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToList();
+            }
+
             return u!;
         }
 
@@ -149,6 +197,13 @@ namespace Its.Onix.Api.Database.Repositories
         public bool IsEntityCodeExist(string code)
         {
             var cnt = context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId)).Count();
+            return cnt >= 1;
+        }
+
+        public bool IsEntityCodeExistExcludingId(string code, string entityId)
+        {
+            var id = Guid.Parse(entityId);
+            var cnt = context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId) && !p!.Id!.Equals(id)).Count();
             return cnt >= 1;
         }
 
@@ -165,11 +220,72 @@ namespace Its.Onix.Api.Database.Repositories
             var r = context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefault();
             if (r != null)
             {
+                //ลบ table ลูก (ที่อยู่) ไปด้วย ตาม spec ข้อ 1c — ไม่มี FK cascade ระดับ DB จึงต้องลบเองตรงนี้
+                var addresses = context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(EntityId));
+                context!.EntityAddresses!.RemoveRange(addresses);
+
                 context!.Entities!.Remove(r);
                 context.SaveChanges();
             }
 
             return r;
+        }
+
+        public List<MEntityAddress> GetEntityAddressesByEntityId(string entityId)
+        {
+            return context!.EntityAddresses!
+                .Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(entityId))
+                .OrderByDescending(a => a.CreatedDate)
+                .ToList();
+        }
+
+        public MEntityAddress? GetEntityAddressById(string addressId)
+        {
+            Guid id = Guid.Parse(addressId);
+            return context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.Id!.Equals(id)).FirstOrDefault();
+        }
+
+        public MEntityAddress AddEntityAddress(MEntityAddress address)
+        {
+            address.Id = Guid.NewGuid();
+            address.CreatedDate = DateTime.UtcNow;
+            address.UpdatedDate = DateTime.UtcNow;
+            address.OrgId = orgId;
+
+            context!.EntityAddresses!.Add(address);
+            context.SaveChanges();
+
+            return address;
+        }
+
+        public MEntityAddress? UpdateEntityAddressById(string addressId, MEntityAddress address)
+        {
+            Guid id = Guid.Parse(addressId);
+            var result = context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                result.AddressType = address.AddressType;
+                result.Address = address.Address;
+                result.UpdatedDate = DateTime.UtcNow;
+                context!.SaveChanges();
+            }
+
+            return result;
+        }
+
+        public MEntityAddress? DeleteEntityAddressById(string addressId)
+        {
+            Guid id = Guid.Parse(addressId);
+            var result = context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.Id!.Equals(id)).FirstOrDefault();
+
+            if (result != null)
+            {
+                context!.EntityAddresses!.Remove(result);
+                context.SaveChanges();
+            }
+
+            return result;
         }
 
         public MEntity? UpdateEntityEmailById(string entityId, string email)
@@ -254,10 +370,13 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (result != null)
             {
+                result.Code = item.Code;
                 result.Name = item.Name;
                 result.Tags = item.Tags;
                 result.EntityType = item.EntityType;
                 result.EntityCategory = item.EntityCategory;
+                result.CustomerTypeId = item.CustomerTypeId;
+                result.CustomerGroupId = item.CustomerGroupId;
                 result.CreditTermDay = item.CreditTermDay;
                 result.CreditAmount = item.CreditAmount;
                 result.TaxId = item.TaxId;

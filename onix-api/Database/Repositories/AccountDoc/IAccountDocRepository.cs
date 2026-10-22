@@ -10,10 +10,12 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<bool> IsAccountDocNoExist(string docNo);
         public Task<bool> IsAccountDocApproved(string accountDocId);
         public Task<bool> IsAccountDocItemApproved(string accountDocItemId);
+        public Task<bool> IsAccountDocPending(string accountDocId);
 
         public Task<MAccountDoc> AddAccountDoc(MAccountDoc ad);
         public Task<MAccountDoc?> UpdateAccountDocById(string accountDocId, MAccountDoc ad);
         public Task<MAccountDoc?> ApproveAccountDocById(string accountDocId);
+        public Task<MAccountDoc?> CancelAccountDocById(string accountDocId);
         public Task<MAccountDoc?> DeleteAccountDocById(string accountDocId);
         public Task<List<MAccountDoc>> GetAccountDocs(VMAccountDoc param);
         public Task<int> GetAccountDocCount(VMAccountDoc param);
