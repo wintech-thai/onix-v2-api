@@ -67,7 +67,25 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            ad.DocumentNo = await _documentNumberService.GetDocumentNumber(orgId, ad.DocumentType);
+            try
+            {
+                ad.DocumentNo = await _documentNumberService.GetDocumentNumber(orgId, ad.DocumentType);
+            }
+            catch (KeyNotFoundException)
+            {
+                r.Status = "DOCTYPE_NOT_CONFIGURED";
+                r.Description = $"Document number is not configured for type [{ad.DocumentType}]. Please add it in Document Number settings first.";
+
+                return r;
+            }
+            catch (InvalidOperationException)
+            {
+                r.Status = "DOCNO_LOCK_FAILED";
+                r.Description = "Unable to generate document number right now, please try again.";
+
+                return r;
+            }
+
             ad.DocumentDate ??= DateTime.UtcNow;
 
             //ขายเชื่อ: คำนวณวันครบกำหนดชำระจาก credit term ของลูกค้า (ถ้าลูกค้าไม่มีกำหนดไว้ ปล่อยว่าง ให้ไปกำหนดเองที่เอกสาร)
