@@ -530,6 +530,15 @@ namespace Its.Onix.Api.Services
             }
 
             repository!.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(cycle.Code) && repository!.IsEntityCodeExistExcludingId(cycle.Code, entityId))
+            {
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Entity code [{cycle.Code}] is duplicate";
+
+                return r;
+            }
+
             var result = repository!.UpdateEntityById(entityId, cycle);
 
             if (result == null)
@@ -663,6 +672,92 @@ namespace Its.Onix.Api.Services
             };
 
             return mv;
+        }
+
+        public List<MEntityAddress> GetEntityAddressesByEntityId(string orgId, string entityId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return repository!.GetEntityAddressesByEntityId(entityId);
+        }
+
+        public MVEntityAddress AddEntityAddress(string orgId, string entityId, MEntityAddress address)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntityAddress() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+                return r;
+            }
+
+            var entity = repository!.GetEntityById(entityId);
+            if (entity == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+                return r;
+            }
+
+            address.EntityId = entityId;
+            var result = repository!.AddEntityAddress(address);
+
+            r.EntityAddress = result;
+            return r;
+        }
+
+        public MVEntityAddress UpdateEntityAddressById(string orgId, string entityId, string addressId, MEntityAddress address)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntityAddress() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(addressId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Address ID [{addressId}] format is invalid";
+                return r;
+            }
+
+            var existing = repository!.GetEntityAddressById(addressId);
+            if (existing == null || existing.EntityId != entityId)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Address ID [{addressId}] not found for Entity ID [{entityId}]";
+                return r;
+            }
+
+            var result = repository!.UpdateEntityAddressById(addressId, address);
+            r.EntityAddress = result;
+            return r;
+        }
+
+        public MVEntityAddress DeleteEntityAddressById(string orgId, string entityId, string addressId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntityAddress() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(addressId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Address ID [{addressId}] format is invalid";
+                return r;
+            }
+
+            var existing = repository!.GetEntityAddressById(addressId);
+            if (existing == null || existing.EntityId != entityId)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Address ID [{addressId}] not found for Entity ID [{entityId}]";
+                return r;
+            }
+
+            var result = repository!.DeleteEntityAddressById(addressId);
+            r.EntityAddress = result;
+            return r;
         }
     }
 }

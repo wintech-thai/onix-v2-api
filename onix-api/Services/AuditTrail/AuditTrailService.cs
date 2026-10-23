@@ -18,5 +18,11 @@ namespace Its.Onix.Api.Services
         {
             return await repository.GetByRowId(rowId);
         }
+
+        //x088 : merchant ดู audit trail ได้เฉพาะของ org ตัวเองเท่านั้น (ต่างจาก Admin ที่ดูได้ทุก org)
+        public async Task<List<MAuditTrack>> GetByRowId(string orgId, string rowId)
+        {
+            return await repository.GetByRowId(orgId, rowId);
+        }
     }
 }

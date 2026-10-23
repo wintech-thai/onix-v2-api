@@ -9,5 +9,8 @@ namespace Its.Onix.Api.ViewsModels
         public string? Direction { get; set; }
         public string? Status { get; set; }
         public bool? IsPeerToPeer { get; set; }
+
+        //x088 : merchant แบบ MerchantOwn ให้เห็น Unidentified tx (OrgId ยังเป็น global) ของ bank account ตัวเองได้ด้วย แม้ยังไม่ approve
+        public List<string>? IncludeUnidentifiedForBankAccountIds { get; set; }
     }
 }

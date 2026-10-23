@@ -11,17 +11,23 @@ namespace Its.Onix.Api.Services
         private readonly IAccountDocRepository repository = null!;
         private readonly IItemService _itemService;
         private readonly IPointRuleService _pointRuleService;
+        private readonly IDocumentNumberService _documentNumberService;
+        private readonly IEntityRepository _entityRepository;
         private readonly IRedisHelper _redis;
 
         public AccountDocService(
             IAccountDocRepository repo,
             IItemService itemService,
             IPointRuleService pointRuleService,
+            IDocumentNumberService documentNumberService,
+            IEntityRepository entityRepository,
             IRedisHelper redis) : base()
         {
             repository = repo;
             _itemService = itemService;
             _pointRuleService = pointRuleService;
+            _documentNumberService = documentNumberService;
+            _entityRepository = entityRepository;
             _redis = redis;
         }
 
@@ -35,14 +41,6 @@ namespace Its.Onix.Api.Services
                 Description = "Success",
             };
 
-            if (string.IsNullOrEmpty(ad.Code))
-            {
-                r.Status = "CODE_MISSING";
-                r.Description = $"Document code is missing!!!";
-
-                return r;
-            }
-
             if (string.IsNullOrEmpty(ad.DocumentType))
             {
                 r.Status = "DOCTYPE_MISSING";
@@ -51,13 +49,49 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var isDocNoExist = await repository.IsAccountDocNoExist(ad.Code!);
-            if (isDocNoExist)
+            if (string.IsNullOrEmpty(ad.EntityId) || !ServiceUtils.IsGuidValid(ad.EntityId))
             {
-                r.Status = "DOC_NO_DUPLICATE";
-                r.Description = $"Document number [{ad.Code}] is duplicate!!!";
+                r.Status = "CUSTOMER_MISSING";
+                r.Description = $"Customer is missing or invalid!!!";
 
                 return r;
+            }
+
+            _entityRepository.SetCustomOrgId(orgId);
+            var customer = _entityRepository.GetEntityById(ad.EntityId);
+            if (customer == null)
+            {
+                r.Status = "CUSTOMER_NOTFOUND";
+                r.Description = $"Customer ID [{ad.EntityId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            try
+            {
+                ad.DocumentNo = await _documentNumberService.GetDocumentNumber(orgId, ad.DocumentType);
+            }
+            catch (KeyNotFoundException)
+            {
+                r.Status = "DOCTYPE_NOT_CONFIGURED";
+                r.Description = $"Document number is not configured for type [{ad.DocumentType}]. Please add it in Document Number settings first.";
+
+                return r;
+            }
+            catch (InvalidOperationException)
+            {
+                r.Status = "DOCNO_LOCK_FAILED";
+                r.Description = "Unable to generate document number right now, please try again.";
+
+                return r;
+            }
+
+            ad.DocumentDate ??= DateTime.UtcNow;
+
+            //ขายเชื่อ: คำนวณวันครบกำหนดชำระจาก credit term ของลูกค้า (ถ้าลูกค้าไม่มีกำหนดไว้ ปล่อยว่าง ให้ไปกำหนดเองที่เอกสาร)
+            if (ad.DocumentType == "CreditInvoice" && ad.DueDate == null && customer.CreditTermDay.HasValue)
+            {
+                ad.DueDate = ad.DocumentDate!.Value.AddDays(customer.CreditTermDay.Value);
             }
 
             var result = await repository!.AddAccountDoc(ad);
@@ -72,42 +106,12 @@ namespace Its.Onix.Api.Services
 
             var r = new MVAccountDoc()
             {
-                Status = "SUCCESS",
+                Status = "OK",
                 Description = "Success",
             };
 
-            if (!ServiceUtils.IsGuidValid(accountDocId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Account document ID [{accountDocId}] format is invalid";
-
-                return r;
-            }
-
-            if (string.IsNullOrEmpty(ad.Code))
-            {
-                r.Status = "CODE_MISSING";
-                r.Description = $"Document code is missing!!!";
-
-                return r;
-            }
-
-            var acd = await repository.GetAccountDocById(accountDocId);
-            if (acd == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Account document ID [{accountDocId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-
-            if (acd.Status == "Approved")
-            {
-                r.Status = "ALREADY_APPROVED";
-                r.Description = $"Account document ID [{accountDocId}] is already approved and cannot be changed";
-
-                return r;
-            }
+            var failure = await ValidatePendingOrNull(orgId, accountDocId, " and can no longer be edited");
+            if (failure != null) return failure;
 
             var result = await repository!.UpdateAccountDocById(accountDocId, ad);
             if (result == null)
@@ -126,50 +130,60 @@ namespace Its.Onix.Api.Services
         {
             repository!.SetCustomOrgId(orgId);
 
-            var r = new MVAccountDoc()
-            {
-                Status = "SUCCESS",
-                Description = "Success",
-            };
-
-            if (!ServiceUtils.IsGuidValid(accountDocId))
-            {
-                r.Status = "UUID_INVALID";
-                r.Description = $"Account document ID [{accountDocId}] format is invalid";
-
-                return r;
-            }
-
-            var acd = await repository.GetAccountDocById(accountDocId);
-            if (acd == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Account document ID [{accountDocId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
-
-            if (acd.Status == "Approved")
-            {
-                r.Status = "ALREADY_APPROVED";
-                r.Description = $"Account document ID [{accountDocId}] is already approved";
-
-                return r;
-            }
+            var failure = await ValidatePendingOrNull(orgId, accountDocId, "");
+            if (failure != null) return failure;
 
             var result = await repository!.ApproveAccountDocById(accountDocId);
-            if (result == null)
-            {
-                r.Status = "NOTFOUND";
-                r.Description = $"Account document ID [{accountDocId}] not found for the organization [{orgId}]";
-
-                return r;
-            }
 
             //TODO : Implement here to process point deduction or addition base on document type
 
-            r.AccountDoc = result;
-            return r;
+            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+        }
+
+        public async Task<MVAccountDoc> CancelAccountDocById(string orgId, string accountDocId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var failure = await ValidatePendingOrNull(orgId, accountDocId, "");
+            if (failure != null) return failure;
+
+            var result = await repository!.CancelAccountDocById(accountDocId);
+            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+        }
+
+        // Shared by Update/Approve/Cancel — all three require the doc to still be Pending.
+        private async Task<MVAccountDoc?> ValidatePendingOrNull(string orgId, string accountDocId, string statusMessageSuffix)
+        {
+            if (!ServiceUtils.IsGuidValid(accountDocId))
+            {
+                return new MVAccountDoc()
+                {
+                    Status = "UUID_INVALID",
+                    Description = $"Account document ID [{accountDocId}] format is invalid",
+                };
+            }
+
+            var existing = await repository.GetAccountDocById(accountDocId);
+            if (existing == null)
+            {
+                return new MVAccountDoc()
+                {
+                    Status = "NOTFOUND",
+                    Description = $"Account document ID [{accountDocId}] not found for the organization [{orgId}]",
+                };
+            }
+
+            if (!await repository.IsAccountDocPending(accountDocId))
+            {
+                return new MVAccountDoc()
+                {
+                    Status = "INVALID_STATUS",
+                    Description = $"Account document [{existing.DocumentNo}] is already [{existing.Status}]{statusMessageSuffix}",
+                    AccountDoc = existing,
+                };
+            }
+
+            return null;
         }
 
         public async Task<MVAccountDoc> DeleteAccountDocById(string orgId, string accountDocId)

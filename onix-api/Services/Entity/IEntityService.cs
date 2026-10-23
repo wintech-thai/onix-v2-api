@@ -21,5 +21,9 @@ namespace Its.Onix.Api.Services
         public MVJob? SendCustomerResetPasswordEmail(string orgId, string entityId);
         public MVEntity? UpdateUserStatusById(string orgId, string entityId, string status);
         public MVCustomerUser VerifyUserIsCustomer(string userName);
+        public List<MEntityAddress> GetEntityAddressesByEntityId(string orgId, string entityId);
+        public MVEntityAddress AddEntityAddress(string orgId, string entityId, MEntityAddress address);
+        public MVEntityAddress UpdateEntityAddressById(string orgId, string entityId, string addressId, MEntityAddress address);
+        public MVEntityAddress DeleteEntityAddressById(string orgId, string entityId, string addressId);
     }
 }

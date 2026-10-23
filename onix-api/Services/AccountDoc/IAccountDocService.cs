@@ -9,6 +9,7 @@ namespace Its.Onix.Api.Services
         public Task<MVAccountDoc> AddAccountDoc(string orgId, MAccountDoc ad);
         public Task<MVAccountDoc> UpdateAccountDocById(string orgId, string accountDocId, MAccountDoc ad);
         public Task<MVAccountDoc> ApproveAccountDocById(string orgId, string accountDocId);
+        public Task<MVAccountDoc> CancelAccountDocById(string orgId, string accountDocId);
         public Task<MVAccountDoc> DeleteAccountDocById(string orgId, string accountDocId);
         public Task<List<MAccountDoc>> GetAccountDocs(string orgId, VMAccountDoc param);
         public Task<int> GetAccountDocCount(string orgId, VMAccountDoc param);

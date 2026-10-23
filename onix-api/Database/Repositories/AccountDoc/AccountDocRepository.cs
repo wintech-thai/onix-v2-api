@@ -116,60 +116,142 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(accountDocId);
 
-            var arr = await (from ai in context!.AccountDocItems
-                       join it in context.Items!
-                       on ai.ProductId equals it.Id.ToString() into items
-                       from item in items.DefaultIfEmpty()
-                       select new MAccountDocItem
-                       {
-                            Id = ai.Id,
-                            OrgId = ai.OrgId,
-                            AccountDocId = ai.AccountDocId,
-                            ProductId = ai.ProductId,
-                            IncentiveRate = ai.IncentiveRate,
-                            IncentiveTotalPrice = ai.IncentiveTotalPrice,
-                            Tags = ai.Tags,
-                            Quantity = ai.Quantity,
-                            UnitPrice = ai.UnitPrice,
-                            TotalPrice = ai.TotalPrice,
-                            ProductCode = item != null ? item.Code : "",
-                            ProductDesc = item != null ? item.Description : "",
-                       })
-                .Where(ai => ai.AccountDocId!.Equals(id) && ai.OrgId!.Equals(orgId))
+            // ProductCode/ProductDesc ถูก denormalize เก็บไว้ตอนบันทึกแล้ว (ดู SyncAccountDocItems)
+            // ไม่ต้อง join สด เพราะแถวแบบ Custom ไม่มี master record ให้ join
+            var arr = await context!.AccountDocItems!
+                .Where(ai => ai.AccountDocId!.Equals(id.ToString()) && ai.OrgId!.Equals(orgId))
                 .OrderByDescending(e => e.CreatedDate)
                 .ToListAsync();
 
             return arr;
         }
 
+        // Reused by Add (existing items always empty) and Update (real reconciliation) — same
+        // diff-sync idea as InventoryDocRepository.SyncInventoryDocItems.
+        private async Task SyncAccountDocItems(Guid accountDocId, List<MAccountDocItem>? incomingItems)
+        {
+            var incoming = incomingItems ?? new List<MAccountDocItem>();
+            var existingItems = await context!.AccountDocItems!
+                .Where(i => i.AccountDocId!.Equals(accountDocId.ToString()) && i.OrgId!.Equals(orgId))
+                .ToListAsync();
+
+            var incomingIds = incoming.Where(i => i.Id.HasValue).Select(i => i.Id!.Value).ToHashSet();
+
+            foreach (var existing in existingItems)
+            {
+                if (!existing.Id.HasValue || !incomingIds.Contains(existing.Id.Value))
+                {
+                    context!.AccountDocItems!.Remove(existing);
+                }
+            }
+
+            foreach (var item in incoming)
+            {
+                var existing = item.Id.HasValue
+                    ? existingItems.FirstOrDefault(e => e.Id == item.Id)
+                    : null;
+
+                if (existing != null)
+                {
+                    existing.ProductId = item.ProductId;
+                    existing.ProductType = item.ProductType;
+                    existing.ProductCode = item.ProductCode;
+                    existing.ProductDesc = item.ProductDesc;
+                    existing.Quantity = item.Quantity;
+                    existing.UnitPrice = item.UnitPrice;
+                    existing.TotalPrice = item.TotalPrice;
+                    existing.Tags = item.Tags;
+                    existing.UpdatedDate = DateTime.UtcNow;
+                }
+                else
+                {
+                    item.Id = Guid.NewGuid();
+                    item.OrgId = orgId;
+                    item.AccountDocId = accountDocId.ToString();
+                    item.CreatedDate = DateTime.UtcNow;
+                    item.UpdatedDate = DateTime.UtcNow;
+                    await context!.AccountDocItems!.AddAsync(item);
+                }
+            }
+
+            await context!.SaveChangesAsync();
+
+            var newTotal = await context!.AccountDocItems!
+                .Where(i => i.AccountDocId!.Equals(accountDocId.ToString()) && i.OrgId!.Equals(orgId))
+                .SumAsync(i => i.TotalPrice ?? 0);
+
+            var doc = await context!.AccountDocs!.FirstOrDefaultAsync(d => d.Id!.Equals(accountDocId) && d.OrgId!.Equals(orgId));
+            if (doc != null)
+            {
+                doc.TotalPrice = newTotal;
+                await context!.SaveChangesAsync();
+            }
+        }
+
+        // Callers (the service layer) must check IsAccountDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
         public async Task<MAccountDoc?> UpdateAccountDocById(string accountDocId, MAccountDoc ad)
         {
             Guid id = Guid.Parse(accountDocId);
             var existing = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
-            if (existing != null)
-            {
-                existing.DocumentDate = ad.DocumentDate;
-                existing.Code = ad.Code;
-                existing.Description = ad.Description;
-                existing.EntityId = ad.EntityId;
-                existing.Tags = ad.Tags;
-            }
+            if (existing == null) return null;
 
+            existing.DocumentDate = ad.DocumentDate;
+            existing.DueDate = ad.DueDate;
+            existing.Description = ad.Description;
+            existing.EntityId = ad.EntityId;
+            existing.Tags = ad.Tags;
+            existing.PaymentMethod = ad.PaymentMethod;
+            existing.PaidAmount = ad.PaidAmount;
+            existing.UpdatedDate = DateTime.UtcNow;
             await context.SaveChangesAsync();
+
+            await SyncAccountDocItems(existing.Id!.Value, ad.Items);
+
+            existing.Items = await context!.AccountDocItems!
+                .Where(i => i.AccountDocId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToListAsync();
+
             return existing;
         }
 
+        // Callers (the service layer) must check IsAccountDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
         public async Task<MAccountDoc?> ApproveAccountDocById(string accountDocId)
         {
             Guid id = Guid.Parse(accountDocId);
             var existing = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
-            if (existing != null)
-            {
-                existing.Status = "Approved";
-            }
+            if (existing == null) return null;
 
+            var now = DateTime.UtcNow;
+            existing.Status = "Approved";
+            existing.ApprovedDate = now;
+            existing.StatusDate = now;
             await context.SaveChangesAsync();
+
             return existing;
+        }
+
+        // Callers (the service layer) must check IsAccountDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public async Task<MAccountDoc?> CancelAccountDocById(string accountDocId)
+        {
+            Guid id = Guid.Parse(accountDocId);
+            var existing = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing == null) return null;
+
+            existing.Status = "Cancelled";
+            existing.StatusDate = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+
+            return existing;
+        }
+
+        public async Task<bool> IsAccountDocPending(string accountDocId)
+        {
+            Guid id = Guid.Parse(accountDocId);
+            var doc = await context!.AccountDocs!.FirstOrDefaultAsync(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            return doc != null && doc.Status == "Pending";
         }
 
         public async Task<MAccountDoc?> DeleteAccountDocById(string accountDocId)
@@ -195,10 +277,25 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<MAccountDoc> AddAccountDoc(MAccountDoc ad)
         {
+            var items = ad.Items;
+            ad.Items = null;
+
+            ad.Id = Guid.NewGuid();
             ad.OrgId = orgId;
+            ad.Status = "Pending";
+            ad.CreatedDate = DateTime.UtcNow;
+            ad.UpdatedDate = DateTime.UtcNow;
+            ad.ApprovedDate = null;
+            ad.StatusDate = null;
 
             await context!.AccountDocs!.AddAsync(ad);
             await context.SaveChangesAsync();
+
+            await SyncAccountDocItems(ad.Id!.Value, items);
+
+            ad.Items = await context!.AccountDocItems!
+                .Where(i => i.AccountDocId!.Equals(ad.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToListAsync();
 
             return ad;
         }
@@ -228,7 +325,48 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(docTypePd);
             }
 
+            if (!string.IsNullOrEmpty(param.DocumentStatus))
+            {
+                pd = pd.And(p => p.Status!.Equals(param.DocumentStatus));
+            }
+
+            if (!string.IsNullOrEmpty(param.EntityId))
+            {
+                pd = pd.And(p => p.EntityId!.Equals(param.EntityId));
+            }
+
+            if (param.FromDate.HasValue)
+            {
+                pd = pd.And(p => p.CreatedDate >= param.FromDate.Value);
+            }
+
+            if (param.ToDate.HasValue)
+            {
+                pd = pd.And(p => p.CreatedDate <= param.ToDate.Value);
+            }
+
             return pd;
+        }
+
+        private async Task PopulateEntityInfo(IEnumerable<MAccountDoc> docs)
+        {
+            var list = docs.ToList();
+            var entityIds = list.Where(d => !string.IsNullOrEmpty(d.EntityId)).Select(d => Guid.Parse(d.EntityId!)).Distinct().ToList();
+            if (entityIds.Count == 0) return;
+
+            var entities = await context!.Entities!
+                .Where(e => e.OrgId!.Equals(orgId) && entityIds.Contains(e.Id!.Value))
+                .ToDictionaryAsync(e => e.Id!.Value, e => e);
+
+            foreach (var d in list)
+            {
+                if (string.IsNullOrEmpty(d.EntityId)) continue;
+                if (entities.TryGetValue(Guid.Parse(d.EntityId), out var entity))
+                {
+                    d.EntityCode = entity.Code;
+                    d.EntityName = entity.Name;
+                }
+            }
         }
 
         public async Task<List<MAccountDoc>> GetAccountDocs(VMAccountDoc param)
@@ -261,6 +399,8 @@ namespace Its.Onix.Api.Database.Repositories
                 r.DocumentParams = "";
             }
 
+            await PopulateEntityInfo(result);
+
             return result;
         }
 
@@ -276,6 +416,15 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(accountDocId);
             var u = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (u == null) return null;
+
+            u.Items = await context!.AccountDocItems!
+                .Where(i => i.AccountDocId!.Equals(u.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .OrderByDescending(i => i.CreatedDate)
+                .ToListAsync();
+
+            await PopulateEntityInfo([u]);
+
             return u;
         }
     }

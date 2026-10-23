@@ -8,5 +8,7 @@ namespace Its.Onix.Api.ViewsModels
         public string? FullTextSearch { get; set; }
         public int? EntityType { get; set; }
         public int? EntityCategory { get; set; }
+        public string? CustomerTypeId { get; set; }
+        public string? CustomerGroupId { get; set; }
     }
 }

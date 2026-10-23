@@ -7,5 +7,7 @@ namespace Its.Onix.Api.ViewsModels
     {
         public string? FullTextSearch { get; set; }
         public string? DocumentType { get; set; }
+        public string? DocumentStatus { get; set; }
+        public string? EntityId { get; set; }
     }
 }

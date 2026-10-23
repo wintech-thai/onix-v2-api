@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
 using Its.Onix.Api.Models;
+using Its.Onix.Api.ModelsViews;
 using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
@@ -14,20 +15,38 @@ namespace Its.Onix.Api.Controllers
     public class AdminPaymentTxController : ControllerBase
     {
         private readonly IPaymentTransactionService svc;
+        private readonly IMerchantService _merchantSvc;
         private readonly IJobService _jobService;
 
         [ExcludeFromCodeCoverage]
-        public AdminPaymentTxController(IPaymentTransactionService service, IJobService jobService)
+        public AdminPaymentTxController(IPaymentTransactionService service, IMerchantService merchantService, IJobService jobService)
         {
             svc = service;
+            _merchantSvc = merchantService;
             _jobService = jobService;
         }
 
+        //x088 : ห้าม Admin approve payment tx ให้ merchant แบบ MerchantOwn เพราะ merchant นั้นดูแล custody เงินของตัวเอง
         [ExcludeFromCodeCoverage]
         [HttpPost]
-        [Route("org/global/action/ApproveUnidentifiedPaymentTx/{paymentTransactionId}/{merchantId}")] 
+        [Route("org/global/action/ApproveUnidentifiedPaymentTx/{paymentTransactionId}/{merchantId}")]
         public async Task<IActionResult> ApproveUnidentifiedPaymentTx(string paymentTransactionId, string merchantId)
         {
+            var mcVm = await _merchantSvc.GetMerchantById("notused", merchantId);
+            if (mcVm.Status != "OK")
+            {
+                return Ok(mcVm);
+            }
+
+            if (mcVm.Merchant?.PayInBankCustodyType == "MerchantOwn")
+            {
+                return Ok(new MVPaymentTransaction
+                {
+                    Status = "ERROR_MERCHANT_OWN_NOT_ALLOWED",
+                    Description = $"Merchant ID [{merchantId}] is MerchantOwn custody type, this action is only allowed from the Merchant app"
+                });
+            }
+
             var result = await svc.ApproveUnidentifiedPaymentTx("global", paymentTransactionId, merchantId);
             return Ok(result);
         }
