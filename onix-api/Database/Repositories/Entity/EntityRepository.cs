@@ -452,7 +452,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetEntityCountV2(VMEntity param)
         {
             var predicate = EntityPredicate(param);
-            var cnt = await context!.Entities!.Where(predicate).AsExpandable().CountAsync();
+            var cnt = await context!.Entities!.Where(predicate).CountAsync();
 
             return cnt;
         }
@@ -473,7 +473,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = EntityPredicate(param!);
-            var arr = await context!.Entities!.Where(predicate).AsExpandable()
+            var arr = await context!.Entities!.Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
