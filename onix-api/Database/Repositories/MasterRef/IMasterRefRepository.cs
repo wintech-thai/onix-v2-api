@@ -11,11 +11,11 @@ namespace Its.Onix.Api.Database.Repositories
         public IEnumerable<MMasterRef> GetMasterRefs(VMMasterRef param);
         public MMasterRef GetMasterRefById(string masterRefId);
         public MMasterRef? DeleteMasterRefById(string masterRefId);
-        public bool IsMasterRefCodeExist(string masterRefName);
+        public bool IsMasterRefCodeExist(string masterRefName, string refType);
         public MMasterRef? UpdateMasterRefById(string masterRefId, MMasterRef masterRef);
 
         // V2 — async
-        public Task<bool> IsMasterRefCodeExistV2(string code);
+        public Task<bool> IsMasterRefCodeExistV2(string code, string refType);
         public Task<MMasterRef> AddMasterRefV2(MMasterRef masterRef);
         public Task<int> GetMasterRefCountV2(VMMasterRef param);
         public Task<List<MMasterRef>> GetMasterRefsV2(VMMasterRef param);

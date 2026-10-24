@@ -100,10 +100,10 @@ namespace Its.Onix.Api.Database.Repositories
             return u!;
         }
 
-        public bool IsMasterRefCodeExist(string code)
+        public bool IsMasterRefCodeExist(string code, string refType)
         {
             var cnt = context!.MasterRefs!.Where(p => p!.Code!.Equals(code)
-                && p!.OrgId!.Equals(orgId)).Count();
+                && p!.RefType!.Equals(refType) && p!.OrgId!.Equals(orgId)).Count();
 
             return cnt >= 1;
         }
@@ -141,9 +141,9 @@ namespace Its.Onix.Api.Database.Repositories
 
         // ──────────────────────────── V2 — async ────────────────────────────
 
-        public async Task<bool> IsMasterRefCodeExistV2(string code)
+        public async Task<bool> IsMasterRefCodeExistV2(string code, string refType)
         {
-            var exists = await context!.MasterRefs!.AsExpandable().AnyAsync(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId));
+            var exists = await context!.MasterRefs!.AsExpandable().AnyAsync(p => p!.Code!.Equals(code) && p!.RefType!.Equals(refType) && p!.OrgId!.Equals(orgId));
             return exists;
         }
 

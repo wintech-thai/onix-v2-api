@@ -30,7 +30,7 @@ namespace Its.Onix.Api.Services
 
             var r = new MVMasterRef();
 
-            var isExist = repository!.IsMasterRefCodeExist(masterRef.Code!);
+            var isExist = repository!.IsMasterRefCodeExist(masterRef.Code!, masterRef.RefType!);
 
             if (isExist)
             {
@@ -207,7 +207,7 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var isExist = await repository!.IsMasterRefCodeExistV2(masterRef.Code);
+            var isExist = await repository!.IsMasterRefCodeExistV2(masterRef.Code, masterRef.RefType!);
             if (isExist)
             {
                 r.Status = "DUPLICATE";

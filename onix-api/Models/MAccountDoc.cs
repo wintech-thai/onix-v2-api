@@ -54,6 +54,27 @@ namespace Its.Onix.Api.Models
         [Column("total_price")]
         public double? TotalPrice { get; set; } /* ยอดรวมทุกรายการ ก่อนส่วนลด ก่อน vat */
 
+        [Column("discount_amount")]
+        public double? DiscountAmount { get; set; } /* รวม item discount ทุกรายการ */
+
+        [Column("net_amount")]
+        public double? NetAmount { get; set; } /* TotalPrice - DiscountAmount */
+
+        [Column("vat_rate")]
+        public double? VatRate { get; set; } /* %, default 0 */
+
+        [Column("vat_amount")]
+        public double? VatAmount { get; set; } /* รวม item VAT ทุกรายการ */
+
+        [Column("total_with_vat")]
+        public double? TotalWithVat { get; set; } /* NetAmount + VatAmount */
+
+        [Column("withholding_tax_amount")]
+        public double? WithholdingTaxAmount { get; set; } /* รวม item หัก ณ ที่จ่าย ทุกรายการ */
+
+        [Column("grand_total")]
+        public double? GrandTotal { get; set; } /* TotalWithVat - WithholdingTaxAmount */
+
         [Column("payment_method")]
         public string? PaymentMethod { get; set; } /* ขายสด: Cash, Transfer, QR ฯลฯ */
 

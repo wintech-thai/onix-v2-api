@@ -47,7 +47,34 @@ namespace Its.Onix.Api.Models
         public double? UnitPrice { get; set; }
 
         [Column("total_price")]
-        public double? TotalPrice { get; set; }
+        public double? TotalPrice { get; set; } /* quantity * unit_price ก่อนหักส่วนลด */
+
+        [Column("item_discount_type")]
+        public string? ItemDiscountType { get; set; } /* Percent, Amount */
+
+        [Column("item_discount_value")]
+        public double? ItemDiscountValue { get; set; } /* ค่าที่กรอกดิบ ๆ (% หรือจำนวนเงิน ตาม ItemDiscountType) */
+
+        [Column("item_discount_amount")]
+        public double? ItemDiscountAmount { get; set; } /* คำนวณเป็นจำนวนเงินเสมอ */
+
+        [Column("net_amount")]
+        public double? NetAmount { get; set; } /* TotalPrice - ItemDiscountAmount, ฐานคำนวณ VAT/หัก ณ ที่จ่าย */
+
+        [Column("vat_enabled")]
+        public bool? VatEnabled { get; set; }
+
+        [Column("vat_amount")]
+        public double? VatAmount { get; set; } /* NetAmount * (AccountDoc.VatRate / 100), ถ้า VatEnabled */
+
+        [Column("withholding_tax_enabled")]
+        public bool? WithholdingTaxEnabled { get; set; }
+
+        [Column("withholding_tax_rate")]
+        public double? WithholdingTaxRate { get; set; } /* default 3 */
+
+        [Column("withholding_tax_amount")]
+        public double? WithholdingTaxAmount { get; set; } /* NetAmount * (WithholdingTaxRate / 100), ถ้า WithholdingTaxEnabled */
 
         [Column("document_params")]
         public string? DocumentParams { get; set; } /* เป็น JSON string บอกว่า price calculate อย่างไร */

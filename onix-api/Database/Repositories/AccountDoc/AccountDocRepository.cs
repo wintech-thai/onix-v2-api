@@ -126,9 +126,31 @@ namespace Its.Onix.Api.Database.Repositories
             return arr;
         }
 
+        // x011 ปรับแก้ #7: item discount (%/จำนวนเงิน) + VAT + หัก ณ ที่จ่าย ต่อ item
+        // คำนวณจาก NetAmount = TotalPrice(gross) - ItemDiscountAmount, ใช้ header VatRate เดียวกันทุก item
+        private static void CalculateItemAmounts(MAccountDocItem item, double vatRate)
+        {
+            var gross = (item.Quantity ?? 0) * (item.UnitPrice ?? 0);
+            item.TotalPrice = gross;
+
+            var discountAmount = item.ItemDiscountType switch
+            {
+                "Percent" => gross * ((item.ItemDiscountValue ?? 0) / 100.0),
+                "Amount" => item.ItemDiscountValue ?? 0,
+                _ => 0,
+            };
+            item.ItemDiscountAmount = discountAmount;
+
+            var netAmount = gross - discountAmount;
+            item.NetAmount = netAmount;
+
+            item.VatAmount = (item.VatEnabled == true) ? netAmount * (vatRate / 100.0) : 0;
+            item.WithholdingTaxAmount = (item.WithholdingTaxEnabled == true) ? netAmount * ((item.WithholdingTaxRate ?? 0) / 100.0) : 0;
+        }
+
         // Reused by Add (existing items always empty) and Update (real reconciliation) — same
         // diff-sync idea as InventoryDocRepository.SyncInventoryDocItems.
-        private async Task SyncAccountDocItems(Guid accountDocId, List<MAccountDocItem>? incomingItems)
+        private async Task SyncAccountDocItems(Guid accountDocId, List<MAccountDocItem>? incomingItems, double vatRate)
         {
             var incoming = incomingItems ?? new List<MAccountDocItem>();
             var existingItems = await context!.AccountDocItems!
@@ -147,6 +169,8 @@ namespace Its.Onix.Api.Database.Repositories
 
             foreach (var item in incoming)
             {
+                CalculateItemAmounts(item, vatRate);
+
                 var existing = item.Id.HasValue
                     ? existingItems.FirstOrDefault(e => e.Id == item.Id)
                     : null;
@@ -161,6 +185,15 @@ namespace Its.Onix.Api.Database.Repositories
                     existing.UnitPrice = item.UnitPrice;
                     existing.TotalPrice = item.TotalPrice;
                     existing.Tags = item.Tags;
+                    existing.ItemDiscountType = item.ItemDiscountType;
+                    existing.ItemDiscountValue = item.ItemDiscountValue;
+                    existing.ItemDiscountAmount = item.ItemDiscountAmount;
+                    existing.NetAmount = item.NetAmount;
+                    existing.VatEnabled = item.VatEnabled;
+                    existing.VatAmount = item.VatAmount;
+                    existing.WithholdingTaxEnabled = item.WithholdingTaxEnabled;
+                    existing.WithholdingTaxRate = item.WithholdingTaxRate;
+                    existing.WithholdingTaxAmount = item.WithholdingTaxAmount;
                     existing.UpdatedDate = DateTime.UtcNow;
                 }
                 else
@@ -176,14 +209,21 @@ namespace Its.Onix.Api.Database.Repositories
 
             await context!.SaveChangesAsync();
 
-            var newTotal = await context!.AccountDocItems!
+            var allItems = await context!.AccountDocItems!
                 .Where(i => i.AccountDocId!.Equals(accountDocId.ToString()) && i.OrgId!.Equals(orgId))
-                .SumAsync(i => i.TotalPrice ?? 0);
+                .ToListAsync();
 
             var doc = await context!.AccountDocs!.FirstOrDefaultAsync(d => d.Id!.Equals(accountDocId) && d.OrgId!.Equals(orgId));
             if (doc != null)
             {
-                doc.TotalPrice = newTotal;
+                doc.VatRate = vatRate;
+                doc.TotalPrice = allItems.Sum(i => i.TotalPrice ?? 0);
+                doc.DiscountAmount = allItems.Sum(i => i.ItemDiscountAmount ?? 0);
+                doc.NetAmount = doc.TotalPrice - doc.DiscountAmount;
+                doc.VatAmount = allItems.Sum(i => i.VatAmount ?? 0);
+                doc.TotalWithVat = doc.NetAmount + doc.VatAmount;
+                doc.WithholdingTaxAmount = allItems.Sum(i => i.WithholdingTaxAmount ?? 0);
+                doc.GrandTotal = doc.TotalWithVat - doc.WithholdingTaxAmount;
                 await context!.SaveChangesAsync();
             }
         }
@@ -206,7 +246,7 @@ namespace Its.Onix.Api.Database.Repositories
             existing.UpdatedDate = DateTime.UtcNow;
             await context.SaveChangesAsync();
 
-            await SyncAccountDocItems(existing.Id!.Value, ad.Items);
+            await SyncAccountDocItems(existing.Id!.Value, ad.Items, ad.VatRate ?? 0);
 
             existing.Items = await context!.AccountDocItems!
                 .Where(i => i.AccountDocId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
@@ -291,7 +331,7 @@ namespace Its.Onix.Api.Database.Repositories
             await context!.AccountDocs!.AddAsync(ad);
             await context.SaveChangesAsync();
 
-            await SyncAccountDocItems(ad.Id!.Value, items);
+            await SyncAccountDocItems(ad.Id!.Value, items, ad.VatRate ?? 0);
 
             ad.Items = await context!.AccountDocItems!
                 .Where(i => i.AccountDocId!.Equals(ad.Id.ToString()) && i.OrgId!.Equals(orgId))

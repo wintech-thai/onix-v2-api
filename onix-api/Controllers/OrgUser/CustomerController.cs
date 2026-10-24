@@ -200,5 +200,109 @@ namespace Its.Onix.Api.Controllers
             Response.Headers.Append("CUST_STATUS", result!.Status);
             return Ok(result);
         }
+
+        // ──────────────────────────── V2 — async (please-erp-console) ────────────────────────────
+
+        [HttpPost]
+        [Route("org/{id}/action/AddCustomerV2")]
+        public async Task<MVEntity?> AddCustomerV2(string id, [FromBody] MEntity request)
+        {
+            request.EntityType = 1;
+            var result = await svc.AddEntityV2(id, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return result;
+        }
+
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteCustomerCascadeByIdV2/{entityId}")]
+        public async Task<IActionResult> DeleteCustomerCascadeByIdV2(string id, string entityId)
+        {
+            var result = await svc.DeleteEntityByIdV2(id, entityId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/UpdateCustomerByIdV2/{entityId}")]
+        public async Task<IActionResult> UpdateCustomerByIdV2(string id, string entityId, [FromBody] MEntity request)
+        {
+            request.EntityType = 1;
+            var result = await svc.UpdateEntityByIdV2(id, entityId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{id}/action/GetCustomerByIdV2/{entityId}")]
+        public async Task<MEntity?> GetCustomerByIdV2(string id, string entityId)
+        {
+            var result = await svc.GetEntityByIdV2(id, entityId);
+            return result;
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/GetCustomersV2")]
+        public async Task<IActionResult> GetCustomersV2(string id, [FromBody] VMEntity param)
+        {
+            if (param.Limit <= 0)
+            {
+                param.Limit = 100;
+            }
+
+            param.EntityType = 1;
+            var result = await svc.GetEntitiesV2(id, param);
+
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/GetCustomerCountV2")]
+        public async Task<IActionResult> GetCustomerCountV2(string id, [FromBody] VMEntity param)
+        {
+            param.EntityType = 1;
+            var result = await svc.GetEntityCountV2(id, param);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{id}/action/GetCustomerAddressesByEntityIdV2/{entityId}")]
+        public async Task<IActionResult> GetCustomerAddressesByEntityIdV2(string id, string entityId)
+        {
+            var result = await svc.GetEntityAddressesByEntityIdV2(id, entityId);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/AddCustomerAddressV2/{entityId}")]
+        public async Task<IActionResult> AddCustomerAddressV2(string id, string entityId, [FromBody] MEntityAddress request)
+        {
+            var result = await svc.AddEntityAddressV2(id, entityId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/{id}/action/UpdateCustomerAddressByIdV2/{entityId}/{addressId}")]
+        public async Task<IActionResult> UpdateCustomerAddressByIdV2(string id, string entityId, string addressId, [FromBody] MEntityAddress request)
+        {
+            var result = await svc.UpdateEntityAddressByIdV2(id, entityId, addressId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("org/{id}/action/DeleteCustomerAddressByIdV2/{entityId}/{addressId}")]
+        public async Task<IActionResult> DeleteCustomerAddressByIdV2(string id, string entityId, string addressId)
+        {
+            var result = await svc.DeleteEntityAddressByIdV2(id, entityId, addressId);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
     }
 }
