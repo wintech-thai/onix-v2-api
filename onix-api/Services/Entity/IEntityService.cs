@@ -25,5 +25,17 @@ namespace Its.Onix.Api.Services
         public MVEntityAddress AddEntityAddress(string orgId, string entityId, MEntityAddress address);
         public MVEntityAddress UpdateEntityAddressById(string orgId, string entityId, string addressId, MEntityAddress address);
         public MVEntityAddress DeleteEntityAddressById(string orgId, string entityId, string addressId);
+
+        // V2 — async
+        public Task<MEntity?> GetEntityByIdV2(string orgId, string entityId);
+        public Task<MVEntity> AddEntityV2(string orgId, MEntity entity);
+        public Task<MVEntity> UpdateEntityByIdV2(string orgId, string entityId, MEntity entity);
+        public Task<MVEntity> DeleteEntityByIdV2(string orgId, string entityId);
+        public Task<List<MEntity>> GetEntitiesV2(string orgId, VMEntity param);
+        public Task<int> GetEntityCountV2(string orgId, VMEntity param);
+        public Task<List<MEntityAddress>> GetEntityAddressesByEntityIdV2(string orgId, string entityId);
+        public Task<MVEntityAddress> AddEntityAddressV2(string orgId, string entityId, MEntityAddress address);
+        public Task<MVEntityAddress> UpdateEntityAddressByIdV2(string orgId, string entityId, string addressId, MEntityAddress address);
+        public Task<MVEntityAddress> DeleteEntityAddressByIdV2(string orgId, string entityId, string addressId);
     }
 }

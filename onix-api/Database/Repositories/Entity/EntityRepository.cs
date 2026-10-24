@@ -1,6 +1,7 @@
 using LinqKit;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ViewsModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace Its.Onix.Api.Database.Repositories
 {
@@ -392,6 +393,232 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             return result!;
+        }
+
+        // ──────────────────────────── V2 — async ────────────────────────────
+
+        private async Task PopulateCustomerRefCodesV2(IEnumerable<MEntity> entities)
+        {
+            var list = entities.ToList();
+            var refIds = list
+                .SelectMany(e => new[] { e.CustomerTypeId, e.CustomerGroupId })
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Select(id => Guid.Parse(id!))
+                .Distinct()
+                .ToList();
+
+            if (refIds.Count == 0) return;
+
+            var refs = await context!.MasterRefs!
+                .Where(r => r.OrgId!.Equals(orgId) && refIds.Contains(r.Id!.Value))
+                .ToDictionaryAsync(r => r.Id!.Value, r => r.Code);
+
+            foreach (var e in list)
+            {
+                if (!string.IsNullOrEmpty(e.CustomerTypeId) && refs.TryGetValue(Guid.Parse(e.CustomerTypeId), out var typeCode))
+                    e.CustomerTypeCode = typeCode;
+                if (!string.IsNullOrEmpty(e.CustomerGroupId) && refs.TryGetValue(Guid.Parse(e.CustomerGroupId), out var groupCode))
+                    e.CustomerGroupCode = groupCode;
+            }
+        }
+
+        public async Task<MEntity> AddEntityV2(MEntity item)
+        {
+            item.Id = Guid.NewGuid();
+            item.CreatedDate = DateTime.UtcNow;
+            item.UpdatedDate = DateTime.UtcNow;
+            item.OrgId = orgId;
+
+            var custId = item.Id.ToString();
+
+            var wallet = new MWallet()
+            {
+                OrgId = orgId,
+                Id = Guid.NewGuid(),
+                Name = custId,
+                Description = $"Auto created wallet of customer ID [{custId}]",
+                Tags = $"email={item.PrimaryEmail}",
+                CustomerId = custId,
+            };
+
+            await context!.Entities!.AddAsync(item);
+            await context!.Wallets!.AddAsync(wallet);
+
+            await context.SaveChangesAsync();
+
+            return item;
+        }
+
+        public async Task<int> GetEntityCountV2(VMEntity param)
+        {
+            var predicate = EntityPredicate(param);
+            var cnt = await context!.Entities!.Where(predicate).CountAsync();
+
+            return cnt;
+        }
+
+        public async Task<List<MEntity>> GetEntitiesV2(VMEntity param)
+        {
+            var limit = 0;
+            var offset = 0;
+
+            if (param.Offset > 0)
+            {
+                offset = param.Offset - 1;
+            }
+
+            if (param.Limit > 0)
+            {
+                limit = param.Limit;
+            }
+
+            var predicate = EntityPredicate(param!);
+            var arr = await context!.Entities!.Where(predicate)
+                .OrderByDescending(e => e.CreatedDate)
+                .Skip(offset)
+                .Take(limit)
+                .ToListAsync();
+
+            await PopulateCustomerRefCodesV2(arr);
+
+            return arr;
+        }
+
+        public async Task<MEntity?> GetEntityByIdV2(string itemId)
+        {
+            Guid id = Guid.Parse(itemId);
+
+            var u = await context!.Entities!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (u != null)
+            {
+                await PopulateCustomerRefCodesV2([u]);
+                u.Addresses = await context!.EntityAddresses!
+                    .Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(itemId))
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
+            }
+
+            return u;
+        }
+
+        public async Task<bool> IsEntityCodeExistV2(string code)
+        {
+            var cnt = await context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId)).CountAsync();
+            return cnt >= 1;
+        }
+
+        public async Task<bool> IsEntityCodeExistExcludingIdV2(string code, string entityId)
+        {
+            var id = Guid.Parse(entityId);
+            var cnt = await context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId) && !p!.Id!.Equals(id)).CountAsync();
+            return cnt >= 1;
+        }
+
+        public async Task<bool> IsPrimaryEmailExistV2(string email)
+        {
+            var cnt = await context!.Entities!.Where(p => p!.PrimaryEmail!.Equals(email) && p!.OrgId!.Equals(orgId)).CountAsync();
+            return cnt >= 1;
+        }
+
+        public async Task<MEntity?> DeleteEntityByIdV2(string entityId)
+        {
+            Guid id = Guid.Parse(entityId);
+
+            var r = await context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
+            if (r != null)
+            {
+                var addresses = context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(entityId));
+                context!.EntityAddresses!.RemoveRange(addresses);
+
+                context!.Entities!.Remove(r);
+                await context.SaveChangesAsync();
+            }
+
+            return r;
+        }
+
+        public async Task<MEntity?> UpdateEntityByIdV2(string itemId, MEntity item)
+        {
+            Guid id = Guid.Parse(itemId);
+            var result = await context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.Code = item.Code;
+                result.Name = item.Name;
+                result.Tags = item.Tags;
+                result.EntityType = item.EntityType;
+                result.EntityCategory = item.EntityCategory;
+                result.CustomerTypeId = item.CustomerTypeId;
+                result.CustomerGroupId = item.CustomerGroupId;
+                result.CreditTermDay = item.CreditTermDay;
+                result.CreditAmount = item.CreditAmount;
+                result.TaxId = item.TaxId;
+                result.NationalCardId = item.NationalCardId;
+                result.Content = item.Content;
+
+                result.UpdatedDate = DateTime.UtcNow;
+                await context.SaveChangesAsync();
+            }
+
+            return result;
+        }
+
+        public async Task<List<MEntityAddress>> GetEntityAddressesByEntityIdV2(string entityId)
+        {
+            return await context!.EntityAddresses!
+                .Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(entityId))
+                .OrderByDescending(a => a.CreatedDate)
+                .ToListAsync();
+        }
+
+        public async Task<MEntityAddress?> GetEntityAddressByIdV2(string addressId)
+        {
+            Guid id = Guid.Parse(addressId);
+            return await context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.Id!.Equals(id)).FirstOrDefaultAsync();
+        }
+
+        public async Task<MEntityAddress> AddEntityAddressV2(MEntityAddress address)
+        {
+            address.Id = Guid.NewGuid();
+            address.CreatedDate = DateTime.UtcNow;
+            address.UpdatedDate = DateTime.UtcNow;
+            address.OrgId = orgId;
+
+            await context!.EntityAddresses!.AddAsync(address);
+            await context.SaveChangesAsync();
+
+            return address;
+        }
+
+        public async Task<MEntityAddress?> UpdateEntityAddressByIdV2(string addressId, MEntityAddress address)
+        {
+            Guid id = Guid.Parse(addressId);
+            var result = await context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.AddressType = address.AddressType;
+                result.Address = address.Address;
+                result.UpdatedDate = DateTime.UtcNow;
+                await context!.SaveChangesAsync();
+            }
+
+            return result;
+        }
+
+        public async Task<MEntityAddress?> DeleteEntityAddressByIdV2(string addressId)
+        {
+            Guid id = Guid.Parse(addressId);
+            var result = await context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.Id!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                context!.EntityAddresses!.Remove(result);
+                await context.SaveChangesAsync();
+            }
+
+            return result;
         }
     }
 }

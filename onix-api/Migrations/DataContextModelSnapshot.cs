@@ -45,6 +45,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<double?>("DiscountAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("discount_amount");
+
                     b.Property<DateTime?>("DocumentDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("document_date");
@@ -68,6 +72,14 @@ namespace onix.api.Migrations
                     b.Property<string>("EntityId")
                         .HasColumnType("text")
                         .HasColumnName("entity_id");
+
+                    b.Property<double?>("GrandTotal")
+                        .HasColumnType("double precision")
+                        .HasColumnName("grand_total");
+
+                    b.Property<double?>("NetAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("net_amount");
 
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
@@ -101,9 +113,25 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("total_price");
 
+                    b.Property<double?>("TotalWithVat")
+                        .HasColumnType("double precision")
+                        .HasColumnName("total_with_vat");
+
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
+
+                    b.Property<double?>("VatAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<double?>("VatRate")
+                        .HasColumnType("double precision")
+                        .HasColumnName("vat_rate");
+
+                    b.Property<double?>("WithholdingTaxAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("withholding_tax_amount");
 
                     b.HasKey("Id");
 
@@ -150,6 +178,22 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("incentive_price");
 
+                    b.Property<double?>("ItemDiscountAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("item_discount_amount");
+
+                    b.Property<string>("ItemDiscountType")
+                        .HasColumnType("text")
+                        .HasColumnName("item_discount_type");
+
+                    b.Property<double?>("ItemDiscountValue")
+                        .HasColumnType("double precision")
+                        .HasColumnName("item_discount_value");
+
+                    b.Property<double?>("NetAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("net_amount");
+
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -189,6 +233,26 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_date");
+
+                    b.Property<double?>("VatAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("vat_amount");
+
+                    b.Property<bool?>("VatEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vat_enabled");
+
+                    b.Property<double?>("WithholdingTaxAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("withholding_tax_amount");
+
+                    b.Property<bool?>("WithholdingTaxEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("withholding_tax_enabled");
+
+                    b.Property<double?>("WithholdingTaxRate")
+                        .HasColumnType("double precision")
+                        .HasColumnName("withholding_tax_rate");
 
                     b.HasKey("Id");
 
@@ -2662,7 +2726,7 @@ namespace onix.api.Migrations
 
                     b.HasIndex("RefType");
 
-                    b.HasIndex("OrgId", "Code")
+                    b.HasIndex("OrgId", "RefType", "Code")
                         .IsUnique();
 
                     b.ToTable("MasterRefs");

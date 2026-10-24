@@ -759,5 +759,220 @@ namespace Its.Onix.Api.Services
             r.EntityAddress = result;
             return r;
         }
+
+        // ──────────────────────────── V2 — async ────────────────────────────
+
+        public async Task<MEntity?> GetEntityByIdV2(string orgId, string entityId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetEntityByIdV2(entityId);
+        }
+
+        public async Task<MVEntity> AddEntityV2(string orgId, MEntity entity)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntity();
+
+            var isCodeExist = await repository!.IsEntityCodeExistV2(entity.Code!);
+            if (isCodeExist)
+            {
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Entity code [{entity.Code}] is duplicate";
+
+                return r;
+            }
+
+            var isEmailExist = await repository!.IsPrimaryEmailExistV2(entity.PrimaryEmail!);
+            if (isEmailExist)
+            {
+                r.Status = "EMAIL_DUPLICATE";
+                r.Description = $"Email [{entity.PrimaryEmail}] is duplicate";
+
+                return r;
+            }
+
+            var result = await repository!.AddEntityV2(entity);
+
+            r.Status = "OK";
+            r.Description = "Success";
+            r.Entity = result;
+
+            return r;
+        }
+
+        public async Task<MVEntity> UpdateEntityByIdV2(string orgId, string entityId, MEntity entity)
+        {
+            var r = new MVEntity()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(entity.Code) && await repository!.IsEntityCodeExistExcludingIdV2(entity.Code, entityId))
+            {
+                r.Status = "CODE_DUPLICATE";
+                r.Description = $"Entity code [{entity.Code}] is duplicate";
+
+                return r;
+            }
+
+            var result = await repository!.UpdateEntityByIdV2(entityId, entity);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+
+                return r;
+            }
+
+            r.Entity = result;
+            return r;
+        }
+
+        public async Task<MVEntity> DeleteEntityByIdV2(string orgId, string entityId)
+        {
+            var r = new MVEntity()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+
+                return r;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var m = await repository!.DeleteEntityByIdV2(entityId);
+
+            r.Entity = m;
+            if (m == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+            }
+
+            return r;
+        }
+
+        public async Task<List<MEntity>> GetEntitiesV2(string orgId, VMEntity param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetEntitiesV2(param);
+
+            foreach (var entity in result)
+            {
+                entity.Content = "";
+            }
+
+            return result;
+        }
+
+        public async Task<int> GetEntityCountV2(string orgId, VMEntity param)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetEntityCountV2(param);
+        }
+
+        public async Task<List<MEntityAddress>> GetEntityAddressesByEntityIdV2(string orgId, string entityId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetEntityAddressesByEntityIdV2(entityId);
+        }
+
+        public async Task<MVEntityAddress> AddEntityAddressV2(string orgId, string entityId, MEntityAddress address)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntityAddress() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(entityId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Entity ID [{entityId}] format is invalid";
+                return r;
+            }
+
+            var entity = await repository!.GetEntityByIdV2(entityId);
+            if (entity == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Entity ID [{entityId}] not found for the organization [{orgId}]";
+                return r;
+            }
+
+            address.EntityId = entityId;
+            var result = await repository!.AddEntityAddressV2(address);
+
+            r.EntityAddress = result;
+            return r;
+        }
+
+        public async Task<MVEntityAddress> UpdateEntityAddressByIdV2(string orgId, string entityId, string addressId, MEntityAddress address)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntityAddress() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(addressId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Address ID [{addressId}] format is invalid";
+                return r;
+            }
+
+            var existing = await repository!.GetEntityAddressByIdV2(addressId);
+            if (existing == null || existing.EntityId != entityId)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Address ID [{addressId}] not found for Entity ID [{entityId}]";
+                return r;
+            }
+
+            var result = await repository!.UpdateEntityAddressByIdV2(addressId, address);
+            r.EntityAddress = result;
+            return r;
+        }
+
+        public async Task<MVEntityAddress> DeleteEntityAddressByIdV2(string orgId, string entityId, string addressId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVEntityAddress() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(addressId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Address ID [{addressId}] format is invalid";
+                return r;
+            }
+
+            var existing = await repository!.GetEntityAddressByIdV2(addressId);
+            if (existing == null || existing.EntityId != entityId)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Address ID [{addressId}] not found for Entity ID [{entityId}]";
+                return r;
+            }
+
+            var result = await repository!.DeleteEntityAddressByIdV2(addressId);
+            r.EntityAddress = result;
+            return r;
+        }
     }
 }

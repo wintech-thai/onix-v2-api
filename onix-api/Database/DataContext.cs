@@ -139,8 +139,9 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         modelBuilder.Entity<MScanItem>()
             .HasIndex(t => new { t.OrgId, t.Serial }).IsUnique();
 
+        // code unique ต่อ (OrgId, RefType) ไม่ใช่ทั้ง org
         modelBuilder.Entity<MMasterRef>()
-            .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
+            .HasIndex(t => new { t.OrgId, t.RefType, t.Code }).IsUnique();
 
         modelBuilder.Entity<MCycle>()
             .HasIndex(t => new { t.OrgId, t.Code }).IsUnique();
