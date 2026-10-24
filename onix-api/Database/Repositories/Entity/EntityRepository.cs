@@ -452,7 +452,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetEntityCountV2(VMEntity param)
         {
             var predicate = EntityPredicate(param);
-            var cnt = await context!.Entities!.AsExpandable().Where(predicate).CountAsync();
+            var cnt = await context!.Entities!.Where(predicate).AsExpandable().CountAsync();
 
             return cnt;
         }
@@ -473,7 +473,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = EntityPredicate(param!);
-            var arr = await context!.Entities!.AsExpandable().Where(predicate)
+            var arr = await context!.Entities!.Where(predicate).AsExpandable()
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
@@ -488,7 +488,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(itemId);
 
-            var u = await context!.Entities!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var u = await context!.Entities!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (u != null)
             {
                 await PopulateCustomerRefCodesV2([u]);
@@ -503,20 +503,20 @@ namespace Its.Onix.Api.Database.Repositories
 
         public async Task<bool> IsEntityCodeExistV2(string code)
         {
-            var cnt = await context!.Entities!.AsExpandable().Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId)).CountAsync();
+            var cnt = await context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId)).CountAsync();
             return cnt >= 1;
         }
 
         public async Task<bool> IsEntityCodeExistExcludingIdV2(string code, string entityId)
         {
             var id = Guid.Parse(entityId);
-            var cnt = await context!.Entities!.AsExpandable().Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId) && !p!.Id!.Equals(id)).CountAsync();
+            var cnt = await context!.Entities!.Where(p => p!.Code!.Equals(code) && p!.OrgId!.Equals(orgId) && !p!.Id!.Equals(id)).CountAsync();
             return cnt >= 1;
         }
 
         public async Task<bool> IsPrimaryEmailExistV2(string email)
         {
-            var cnt = await context!.Entities!.AsExpandable().Where(p => p!.PrimaryEmail!.Equals(email) && p!.OrgId!.Equals(orgId)).CountAsync();
+            var cnt = await context!.Entities!.Where(p => p!.PrimaryEmail!.Equals(email) && p!.OrgId!.Equals(orgId)).CountAsync();
             return cnt >= 1;
         }
 
@@ -524,7 +524,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(entityId);
 
-            var r = await context!.Entities!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
+            var r = await context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id.Equals(id)).FirstOrDefaultAsync();
             if (r != null)
             {
                 var addresses = context!.EntityAddresses!.Where(a => a.OrgId!.Equals(orgId) && a.EntityId!.Equals(entityId));
@@ -540,7 +540,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MEntity?> UpdateEntityByIdV2(string itemId, MEntity item)
         {
             Guid id = Guid.Parse(itemId);
-            var result = await context!.Entities!.AsExpandable().Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
+            var result = await context!.Entities!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id)).FirstOrDefaultAsync();
 
             if (result != null)
             {
