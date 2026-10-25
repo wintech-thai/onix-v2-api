@@ -17,18 +17,21 @@ namespace Its.Onix.Api.Controllers
         private readonly IMerchantService _merchantSvc;
         private readonly IBankAccountService _bankAccountSvc;
         private readonly IJobService _jobService;
+        private readonly RequestContext _requestContext;
 
         [ExcludeFromCodeCoverage]
         public AdminPaymentRequestController(
             IPaymentRequestService service,
             IMerchantService merchantService,
             IBankAccountService bankAccountService,
-            IJobService jobService)
+            IJobService jobService,
+            RequestContext requestContext)
         {
             svc = service;
             _merchantSvc = merchantService;
             _bankAccountSvc = bankAccountService;
             _jobService = jobService;
+            _requestContext = requestContext;
         }
 
         //x088 : merchant แบบ MerchantOwn สร้าง/approve/reject/edit payment request เองที่โปรแกรม Merchant เท่านั้น
@@ -72,7 +75,15 @@ namespace Its.Onix.Api.Controllers
                 return new MVPaymentRequest { Status = mcVm.Status, Description = mcVm.Description };
             }
 
-            return DenyIfMerchantIsOwn(mcVm.Merchant, merchantId);
+            var denyResult = DenyIfMerchantIsOwn(mcVm.Merchant, merchantId);
+            if (denyResult == null && !string.IsNullOrEmpty(mcVm.Merchant?.OrgId))
+            {
+                //x088 ปรับแก้ #1: stamp audit trail ด้วย org id จริงของ merchant แทน "global"
+                //(RequestContextMiddleware อ่าน OrgId จาก URL /admin-api/.../org/global/action/... ตรง ๆ เลยได้ "global" เสมอ)
+                _requestContext.OrgId = mcVm.Merchant!.OrgId;
+            }
+
+            return denyResult;
         }
 
         [ExcludeFromCodeCoverage]
@@ -104,6 +115,9 @@ namespace Its.Onix.Api.Controllers
                 mcVm.Description = "Organization ID is null or empty";
                 return Ok(mcVm);
             }
+
+            //x088 ปรับแก้ #1: stamp audit trail ด้วย org id จริงของ merchant แทน "global"
+            _requestContext.OrgId = mc.OrgId;
 
             request.MerchantId = merchantId;
             request.MerchantId2 = Guid.Parse(merchantId);
@@ -140,6 +154,9 @@ namespace Its.Onix.Api.Controllers
                 mcVm.Description = "Organization ID is null or empty";
                 return Ok(mcVm);
             }
+
+            //x088 ปรับแก้ #1: stamp audit trail ด้วย org id จริงของ merchant แทน "global"
+            _requestContext.OrgId = mc.OrgId;
 
             request.MerchantId = merchantId;
             request.MerchantId2 = Guid.Parse(merchantId);
@@ -383,6 +400,9 @@ namespace Its.Onix.Api.Controllers
                 return Ok(mcVm);
             }
 
+            //x088 ปรับแก้ #1: stamp audit trail ด้วย org id จริงของ merchant แทน "global"
+            _requestContext.OrgId = mc.OrgId;
+
             //Bank Account
             var baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
             if (baVm.Status != "OK")
@@ -436,6 +456,9 @@ namespace Its.Onix.Api.Controllers
                 mcVm.Description = "Organization ID is null or empty";
                 return Ok(mcVm);
             }
+
+            //x088 ปรับแก้ #1: stamp audit trail ด้วย org id จริงของ merchant แทน "global"
+            _requestContext.OrgId = mc.OrgId;
 
             //Bank Account
             var baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
