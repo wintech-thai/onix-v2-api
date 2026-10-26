@@ -298,6 +298,56 @@ namespace Its.Onix.Api.Database.Repositories
             return r;
         }
 
+        public async Task<MPointTx> AddPointTxWithBalanceV2(MPointTx tx, MPointBalance currBal, MPointBalance dailyBal, decimal quantityBalance, decimal averagePrice)
+        {
+            tx.OrgId = orgId;
+            currBal.OrgId = orgId;
+            dailyBal.OrgId = orgId;
+
+            //Transaction controll จะถูกจัดการเองในนี้เลย
+
+            await context!.PointTxs!.AddAsync(tx);
+            await UpsertPointBalance(currBal);
+            await UpsertPointBalance(dailyBal);
+
+            var walletId = Guid.Parse(tx.WalletId!);
+            var wallet = await context!.Wallets!.Where(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(walletId)).FirstOrDefaultAsync();
+            if (wallet != null)
+            {
+                wallet.PointQuantityBalanceDecimal = quantityBalance;
+                wallet.PointAveragePriceDecimal = averagePrice;
+            }
+
+            await context.SaveChangesAsync();
+
+            return tx;
+        }
+
+        public async Task<MWallet?> GetWalletByLocationItemId(string locationId, string itemId)
+        {
+            var u = await context!.Wallets!.Where(
+                p => p!.InventoryLocationId!.Equals(locationId) &&
+                p!.InventoryItemId!.Equals(itemId) &&
+                p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            return u;
+        }
+
+        public async Task<List<MWallet>> GetWalletsByLocationId(string locationId)
+        {
+            var r = await context!.Wallets!.Where(
+                p => p!.InventoryLocationId!.Equals(locationId) &&
+                p!.OrgId!.Equals(orgId)).ToListAsync();
+            return r;
+        }
+
+        public async Task<List<MWallet>> GetWalletsByItemId(string itemId)
+        {
+            var r = await context!.Wallets!.Where(
+                p => p!.InventoryItemId!.Equals(itemId) &&
+                p!.OrgId!.Equals(orgId)).ToListAsync();
+            return r;
+        }
+
         private ExpressionStarter<MWallet> WalletPredicate(VMWallet param)
         {
             var pd = PredicateBuilder.New<MWallet>();

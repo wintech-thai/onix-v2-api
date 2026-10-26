@@ -4270,6 +4270,10 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<decimal?>("CurrentAveragePriceDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("current_average_price_decimal");
+
                     b.Property<long?>("CurrentBalance")
                         .HasColumnType("bigint")
                         .HasColumnName("current_balance");
@@ -4277,6 +4281,10 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("CurrentBalanceDecimal")
                         .HasColumnType("numeric")
                         .HasColumnName("current_balance_decimal");
+
+                    b.Property<decimal?>("CurrentBalanceQuantityDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("current_balance_quantity_decimal");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -4286,6 +4294,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
+                    b.Property<decimal?>("PreviousAveragePriceDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("previous_average_price_decimal");
+
                     b.Property<long?>("PreviousBalance")
                         .HasColumnType("bigint")
                         .HasColumnName("previous_balance");
@@ -4293,6 +4305,10 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("PreviousBalanceDecimal")
                         .HasColumnType("numeric")
                         .HasColumnName("previous_balance_decimal");
+
+                    b.Property<decimal?>("PreviousBalanceQuantityDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("previous_balance_quantity_decimal");
 
                     b.Property<string>("Tags")
                         .HasColumnType("text")
@@ -4309,6 +4325,14 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("TxAmountDecimal")
                         .HasColumnType("numeric")
                         .HasColumnName("tx_amount_decimal");
+
+                    b.Property<decimal?>("TxAveragePriceDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tx_average_price_decimal");
+
+                    b.Property<decimal?>("TxQuantityDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("tx_quantity_decimal");
 
                     b.Property<int?>("TxType")
                         .HasColumnType("integer")
@@ -5101,6 +5125,14 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<string>("InventoryItemId")
+                        .HasColumnType("text")
+                        .HasColumnName("inventory_item_id");
+
+                    b.Property<string>("InventoryLocationId")
+                        .HasColumnType("text")
+                        .HasColumnName("inventory_location_id");
+
                     b.Property<string>("MerchantId")
                         .HasColumnType("text")
                         .HasColumnName("merchant_id");
@@ -5113,6 +5145,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
+                    b.Property<decimal?>("PointAveragePriceDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("point_average_price_decimal");
+
                     b.Property<long?>("PointBalance")
                         .HasColumnType("bigint")
                         .HasColumnName("point_balance");
@@ -5120,6 +5156,10 @@ namespace onix.api.Migrations
                     b.Property<decimal?>("PointBalanceDecimal")
                         .HasColumnType("numeric")
                         .HasColumnName("point_balance_decimal");
+
+                    b.Property<decimal?>("PointQuantityBalanceDecimal")
+                        .HasColumnType("numeric")
+                        .HasColumnName("point_quantity_balance_decimal");
 
                     b.Property<string>("RefId")
                         .HasColumnType("text")
@@ -5144,6 +5184,9 @@ namespace onix.api.Migrations
                     b.HasIndex("OrgId");
 
                     b.HasIndex("RefId");
+
+                    b.HasIndex(new[] { "OrgId", "InventoryLocationId", "InventoryItemId" }, "Wallet_InventoryLocationItem_Unique")
+                        .IsUnique();
 
                     b.ToTable("Wallets");
                 });

@@ -12,13 +12,50 @@ namespace Its.Onix.Api.Services
         private readonly IInventoryDocRepository repository;
         private readonly IDocumentNumberService documentNumberService;
         private readonly IInventoryItemRepository itemRepository;
+        private readonly IPointService pointService;
 
-        public InventoryDocService(IInventoryDocRepository repo, IDocumentNumberService documentNumberSvc, IInventoryItemRepository itemRepo) : base()
+        public InventoryDocService(IInventoryDocRepository repo, IDocumentNumberService documentNumberSvc, IInventoryItemRepository itemRepo, IPointService pointSvc) : base()
         {
             repository = repo;
             documentNumberService = documentNumberSvc;
             itemRepository = itemRepo;
+            pointService = pointSvc;
         }
+
+        // ตรวจสอบยอดคงเหลือ (quantity) ของทุก item ก่อน approve จริง — กันไม่ให้เอกสาร
+        // ถูก approve (flip status) ไปแล้วแต่ posting ไปติดลบค้างอยู่ครึ่งๆ กลางๆ
+        private async Task<MVInventoryDoc?> ValidateSufficientStockOrNull(string orgId, string? locationId, List<MInventoryDocItem> items)
+        {
+            if (string.IsNullOrEmpty(locationId)) return null;
+
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item.ItemId)) continue;
+                var requested = item.ItemQuantity ?? 0;
+                if (requested <= 0) continue;
+
+                var wallet = await pointService.GetInventoryWalletByLocationItemId(orgId, locationId, item.ItemId);
+                var available = wallet?.PointQuantityBalanceDecimal ?? 0;
+
+                if (requested > available)
+                {
+                    return new MVInventoryDoc
+                    {
+                        Status = "INSUFFICIENT_STOCK",
+                        Description = $"Item [{item.ItemCode}] insufficient stock at location: available [{available}], requested [{requested}]",
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        // Posts the wallet-balance side effect (quantity + weighted-average price) for each item
+        // of an already-approved doc. Collected failures (should only happen under a race with
+        // another concurrent approve — ValidateSufficientStockOrNull already covers the common
+        // case) are surfaced as a warning on the response rather than silently dropped, since the
+        // document's status has already been committed to Approved by this point.
+        private static string? JoinWarnings(List<string> warnings) => warnings.Count == 0 ? null : string.Join(" | ", warnings);
 
         public async Task<MVInventoryDoc> AddInventoryDocStockIn(string orgId, MInventoryDoc doc)
         {
@@ -48,8 +85,29 @@ namespace Its.Onix.Api.Services
             var failure = await ValidatePendingOrNull(inventoryDocId, "");
             if (failure != null) return failure;
 
+            // Items (quantity + unit price/amount ที่กรอกไว้ตอนสร้างเอกสาร) ต้องดึงมาก่อน
+            // approve เพราะ repository ของ StockIn ไม่ได้คืน Items กลับมาให้
+            var doc = await repository.GetInventoryDocById(inventoryDocId);
+            var items = doc?.Items ?? new List<MInventoryDocItem>();
+
             var result = await repository.ApproveInventoryDocStockIn(inventoryDocId);
-            return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = result };
+
+            var warnings = new List<string>();
+            foreach (var item in items)
+            {
+                if (string.IsNullOrEmpty(item.ItemId)) continue;
+                var qty = item.ItemQuantity ?? 0;
+                if (qty <= 0) continue;
+
+                var addResult = await pointService.AddPointV2(orgId, doc!.ToLocationId!, item.ItemId, qty, item.ItemAmount ?? 0,
+                    tags: inventoryDocId, description: $"StockIn {doc.DocumentNo}");
+                if (addResult.Status != "OK")
+                {
+                    warnings.Add($"Item [{item.ItemCode}]: {addResult.Description}");
+                }
+            }
+
+            return new MVInventoryDoc { Status = "OK", Description = JoinWarnings(warnings) ?? "Success", InventoryDoc = result };
         }
 
         public async Task<MVInventoryDoc> CancelInventoryDocStockIn(string orgId, string inventoryDocId)
@@ -99,8 +157,10 @@ namespace Its.Onix.Api.Services
             if (failure != null) return failure;
 
             var doc = await repository.GetInventoryDocById(inventoryDocId);
+            var items = doc?.Items ?? new List<MInventoryDocItem>();
+
             var itemUnitPrices = new Dictionary<Guid, decimal>();
-            foreach (var item in doc?.Items ?? new List<MInventoryDocItem>())
+            foreach (var item in items)
             {
                 if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId)) continue;
                 // IInventoryItemRepository is not async yet (out of scope for this change) —
@@ -109,8 +169,27 @@ namespace Its.Onix.Api.Services
                 itemUnitPrices[item.Id.Value] = masterItem?.Price ?? 0;
             }
 
+            var stockFailure = await ValidateSufficientStockOrNull(orgId, doc?.FromLocationId, items);
+            if (stockFailure != null) return stockFailure;
+
             var result = await repository.ApproveInventoryDocStockOut(inventoryDocId, itemUnitPrices);
-            return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = result };
+
+            var warnings = new List<string>();
+            foreach (var item in result?.Items ?? new List<MInventoryDocItem>())
+            {
+                if (string.IsNullOrEmpty(item.ItemId)) continue;
+                var qty = item.ItemQuantity ?? 0;
+                if (qty <= 0) continue;
+
+                var deductResult = await pointService.DeductPointV2(orgId, doc!.FromLocationId!, item.ItemId, qty,
+                    tags: inventoryDocId, description: $"StockOut {doc.DocumentNo}");
+                if (deductResult.Status != "OK")
+                {
+                    warnings.Add($"Item [{item.ItemCode}]: {deductResult.Description}");
+                }
+            }
+
+            return new MVInventoryDoc { Status = "OK", Description = JoinWarnings(warnings) ?? "Success", InventoryDoc = result };
         }
 
         public async Task<MVInventoryDoc> CancelInventoryDocStockOut(string orgId, string inventoryDocId)
@@ -177,16 +256,47 @@ namespace Its.Onix.Api.Services
             if (failure != null) return failure;
 
             var doc = await repository.GetInventoryDocById(inventoryDocId);
+            var items = doc?.Items ?? new List<MInventoryDocItem>();
+
             var itemUnitPrices = new Dictionary<Guid, decimal>();
-            foreach (var item in doc?.Items ?? new List<MInventoryDocItem>())
+            foreach (var item in items)
             {
                 if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId)) continue;
                 var masterItem = itemRepository.GetInventoryItemById(item.ItemId);
                 itemUnitPrices[item.Id.Value] = masterItem?.Price ?? 0;
             }
 
+            var stockFailure = await ValidateSufficientStockOrNull(orgId, doc?.FromLocationId, items);
+            if (stockFailure != null) return stockFailure;
+
             var result = await repository.ApproveInventoryDocTransfer(inventoryDocId, itemUnitPrices);
-            return new MVInventoryDoc { Status = "OK", Description = "Success", InventoryDoc = result };
+
+            var warnings = new List<string>();
+            foreach (var item in result?.Items ?? new List<MInventoryDocItem>())
+            {
+                if (string.IsNullOrEmpty(item.ItemId)) continue;
+                var qty = item.ItemQuantity ?? 0;
+                if (qty <= 0) continue;
+
+                // มูลค่าที่ไป Add ปลายทาง = มูลค่าที่เบิกออกจากต้นทางจริง (ราคาเฉลี่ย ณ ตอนเบิก × qty)
+                var deductResult = await pointService.DeductPointV2(orgId, doc!.FromLocationId!, item.ItemId, qty,
+                    tags: inventoryDocId, description: $"Transfer-Out {doc.DocumentNo}");
+                if (deductResult.Status != "OK")
+                {
+                    warnings.Add($"Item [{item.ItemCode}] (out): {deductResult.Description}");
+                    continue;
+                }
+
+                var deductedAmount = deductResult.PointTx?.TxAmountDecimal ?? 0;
+                var addResult = await pointService.AddPointV2(orgId, doc.ToLocationId!, item.ItemId, qty, deductedAmount,
+                    tags: inventoryDocId, description: $"Transfer-In {doc.DocumentNo}");
+                if (addResult.Status != "OK")
+                {
+                    warnings.Add($"Item [{item.ItemCode}] (in): {addResult.Description}");
+                }
+            }
+
+            return new MVInventoryDoc { Status = "OK", Description = JoinWarnings(warnings) ?? "Success", InventoryDoc = result };
         }
 
         public async Task<MVInventoryDoc> CancelInventoryDocTransfer(string orgId, string inventoryDocId)

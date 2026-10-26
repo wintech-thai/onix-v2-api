@@ -265,6 +265,224 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        // ─── V2 : Inventory (quantity + ราคาเฉลี่ยถ่วงน้ำหนัก) ─────────────────────────
+
+        public async Task<MWallet> GetOrCreateInventoryWallet(string orgId, string locationId, string itemId)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var wallet = await repository!.GetWalletByLocationItemId(locationId, itemId);
+            if (wallet != null)
+            {
+                return wallet;
+            }
+
+            var newWallet = new MWallet()
+            {
+                OrgId = orgId,
+                WalletType = "InventoryItem",
+                InventoryLocationId = locationId,
+                InventoryItemId = itemId,
+                Name = $"Inventory-{locationId}-{itemId}",
+                PointBalanceDecimal = 0,
+                PointQuantityBalanceDecimal = 0,
+                PointAveragePriceDecimal = 0,
+            };
+
+            return await repository!.AddWallet(newWallet);
+        }
+
+        public async Task<MWallet?> GetInventoryWalletByLocationItemId(string orgId, string locationId, string itemId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetWalletByLocationItemId(locationId, itemId);
+        }
+
+        public async Task<MVPointTx> AddPointV2(string orgId, string locationId, string itemId, decimal quantity, decimal amount, string? tags, string? description)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPointTx()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (quantity <= 0)
+            {
+                r.Status = "INVALID_QUANTITY";
+                r.Description = "Quantity must be greater than 0 for inventory add!!!";
+
+                return r;
+            }
+
+            if (amount < 0)
+            {
+                r.Status = "INVALID_TX_AMOUNT_DECIMAL";
+                r.Description = "Amount must not be negative!!!";
+
+                return r;
+            }
+
+            var wallet = await GetOrCreateInventoryWallet(orgId, locationId, itemId);
+            var walletId = wallet.Id.ToString()!;
+
+            var currBal = await GetCurrentBalance(walletId);
+            var previousBalDecimal = currBal.BalanceEndDecimal ?? 0;
+            var dailyBal = await GetDailyBalance(walletId, currBal.BalanceEnd, previousBalDecimal);
+
+            var previousQty = wallet.PointQuantityBalanceDecimal ?? 0;
+            var previousAvg = wallet.PointAveragePriceDecimal ?? 0;
+
+            var newQty = previousQty + quantity;
+            var newValueDecimal = previousBalDecimal + amount;
+            var newAvg = newQty == 0 ? 0 : newValueDecimal / newQty;
+
+            currBal.TxInDecimal = (currBal.TxInDecimal ?? 0) + amount;
+            currBal.BalanceEndDecimal = newValueDecimal;
+            currBal.BalanceDate = DateTime.UtcNow;
+
+            dailyBal.TxInDecimal = (dailyBal.TxInDecimal ?? 0) + amount;
+            dailyBal.BalanceEndDecimal = (dailyBal.BalanceEndDecimal ?? 0) + amount;
+            dailyBal.BalanceDate = DateTime.UtcNow;
+
+            var tx = new MPointTx()
+            {
+                WalletId = walletId,
+                Tags = tags,
+                Description = description,
+                TxAmountDecimal = amount,
+                TxQuantityDecimal = quantity,
+                TxAveragePriceDecimal = quantity == 0 ? 0 : amount / quantity,
+                TxType = 1,
+                PreviousBalanceDecimal = previousBalDecimal,
+                PreviousBalanceQuantityDecimal = previousQty,
+                PreviousAveragePriceDecimal = previousAvg,
+                CurrentBalanceDecimal = newValueDecimal,
+                CurrentBalanceQuantityDecimal = newQty,
+                CurrentAveragePriceDecimal = newAvg,
+            };
+
+            var result = await repository!.AddPointTxWithBalanceV2(tx, currBal, dailyBal, newQty, newAvg);
+
+            r.PointTx = result;
+
+            return r;
+        }
+
+        public async Task<MVPointTx> DeductPointV2(string orgId, string locationId, string itemId, decimal quantity, string? tags, string? description)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVPointTx()
+            {
+                Status = "OK",
+                Description = "Success",
+            };
+
+            if (quantity <= 0)
+            {
+                r.Status = "INVALID_QUANTITY";
+                r.Description = "Quantity must be greater than 0 for inventory deduction!!!";
+
+                return r;
+            }
+
+            var wallet = await repository!.GetWalletByLocationItemId(locationId, itemId);
+            if (wallet == null)
+            {
+                r.Status = "WALLET_NOTFOUND";
+                r.Description = $"No inventory balance found for location [{locationId}], item [{itemId}]";
+
+                return r;
+            }
+
+            var walletId = wallet.Id.ToString()!;
+            var previousQty = wallet.PointQuantityBalanceDecimal ?? 0;
+            var previousAvg = wallet.PointAveragePriceDecimal ?? 0;
+
+            var newQty = previousQty - quantity;
+            if (newQty < 0)
+            {
+                r.Status = "INVALID_BALANCE_LESS_THAN_ZERO";
+                r.Description = $"Insufficient quantity balance: available [{previousQty}], requested [{quantity}]";
+
+                return r;
+            }
+
+            //ราคาเฉลี่ยของที่เบิก คือราคาเฉลี่ย ณ ตอนนั้น (ไม่เปลี่ยนหลังเบิก)
+            var deductAmount = quantity * previousAvg;
+
+            var currBal = await GetCurrentBalance(walletId);
+            var previousBalDecimal = currBal.BalanceEndDecimal ?? 0;
+            var dailyBal = await GetDailyBalance(walletId, currBal.BalanceEnd, previousBalDecimal);
+
+            var newValueDecimal = previousBalDecimal - deductAmount;
+            if (newValueDecimal < 0)
+            {
+                newValueDecimal = 0; //กันเศษปัดเล็กน้อยติดลบ
+            }
+
+            currBal.TxOutDecimal = (currBal.TxOutDecimal ?? 0) + deductAmount;
+            currBal.BalanceEndDecimal = newValueDecimal;
+            currBal.BalanceDate = DateTime.UtcNow;
+
+            dailyBal.TxOutDecimal = (dailyBal.TxOutDecimal ?? 0) + deductAmount;
+            dailyBal.BalanceEndDecimal = (dailyBal.BalanceEndDecimal ?? 0) - deductAmount;
+            dailyBal.BalanceDate = DateTime.UtcNow;
+
+            var tx = new MPointTx()
+            {
+                WalletId = walletId,
+                Tags = tags,
+                Description = description,
+                TxAmountDecimal = deductAmount,
+                TxQuantityDecimal = quantity,
+                TxAveragePriceDecimal = previousAvg,
+                TxType = -1,
+                PreviousBalanceDecimal = previousBalDecimal,
+                PreviousBalanceQuantityDecimal = previousQty,
+                PreviousAveragePriceDecimal = previousAvg,
+                CurrentBalanceDecimal = newValueDecimal,
+                CurrentBalanceQuantityDecimal = newQty,
+                CurrentAveragePriceDecimal = previousAvg,
+            };
+
+            var result = await repository!.AddPointTxWithBalanceV2(tx, currBal, dailyBal, newQty, previousAvg);
+
+            r.PointTx = result;
+
+            return r;
+        }
+
+        public async Task<List<MPointTx>> GetPointTxsByLocationItemId(string orgId, string locationId, string itemId, VMPointTx param)
+        {
+            repository.SetCustomOrgId(orgId);
+
+            var wallet = await repository!.GetWalletByLocationItemId(locationId, itemId);
+            if (wallet == null)
+            {
+                return [];
+            }
+
+            param.WalletId = wallet.Id.ToString();
+            var pointTxs = await repository.GetPointTxsByWalletId(param);
+
+            return pointTxs;
+        }
+
+        public async Task<List<MWallet>> GetWalletsByLocationId(string orgId, string locationId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetWalletsByLocationId(locationId);
+        }
+
+        public async Task<List<MWallet>> GetWalletsByItemId(string orgId, string itemId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetWalletsByItemId(itemId);
+        }
+
         public async Task<List<MPointTx>> GetPointTxsByCustomerId(string orgId, string custId, VMPointTx param)
         {
             repository.SetCustomOrgId(orgId);

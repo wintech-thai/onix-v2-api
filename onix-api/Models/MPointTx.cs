@@ -55,6 +55,24 @@ namespace Its.Onix.Api.Models
         [Column("previous_balance_decimal")]
         public decimal? PreviousBalanceDecimal { get; set; }
 
+        [Column("tx_quantity_decimal")]
+        public decimal? TxQuantityDecimal { get; set; } /* จำนวน (inventory) ของ transaction นี้ */
+
+        [Column("tx_average_price_decimal")]
+        public decimal? TxAveragePriceDecimal { get; set; } /* = TxAmountDecimal / TxQuantityDecimal, เป็น 0 ถ้า quantity เป็น 0 */
+
+        [Column("current_balance_quantity_decimal")]
+        public decimal? CurrentBalanceQuantityDecimal { get; set; }
+
+        [Column("current_average_price_decimal")]
+        public decimal? CurrentAveragePriceDecimal { get; set; }
+
+        [Column("previous_balance_quantity_decimal")]
+        public decimal? PreviousBalanceQuantityDecimal { get; set; }
+
+        [Column("previous_average_price_decimal")]
+        public decimal? PreviousAveragePriceDecimal { get; set; }
+
 
         //System fields
         [Column("created_date")]
