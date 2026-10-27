@@ -93,6 +93,7 @@ namespace Its.Onix.Api.Services
             var result = await repository.ApproveInventoryDocStockIn(inventoryDocId);
 
             var warnings = new List<string>();
+            var locationSnapshots = new Dictionary<Guid, MInventoryDocItem>();
             foreach (var item in items)
             {
                 if (string.IsNullOrEmpty(item.ItemId)) continue;
@@ -104,7 +105,27 @@ namespace Its.Onix.Api.Services
                 if (addResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}]: {addResult.Description}");
+                    continue;
                 }
+
+                if (item.Id.HasValue && addResult.PointTx != null)
+                {
+                    var tx = addResult.PointTx;
+                    locationSnapshots[item.Id.Value] = new MInventoryDocItem
+                    {
+                        ToLocationPreviousQuantity = tx.PreviousBalanceQuantityDecimal,
+                        ToLocationPreviousAmount = tx.PreviousBalanceDecimal,
+                        ToLocationPreviousUnitPrice = tx.PreviousAveragePriceDecimal,
+                        ToLocationCurrentQuantity = tx.CurrentBalanceQuantityDecimal,
+                        ToLocationCurrentAmount = tx.CurrentBalanceDecimal,
+                        ToLocationCurrentUnitPrice = tx.CurrentAveragePriceDecimal,
+                    };
+                }
+            }
+
+            if (locationSnapshots.Count > 0)
+            {
+                result = await repository.ApplyInventoryDocItemLocationSnapshots(inventoryDocId, locationSnapshots) ?? result;
             }
 
             return new MVInventoryDoc { Status = "OK", Description = JoinWarnings(warnings) ?? "Success", InventoryDoc = result };
@@ -173,6 +194,7 @@ namespace Its.Onix.Api.Services
             var result = await repository.ApproveInventoryDocStockOut(inventoryDocId, itemUnitPrices);
 
             var warnings = new List<string>();
+            var locationSnapshots = new Dictionary<Guid, MInventoryDocItem>();
             foreach (var item in result?.Items ?? new List<MInventoryDocItem>())
             {
                 if (string.IsNullOrEmpty(item.ItemId)) continue;
@@ -184,7 +206,27 @@ namespace Its.Onix.Api.Services
                 if (deductResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}]: {deductResult.Description}");
+                    continue;
                 }
+
+                if (item.Id.HasValue && deductResult.PointTx != null)
+                {
+                    var tx = deductResult.PointTx;
+                    locationSnapshots[item.Id.Value] = new MInventoryDocItem
+                    {
+                        FromLocationPreviousQuantity = tx.PreviousBalanceQuantityDecimal,
+                        FromLocationPreviousAmount = tx.PreviousBalanceDecimal,
+                        FromLocationPreviousUnitPrice = tx.PreviousAveragePriceDecimal,
+                        FromLocationCurrentQuantity = tx.CurrentBalanceQuantityDecimal,
+                        FromLocationCurrentAmount = tx.CurrentBalanceDecimal,
+                        FromLocationCurrentUnitPrice = tx.CurrentAveragePriceDecimal,
+                    };
+                }
+            }
+
+            if (locationSnapshots.Count > 0)
+            {
+                result = await repository.ApplyInventoryDocItemLocationSnapshots(inventoryDocId, locationSnapshots) ?? result;
             }
 
             return new MVInventoryDoc { Status = "OK", Description = JoinWarnings(warnings) ?? "Success", InventoryDoc = result };
@@ -270,6 +312,7 @@ namespace Its.Onix.Api.Services
             var result = await repository.ApproveInventoryDocTransfer(inventoryDocId, itemUnitPrices);
 
             var warnings = new List<string>();
+            var locationSnapshots = new Dictionary<Guid, MInventoryDocItem>();
             foreach (var item in result?.Items ?? new List<MInventoryDocItem>())
             {
                 if (string.IsNullOrEmpty(item.ItemId)) continue;
@@ -291,7 +334,39 @@ namespace Its.Onix.Api.Services
                 if (addResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}] (in): {addResult.Description}");
+                    continue;
                 }
+
+                if (item.Id.HasValue)
+                {
+                    var snap = new MInventoryDocItem();
+                    if (deductResult.PointTx != null)
+                    {
+                        var outTx = deductResult.PointTx;
+                        snap.FromLocationPreviousQuantity = outTx.PreviousBalanceQuantityDecimal;
+                        snap.FromLocationPreviousAmount = outTx.PreviousBalanceDecimal;
+                        snap.FromLocationPreviousUnitPrice = outTx.PreviousAveragePriceDecimal;
+                        snap.FromLocationCurrentQuantity = outTx.CurrentBalanceQuantityDecimal;
+                        snap.FromLocationCurrentAmount = outTx.CurrentBalanceDecimal;
+                        snap.FromLocationCurrentUnitPrice = outTx.CurrentAveragePriceDecimal;
+                    }
+                    if (addResult.PointTx != null)
+                    {
+                        var inTx = addResult.PointTx;
+                        snap.ToLocationPreviousQuantity = inTx.PreviousBalanceQuantityDecimal;
+                        snap.ToLocationPreviousAmount = inTx.PreviousBalanceDecimal;
+                        snap.ToLocationPreviousUnitPrice = inTx.PreviousAveragePriceDecimal;
+                        snap.ToLocationCurrentQuantity = inTx.CurrentBalanceQuantityDecimal;
+                        snap.ToLocationCurrentAmount = inTx.CurrentBalanceDecimal;
+                        snap.ToLocationCurrentUnitPrice = inTx.CurrentAveragePriceDecimal;
+                    }
+                    locationSnapshots[item.Id.Value] = snap;
+                }
+            }
+
+            if (locationSnapshots.Count > 0)
+            {
+                result = await repository.ApplyInventoryDocItemLocationSnapshots(inventoryDocId, locationSnapshots) ?? result;
             }
 
             return new MVInventoryDoc { Status = "OK", Description = JoinWarnings(warnings) ?? "Success", InventoryDoc = result };
