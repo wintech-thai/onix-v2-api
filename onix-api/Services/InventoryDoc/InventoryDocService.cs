@@ -144,10 +144,10 @@ namespace Its.Onix.Api.Services
 
         // Unlike Stock-In/Transfer, item unit price/amount are never taken from the request —
         // the spec requires them to be pulled from the item's current stock cost at approve
-        // time instead. There's no weighted-average stock ledger implemented yet (Stock-In's
-        // own approve doesn't maintain one either), so the best available "current cost" is
-        // the item master's own Price field — the same field Stock-In's UI already uses to
-        // prefill unit price, so this stays consistent with existing behavior.
+        // time instead. This must be the wallet's weighted-average price at the from-location
+        // (the same figure DeductPointV2 actually posts as the cost of this withdrawal below),
+        // not the item master's static Price — otherwise the document shows a unit price that
+        // never matches what was really deducted from the ledger.
         public async Task<MVInventoryDoc> ApproveInventoryDocStockOut(string orgId, string inventoryDocId)
         {
             repository.SetCustomOrgId(orgId);
@@ -162,11 +162,9 @@ namespace Its.Onix.Api.Services
             var itemUnitPrices = new Dictionary<Guid, decimal>();
             foreach (var item in items)
             {
-                if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId)) continue;
-                // IInventoryItemRepository is not async yet (out of scope for this change) —
-                // fine to call synchronously from here, just not end-to-end async for this one hop.
-                var masterItem = itemRepository.GetInventoryItemById(item.ItemId);
-                itemUnitPrices[item.Id.Value] = masterItem?.Price ?? 0;
+                if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId) || string.IsNullOrEmpty(doc?.FromLocationId)) continue;
+                var wallet = await pointService.GetInventoryWalletByLocationItemId(orgId, doc.FromLocationId, item.ItemId);
+                itemUnitPrices[item.Id.Value] = wallet?.PointAveragePriceDecimal ?? 0;
             }
 
             var stockFailure = await ValidateSufficientStockOrNull(orgId, doc?.FromLocationId, items);
@@ -261,9 +259,9 @@ namespace Its.Onix.Api.Services
             var itemUnitPrices = new Dictionary<Guid, decimal>();
             foreach (var item in items)
             {
-                if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId)) continue;
-                var masterItem = itemRepository.GetInventoryItemById(item.ItemId);
-                itemUnitPrices[item.Id.Value] = masterItem?.Price ?? 0;
+                if (!item.Id.HasValue || string.IsNullOrEmpty(item.ItemId) || string.IsNullOrEmpty(doc?.FromLocationId)) continue;
+                var wallet = await pointService.GetInventoryWalletByLocationItemId(orgId, doc.FromLocationId, item.ItemId);
+                itemUnitPrices[item.Id.Value] = wallet?.PointAveragePriceDecimal ?? 0;
             }
 
             var stockFailure = await ValidateSufficientStockOrNull(orgId, doc?.FromLocationId, items);
