@@ -100,7 +100,7 @@ namespace Its.Onix.Api.Services
                 if (qty <= 0) continue;
 
                 var addResult = await pointService.AddPointV2(orgId, doc!.ToLocationId!, item.ItemId, qty, item.ItemAmount ?? 0,
-                    tags: inventoryDocId, description: $"StockIn {doc.DocumentNo}");
+                    tags: inventoryDocId, docNo: doc.DocumentNo, description: "StockIn");
                 if (addResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}]: {addResult.Description}");
@@ -182,7 +182,7 @@ namespace Its.Onix.Api.Services
                 if (qty <= 0) continue;
 
                 var deductResult = await pointService.DeductPointV2(orgId, doc!.FromLocationId!, item.ItemId, qty,
-                    tags: inventoryDocId, description: $"StockOut {doc.DocumentNo}");
+                    tags: inventoryDocId, docNo: doc.DocumentNo, description: "StockOut");
                 if (deductResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}]: {deductResult.Description}");
@@ -280,7 +280,7 @@ namespace Its.Onix.Api.Services
 
                 // มูลค่าที่ไป Add ปลายทาง = มูลค่าที่เบิกออกจากต้นทางจริง (ราคาเฉลี่ย ณ ตอนเบิก × qty)
                 var deductResult = await pointService.DeductPointV2(orgId, doc!.FromLocationId!, item.ItemId, qty,
-                    tags: inventoryDocId, description: $"Transfer-Out {doc.DocumentNo}");
+                    tags: inventoryDocId, docNo: doc.DocumentNo, description: "Transfer-Out");
                 if (deductResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}] (out): {deductResult.Description}");
@@ -289,7 +289,7 @@ namespace Its.Onix.Api.Services
 
                 var deductedAmount = deductResult.PointTx?.TxAmountDecimal ?? 0;
                 var addResult = await pointService.AddPointV2(orgId, doc.ToLocationId!, item.ItemId, qty, deductedAmount,
-                    tags: inventoryDocId, description: $"Transfer-In {doc.DocumentNo}");
+                    tags: inventoryDocId, docNo: doc.DocumentNo, description: "Transfer-In");
                 if (addResult.Status != "OK")
                 {
                     warnings.Add($"Item [{item.ItemCode}] (in): {addResult.Description}");

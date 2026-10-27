@@ -298,7 +298,7 @@ namespace Its.Onix.Api.Services
             return await repository!.GetWalletByLocationItemId(locationId, itemId);
         }
 
-        public async Task<MVPointTx> AddPointV2(string orgId, string locationId, string itemId, decimal quantity, decimal amount, string? tags, string? description)
+        public async Task<MVPointTx> AddPointV2(string orgId, string locationId, string itemId, decimal quantity, decimal amount, string? tags, string? docNo, string? description)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -350,6 +350,7 @@ namespace Its.Onix.Api.Services
             {
                 WalletId = walletId,
                 Tags = tags,
+                Tags2 = docNo,
                 Description = description,
                 TxAmountDecimal = amount,
                 TxQuantityDecimal = quantity,
@@ -370,7 +371,7 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVPointTx> DeductPointV2(string orgId, string locationId, string itemId, decimal quantity, string? tags, string? description)
+        public async Task<MVPointTx> DeductPointV2(string orgId, string locationId, string itemId, decimal quantity, string? tags, string? docNo, string? description)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -435,6 +436,7 @@ namespace Its.Onix.Api.Services
             {
                 WalletId = walletId,
                 Tags = tags,
+                Tags2 = docNo,
                 Description = description,
                 TxAmountDecimal = deductAmount,
                 TxQuantityDecimal = quantity,
