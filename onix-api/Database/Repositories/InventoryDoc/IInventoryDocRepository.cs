@@ -26,6 +26,9 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MInventoryDoc?> ApproveInventoryDocTransfer(string inventoryDocId, Dictionary<Guid, decimal> itemUnitPrices);
         public Task<MInventoryDoc?> CancelInventoryDocTransfer(string inventoryDocId);
 
+        // snapshots: item row id -> from/to location previous/current quantity+amount+price (only those 12 fields are read)
+        public Task<MInventoryDoc?> ApplyInventoryDocItemLocationSnapshots(string inventoryDocId, Dictionary<Guid, MInventoryDocItem> snapshots);
+
         public Task<bool> IsInventoryDocPending(string inventoryDocId);
         public Task<MInventoryDoc?> GetInventoryDocById(string inventoryDocId);
         public Task<int> GetInventoryDocCount(VMInventoryDoc param);

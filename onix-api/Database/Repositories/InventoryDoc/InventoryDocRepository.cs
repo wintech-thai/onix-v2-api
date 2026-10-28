@@ -383,6 +383,41 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        public async Task<MInventoryDoc?> ApplyInventoryDocItemLocationSnapshots(string inventoryDocId, Dictionary<Guid, MInventoryDocItem> snapshots)
+        {
+            var id = Guid.Parse(inventoryDocId);
+            var existing = await context!.InventoryDocs!.FirstOrDefaultAsync(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            if (existing == null) return null;
+
+            var items = await context!.InventoryDocItems!
+                .Where(i => i.DocumentId!.Equals(existing.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .ToListAsync();
+
+            foreach (var item in items)
+            {
+                if (!item.Id.HasValue || !snapshots.TryGetValue(item.Id.Value, out var snap)) continue;
+
+                item.FromLocationPreviousQuantity = snap.FromLocationPreviousQuantity;
+                item.FromLocationPreviousAmount = snap.FromLocationPreviousAmount;
+                item.FromLocationPreviousUnitPrice = snap.FromLocationPreviousUnitPrice;
+                item.FromLocationCurrentQuantity = snap.FromLocationCurrentQuantity;
+                item.FromLocationCurrentAmount = snap.FromLocationCurrentAmount;
+                item.FromLocationCurrentUnitPrice = snap.FromLocationCurrentUnitPrice;
+
+                item.ToLocationPreviousQuantity = snap.ToLocationPreviousQuantity;
+                item.ToLocationPreviousAmount = snap.ToLocationPreviousAmount;
+                item.ToLocationPreviousUnitPrice = snap.ToLocationPreviousUnitPrice;
+                item.ToLocationCurrentQuantity = snap.ToLocationCurrentQuantity;
+                item.ToLocationCurrentAmount = snap.ToLocationCurrentAmount;
+                item.ToLocationCurrentUnitPrice = snap.ToLocationCurrentUnitPrice;
+            }
+
+            await context!.SaveChangesAsync();
+
+            existing.Items = items;
+            return existing;
+        }
+
         public async Task<bool> IsInventoryDocPending(string inventoryDocId)
         {
             var id = Guid.Parse(inventoryDocId);

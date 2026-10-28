@@ -11,6 +11,7 @@ namespace Its.Onix.Api.Models
     [Index(nameof(OrgId))]
     [Index(nameof(CustomerId))]
     [Index(nameof(RefId))]
+    [Index(nameof(OrgId), nameof(InventoryLocationId), nameof(InventoryItemId), IsUnique = true, Name = "Wallet_InventoryLocationItem_Unique")]
     public class MWallet : IOrgEntity
     {
         [Key]
@@ -51,6 +52,18 @@ namespace Its.Onix.Api.Models
 
         [Column("point_balance_decimal")]
         public decimal? PointBalanceDecimal { get; set; }
+
+        [Column("inventory_item_id")]
+        public string? InventoryItemId { get; set; }
+
+        [Column("inventory_location_id")]
+        public string? InventoryLocationId { get; set; }
+
+        [Column("point_quantity_balance_decimal")]
+        public decimal? PointQuantityBalanceDecimal { get; set; } /* ยอดคงเหลือ (จำนวน) ของ inventory item ใน location นี้ */
+
+        [Column("point_average_price_decimal")]
+        public decimal? PointAveragePriceDecimal { get; set; } /* ราคาเฉลี่ยถ่วงน้ำหนักปัจจุบัน */
 
 
         //System fields

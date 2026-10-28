@@ -151,5 +151,39 @@ namespace Prom.LPR.Api.Controllers
             var result = await svc.DeleteWalletById(id, walletId);
             return Ok(result);
         }
+
+        // ─── V2 : Inventory (ใช้โดยหน้าจอ Item Transaction ของ Please ERP) ──────────────
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetWalletsByLocationId/{locationId}")]
+        public async Task<IActionResult> GetWalletsByLocationId(string id, string locationId)
+        {
+            var result = await svc.GetWalletsByLocationId(id, locationId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetWalletsByItemId/{itemId}")]
+        public async Task<IActionResult> GetWalletsByItemId(string id, string itemId)
+        {
+            var result = await svc.GetWalletsByItemId(id, itemId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetPointTxsByLocationItemId/{locationId}/{itemId}")]
+        public async Task<IActionResult> GetPointTxsByLocationItemId(string id, string locationId, string itemId, [FromBody] VMPointTx request)
+        {
+            if (request.Limit <= 0)
+            {
+                request.Limit = 100;
+            }
+
+            var result = await svc.GetPointTxsByLocationItemId(id, locationId, itemId, request);
+            return Ok(result);
+        }
     }
 }

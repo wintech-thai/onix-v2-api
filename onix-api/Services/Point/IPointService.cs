@@ -9,6 +9,15 @@ namespace Its.Onix.Api.Services
         public Task<MVPointTx> AddPoint(string orgId, MPointTx tx);
         public Task<MVPointTx> DeductPoint(string orgId, MPointTx tx);
 
+        // V2 : สำหรับงาน Inventory โดยเฉพาะ (quantity + ราคาเฉลี่ยถ่วงน้ำหนัก), แยกจาก AddPoint/DeductPoint เดิมที่ Please Payment ใช้อยู่
+        public Task<MVPointTx> AddPointV2(string orgId, string locationId, string itemId, decimal quantity, decimal amount, string? tags, string? docNo, string? description);
+        public Task<MVPointTx> DeductPointV2(string orgId, string locationId, string itemId, decimal quantity, string? tags, string? docNo, string? description);
+        public Task<List<MPointTx>> GetPointTxsByLocationItemId(string orgId, string locationId, string itemId, VMPointTx param);
+        public Task<MWallet> GetOrCreateInventoryWallet(string orgId, string locationId, string itemId);
+        public Task<MWallet?> GetInventoryWalletByLocationItemId(string orgId, string locationId, string itemId);
+        public Task<List<MWallet>> GetWalletsByLocationId(string orgId, string locationId);
+        public Task<List<MWallet>> GetWalletsByItemId(string orgId, string itemId);
+
         public Task<List<MPointTx>> GetPointTxsByWalletId(string orgId, VMPointTx param);
         public Task<int> GetPointTxsCountByWalletId(string orgId, VMPointTx param);
 
