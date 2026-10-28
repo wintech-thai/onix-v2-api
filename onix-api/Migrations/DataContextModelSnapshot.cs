@@ -4845,6 +4845,108 @@ namespace onix.api.Migrations
                     b.ToTable("ScanItemTemplates");
                 });
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MServiceRequest", b =>
+                {
+                    b.Property<Guid?>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("service_request_id");
+
+                    b.Property<string>("AdminDomain")
+                        .HasColumnType("text")
+                        .HasColumnName("admin_domain");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_date");
+
+                    b.Property<string>("BankAccountName")
+                        .HasColumnType("text")
+                        .HasColumnName("bank_account_name");
+
+                    b.Property<string>("BankAccountNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("bank_account_number");
+
+                    b.Property<string>("BankCode")
+                        .HasColumnType("text")
+                        .HasColumnName("bank_code");
+
+                    b.Property<string>("BookBankFileDocumentId")
+                        .HasColumnType("text")
+                        .HasColumnName("book_bank_file_document_id");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime?>("ExpiredDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expired_date");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("Lang")
+                        .HasColumnType("text")
+                        .HasColumnName("lang");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("Otp")
+                        .HasColumnType("text")
+                        .HasColumnName("otp");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("text")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("PromptPayId")
+                        .HasColumnType("text")
+                        .HasColumnName("prompt_pay_id");
+
+                    b.Property<string>("ServiceType")
+                        .HasColumnType("text")
+                        .HasColumnName("service_type");
+
+                    b.Property<string>("ShopCode")
+                        .HasColumnType("text")
+                        .HasColumnName("shop_code");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_date");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex("ServiceType");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("ServiceRequests");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MStat", b =>
                 {
                     b.Property<Guid?>("Id")

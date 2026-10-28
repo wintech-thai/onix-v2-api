@@ -88,6 +88,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
     public DbSet<MInventoryDoc>? InventoryDocs { get; set; }
     public DbSet<MInventoryDocItem>? InventoryDocItems { get; set; }
 
+    public DbSet<MServiceRequest>? ServiceRequests { get; set; }
+
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
 
