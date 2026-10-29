@@ -22,5 +22,8 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MServiceRequest?> DeleteServiceRequestById(string serviceRequestId);
         public Task<IEnumerable<MServiceRequest>> GetServiceRequests(VMServiceRequest param);
         public Task<int> GetServiceRequestCount(VMServiceRequest param);
+
+        // x089 ปรับแก้ 8.a : เช็คชนกับ ServiceRequest แถวอื่น ไม่ใช่แค่ MMerchant
+        public Task<bool> IsShopCodeExist(string shopCode, Guid excludeId);
     }
 }

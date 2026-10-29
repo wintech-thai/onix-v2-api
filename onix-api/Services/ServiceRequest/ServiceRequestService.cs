@@ -174,7 +174,8 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "SHOP_CODE_INVALID", Description = "Shop code must be 3-20 characters, lowercase English letters/digits/underscore/hyphen only" };
             }
 
-            if (await merchantRepository.IsMerchantCodeExist(shopCode))
+            // x089 ปรับแก้ 8.a : Approve ยังไม่มี เลยต้องกันชนกับ ServiceRequest แถวอื่นด้วย ไม่ใช่แค่ MMerchant
+            if (await merchantRepository.IsMerchantCodeExist(shopCode) || await repository.IsShopCodeExist(shopCode, existing!.Id!.Value))
             {
                 return new MVServiceRequest { Status = "SHOP_CODE_ALREADY_EXISTS", Description = "This shop code is already in use" };
             }

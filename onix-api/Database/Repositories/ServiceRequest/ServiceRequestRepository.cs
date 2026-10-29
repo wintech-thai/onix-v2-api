@@ -85,6 +85,13 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        public async Task<bool> IsShopCodeExist(string shopCode, Guid excludeId)
+        {
+            return await context!.ServiceRequests!
+                .Where(p => p.ShopCode!.Equals(shopCode) && p.Status != "Rejected" && p.Id != excludeId)
+                .AnyAsync();
+        }
+
         public async Task<MServiceRequest?> DeleteServiceRequestById(string serviceRequestId)
         {
             var id = Guid.Parse(serviceRequestId);
