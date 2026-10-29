@@ -10,17 +10,21 @@ namespace Its.Onix.Api.Services
     public class ServiceRequestService : BaseService, IServiceRequestService
     {
         private const string ORG_ID = "global"; // service request ยังไม่ผูกกับ org ใด ๆ จนกว่าจะ approve (ยังไม่ทำรอบนี้)
-        private static readonly Regex ShopCodeRegex = new("^[A-Za-z0-9_-]{3,30}$");
+        private static readonly Regex ShopCodeRegex = new("^[a-z0-9_-]{3,20}$");
 
         private readonly IServiceRequestRepository repository;
         private readonly IJobService jobService;
         private readonly IFileDocumentService fileDocumentService;
+        private readonly IMerchantRepository merchantRepository;
+        private readonly IUserRepository userRepository;
 
-        public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc) : base()
+        public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc, IMerchantRepository merchantRepo, IUserRepository userRepo) : base()
         {
             repository = repo;
             jobService = jobSvc;
             fileDocumentService = fileDocumentSvc;
+            merchantRepository = merchantRepo;
+            userRepository = userRepo;
             repository.SetCustomOrgId(ORG_ID);
         }
 
@@ -167,7 +171,12 @@ namespace Its.Onix.Api.Services
             var shopCode = request.ShopCode?.Trim();
             if (string.IsNullOrEmpty(shopCode) || !ShopCodeRegex.IsMatch(shopCode))
             {
-                return new MVServiceRequest { Status = "SHOP_CODE_INVALID", Description = "Shop code must be 3-30 characters, English letters/digits/underscore/hyphen only" };
+                return new MVServiceRequest { Status = "SHOP_CODE_INVALID", Description = "Shop code must be 3-20 characters, lowercase English letters/digits/underscore/hyphen only" };
+            }
+
+            if (await merchantRepository.IsMerchantCodeExist(shopCode))
+            {
+                return new MVServiceRequest { Status = "SHOP_CODE_ALREADY_EXISTS", Description = "This shop code is already in use" };
             }
 
             var username = request.Username?.Trim() ?? "";
@@ -175,6 +184,17 @@ namespace Its.Onix.Api.Services
             if (usernameValidate.Status != "OK")
             {
                 return new MVServiceRequest { Status = usernameValidate.Status, Description = usernameValidate.Description };
+            }
+
+            // x089 ปรับแก้ 8.b : ต้องเป็น username และ email ที่ไม่มีในระบบ (MUser.cs) มาก่อนเลย
+            if (userRepository.IsUserNameExist(username))
+            {
+                return new MVServiceRequest { Status = "USERNAME_ALREADY_EXISTS", Description = "This username is already registered" };
+            }
+
+            if (userRepository.IsEmailExist(existing!.Email!))
+            {
+                return new MVServiceRequest { Status = "EMAIL_ALREADY_EXISTS", Description = "This email is already registered" };
             }
 
             if (string.IsNullOrEmpty(request.BankCode) || string.IsNullOrEmpty(request.BankAccountNumber))
