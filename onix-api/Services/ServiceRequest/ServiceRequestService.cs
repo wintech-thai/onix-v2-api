@@ -48,18 +48,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var adminDomain = request.AdminDomain?.Trim();
+            var adminDomain = NormalizeAdminDomain(request.AdminDomain);
             if (string.IsNullOrEmpty(adminDomain))
             {
                 r.Status = "ADMIN_DOMAIN_MISSING";
                 r.Description = "AdminDomain is required";
                 return r;
             }
-            if (!adminDomain.StartsWith("http://") && !adminDomain.StartsWith("https://"))
-            {
-                adminDomain = $"https://{adminDomain}";
-            }
-            adminDomain = adminDomain.TrimEnd('/');
 
             var lang = (request.Lang ?? "en").Trim().ToLowerInvariant();
             if (lang != "th" && lang != "en") lang = "en";
@@ -313,7 +308,7 @@ namespace Its.Onix.Api.Services
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = deleted };
         }
 
-        public async Task<MVServiceRequest> RegenerateRegistrationLink(string serviceRequestId)
+        public async Task<MVServiceRequest> RegenerateRegistrationLink(string serviceRequestId, string? adminDomain = null)
         {
             if (!ServiceUtils.IsGuidValid(serviceRequestId))
             {
@@ -331,14 +326,24 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "NOT_EDITABLE", Description = $"Service request is already [{existing.Status}]" };
             }
 
+            // x089 ปรับแก้ : regenerate จาก browser ปัจจุบันแล้ว ให้ domain อัปเดตตามด้วย ไม่งั้นแถวที่สร้างจาก localhost จะติด localhost ตลอดไป
+            var newDomain = NormalizeAdminDomain(adminDomain) ?? existing.AdminDomain;
             var newOtp = ServiceUtils.GenerateSecureRandomString(32);
             var newExpiredDate = DateTime.UtcNow.AddDays(1);
-            var updated = await repository.RegenerateOtp(serviceRequestId, newOtp, newExpiredDate);
+            var updated = await repository.RegenerateOtp(serviceRequestId, newOtp, newExpiredDate, newDomain);
 
-            var link = $"{existing.AdminDomain}/customer-signup/global/{existing.Id}/{newOtp}";
+            var link = $"{newDomain}/customer-signup/global/{existing.Id}/{newOtp}";
             CreateRegistrationLinkEmailJob(updated!, link, "customer-registration-link-regenerate");
 
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated, RegistrationLink = link };
+        }
+
+        private static string? NormalizeAdminDomain(string? adminDomain)
+        {
+            var domain = adminDomain?.Trim();
+            if (string.IsNullOrEmpty(domain)) return null;
+            if (!domain.StartsWith("http://") && !domain.StartsWith("https://")) domain = $"https://{domain}";
+            return domain.TrimEnd('/');
         }
 
         public async Task<MVServiceRequest> ResendRegistrationLinkEmail(string serviceRequestId)

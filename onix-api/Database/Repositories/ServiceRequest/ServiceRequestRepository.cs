@@ -71,7 +71,7 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
-        public async Task<MServiceRequest?> RegenerateOtp(string serviceRequestId, string newOtp, DateTime newExpiredDate)
+        public async Task<MServiceRequest?> RegenerateOtp(string serviceRequestId, string newOtp, DateTime newExpiredDate, string? adminDomain = null)
         {
             var id = Guid.Parse(serviceRequestId);
             var existing = await context!.ServiceRequests!.Where(p => p.Id!.Equals(id) && p.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
@@ -79,6 +79,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             existing.Otp = newOtp;
             existing.ExpiredDate = newExpiredDate;
+            if (!string.IsNullOrEmpty(adminDomain)) existing.AdminDomain = adminDomain;
             existing.UpdatedDate = DateTime.UtcNow;
 
             await context!.SaveChangesAsync();

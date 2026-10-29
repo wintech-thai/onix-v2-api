@@ -16,8 +16,8 @@ namespace Its.Onix.Api.Database.Repositories
         // already set on the passed-in object onto every editable column.
         public Task<MServiceRequest?> UpdateServiceRequestById(string serviceRequestId, MServiceRequest serviceRequest);
 
-        // ออก otp ใหม่ + ขยายวันหมดอายุ
-        public Task<MServiceRequest?> RegenerateOtp(string serviceRequestId, string newOtp, DateTime newExpiredDate);
+        // ออก otp ใหม่ + ขยายวันหมดอายุ, adminDomain ถ้าส่งมาจะอัปเดตด้วย
+        public Task<MServiceRequest?> RegenerateOtp(string serviceRequestId, string newOtp, DateTime newExpiredDate, string? adminDomain = null);
 
         public Task<MServiceRequest?> DeleteServiceRequestById(string serviceRequestId);
         public Task<IEnumerable<MServiceRequest>> GetServiceRequests(VMServiceRequest param);

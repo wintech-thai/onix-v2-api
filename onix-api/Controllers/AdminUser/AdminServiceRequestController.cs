@@ -117,9 +117,9 @@ namespace Its.Onix.Api.Controllers
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/RegenerateServiceRequestLink/{serviceRequestId}")]
-        public async Task<IActionResult> RegenerateServiceRequestLink(string serviceRequestId)
+        public async Task<IActionResult> RegenerateServiceRequestLink(string serviceRequestId, [FromQuery] string? adminDomain)
         {
-            var result = await svc.RegenerateRegistrationLink(serviceRequestId);
+            var result = await svc.RegenerateRegistrationLink(serviceRequestId, adminDomain);
             return Ok(result);
         }
 
