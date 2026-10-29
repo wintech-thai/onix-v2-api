@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
@@ -140,6 +141,20 @@ namespace Its.Onix.Api.Controllers
         public IActionResult GetServiceRequestJobs(string serviceRequestId)
         {
             var result = _jobSvc.GetJobs("global", new VMJob { RefId = serviceRequestId, Limit = 100 });
+
+            // x089 ปรับแก้ 7.b : Parameters is [NotMapped] — AddJob() serializes it into Configuration
+            // on write, but nothing deserializes it back on read, so rehydrate it here for the
+            // admin UI to pull REGISTRATION_LINK out of without needing to parse Configuration itself
+            foreach (var job in result)
+            {
+                if (string.IsNullOrEmpty(job.Configuration)) continue;
+                try
+                {
+                    job.Parameters = JsonSerializer.Deserialize<List<NameValue>>(job.Configuration) ?? new();
+                }
+                catch (JsonException) { }
+            }
+
             return Ok(result);
         }
     }
