@@ -41,6 +41,9 @@ namespace Its.Onix.Api.Database.Repositories
                 fts = fts.Or(p => p.IdentityType!.Contains(param.FullTextSearch));
                 fts = fts.Or(p => p.UserName!.Contains(param.FullTextSearch));
                 fts = fts.Or(p => p.StatusCode!.ToString()!.Contains(param.FullTextSearch));
+                // ให้ค้นหาด้วย InventoryDocId เจอด้วย — ตอน Add ยังไม่มี docId อยู่ใน Path
+                // (server เป็นคน generate id เอง) แต่เราแนบ ContextData.InventoryDocId ไว้ใน RawData แล้ว
+                fts = fts.Or(p => p.RawData!.Contains(param.FullTextSearch));
                 pd = pd.And(fts);
             }
 
