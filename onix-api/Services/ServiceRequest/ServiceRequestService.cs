@@ -48,6 +48,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            // x089 Bug 7 : เช็คซ้ำกับ MUser.cs ตั้งแต่ตอนสร้าง link เลย ไม่ต้องรอถึงตอน confirm
+            if (userRepository.IsEmailExist(email))
+            {
+                r.Status = "EMAIL_ALREADY_EXISTS";
+                r.Description = "This email is already registered";
+                return r;
+            }
+
             var adminDomain = NormalizeAdminDomain(request.AdminDomain);
             if (string.IsNullOrEmpty(adminDomain))
             {
