@@ -71,7 +71,7 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
-        public async Task<MServiceRequest?> RegenerateOtp(string serviceRequestId, string newOtp, DateTime newExpiredDate)
+        public async Task<MServiceRequest?> RegenerateOtp(string serviceRequestId, string newOtp, DateTime newExpiredDate, string? adminDomain = null)
         {
             var id = Guid.Parse(serviceRequestId);
             var existing = await context!.ServiceRequests!.Where(p => p.Id!.Equals(id) && p.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
@@ -79,10 +79,25 @@ namespace Its.Onix.Api.Database.Repositories
 
             existing.Otp = newOtp;
             existing.ExpiredDate = newExpiredDate;
+            if (!string.IsNullOrEmpty(adminDomain)) existing.AdminDomain = adminDomain;
             existing.UpdatedDate = DateTime.UtcNow;
 
             await context!.SaveChangesAsync();
             return existing;
+        }
+
+        public async Task<bool> IsShopCodeExist(string shopCode, Guid excludeId)
+        {
+            return await context!.ServiceRequests!
+                .Where(p => p.ShopCode!.Equals(shopCode) && p.Status != "Rejected" && p.Id != excludeId)
+                .AnyAsync();
+        }
+
+        public async Task<bool> IsEmailExist(string email)
+        {
+            return await context!.ServiceRequests!
+                .Where(p => p.Email!.Equals(email) && p.Status != "Rejected")
+                .AnyAsync();
         }
 
         public async Task<MServiceRequest?> DeleteServiceRequestById(string serviceRequestId)

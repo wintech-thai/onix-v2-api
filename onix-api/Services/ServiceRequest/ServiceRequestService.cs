@@ -10,17 +10,21 @@ namespace Its.Onix.Api.Services
     public class ServiceRequestService : BaseService, IServiceRequestService
     {
         private const string ORG_ID = "global"; // service request ยังไม่ผูกกับ org ใด ๆ จนกว่าจะ approve (ยังไม่ทำรอบนี้)
-        private static readonly Regex ShopCodeRegex = new("^[A-Za-z0-9_-]{3,30}$");
+        private static readonly Regex ShopCodeRegex = new("^[a-z0-9_-]{3,20}$");
 
         private readonly IServiceRequestRepository repository;
         private readonly IJobService jobService;
         private readonly IFileDocumentService fileDocumentService;
+        private readonly IMerchantRepository merchantRepository;
+        private readonly IUserRepository userRepository;
 
-        public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc) : base()
+        public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc, IMerchantRepository merchantRepo, IUserRepository userRepo) : base()
         {
             repository = repo;
             jobService = jobSvc;
             fileDocumentService = fileDocumentSvc;
+            merchantRepository = merchantRepo;
+            userRepository = userRepo;
             repository.SetCustomOrgId(ORG_ID);
         }
 
@@ -44,18 +48,29 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            var adminDomain = request.AdminDomain?.Trim();
+            // x089 Bug 7 : เช็คซ้ำกับ MUser.cs (user ที่ approve ไปแล้ว) ตั้งแต่ตอนสร้าง link เลย ไม่ต้องรอถึงตอน confirm
+            if (userRepository.IsEmailExist(email))
+            {
+                r.Status = "EMAIL_ALREADY_EXISTS";
+                r.Description = "This email is already registered";
+                return r;
+            }
+
+            // Approve ยังไม่มี MUser เลยไม่พอ ต้องกันชนกับ ServiceRequest แถวอื่นที่ยัง Pending/Confirmed ด้วย (เหมือน Bug 8.a ของ shop code)
+            if (await repository.IsEmailExist(email))
+            {
+                r.Status = "EMAIL_REQUEST_ALREADY_EXISTS";
+                r.Description = "A registration request for this email is already pending";
+                return r;
+            }
+
+            var adminDomain = NormalizeAdminDomain(request.AdminDomain);
             if (string.IsNullOrEmpty(adminDomain))
             {
                 r.Status = "ADMIN_DOMAIN_MISSING";
                 r.Description = "AdminDomain is required";
                 return r;
             }
-            if (!adminDomain.StartsWith("http://") && !adminDomain.StartsWith("https://"))
-            {
-                adminDomain = $"https://{adminDomain}";
-            }
-            adminDomain = adminDomain.TrimEnd('/');
 
             var lang = (request.Lang ?? "en").Trim().ToLowerInvariant();
             if (lang != "th" && lang != "en") lang = "en";
@@ -167,7 +182,13 @@ namespace Its.Onix.Api.Services
             var shopCode = request.ShopCode?.Trim();
             if (string.IsNullOrEmpty(shopCode) || !ShopCodeRegex.IsMatch(shopCode))
             {
-                return new MVServiceRequest { Status = "SHOP_CODE_INVALID", Description = "Shop code must be 3-30 characters, English letters/digits/underscore/hyphen only" };
+                return new MVServiceRequest { Status = "SHOP_CODE_INVALID", Description = "Shop code must be 3-20 characters, lowercase English letters/digits/underscore/hyphen only" };
+            }
+
+            // x089 ปรับแก้ 8.a : Approve ยังไม่มี เลยต้องกันชนกับ ServiceRequest แถวอื่นด้วย ไม่ใช่แค่ MMerchant
+            if (await merchantRepository.IsMerchantCodeExist(shopCode) || await repository.IsShopCodeExist(shopCode, existing!.Id!.Value))
+            {
+                return new MVServiceRequest { Status = "SHOP_CODE_ALREADY_EXISTS", Description = "This shop code is already in use" };
             }
 
             var username = request.Username?.Trim() ?? "";
@@ -175,6 +196,17 @@ namespace Its.Onix.Api.Services
             if (usernameValidate.Status != "OK")
             {
                 return new MVServiceRequest { Status = usernameValidate.Status, Description = usernameValidate.Description };
+            }
+
+            // x089 ปรับแก้ 8.b : ต้องเป็น username และ email ที่ไม่มีในระบบ (MUser.cs) มาก่อนเลย
+            if (userRepository.IsUserNameExist(username))
+            {
+                return new MVServiceRequest { Status = "USERNAME_ALREADY_EXISTS", Description = "This username is already registered" };
+            }
+
+            if (userRepository.IsEmailExist(existing!.Email!))
+            {
+                return new MVServiceRequest { Status = "EMAIL_ALREADY_EXISTS", Description = "This email is already registered" };
             }
 
             if (string.IsNullOrEmpty(request.BankCode) || string.IsNullOrEmpty(request.BankAccountNumber))
@@ -292,7 +324,7 @@ namespace Its.Onix.Api.Services
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = deleted };
         }
 
-        public async Task<MVServiceRequest> RegenerateRegistrationLink(string serviceRequestId)
+        public async Task<MVServiceRequest> RegenerateRegistrationLink(string serviceRequestId, string? adminDomain = null)
         {
             if (!ServiceUtils.IsGuidValid(serviceRequestId))
             {
@@ -310,14 +342,24 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "NOT_EDITABLE", Description = $"Service request is already [{existing.Status}]" };
             }
 
+            // x089 ปรับแก้ : regenerate จาก browser ปัจจุบันแล้ว ให้ domain อัปเดตตามด้วย ไม่งั้นแถวที่สร้างจาก localhost จะติด localhost ตลอดไป
+            var newDomain = NormalizeAdminDomain(adminDomain) ?? existing.AdminDomain;
             var newOtp = ServiceUtils.GenerateSecureRandomString(32);
             var newExpiredDate = DateTime.UtcNow.AddDays(1);
-            var updated = await repository.RegenerateOtp(serviceRequestId, newOtp, newExpiredDate);
+            var updated = await repository.RegenerateOtp(serviceRequestId, newOtp, newExpiredDate, newDomain);
 
-            var link = $"{existing.AdminDomain}/customer-signup/global/{existing.Id}/{newOtp}";
+            var link = $"{newDomain}/customer-signup/global/{existing.Id}/{newOtp}";
             CreateRegistrationLinkEmailJob(updated!, link, "customer-registration-link-regenerate");
 
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated, RegistrationLink = link };
+        }
+
+        private static string? NormalizeAdminDomain(string? adminDomain)
+        {
+            var domain = adminDomain?.Trim();
+            if (string.IsNullOrEmpty(domain)) return null;
+            if (!domain.StartsWith("http://") && !domain.StartsWith("https://")) domain = $"https://{domain}";
+            return domain.TrimEnd('/');
         }
 
         public async Task<MVServiceRequest> ResendRegistrationLinkEmail(string serviceRequestId)
