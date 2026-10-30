@@ -93,6 +93,13 @@ namespace Its.Onix.Api.Database.Repositories
                 .AnyAsync();
         }
 
+        public async Task<bool> IsEmailExist(string email)
+        {
+            return await context!.ServiceRequests!
+                .Where(p => p.Email!.Equals(email) && p.Status != "Rejected")
+                .AnyAsync();
+        }
+
         public async Task<MServiceRequest?> DeleteServiceRequestById(string serviceRequestId)
         {
             var id = Guid.Parse(serviceRequestId);

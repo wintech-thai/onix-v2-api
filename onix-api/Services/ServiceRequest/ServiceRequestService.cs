@@ -48,11 +48,19 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            // x089 Bug 7 : เช็คซ้ำกับ MUser.cs ตั้งแต่ตอนสร้าง link เลย ไม่ต้องรอถึงตอน confirm
+            // x089 Bug 7 : เช็คซ้ำกับ MUser.cs (user ที่ approve ไปแล้ว) ตั้งแต่ตอนสร้าง link เลย ไม่ต้องรอถึงตอน confirm
             if (userRepository.IsEmailExist(email))
             {
                 r.Status = "EMAIL_ALREADY_EXISTS";
                 r.Description = "This email is already registered";
+                return r;
+            }
+
+            // Approve ยังไม่มี MUser เลยไม่พอ ต้องกันชนกับ ServiceRequest แถวอื่นที่ยัง Pending/Confirmed ด้วย (เหมือน Bug 8.a ของ shop code)
+            if (await repository.IsEmailExist(email))
+            {
+                r.Status = "EMAIL_REQUEST_ALREADY_EXISTS";
+                r.Description = "A registration request for this email is already pending";
                 return r;
             }
 

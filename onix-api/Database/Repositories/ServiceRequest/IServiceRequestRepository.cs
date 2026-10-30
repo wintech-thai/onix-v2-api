@@ -25,5 +25,8 @@ namespace Its.Onix.Api.Database.Repositories
 
         // x089 ปรับแก้ 8.a : เช็คชนกับ ServiceRequest แถวอื่น ไม่ใช่แค่ MMerchant
         public Task<bool> IsShopCodeExist(string shopCode, Guid excludeId);
+
+        // x089 Bug 7 : เช็คชนกับ ServiceRequest แถวอื่นที่ยัง Pending/Confirmed อยู่ ไม่ใช่แค่ MUser (ที่ยังไม่มีจนกว่าจะ Approve)
+        public Task<bool> IsEmailExist(string email);
     }
 }
