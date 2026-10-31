@@ -25,10 +25,9 @@ namespace Its.Onix.Api.Controllers
             svc = service;
         }
 
-        // x013 ข้อ 9 : ไม่สร้าง audit table ใหม่ — ต่อเข้ากับ AuditLogMiddleware ที่มีอยู่แล้ว
-        // (log ทุก request อัตโนมัติพร้อม who/when) โดยแนบ item rows ที่ส่งมาไว้ใน ContextData
-        // (เก็บลง RawData) ก็พอเห็นว่า item ไหนถูกแก้ตอนไหน แม้จะแก้แค่ item ไม่ได้แตะ doc เอง
-        // ก็ยังนับเป็น Update ของ doc เสมอ เพราะ item rows ส่งมาเป็นก้อนเดียวกับ doc request
+        // Feeds the generic ES-backed audit log (AuditLogMiddleware -> administrator/audit-log page),
+        // not the Inventory Doc Audit Trail UI on this doc's own form — that one reads MAuditTrack
+        // via AuditTrailInterceptor instead (see AuditTrailInterceptor.AuditedTables).
         private void SetAuditContext(string action, string? inventoryDocId, string? documentNo, MInventoryDoc? request)
         {
             HttpContext.Items["ContextData"] = new
