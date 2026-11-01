@@ -25,30 +25,12 @@ namespace Its.Onix.Api.Controllers
             svc = service;
         }
 
-        // Feeds the generic ES-backed audit log (AuditLogMiddleware -> administrator/audit-log page),
-        // not the Inventory Doc Audit Trail UI on this doc's own form — that one reads MAuditTrack
-        // via AuditTrailInterceptor instead (see AuditTrailInterceptor.AuditedTables).
-        private void SetAuditContext(string action, string? inventoryDocId, string? documentNo, MInventoryDoc? request)
-        {
-            HttpContext.Items["ContextData"] = new
-            {
-                Action = action,
-                InventoryDocId = inventoryDocId,
-                DocumentNo = documentNo,
-                request?.Description,
-                request?.FromLocationId,
-                request?.ToLocationId,
-                Items = request?.Items?.Select(i => new { i.ItemId, i.ItemCode, i.ItemQuantity, i.ItemUnitPrice, i.LotId, i.Project }),
-            };
-        }
-
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/AddInventoryDocStockIn")]
         public async Task<IActionResult> AddInventoryDocStockIn(string id, [FromBody] MInventoryDoc request)
         {
             var result = await svc.AddInventoryDocStockIn(id, request);
-            SetAuditContext("Add", result.InventoryDoc?.Id?.ToString(), result.InventoryDoc?.DocumentNo, request);
             return Ok(result);
         }
 
@@ -58,7 +40,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> UpdateInventoryDocStockIn(string id, string inventoryDocId, [FromBody] MInventoryDoc request)
         {
             var result = await svc.UpdateInventoryDocStockIn(id, inventoryDocId, request);
-            SetAuditContext("Update", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, request);
             return Ok(result);
         }
 
@@ -68,7 +49,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> ApproveInventoryDocStockIn(string id, string inventoryDocId)
         {
             var result = await svc.ApproveInventoryDocStockIn(id, inventoryDocId);
-            SetAuditContext("Approve", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, null);
             return Ok(result);
         }
 
@@ -78,7 +58,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> CancelInventoryDocStockIn(string id, string inventoryDocId)
         {
             var result = await svc.CancelInventoryDocStockIn(id, inventoryDocId);
-            SetAuditContext("Cancel", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, null);
             return Ok(result);
         }
 
@@ -88,7 +67,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> AddInventoryDocStockOut(string id, [FromBody] MInventoryDoc request)
         {
             var result = await svc.AddInventoryDocStockOut(id, request);
-            SetAuditContext("Add", result.InventoryDoc?.Id?.ToString(), result.InventoryDoc?.DocumentNo, request);
             return Ok(result);
         }
 
@@ -98,7 +76,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> UpdateInventoryDocStockOut(string id, string inventoryDocId, [FromBody] MInventoryDoc request)
         {
             var result = await svc.UpdateInventoryDocStockOut(id, inventoryDocId, request);
-            SetAuditContext("Update", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, request);
             return Ok(result);
         }
 
@@ -108,7 +85,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> ApproveInventoryDocStockOut(string id, string inventoryDocId)
         {
             var result = await svc.ApproveInventoryDocStockOut(id, inventoryDocId);
-            SetAuditContext("Approve", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, null);
             return Ok(result);
         }
 
@@ -118,7 +94,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> CancelInventoryDocStockOut(string id, string inventoryDocId)
         {
             var result = await svc.CancelInventoryDocStockOut(id, inventoryDocId);
-            SetAuditContext("Cancel", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, null);
             return Ok(result);
         }
 
@@ -128,7 +103,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> AddInventoryDocTransfer(string id, [FromBody] MInventoryDoc request)
         {
             var result = await svc.AddInventoryDocTransfer(id, request);
-            SetAuditContext("Add", result.InventoryDoc?.Id?.ToString(), result.InventoryDoc?.DocumentNo, request);
             return Ok(result);
         }
 
@@ -138,7 +112,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> UpdateInventoryDocTransfer(string id, string inventoryDocId, [FromBody] MInventoryDoc request)
         {
             var result = await svc.UpdateInventoryDocTransfer(id, inventoryDocId, request);
-            SetAuditContext("Update", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, request);
             return Ok(result);
         }
 
@@ -148,7 +121,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> ApproveInventoryDocTransfer(string id, string inventoryDocId)
         {
             var result = await svc.ApproveInventoryDocTransfer(id, inventoryDocId);
-            SetAuditContext("Approve", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, null);
             return Ok(result);
         }
 
@@ -158,7 +130,6 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> CancelInventoryDocTransfer(string id, string inventoryDocId)
         {
             var result = await svc.CancelInventoryDocTransfer(id, inventoryDocId);
-            SetAuditContext("Cancel", result.InventoryDoc?.Id?.ToString() ?? inventoryDocId, result.InventoryDoc?.DocumentNo, null);
             return Ok(result);
         }
 
