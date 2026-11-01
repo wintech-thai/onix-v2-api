@@ -12,6 +12,7 @@ namespace Its.Onix.Api.Services
         public Task<MDocumentNumberConfig?> UpdateDocumentNumberConfigById(string orgId, string id, MDocumentNumberConfig config);
         public Task<MDocumentNumberConfig?> DeleteDocumentNumberConfigById(string orgId, string id);
         public Task<string> GetDocumentNumber(string orgId, string documentType);
+        public Task<string> PeekNextDocumentNumber(string orgId, string documentType);
         public Task<MDocumentNumberConfig?> UpdateDocumentNumberSequence(string orgId, string id, int sequenceNo, string sequenceKey);
     }
 }

@@ -57,6 +57,28 @@ namespace Its.Onix.Api.Services
             return await _repo.DeleteDocumentNumberConfigByIdAsync(id);
         }
 
+        private static (string docNo, int seqNo, string currentKey) ComputeNextDocNo(MDocumentNumberConfig config, DateTime now)
+        {
+            // Compute the reset key: "2026" for Yearly, "2026-08" for Monthly
+            var currentKey = (config.ResetType == "Yearly")
+                ? now.Year.ToString()
+                : $"{now.Year}-{now.Month:D2}";
+
+            // Reset seq if we crossed a month/year boundary
+            var seqNo = (config.CurrentSequenceKey != currentKey) ? 0 : (config.CurrentSequenceNo ?? 0);
+            seqNo++;
+
+            var year = now.Year + (config.YearOffset ?? 0);
+            var seqStr = seqNo.ToString().PadLeft(config.SeqDigit ?? 4, '0');
+
+            var docNo = (config.DocumentFormat ?? "")
+                .Replace("${yyyy}", year.ToString())
+                .Replace("${mm}", now.Month.ToString("D2"))
+                .Replace("${seq}", seqStr);
+
+            return (docNo, seqNo, currentKey);
+        }
+
         public async Task<string> GetDocumentNumber(string orgId, string documentType)
         {
             _repo.SetCustomOrgId(orgId);
@@ -71,28 +93,23 @@ namespace Its.Onix.Api.Services
             if (config == null)
                 throw new KeyNotFoundException($"DocumentType '{documentType}' not found");
 
-            var now = DateTime.UtcNow;
-
-            // Compute the reset key: "2026" for Yearly, "2026-08" for Monthly
-            var currentKey = (config.ResetType == "Yearly")
-                ? now.Year.ToString()
-                : $"{now.Year}-{now.Month:D2}";
-
-            // Reset seq if we crossed a month/year boundary
-            var seqNo = (config.CurrentSequenceKey != currentKey) ? 0 : (config.CurrentSequenceNo ?? 0);
-            seqNo++;
-
-            // Format docNo before saving so we can persist it
-            var year = now.Year + (config.YearOffset ?? 0);
-            var seqStr = seqNo.ToString().PadLeft(config.SeqDigit ?? 4, '0');
-
-            var docNo = (config.DocumentFormat ?? "")
-                .Replace("${yyyy}", year.ToString())
-                .Replace("${mm}", now.Month.ToString("D2"))
-                .Replace("${seq}", seqStr);
+            var (docNo, seqNo, currentKey) = ComputeNextDocNo(config, DateTime.UtcNow);
 
             await _repo.UpdateDocumentNumberSequenceAsync(config.Id!.ToString()!, seqNo, currentKey, docNo);
 
+            return docNo;
+        }
+
+        // x013 ข้อ 5 : ดูเลขที่เอกสารถัดไปได้โดยไม่ increment sequence จริง — ไม่ต้องถือ lock เพราะไม่มีการเขียนข้อมูล
+        public async Task<string> PeekNextDocumentNumber(string orgId, string documentType)
+        {
+            _repo.SetCustomOrgId(orgId);
+
+            var config = await _repo.GetDocumentNumberConfigByTypeAsync(documentType);
+            if (config == null)
+                throw new KeyNotFoundException($"DocumentType '{documentType}' not found");
+
+            var (docNo, _, _) = ComputeNextDocNo(config, DateTime.UtcNow);
             return docNo;
         }
 

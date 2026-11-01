@@ -95,6 +95,15 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetNextDocumentNumber/{docType}")]
+        public async Task<IActionResult> GetNextDocumentNumber(string id, string docType)
+        {
+            var docNo = await _svc.PeekNextDocumentNumber(id, docType);
+            return Ok(new { DocumentNumber = docNo });
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateDocumentNumberSequence/{configId}")]
         public async Task<IActionResult> UpdateDocumentNumberSequence(string id, string configId, [FromBody] VMDocumentNumberSequence request)

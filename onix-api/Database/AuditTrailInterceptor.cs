@@ -12,7 +12,9 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
         new(StringComparer.OrdinalIgnoreCase)
         {
             "PaymentRequests",
-            "PaymentTransactions"
+            "PaymentTransactions",
+            "InventoryDocs",
+            "InventoryDocItems"
         };
 
     public AuditTrailInterceptor(RequestContext requestContext)
