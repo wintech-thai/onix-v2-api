@@ -175,6 +175,22 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/DeleteMyPayOutBankAccountById/{bankAccountId}")]
+        public async Task<IActionResult> DeleteMyPayOutBankAccountById(string orgId, string bankAccountId)
+        {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
+            var result = await _bankAccountSvc.DeleteBankAccountById(orgId, bankAccountId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{orgId}/action/GetPayInBankAccountsForMerchant")]
         public async Task<IActionResult> GetPayInBankAccountsForMerchant(string orgId)
