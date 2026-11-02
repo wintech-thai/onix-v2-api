@@ -143,6 +143,38 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/EnableMyPayOutBankAccountById/{bankAccountId}")]
+        public async Task<IActionResult> EnableMyPayOutBankAccountById(string orgId, string bankAccountId)
+        {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
+            var result = await _bankAccountSvc.UpdateBankAccountStatusById(orgId, bankAccountId, "Active");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/DisableMyPayOutBankAccountById/{bankAccountId}")]
+        public async Task<IActionResult> DisableMyPayOutBankAccountById(string orgId, string bankAccountId)
+        {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
+            var result = await _bankAccountSvc.UpdateBankAccountStatusById(orgId, bankAccountId, "Disabled");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{orgId}/action/GetPayInBankAccountsForMerchant")]
         public async Task<IActionResult> GetPayInBankAccountsForMerchant(string orgId)
