@@ -42,6 +42,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public MClientIpSourceConfig? ClientIpSourceConfig { get; set; }
 
+        [NotMapped]
+        public MSmtpConfig? SmtpConfig { get; set; }
+
 
         public MConfiguration()
         {

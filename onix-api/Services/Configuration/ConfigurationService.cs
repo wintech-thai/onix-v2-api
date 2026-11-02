@@ -293,6 +293,76 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVConfiguration?> GetSmtpConfig(string orgId)
+        {
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "SMTP configuration retrieved successfully"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetConfigurationByType("Smtp");
+
+            if (result == null)
+            {
+                r.Status = "NOT_FOUND";
+                r.Description = "SMTP configuration not found for the specified organization";
+                return r;
+            }
+
+            var sc = !string.IsNullOrEmpty(result.ConfigValue)
+                ? JsonSerializer.Deserialize<MSmtpConfig>(result.ConfigValue)
+                : new MSmtpConfig();
+
+            //ไม่คืน password เต็ม ๆ กลับไปให้ frontend เห็น เอาแค่ 2 ตัวหน้า 2 ตัวหลังพอ
+            sc!.SmtpPassword = ServiceUtils.MaskSmtpPassword(sc.SmtpPassword);
+
+            result.SmtpConfig = sc;
+            result.ConfigValue = "";
+
+            r.Configuration = result;
+            return r;
+        }
+
+        public async Task<MVConfiguration> SetSmtpConfig(string orgId, MConfiguration config)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "SMTP configuration saved successfully"
+            };
+
+            if (config.SmtpConfig == null)
+            {
+                r.Status = "CONFIG_VALUE_MISSING";
+                r.Description = "SMTP configuration data is missing";
+                return r;
+            }
+
+            //ถ้า user ไม่ได้กรอก password ใหม่มา (เว้นว่างไว้) ให้คงรหัสเดิมไว้ ไม่เขียนทับด้วยค่าว่าง
+            if (string.IsNullOrEmpty(config.SmtpConfig.SmtpPassword))
+            {
+                var existing = await repository!.GetConfigurationByType("Smtp");
+                var existingSc = !string.IsNullOrEmpty(existing?.ConfigValue)
+                    ? JsonSerializer.Deserialize<MSmtpConfig>(existing!.ConfigValue!)
+                    : null;
+                config.SmtpConfig.SmtpPassword = existingSc?.SmtpPassword;
+            }
+
+            config.ConfigType = "Smtp";
+            config.ConfigValue = JsonSerializer.Serialize(config.SmtpConfig);
+            config.Status = "Active";
+
+            var c = await repository!.UpsertConfiguration(config);
+            c.ConfigValue = "";
+
+            r.Configuration = c;
+            return r;
+        }
+
         [Obsolete("Brand logo is now uploaded as base64 directly via SetBrandConfig. Kept only until legacy clients stop calling it.")]
         public async Task<MVPresignedUrl> GetBrandLogoUploadPresignedUrl(string orgId, VMUploadDocument param)
         {

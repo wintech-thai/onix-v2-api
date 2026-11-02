@@ -18,5 +18,7 @@ namespace Its.Onix.Api.Services
         public Task<MVConfiguration> SetBackupPolicy(string orgId, MConfiguration config);
         public Task<MVConfiguration?> GetClientIpSource(string orgId, string scope);
         public Task<MVConfiguration> SetClientIpSource(string orgId, string scope, MConfiguration config);
+        public Task<MVConfiguration?> GetSmtpConfig(string orgId);
+        public Task<MVConfiguration> SetSmtpConfig(string orgId, MConfiguration config);
     }
 }

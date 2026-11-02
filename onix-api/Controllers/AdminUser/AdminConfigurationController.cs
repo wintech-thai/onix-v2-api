@@ -14,11 +14,13 @@ namespace Its.Onix.Api.Controllers
     public class AdminConfigurationController : ControllerBase
     {
         private readonly IConfigurationService svc;
+        private readonly IJobService _jobService;
 
         [ExcludeFromCodeCoverage]
-        public AdminConfigurationController(IConfigurationService service)
+        public AdminConfigurationController(IConfigurationService service, IJobService jobService)
         {
             svc = service;
+            _jobService = jobService;
         }
 
         [ExcludeFromCodeCoverage]
@@ -113,6 +115,61 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> SetClientIpSource(string scope, [FromBody] MConfiguration cfg)
         {
             var result = await svc.SetClientIpSource("global", scope, cfg);
+            return Ok(result);
+        }
+
+        //x091 : ต้อง authen ถึงจะอ่านค่า SMTP config ได้ (ไม่มี [AllowAnonymous] เหมือน GetBrandConfig)
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetSmtpConfig")]
+        public async Task<IActionResult> GetSmtpConfig()
+        {
+            var result = await svc.GetSmtpConfig("global");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SetSmtpConfig")]
+        public async Task<IActionResult> SetSmtpConfig([FromBody] MConfiguration cfg)
+        {
+            var result = await svc.SetSmtpConfig("global", cfg);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SubmitTestEmailJob")]
+        public IActionResult SubmitTestEmailJob([FromBody] VMSubmitTestEmail request)
+        {
+            if (string.IsNullOrEmpty(request.ToEmail))
+            {
+                return Ok(new { Status = "ERROR_EMAIL_REQUIRED", Description = "Test email recipient is required" });
+            }
+
+            var job = new MJob
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "AdminConfigurationController.SubmitTestEmailJob()",
+                Type = "PleasePaymentEmailSend",
+                Status = "Pending",
+                Tags = "smtp-test-email",
+                Parameters =
+                [
+                    new NameValue { Name = "TEST_EMAIL_ADDRESS", Value = request.ToEmail },
+                ]
+            };
+
+            var result = _jobService.AddJob("global", job);
+            return Ok(new { Status = "OK", Description = "Success", JobId = result?.Job?.Id });
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetTestEmailJobById/{jobId}")]
+        public IActionResult GetTestEmailJobById(string jobId)
+        {
+            var result = _jobService.GetJobById("global", jobId);
             return Ok(result);
         }
     }
