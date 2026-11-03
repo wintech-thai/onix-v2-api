@@ -506,6 +506,14 @@ namespace Its.Onix.Api.Controllers
         }
 
         [HttpGet]
+        [Route("org/{orgId}/action/GeneratePayOutSlipUploadToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayOutSlipUploadToken(string orgId, string paymentRequestId)
+        {
+            var result = await _paymentRequestSvc.GeneratePayOutSlipUploadToken(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+        [HttpGet]
         [Route("org/{orgId}/action/GeneratePayInStatusToken/{paymentRequestId}")]
         public async Task<IActionResult> GeneratePayInStatusToken(string orgId, string paymentRequestId)
         {
