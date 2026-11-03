@@ -288,7 +288,7 @@ namespace Its.Onix.Api.Database.Repositories
                 return null;
             }
 
-            var result = await context!.BankAccounts!
+            var result = await context!.BankAccounts!.AsExpandable()
                 .Where(p => p!.Id!.Equals(id))
                 .Select(p => p!.OrgId)
                 .FirstOrDefaultAsync();
