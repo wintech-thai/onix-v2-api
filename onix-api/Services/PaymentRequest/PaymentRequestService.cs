@@ -1115,7 +1115,9 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayInFeePct = merchant.PayinFeePct;
             paymentRequest.PayinBankAccountId = bankAccount.Id.ToString();
             paymentRequest.PayoutFeePct = merchant.PayoutFeePct;
-            paymentRequest.FeeDeductionSource = merchant.PayOutFeeWalletSource; //MerchantWallet, PointWallet - ไว้ใช้ตอนหักค่าธรรมเนียม payout
+            //MerchantWallet, PointWallet - ไว้ใช้ตอนหักค่าธรรมเนียม payout
+            //MerchantOwn ต้องเป็น PointWallet เสมอ (บังคับที่นี่ด้วย เผื่อ merchant.PayOutFeeWalletSource ยังเป็น null ของเก่าที่ยังไม่เคย save ผ่านหน้า Admin)
+            paymentRequest.FeeDeductionSource = (merchant.PayInBankCustodyType == "MerchantOwn") ? "PointWallet" : merchant.PayOutFeeWalletSource;
             paymentRequest.GeneratedAmount = paymentRequest.RequestedAmount;
 
             paymentRequest.PayoutPartialCountLimitP2P = merchant.PayoutPartialCountLimitP2P;
@@ -1144,7 +1146,7 @@ namespace Its.Onix.Api.Services
             paymentRequest.PayoutFeeDecimal = payoutFee;
 
             //ต่อให้ยังไม่หักค่าธรรมเนียมจริง ๆ ตอนนี้ ก็ควรเช็คไว้ก่อนว่ามียอด balance พอหรือไม่ ถ้าหักค่าธรรมเนียมจาก Point Wallet
-            if ((paymentRequest.PayoutFeePayer == "Merchant") && (payoutFee > 0) && (merchant.PayOutFeeWalletSource == "PointWallet"))
+            if ((paymentRequest.PayoutFeePayer == "Merchant") && (payoutFee > 0) && (paymentRequest.FeeDeductionSource == "PointWallet"))
             {
                 var merchantId = merchant.Id.ToString()!;
                 var feeWallet = await _pointService!.GetWalletByRefIdAndType(orgId, merchantId, "MerchantPoint");

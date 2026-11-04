@@ -87,6 +87,8 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutAccountLevel = x.pr.PayoutAccountLevel,
                 PayoutFeePct = x.pr.PayoutFeePct,
                 PayoutFeeDecimal = x.pr.PayoutFeeDecimal,
+                //ขาดฟีลด์นี้ไปทำให้ query ตรงนี้คืนค่า default จาก constructor ("Merchant") เสมอ ไม่ว่า DB จะเก็บเป็นอะไรจริง ๆ
+                PayoutFeePayer = x.pr.PayoutFeePayer,
                 TotalPayOutPendingPaidAmountDecimal = x.pr.TotalPayOutPendingPaidAmountDecimal,
                 TotalPayOutPaidAmountDecimal = x.pr.TotalPayOutPaidAmountDecimal,
                 PartialPayoutHistory = x.pr.PartialPayoutHistory,

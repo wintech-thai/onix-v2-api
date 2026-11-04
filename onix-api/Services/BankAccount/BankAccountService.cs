@@ -199,6 +199,11 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<string?> GetBankAccountOrgIdById(string bankAccountId)
+        {
+            return await repository!.GetBankAccountOrgIdById(bankAccountId);
+        }
+
         public async Task<MVBankAccount> GetBankAccountById(string orgId, string bankAccountId)
         {
             repository!.SetCustomOrgId(orgId);

@@ -28,6 +28,30 @@ namespace Its.Onix.Api.Controllers
             _jobService = jobService;
         }
 
+        private async Task<MMerchant?> GetCurrentMerchant(string orgId)
+        {
+            var param = new VMMerchant { Limit = 100, Offset = 0 };
+            var merchants = await _merchantSvc.GetMerchants(orgId, param);
+
+            return merchants.FirstOrDefault(m => m.OrgId == orgId);
+        }
+
+        //x091 : merchant แบบ MerchantOwn เท่านั้นที่สร้าง/แก้ไข/ลบ/approve/reject Pay-Out, Withdraw request เองได้จากโปรแกรม Merchant
+        private static MVPaymentRequest? DenyIfMerchantIsNotOwn(MMerchant? mc)
+        {
+            if (mc == null)
+            {
+                return new MVPaymentRequest { Status = "ERROR_MERCHANT_NOT_FOUND", Description = "Merchant not found for this organization" };
+            }
+
+            if (mc.PayInBankCustodyType != "MerchantOwn")
+            {
+                return new MVPaymentRequest { Status = "ERROR_PLATFORM_OWN_NOT_ALLOWED", Description = "This action is only allowed for MerchantOwn merchants" };
+            }
+
+            return null;
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{orgId}/action/GetPaymentRequests")]
@@ -74,14 +98,14 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/CreatePayOutRequest")]
         public async Task<IActionResult> CreatePayOutRequest(string orgId, [FromBody] MPaymentRequest request)
         {
-            if (string.IsNullOrEmpty(request.MerchantId))
-                return Ok(new { Status = "Error", Description = "MerchantId is required" });
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
 
-            var merchantVm = await _merchantSvc.GetMerchantById(orgId, request.MerchantId);
-            if (merchantVm.Status != "OK" || merchantVm.Merchant == null)
-                return Ok(merchantVm);
-
-            var merchant = merchantVm.Merchant;
+            var merchant = mc!;
             var bankAccountId = request.PayinBankAccountId!;
             var baVm = new MVBankAccount() { Status = "OK", BankAccount = null };
             if (string.IsNullOrEmpty(bankAccountId))
@@ -98,7 +122,8 @@ namespace Its.Onix.Api.Controllers
             }
             else
             {
-                baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+                //Pay-Out bank account ของ merchant แบบ MerchantOwn เก็บด้วย OrgId ของ merchant เอง ไม่ใช่ "global"
+                baVm = await _bankAccountSvc.GetBankAccountById(orgId, bankAccountId);
                 if (baVm.Status != "OK" || baVm.BankAccount == null)
                     return Ok(baVm);
             }
@@ -117,9 +142,16 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/UpdatePayOutRequestById/{paymentRequestId}")]
         public async Task<IActionResult> UpdatePayOutRequestById(string orgId, string paymentRequestId, [FromBody] MPaymentRequest request)
         {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             if (!string.IsNullOrEmpty(request.PayinBankAccountId))
             {
-                var baVm = await _bankAccountSvc.GetBankAccountById("global", request.PayinBankAccountId);
+                var baVm = await _bankAccountSvc.GetBankAccountById(orgId, request.PayinBankAccountId);
                 if (baVm.Status == "OK" && baVm.BankAccount != null)
                 {
                     var ba = baVm.BankAccount;
@@ -139,7 +171,46 @@ namespace Its.Onix.Api.Controllers
         [Route("org/{orgId}/action/DeletePayOutRequestById/{paymentRequestId}")]
         public async Task<IActionResult> DeletePayOutRequestById(string orgId, string paymentRequestId)
         {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             var result = await _paymentRequestSvc.DeletePayOutRequestById(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/ApprovePayOutRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> ApprovePayOutRequestById(string orgId, string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
+            var result = await _paymentRequestSvc.ApprovePaymentRequestPayOut(orgId, paymentRequestId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/RejectPayOutRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> RejectPayOutRequestById(string orgId, string paymentRequestId, [FromBody] MPaymentRequest request)
+        {
+            var mc = await GetCurrentMerchant(orgId);
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
+            var result = await _paymentRequestSvc.RejectPaymentRequestPayOut(orgId, paymentRequestId, request);
             return Ok(result);
         }
 
@@ -268,6 +339,12 @@ namespace Its.Onix.Api.Controllers
 
             var merchant = merchantVm.Merchant;
 
+            var denyResult = DenyIfMerchantIsNotOwn(merchant);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
+
             var bankAccountId = request.PayinBankAccountId!;
             var baVm = new MVBankAccount() { Status = "OK", BankAccount = null };
             if (string.IsNullOrEmpty(bankAccountId))
@@ -285,7 +362,8 @@ namespace Its.Onix.Api.Controllers
             }
             else
             {
-                baVm = await _bankAccountSvc.GetBankAccountById("global", bankAccountId);
+                //Pay-Out bank account ของ merchant แบบ MerchantOwn เก็บด้วย OrgId ของ merchant เอง ไม่ใช่ "global"
+                baVm = await _bankAccountSvc.GetBankAccountById(orgId, bankAccountId);
                 if (baVm.Status != "OK" || baVm.BankAccount == null)
                 return Ok(baVm);
             }
@@ -424,6 +502,14 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> GeneratePayInSlipUploadToken(string orgId, string paymentRequestId)
         {
             var result = await _paymentRequestSvc.GeneratePayInSlipUploadToken(orgId, paymentRequestId);
+            return Ok(result);
+        }
+
+        [HttpGet]
+        [Route("org/{orgId}/action/GeneratePayOutSlipUploadToken/{paymentRequestId}")]
+        public async Task<IActionResult> GeneratePayOutSlipUploadToken(string orgId, string paymentRequestId)
+        {
+            var result = await _paymentRequestSvc.GeneratePayOutSlipUploadToken(orgId, paymentRequestId);
             return Ok(result);
         }
 

@@ -28,6 +28,7 @@ namespace Its.Onix.Api.Database.Repositories
 
         public Task<int> GetBankAccountCount(VMBankAccount param);
         public Task<MBankAccount?> GetBankAccountById(string bankAccountId);
+        public Task<string?> GetBankAccountOrgIdById(string bankAccountId);
         public Task<MBankAccount> AddBankAccount(MBankAccount bankAccount);
         public Task<MBankAccount?> DeleteBankAccountById(string bankAccountId);
         public Task<MBankAccount?> UpdateBankAccountById(string bankAccountId, MBankAccount bankAccount);

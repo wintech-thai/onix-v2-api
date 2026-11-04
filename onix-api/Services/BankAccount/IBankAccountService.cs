@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     public interface IBankAccountService
     {
         public Task<MVBankAccount> GetBankAccountById(string orgId, string bankAccountId);
+        public Task<string?> GetBankAccountOrgIdById(string bankAccountId);
         public Task<MVBankAccount> AddBankAccount(string orgId, MBankAccount bankAccount);
         public Task<MVBankAccount> DeleteBankAccountById(string orgId, string bankAccountId);
         public Task<List<MBankAccount>> GetBankAccounts(string orgId, VMBankAccount param);

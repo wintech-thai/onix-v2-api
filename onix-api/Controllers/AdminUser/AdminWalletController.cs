@@ -129,7 +129,9 @@ namespace Prom.LPR.Api.Controllers
         [Route("org/global/action/GetWalletByBankAccountId/{bankAccountId}")]
         public async Task<IActionResult> GetWalletByBankAccountId(string bankAccountId)
         {
-            var result = await svc.GetWalletByBankAccountId("global", bankAccountId);
+            //MerchantOwn bank account orgId ไม่ใช่ "global" เสมอไป
+            var realOrgId = await _bankAccountSvc.GetBankAccountOrgIdById(bankAccountId) ?? "global";
+            var result = await svc.GetWalletByBankAccountId(realOrgId, bankAccountId);
             return Ok(result);
         }
     }

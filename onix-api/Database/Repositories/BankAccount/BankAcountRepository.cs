@@ -280,6 +280,22 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        //ไม่กรอง orgId ตั้งใจ — ใช้หา orgId จริงตอนยังไม่รู้ล่วงหน้า
+        public async Task<string?> GetBankAccountOrgIdById(string bankAccountId)
+        {
+            if (!Guid.TryParse(bankAccountId, out var id))
+            {
+                return null;
+            }
+
+            var result = await context!.BankAccounts!.AsExpandable()
+                .Where(p => p!.Id!.Equals(id))
+                .Select(p => p!.OrgId)
+                .FirstOrDefaultAsync();
+
+            return result;
+        }
+
         public async Task<MBankAccount?> GetBankAccountById(string bankAccountId)
         {
             Guid id = Guid.Parse(bankAccountId);

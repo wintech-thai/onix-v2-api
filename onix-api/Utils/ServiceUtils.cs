@@ -156,6 +156,18 @@ namespace Its.Onix.Api.Utils
             return pin[0] + new string('*', pin.Length - 2) + pin[^1];
         }
 
+        //x091 : ให้เห็นแค่ 2 ตัวหน้า 2 ตัวหลัง เช่น "sm*******iK"
+        public static string MaskSmtpPassword(string? password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return "";
+
+            if (password.Length <= 4)
+                return new string('*', password.Length);
+
+            return password[..2] + new string('*', password.Length - 4) + password[^2..];
+        }
+
         public static string GetDomain(string orgType, string domainType)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
