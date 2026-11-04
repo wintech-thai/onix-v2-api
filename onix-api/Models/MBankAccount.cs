@@ -86,6 +86,9 @@ namespace Its.Onix.Api.Models
         [Column("decimal_action")]
         public string? DecimalAction { get; set; } /* Round, RoundUp, Truncate */ //เอาไว้บอกว่าหากยอด request เข้ามามีทศนิยมจะทำอย่างไร
 
+        [Column("book_bank_file_document_id")]
+        public string? BookBankFileDocumentId { get; set; } /* Ref ไปยัง MFileDocument.Id — copy มาจาก service request ตอน approve หรือ upload เองได้จากหน้า bank account */
+
 
         //System fields
         [Column("created_date")]

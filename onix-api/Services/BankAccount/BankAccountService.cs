@@ -11,13 +11,15 @@ namespace Its.Onix.Api.Services
     {
         private readonly IBankAccountRepository? repository = null;
         private readonly IPointRepository? _pointRepo = null;
+        private readonly IFileDocumentService _fileDocumentService;
         private readonly List<MBank> _banks;
         private readonly IRedisHelper _redis;
 
-        public BankAccountService(IBankAccountRepository repo, IPointRepository pointRepo, IRedisHelper redis) : base()
+        public BankAccountService(IBankAccountRepository repo, IPointRepository pointRepo, IFileDocumentService fileDocumentService, IRedisHelper redis) : base()
         {
             repository = repo;
             _pointRepo = pointRepo;
+            _fileDocumentService = fileDocumentService;
             _redis = redis;
 
             _banks = [
@@ -266,6 +268,56 @@ namespace Its.Onix.Api.Services
 
             r.BankAccount = result;
             r.BankAccount.BankConfig = "";
+
+            if (!string.IsNullOrEmpty(result.BookBankFileDocumentId))
+            {
+                var fileResult = await _fileDocumentService.GetFileDocumentById(orgId, result.BookBankFileDocumentId);
+                if (fileResult.Status == "OK" && fileResult.FileDocument != null)
+                {
+                    r.BookBankImageBase64 = fileResult.FileDocument.FileContent;
+                    r.BookBankMimeType = fileResult.FileDocument.MimeType;
+                }
+            }
+
+            return r;
+        }
+
+        public async Task<MVBankAccount> UploadBankAccountBookBank(string orgId, string bankAccountId, MFileDocument fileDocument)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVBankAccount() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(bankAccountId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Bank Account ID [{bankAccountId}] format is invalid";
+                return r;
+            }
+
+            var existing = await repository!.GetBankAccountById(bankAccountId);
+            if (existing == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Bank Account ID [{bankAccountId}] not found for the organization [{orgId}]";
+                return r;
+            }
+
+            fileDocument.DocumentType = "BookBank";
+            fileDocument.IsPublic = false;
+
+            var fileResult = await _fileDocumentService.AddFileDocument(orgId, fileDocument);
+            if (fileResult.Status != "OK")
+            {
+                r.Status = fileResult.Status;
+                r.Description = fileResult.Description;
+                return r;
+            }
+
+            var updated = await repository!.UpdateBankAccountBookBankById(bankAccountId, fileResult.FileDocument!.Id.ToString()!);
+            r.BankAccount = updated;
+            r.BookBankImageBase64 = fileResult.FileDocument.FileContent;
+            r.BookBankMimeType = fileResult.FileDocument.MimeType;
 
             return r;
         }

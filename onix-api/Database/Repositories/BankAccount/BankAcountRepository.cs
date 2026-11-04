@@ -78,6 +78,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutMinAmount = x.bankaccount != null ? x.bankaccount.PayoutMinAmount : null,
                 PayoutMaxAmount = x.bankaccount != null ? x.bankaccount.PayoutMaxAmount : null,
                 DailyQuota = x.bankaccount != null ? x.bankaccount.DailyQuota : null,
+                CurrentBalance = x.bankaccount != null ? x.bankaccount.CurrentBalance : null, // x090 5.a : ขาดไปทำให้หน้า payout ของ MerchantOwn ไม่เห็นยอดคงเหลือ
 
                 //ข้อมูลของ Merchant
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
@@ -346,6 +347,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.ba.Status,
                 IsRandomCent = x.ba.IsRandomCent,
                 DecimalAction = x.ba.DecimalAction,
+                BookBankFileDocumentId = x.ba.BookBankFileDocumentId,
             });
         }
 
@@ -467,6 +469,19 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MBankAccount?> UpdateBankAccountBookBankById(string bankAccountId, string fileDocumentId)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            var existing = await context!.BankAccounts!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.BookBankFileDocumentId = fileDocumentId;
+                await context.SaveChangesAsync();
+            }
+
             return existing;
         }
     }

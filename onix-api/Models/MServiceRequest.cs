@@ -70,6 +70,15 @@ namespace Its.Onix.Api.Models
         [Column("shop_code")]
         public string? ShopCode { get; set; } /* ชื่อ/รหัสร้านค้า — กลายเป็นชื่อ Organization ตอน approve ด้วย */
 
+        [Column("reject_reason")]
+        public string? RejectReason { get; set; } /* free text เหตุผลตอน Reject — ใช้ส่งไปในอีเมลแจ้งผลด้วย */
+
+        [Column("merchant_setup_data_json")]
+        public string? MerchantSetupDataJson { get; set; } /* เก็บข้อมูล MOrganization ที่กรอกใน wizard ตอน approve ไว้ดูย้อนหลัง — ไม่ได้เอามาแสดง */
+
+        [Column("bank_account_setup_data_json")]
+        public string? BankAccountSetupDataJson { get; set; } /* เก็บข้อมูล MBankAccount ที่กรอกใน wizard ตอน approve ไว้ดูย้อนหลัง — ไม่ได้เอามาแสดง */
+
         [Column("username")]
         public string? Username { get; set; } /* ลูกค้ากำหนดเอง */
 

@@ -25,6 +25,8 @@ namespace Its.Onix.Api.Services
         public Task<int> GetServiceRequestCount(VMServiceRequest param);
         public Task<MVServiceRequest> UpdateServiceRequestById(string serviceRequestId, MServiceRequest request);
         public Task<MVServiceRequest> DeleteServiceRequestById(string serviceRequestId);
+        public Task<MVServiceRequest> RejectServiceRequest(string serviceRequestId, string? reason);
+        public Task<MVServiceRequest> ApproveServiceRequest(string serviceRequestId, VMApproveServiceRequest payload);
 
         // ปุ่ม regenerate link / resend email บนหน้า Admin
         public Task<MVServiceRequest> RegenerateRegistrationLink(string serviceRequestId, string? adminDomain = null);

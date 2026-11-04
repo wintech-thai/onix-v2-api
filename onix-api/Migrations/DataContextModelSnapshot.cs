@@ -812,6 +812,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("bank_config");
 
+                    b.Property<string>("BookBankFileDocumentId")
+                        .HasColumnType("text")
+                        .HasColumnName("book_bank_file_document_id");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
@@ -4868,6 +4872,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("bank_account_number");
 
+                    b.Property<string>("BankAccountSetupDataJson")
+                        .HasColumnType("text")
+                        .HasColumnName("bank_account_setup_data_json");
+
                     b.Property<string>("BankCode")
                         .HasColumnType("text")
                         .HasColumnName("bank_code");
@@ -4900,6 +4908,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("last_name");
 
+                    b.Property<string>("MerchantSetupDataJson")
+                        .HasColumnType("text")
+                        .HasColumnName("merchant_setup_data_json");
+
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -4915,6 +4927,10 @@ namespace onix.api.Migrations
                     b.Property<string>("PromptPayId")
                         .HasColumnType("text")
                         .HasColumnName("prompt_pay_id");
+
+                    b.Property<string>("RejectReason")
+                        .HasColumnType("text")
+                        .HasColumnName("reject_reason");
 
                     b.Property<string>("ServiceType")
                         .HasColumnType("text")

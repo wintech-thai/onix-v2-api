@@ -105,6 +105,24 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/RejectServiceRequestById/{serviceRequestId}")]
+        public async Task<IActionResult> RejectServiceRequestById(string serviceRequestId, [FromBody] MServiceRequest request)
+        {
+            var result = await svc.RejectServiceRequest(serviceRequestId, request.RejectReason);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/ApproveServiceRequestById/{serviceRequestId}")]
+        public async Task<IActionResult> ApproveServiceRequestById(string serviceRequestId, [FromBody] VMApproveServiceRequest request)
+        {
+            var result = await svc.ApproveServiceRequest(serviceRequestId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpDelete]
         [Route("org/global/action/DeleteServiceRequestById/{serviceRequestId}")]
         public async Task<IActionResult> DeleteServiceRequestById(string serviceRequestId)
