@@ -522,6 +522,9 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = inviteResult?.Status ?? "INVITE_FAILED", Description = $"Merchant and bank account were created and linked, but failed to invite user: {inviteResult?.Description}" };
             }
 
+            // InviteUserWithLink คืน URL แบบ placeholder "<REGISTER_SERVICE_DOMAIN>" เสมอ ต้องแทนที่ด้วย merchant domain จริงก่อนส่งอีเมลให้ลูกค้า
+            var signupLink = inviteResult.RegistrationUrl!.Replace("https://<REGISTER_SERVICE_DOMAIN>", DeriveMerchantDomain(existing.AdminDomain));
+
             existing.Status = "Approved";
             existing.ApprovedDate = DateTime.UtcNow;
             existing.MerchantSetupDataJson = JsonSerializer.Serialize(org);
@@ -529,10 +532,19 @@ namespace Its.Onix.Api.Services
 
             var updated = await repository.UpdateServiceRequestById(serviceRequestId, existing);
 
-            CreateApprovalEmailJob(updated!, inviteResult.RegistrationUrl!);
+            CreateApprovalEmailJob(updated!, signupLink);
             jobService.CreateMerchantRegistrationEventJob(ORG_ID, updated!, "approve");
 
-            return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated, RegistrationLink = inviteResult.RegistrationUrl };
+            return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated, RegistrationLink = signupLink };
+        }
+
+        // admin domain กับ merchant domain เป็น subdomain คู่กันเสมอ (เช่น admin-dev.x / merchant-dev.x) ตามรูปแบบเดียวกับ getMerchantBase() ฝั่ง frontend
+        private static string DeriveMerchantDomain(string? adminDomain)
+        {
+            if (string.IsNullOrWhiteSpace(adminDomain)) return "<REGISTER_SERVICE_DOMAIN>";
+            return adminDomain.Contains("admin", StringComparison.OrdinalIgnoreCase)
+                ? adminDomain.Replace("admin", "merchant", StringComparison.OrdinalIgnoreCase)
+                : adminDomain;
         }
 
         // ส่ง event ไปที่ Redis Stream ให้ Ruby job ส่งอีเมลแจ้งผลอนุมัติ พร้อม link สำหรับ signup
