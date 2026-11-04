@@ -475,7 +475,8 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MBankAccount?> UpdateBankAccountBookBankById(string bankAccountId, string fileDocumentId)
         {
             Guid id = Guid.Parse(bankAccountId);
-            var existing = await context!.BankAccounts!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            // ต้องผ่าน AsExpandable() ก่อน ไม่งั้น FirstOrDefaultAsync จะ bind ผิดไปที่ System.Data.Entity แล้วพังตอน runtime
+            var existing = await context!.BankAccounts!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing != null)
             {
                 existing.BookBankFileDocumentId = fileDocumentId;
