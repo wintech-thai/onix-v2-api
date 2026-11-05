@@ -381,6 +381,14 @@ namespace Its.Onix.Api.Database.Repositories
                 pd = pd.And(accTypePd);
             }
 
+            if ((param.CustodyType != null) && (param.CustodyType != ""))
+            {
+                var custodyTypePd = PredicateBuilder.New<MBankAccount>();
+                custodyTypePd = custodyTypePd.Or(p => p.CustodyType!.Equals(param.CustodyType));
+
+                pd = pd.And(custodyTypePd);
+            }
+
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
                 var fullTextPd = PredicateBuilder.New<MBankAccount>();

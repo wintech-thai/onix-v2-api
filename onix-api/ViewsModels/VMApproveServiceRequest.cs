@@ -8,6 +8,6 @@ namespace Its.Onix.Api.ViewsModels
     {
         public MOrganization? Organization { get; set; }
         public MBankAccount? BankAccount { get; set; }
-        public string? ExistingBankAccountId { get; set; } // x090 ปรับแก้ 2 : PlatformOwn เลือกจากบัญชีที่มีอยู่แล้วแทนการสร้างใหม่
+        public string? ExistingBankAccountId { get; set; } // PlatformOwn เลือกจากบัญชีที่มีอยู่แล้วแทนการสร้างใหม่
     }
 }

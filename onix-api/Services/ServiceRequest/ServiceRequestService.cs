@@ -223,7 +223,7 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "BANK_ACCOUNT_REQUIRED", Description = "Bank code and account number are required" };
             }
 
-            // x090 ปรับแก้ 1 : เช็ค dup บัญชีธนาคารตั้งแต่หน้า registration เลย (bank code + account number / account name เดียวกับ logic ของ bank account ปกติ)
+            // เช็ค dup บัญชีธนาคารตั้งแต่หน้า registration เลย (logic เดียวกับ AddBankAccount)
             var dupStatus = await bankAccountService.CheckBankAccountDuplicate("global", request.BankAccountNumber, request.BankCode, request.BankAccountName);
             if (dupStatus != null)
             {
@@ -503,7 +503,7 @@ namespace Its.Onix.Api.Services
             string bankAccountId;
             if (!string.IsNullOrEmpty(payload.ExistingBankAccountId))
             {
-                // x090 ปรับแก้ 2 : PlatformOwn เลือกผูกกับบัญชีที่มีอยู่แล้ว ไม่ต้องสร้างใหม่
+                // PlatformOwn เลือกผูกกับบัญชีที่มีอยู่แล้ว ไม่ต้องสร้างใหม่
                 bankAccountId = payload.ExistingBankAccountId;
             }
             else
@@ -517,7 +517,7 @@ namespace Its.Onix.Api.Services
                 }
 
                 bankAccountId = bankAccountResult.BankAccount!.Id.ToString()!;
-                await bankAccountService.UpdateBankAccountStatusById("global", bankAccountId, "Active"); // x090 ปรับแก้ 3 : AddBankAccount default เป็น Pending แต่บัญชีจาก approve ต้อง Active เลย
+                await bankAccountService.UpdateBankAccountStatusById("global", bankAccountId, "Active"); // AddBankAccount default เป็น Pending แต่บัญชีจาก approve ต้อง Active เลย
             }
 
             var linkResult = await bankAccountService.SelectMerchant("global", bankAccountId, existing.ShopCode);

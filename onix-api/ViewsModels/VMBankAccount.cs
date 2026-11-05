@@ -9,5 +9,6 @@ namespace Its.Onix.Api.ViewsModels
         public string? AccountCategory { get; set; }
         public string? AccountLevel { get; set; }
         public string? AccountType { get; set; }
+        public string? CustodyType { get; set; }
     }
 }
