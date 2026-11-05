@@ -383,8 +383,16 @@ namespace Its.Onix.Api.Database.Repositories
 
             if ((param.CustodyType != null) && (param.CustodyType != ""))
             {
+                // บัญชีเก่าหลายตัวไม่เคยตั้ง CustodyType ไว้ (null) ซึ่งหน้า list ถือว่าเป็น PlatformOwn (ไม่ใช่ MerchantOwn ก็ถือเป็น PlatformOwn)
                 var custodyTypePd = PredicateBuilder.New<MBankAccount>();
-                custodyTypePd = custodyTypePd.Or(p => p.CustodyType!.Equals(param.CustodyType));
+                if (param.CustodyType == "PlatformOwn")
+                {
+                    custodyTypePd = custodyTypePd.Or(p => p.CustodyType != "MerchantOwn");
+                }
+                else
+                {
+                    custodyTypePd = custodyTypePd.Or(p => p.CustodyType!.Equals(param.CustodyType));
+                }
 
                 pd = pd.And(custodyTypePd);
             }
