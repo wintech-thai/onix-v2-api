@@ -79,6 +79,7 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutMaxAmount = x.bankaccount != null ? x.bankaccount.PayoutMaxAmount : null,
                 DailyQuota = x.bankaccount != null ? x.bankaccount.DailyQuota : null,
                 CurrentBalance = x.bankaccount != null ? x.bankaccount.CurrentBalance : null, // x090 5.a : ขาดไปทำให้หน้า payout ของ MerchantOwn ไม่เห็นยอดคงเหลือ
+                BookBankFileDocumentId = x.bankaccount != null ? x.bankaccount.BookBankFileDocumentId : null,
 
                 //ข้อมูลของ Merchant
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,

@@ -94,6 +94,9 @@ namespace Its.Onix.Api.Models
         public string? BankAccountStatus { get; set; } //Active, Pending, Disabled
 
         [NotMapped]
+        public string? BookBankFileDocumentId { get; set; }
+
+        [NotMapped]
         public int? MerchantCount { get; set; }
 
         [NotMapped]
