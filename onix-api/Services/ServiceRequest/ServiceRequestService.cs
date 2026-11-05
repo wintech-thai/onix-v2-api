@@ -223,6 +223,13 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "BANK_ACCOUNT_REQUIRED", Description = "Bank code and account number are required" };
             }
 
+            // x090 ปรับแก้ 1 : เช็ค dup บัญชีธนาคารตั้งแต่หน้า registration เลย (bank code + account number / account name เดียวกับ logic ของ bank account ปกติ)
+            var dupStatus = await bankAccountService.CheckBankAccountDuplicate("global", request.BankAccountNumber, request.BankCode, request.BankAccountName);
+            if (dupStatus != null)
+            {
+                return new MVServiceRequest { Status = dupStatus, Description = dupStatus == "ACCOUNT_NUMBER_DUPLICATE" ? "This bank account number is already registered" : "This bank account name is already registered" };
+            }
+
             existing!.Status = "Confirmed";
             existing.FirstName = request.FirstName?.Trim();
             existing.LastName = request.LastName?.Trim();
@@ -459,7 +466,7 @@ namespace Its.Onix.Api.Services
             {
                 return new MVServiceRequest { Status = "MERCHANT_INFO_REQUIRED", Description = "Merchant info is required" };
             }
-            if (payload.BankAccount == null)
+            if (payload.BankAccount == null && string.IsNullOrEmpty(payload.ExistingBankAccountId))
             {
                 return new MVServiceRequest { Status = "BANK_ACCOUNT_INFO_REQUIRED", Description = "Bank account info is required" };
             }
@@ -493,15 +500,26 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = orgResult.Status, Description = $"Failed to create merchant: {orgResult.Description}" };
             }
 
-            var bankAccount = payload.BankAccount;
-            bankAccount.BookBankFileDocumentId = existing.BookBankFileDocumentId; // x090 4.b : copy book-bank photo from the service request over to the new bank account
-            var bankAccountResult = await bankAccountService.AddBankAccount("global", bankAccount);
-            if (bankAccountResult.Status != "OK")
+            string bankAccountId;
+            if (!string.IsNullOrEmpty(payload.ExistingBankAccountId))
             {
-                return new MVServiceRequest { Status = bankAccountResult.Status, Description = $"Merchant was created, but failed to create bank account: {bankAccountResult.Description}" };
+                // x090 ปรับแก้ 2 : PlatformOwn เลือกผูกกับบัญชีที่มีอยู่แล้ว ไม่ต้องสร้างใหม่
+                bankAccountId = payload.ExistingBankAccountId;
+            }
+            else
+            {
+                var bankAccount = payload.BankAccount!;
+                bankAccount.BookBankFileDocumentId = existing.BookBankFileDocumentId; // x090 4.b : copy book-bank photo from the service request over to the new bank account
+                var bankAccountResult = await bankAccountService.AddBankAccount("global", bankAccount);
+                if (bankAccountResult.Status != "OK")
+                {
+                    return new MVServiceRequest { Status = bankAccountResult.Status, Description = $"Merchant was created, but failed to create bank account: {bankAccountResult.Description}" };
+                }
+
+                bankAccountId = bankAccountResult.BankAccount!.Id.ToString()!;
+                await bankAccountService.UpdateBankAccountStatusById("global", bankAccountId, "Active"); // x090 ปรับแก้ 3 : AddBankAccount default เป็น Pending แต่บัญชีจาก approve ต้อง Active เลย
             }
 
-            var bankAccountId = bankAccountResult.BankAccount!.Id.ToString()!;
             var linkResult = await bankAccountService.SelectMerchant("global", bankAccountId, existing.ShopCode);
             if (linkResult?.Status != "OK")
             {
@@ -528,7 +546,7 @@ namespace Its.Onix.Api.Services
             existing.Status = "Approved";
             existing.ApprovedDate = DateTime.UtcNow;
             existing.MerchantSetupDataJson = JsonSerializer.Serialize(org);
-            existing.BankAccountSetupDataJson = JsonSerializer.Serialize(bankAccount);
+            existing.BankAccountSetupDataJson = JsonSerializer.Serialize(payload.BankAccount != null ? (object)payload.BankAccount : new { ExistingBankAccountId = bankAccountId });
 
             var updated = await repository.UpdateServiceRequestById(serviceRequestId, existing);
 

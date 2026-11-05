@@ -433,6 +433,17 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        // x090 ปรับแก้ 1 : logic dup เดียวกับ AddBankAccount เพื่อใช้เช็คตั้งแต่หน้า registration (ก่อนมี bank account จริง)
+        public async Task<string?> CheckBankAccountDuplicate(string orgId, string? accountNumber, string? bankCode, string? accountName)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            if (!string.IsNullOrEmpty(accountNumber) && await repository!.IsBankAccountNoExist(accountNumber)) return "ACCOUNT_NUMBER_DUPLICATE";
+            if (!string.IsNullOrEmpty(bankCode) && !string.IsNullOrEmpty(accountName) && await repository!.IsBankAccountNameExist(bankCode, accountName)) return "ACCOUNT_NAME_DUPLICATE";
+
+            return null;
+        }
+
         public async Task<MVBankAccount> DeleteBankAccountById(string orgId, string bankAccountId)
         {
             repository!.SetCustomOrgId(orgId);
