@@ -520,7 +520,9 @@ namespace Its.Onix.Api.Services
                 await bankAccountService.UpdateBankAccountStatusById("global", bankAccountId, "Active"); // AddBankAccount default เป็น Pending แต่บัญชีจาก approve ต้อง Active เลย
             }
 
-            var linkResult = await bankAccountService.SelectMerchant("global", bankAccountId, existing.ShopCode);
+            // ผูกด้วย Merchant GUID จริง ไม่ใช่ shop code — mismatch ตรงนี้ทำให้ merchant มองไม่เห็นบัญชีตัวเองใน GetMyBankAccounts
+            var merchantId = orgResult.Organization!.Merchant!.Id.ToString()!;
+            var linkResult = await bankAccountService.SelectMerchant("global", bankAccountId, merchantId);
             if (linkResult?.Status != "OK")
             {
                 return new MVServiceRequest { Status = linkResult?.Status ?? "LINK_FAILED", Description = $"Merchant and bank account were created, but failed to link them: {linkResult?.Description}" };
