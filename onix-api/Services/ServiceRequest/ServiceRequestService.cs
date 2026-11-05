@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
@@ -17,14 +18,21 @@ namespace Its.Onix.Api.Services
         private readonly IFileDocumentService fileDocumentService;
         private readonly IMerchantRepository merchantRepository;
         private readonly IUserRepository userRepository;
+        private readonly IOrganizationService organizationService;
+        private readonly IOrganizationUserService organizationUserService;
+        private readonly IBankAccountService bankAccountService;
 
-        public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc, IMerchantRepository merchantRepo, IUserRepository userRepo) : base()
+        public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc, IMerchantRepository merchantRepo, IUserRepository userRepo,
+            IOrganizationService orgSvc, IOrganizationUserService orgUserSvc, IBankAccountService bankAccountSvc) : base()
         {
             repository = repo;
             jobService = jobSvc;
             fileDocumentService = fileDocumentSvc;
             merchantRepository = merchantRepo;
             userRepository = userRepo;
+            organizationService = orgSvc;
+            organizationUserService = orgUserSvc;
+            bankAccountService = bankAccountSvc;
             repository.SetCustomOrgId(ORG_ID);
         }
 
@@ -93,6 +101,7 @@ namespace Its.Onix.Api.Services
             var link = $"{adminDomain}/customer-signup/global/{saved.Id}/{saved.Otp}";
 
             CreateRegistrationLinkEmailJob(saved, link);
+            jobService.CreateMerchantRegistrationEventJob(ORG_ID, saved, "create");
 
             r.ServiceRequest = saved;
             r.RegistrationLink = link;
@@ -214,6 +223,13 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "BANK_ACCOUNT_REQUIRED", Description = "Bank code and account number are required" };
             }
 
+            // เช็ค dup บัญชีธนาคารตั้งแต่หน้า registration เลย (logic เดียวกับ AddBankAccount)
+            var dupStatus = await bankAccountService.CheckBankAccountDuplicate("global", request.BankAccountNumber, request.BankCode, request.BankAccountName);
+            if (dupStatus != null)
+            {
+                return new MVServiceRequest { Status = dupStatus, Description = dupStatus == "ACCOUNT_NUMBER_DUPLICATE" ? "This bank account number is already registered" : "This bank account name is already registered" };
+            }
+
             existing!.Status = "Confirmed";
             existing.FirstName = request.FirstName?.Trim();
             existing.LastName = request.LastName?.Trim();
@@ -226,6 +242,7 @@ namespace Its.Onix.Api.Services
             existing.Username = username;
 
             var updated = await repository.UpdateServiceRequestById(requestId, existing);
+            jobService.CreateMerchantRegistrationEventJob(ORG_ID, updated!, "update");
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated };
         }
 
@@ -293,12 +310,24 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "UUID_INVALID", Description = $"Service request ID [{serviceRequestId}] format is invalid" };
             }
 
+            // x090 2.d : Approve/Reject แล้วแก้ไขอะไรไม่ได้ทั้งนั้น ต้องกันที่ระดับ API ไม่ใช่แค่ UI
+            var existingCheck = await repository.GetServiceRequestById(serviceRequestId);
+            if (existingCheck == null)
+            {
+                return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
+            }
+            if (existingCheck.Status == "Approved" || existingCheck.Status == "Rejected")
+            {
+                return new MVServiceRequest { Status = "NOT_EDITABLE", Description = $"Service request is already [{existingCheck.Status}] and can no longer be edited" };
+            }
+
             var updated = await repository.UpdateServiceRequestById(serviceRequestId, request);
             if (updated == null)
             {
                 return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
             }
 
+            jobService.CreateMerchantRegistrationEventJob(ORG_ID, updated, "update");
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated };
         }
 
@@ -315,9 +344,9 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
             }
 
-            if (existing.Status == "Approved")
+            if (existing.Status == "Approved" || existing.Status == "Rejected")
             {
-                return new MVServiceRequest { Status = "APPROVED_CANNOT_DELETE", Description = "Service request is already Approved and cannot be deleted" };
+                return new MVServiceRequest { Status = "APPROVED_CANNOT_DELETE", Description = $"Service request is already [{existing.Status}] and cannot be deleted" };
             }
 
             var deleted = await repository.DeleteServiceRequestById(serviceRequestId);
@@ -389,6 +418,203 @@ namespace Its.Onix.Api.Services
             CreateRegistrationLinkEmailJob(existing, link, "customer-registration-link-resend");
 
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = existing, RegistrationLink = link };
+        }
+
+        public async Task<MVServiceRequest> RejectServiceRequest(string serviceRequestId, string? reason)
+        {
+            if (!ServiceUtils.IsGuidValid(serviceRequestId))
+            {
+                return new MVServiceRequest { Status = "UUID_INVALID", Description = $"Service request ID [{serviceRequestId}] format is invalid" };
+            }
+
+            var trimmedReason = reason?.Trim();
+            if (string.IsNullOrEmpty(trimmedReason))
+            {
+                return new MVServiceRequest { Status = "REASON_REQUIRED", Description = "Rejection reason is required" };
+            }
+
+            var existing = await repository.GetServiceRequestById(serviceRequestId);
+            if (existing == null)
+            {
+                return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
+            }
+
+            if (existing.Status == "Approved" || existing.Status == "Rejected")
+            {
+                return new MVServiceRequest { Status = "NOT_EDITABLE", Description = $"Service request is already [{existing.Status}] and cannot be rejected again" };
+            }
+
+            existing.Status = "Rejected";
+            existing.RejectReason = trimmedReason;
+
+            var updated = await repository.UpdateServiceRequestById(serviceRequestId, existing);
+
+            CreateRejectionEmailJob(updated!, trimmedReason);
+            jobService.CreateMerchantRegistrationEventJob(ORG_ID, updated!, "reject", trimmedReason);
+
+            return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated };
+        }
+
+        public async Task<MVServiceRequest> ApproveServiceRequest(string serviceRequestId, VMApproveServiceRequest payload)
+        {
+            if (!ServiceUtils.IsGuidValid(serviceRequestId))
+            {
+                return new MVServiceRequest { Status = "UUID_INVALID", Description = $"Service request ID [{serviceRequestId}] format is invalid" };
+            }
+
+            if (payload?.Organization?.Merchant == null)
+            {
+                return new MVServiceRequest { Status = "MERCHANT_INFO_REQUIRED", Description = "Merchant info is required" };
+            }
+            if (payload.BankAccount == null && string.IsNullOrEmpty(payload.ExistingBankAccountId))
+            {
+                return new MVServiceRequest { Status = "BANK_ACCOUNT_INFO_REQUIRED", Description = "Bank account info is required" };
+            }
+
+            var existing = await repository.GetServiceRequestById(serviceRequestId);
+            if (existing == null)
+            {
+                return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
+            }
+
+            if (existing.Status == "Approved" || existing.Status == "Rejected")
+            {
+                return new MVServiceRequest { Status = "NOT_EDITABLE", Description = $"Service request is already [{existing.Status}] and cannot be approved again" };
+            }
+
+            if (string.IsNullOrEmpty(existing.ShopCode) || string.IsNullOrEmpty(existing.Username))
+            {
+                return new MVServiceRequest { Status = "NOT_CONFIRMED", Description = "Service request must be Confirmed by the customer (shop code / username) before it can be approved" };
+            }
+
+            // ล็อก OrgCustomId/Merchant.Code ให้ตรงกับ shop code ที่ลูกค้ากรอกตอน confirm เสมอ ไม่เชื่อค่าที่ส่งมาจาก wizard
+            var org = payload.Organization;
+            org.OrgCustomId = existing.ShopCode;
+            org.OrgType = "PLEASE-PAYMENT";
+            org.Status = "Active";
+            org.Merchant!.Code = existing.ShopCode;
+
+            var orgResult = organizationService.AddOrganization(existing.ShopCode, org);
+            if (orgResult.Status != "OK")
+            {
+                return new MVServiceRequest { Status = orgResult.Status, Description = $"Failed to create merchant: {orgResult.Description}" };
+            }
+
+            string bankAccountId;
+            if (!string.IsNullOrEmpty(payload.ExistingBankAccountId))
+            {
+                // PlatformOwn เลือกผูกกับบัญชีที่มีอยู่แล้ว ไม่ต้องสร้างใหม่
+                bankAccountId = payload.ExistingBankAccountId;
+            }
+            else
+            {
+                var bankAccount = payload.BankAccount!;
+                bankAccount.BookBankFileDocumentId = existing.BookBankFileDocumentId; // x090 4.b : copy book-bank photo from the service request over to the new bank account
+                var bankAccountResult = await bankAccountService.AddBankAccount("global", bankAccount);
+                if (bankAccountResult.Status != "OK")
+                {
+                    return new MVServiceRequest { Status = bankAccountResult.Status, Description = $"Merchant was created, but failed to create bank account: {bankAccountResult.Description}" };
+                }
+
+                bankAccountId = bankAccountResult.BankAccount!.Id.ToString()!;
+                await bankAccountService.UpdateBankAccountStatusById("global", bankAccountId, "Active"); // AddBankAccount default เป็น Pending แต่บัญชีจาก approve ต้อง Active เลย
+            }
+
+            // ผูกด้วย Merchant GUID จริง ไม่ใช่ shop code — mismatch ตรงนี้ทำให้ merchant มองไม่เห็นบัญชีตัวเองใน GetMyBankAccounts
+            var merchantId = orgResult.Organization!.Merchant!.Id.ToString()!;
+            var linkResult = await bankAccountService.SelectMerchant("global", bankAccountId, merchantId);
+            if (linkResult?.Status != "OK")
+            {
+                return new MVServiceRequest { Status = linkResult?.Status ?? "LINK_FAILED", Description = $"Merchant and bank account were created, but failed to link them: {linkResult?.Description}" };
+            }
+
+            var ou = new MOrganizationUser
+            {
+                UserName = existing.Username,
+                TmpUserEmail = existing.Email,
+                InvitedBy = "ServiceRequestApprove",
+                InvitedByAdmin = true,
+                Roles = ["OWNER"],
+            };
+            var inviteResult = organizationUserService.InviteUserWithLink(existing.ShopCode, ou);
+            if (inviteResult?.Status != "OK")
+            {
+                return new MVServiceRequest { Status = inviteResult?.Status ?? "INVITE_FAILED", Description = $"Merchant and bank account were created and linked, but failed to invite user: {inviteResult?.Description}" };
+            }
+
+            // InviteUserWithLink คืน URL แบบ placeholder "<REGISTER_SERVICE_DOMAIN>" เสมอ ต้องแทนที่ด้วย merchant domain จริงก่อนส่งอีเมลให้ลูกค้า
+            var signupLink = inviteResult.RegistrationUrl!.Replace("https://<REGISTER_SERVICE_DOMAIN>", DeriveMerchantDomain(existing.AdminDomain));
+
+            existing.Status = "Approved";
+            existing.ApprovedDate = DateTime.UtcNow;
+            existing.MerchantSetupDataJson = JsonSerializer.Serialize(org);
+            existing.BankAccountSetupDataJson = JsonSerializer.Serialize(payload.BankAccount != null ? (object)payload.BankAccount : new { ExistingBankAccountId = bankAccountId });
+
+            var updated = await repository.UpdateServiceRequestById(serviceRequestId, existing);
+
+            CreateApprovalEmailJob(updated!, signupLink);
+            jobService.CreateMerchantRegistrationEventJob(ORG_ID, updated!, "approve");
+
+            return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = updated, RegistrationLink = signupLink };
+        }
+
+        // admin domain กับ merchant domain เป็น subdomain คู่กันเสมอ (เช่น admin-dev.x / merchant-dev.x) ตามรูปแบบเดียวกับ getMerchantBase() ฝั่ง frontend
+        private static string DeriveMerchantDomain(string? adminDomain)
+        {
+            if (string.IsNullOrWhiteSpace(adminDomain)) return "<REGISTER_SERVICE_DOMAIN>";
+            return adminDomain.Contains("admin", StringComparison.OrdinalIgnoreCase)
+                ? adminDomain.Replace("admin", "merchant", StringComparison.OrdinalIgnoreCase)
+                : adminDomain;
+        }
+
+        // ส่ง event ไปที่ Redis Stream ให้ Ruby job ส่งอีเมลแจ้งผลอนุมัติ พร้อม link สำหรับ signup
+        private void CreateApprovalEmailJob(MServiceRequest sr, string signupLink)
+        {
+            var job = new MJob
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "ServiceRequestService.CreateApprovalEmailJob()",
+                Type = "PleasePaymentEmailSend",
+                Status = "Pending",
+                Tags = "service-request-approved",
+                RefId = sr.Id.ToString(),
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = sr.Email },
+                    new NameValue { Name = "FIRST_NAME", Value = sr.FirstName },
+                    new NameValue { Name = "LAST_NAME", Value = sr.LastName },
+                    new NameValue { Name = "SIGNUP_LINK", Value = signupLink },
+                    new NameValue { Name = "LANG", Value = sr.Lang },
+                ]
+            };
+
+            jobService.AddJob(ORG_ID, job);
+        }
+
+        // ส่ง event ไปที่ Redis Stream ให้ Ruby job ส่งอีเมลแจ้งผล reject พร้อมเหตุผล
+        private void CreateRejectionEmailJob(MServiceRequest sr, string reason)
+        {
+            var job = new MJob
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = "ServiceRequestService.CreateRejectionEmailJob()",
+                Type = "PleasePaymentEmailSend",
+                Status = "Pending",
+                Tags = "service-request-rejected",
+                RefId = sr.Id.ToString(),
+
+                Parameters =
+                [
+                    new NameValue { Name = "EMAIL_OTP_ADDRESS", Value = sr.Email },
+                    new NameValue { Name = "FIRST_NAME", Value = sr.FirstName },
+                    new NameValue { Name = "LAST_NAME", Value = sr.LastName },
+                    new NameValue { Name = "REASON", Value = reason },
+                    new NameValue { Name = "LANG", Value = sr.Lang },
+                ]
+            };
+
+            jobService.AddJob(ORG_ID, job);
         }
     }
 }

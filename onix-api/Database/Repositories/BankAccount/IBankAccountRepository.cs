@@ -35,5 +35,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MBankAccount?> UpdateBankAccountStatusById(string bankAccountId, string status);
 
         public Task<MBankAccount?> UpdateBankAccountConfigById(string bankAccountId, string bankConfig);
+        public Task<MBankAccount?> UpdateBankAccountBookBankById(string bankAccountId, string fileDocumentId);
     }
 }

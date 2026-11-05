@@ -514,10 +514,40 @@ namespace Its.Onix.Api.Services
             };
 
             //ยังไม่ต้อง trigger job ให้ทำงานทันที เดี๋ยวรอให้สร้าง Payment Tx เสร็จแล้วค่อย trigger พร้อมกับส่ง jobId ไปด้วยจะได้ดู log การ process ได้ง่ายขึ้น
-            var result = AddJob(orgId, job, false); 
+            var result = AddJob(orgId, job, false);
             var newJob = result?.Job!;
 
             return newJob;
+        }
+
+        public MJob CreateMerchantRegistrationEventJob(string orgId, MServiceRequest sr, string action, string? reason = null)
+        {
+            //event เดียวใช้ร่วมกันทั้ง create/update/approve/reject ของ merchant registration service request แยกจาก stream ของ PleasePaymentEmailSend
+            //ไม่ตั้ง RefId เพราะไม่ต้องการให้ event นี้ไปโผล่ในหน้า detail ของ service request (ซึ่ง query job log ด้วย RefId)
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = $"Merchant Registration [{action}] — ServiceRequest ID: {sr.Id}",
+                Type = "MerchantRegistration.Event",
+                Status = "Pending",
+                Tags = "merchant-registration",
+
+                Parameters =
+                [
+                    new NameValue { Name = "EVENT_TYPE", Value = "MerchantRegistration.Event" },
+                    new NameValue { Name = "ACTION", Value = action },
+                    new NameValue { Name = "REQUEST_ID", Value = sr.Id.ToString() },
+                    new NameValue { Name = "EMAIL", Value = sr.Email },
+                    new NameValue { Name = "FIRST_NAME", Value = sr.FirstName },
+                    new NameValue { Name = "LAST_NAME", Value = sr.LastName },
+                    new NameValue { Name = "SHOP_CODE", Value = sr.ShopCode },
+                    new NameValue { Name = "SR_STATUS", Value = sr.Status },
+                    new NameValue { Name = "REASON", Value = reason },
+                ]
+            };
+
+            var result = AddJob(orgId, job);
+            return result?.Job!;
         }
     }
 }

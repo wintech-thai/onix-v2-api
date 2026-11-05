@@ -78,6 +78,8 @@ namespace Its.Onix.Api.Database.Repositories
                 PayoutMinAmount = x.bankaccount != null ? x.bankaccount.PayoutMinAmount : null,
                 PayoutMaxAmount = x.bankaccount != null ? x.bankaccount.PayoutMaxAmount : null,
                 DailyQuota = x.bankaccount != null ? x.bankaccount.DailyQuota : null,
+                CurrentBalance = x.bankaccount != null ? x.bankaccount.CurrentBalance : null, // x090 5.a : ขาดไปทำให้หน้า payout ของ MerchantOwn ไม่เห็นยอดคงเหลือ
+                BookBankFileDocumentId = x.bankaccount != null ? x.bankaccount.BookBankFileDocumentId : null,
 
                 //ข้อมูลของ Merchant
                 MerchantCode = x.merchant != null ? x.merchant.Code : null,
@@ -346,6 +348,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Status = x.ba.Status,
                 IsRandomCent = x.ba.IsRandomCent,
                 DecimalAction = x.ba.DecimalAction,
+                BookBankFileDocumentId = x.ba.BookBankFileDocumentId,
             });
         }
 
@@ -377,6 +380,22 @@ namespace Its.Onix.Api.Database.Repositories
                 accTypePd = accTypePd.Or(p => p.AccountType!.Equals(param.AccountType));
 
                 pd = pd.And(accTypePd);
+            }
+
+            if ((param.CustodyType != null) && (param.CustodyType != ""))
+            {
+                // บัญชีเก่าหลายตัวไม่เคยตั้ง CustodyType ไว้ (null) ซึ่งหน้า list ถือว่าเป็น PlatformOwn (ไม่ใช่ MerchantOwn ก็ถือเป็น PlatformOwn)
+                var custodyTypePd = PredicateBuilder.New<MBankAccount>();
+                if (param.CustodyType == "PlatformOwn")
+                {
+                    custodyTypePd = custodyTypePd.Or(p => p.CustodyType != "MerchantOwn");
+                }
+                else
+                {
+                    custodyTypePd = custodyTypePd.Or(p => p.CustodyType!.Equals(param.CustodyType));
+                }
+
+                pd = pd.And(custodyTypePd);
             }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
@@ -467,6 +486,20 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             await context.SaveChangesAsync();
+            return existing;
+        }
+
+        public async Task<MBankAccount?> UpdateBankAccountBookBankById(string bankAccountId, string fileDocumentId)
+        {
+            Guid id = Guid.Parse(bankAccountId);
+            // ต้องผ่าน AsExpandable() ก่อน ไม่งั้น FirstOrDefaultAsync จะ bind ผิดไปที่ System.Data.Entity แล้วพังตอน runtime
+            var existing = await context!.BankAccounts!.AsExpandable().Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.BookBankFileDocumentId = fileDocumentId;
+                await context.SaveChangesAsync();
+            }
+
             return existing;
         }
     }

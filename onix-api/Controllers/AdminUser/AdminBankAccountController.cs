@@ -117,6 +117,17 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/UploadBankAccountBookBankById/{bankAccountId}")]
+        public async Task<IActionResult> UploadBankAccountBookBankById(string bankAccountId, [FromBody] MFileDocument request)
+        {
+            var result = await svc.UploadBankAccountBookBank("global", bankAccountId, request);
+
+            Response.Headers.Append("CUST_STATUS", result!.Status);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/EnableBankAccountById/{bankAccountId}")]
         public async Task<IActionResult> EnableBankAccountById(string bankAccountId)
         {

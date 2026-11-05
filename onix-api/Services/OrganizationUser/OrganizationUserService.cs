@@ -367,11 +367,25 @@ namespace Its.Onix.Api.Services
             };
             var registrationUrl = GetInvitationLink(orgId, registrationCase, reg);
 
-            r.OrgUser = result;
-            //ป้องกันการ auto track กลับไปที่ column ใน table เลยต้อง assign result ให้กับ OrgUser ก่อน จากนั้นค่อยอัพเดต field อีกที
-            r.OrgUser.RolesList = "";
+            // สร้าง object แยกสำหรับ response แทนที่จะแก้ RolesList บน entity ที่ EF Core ยัง track อยู่ตรงๆ
+            // เพราะถ้ามี SaveChanges อีกรอบในคำขอเดียวกันหลังจากนี้ (เช่น ApproveServiceRequest ที่เรียกต่อ)
+            // ค่า RolesList ที่เพิ่ง blank ไปจะหลุดไปทับของจริงใน DB ด้วย
+            r.OrgUser = new MOrganizationUser
+            {
+                OrgUserId = result.OrgUserId,
+                OrgCustomId = result.OrgCustomId,
+                UserName = result.UserName,
+                CreatedDate = result.CreatedDate,
+                RolesList = "",
+                IsOrgInitialUser = result.IsOrgInitialUser,
+                UserStatus = result.UserStatus,
+                TmpUserEmail = result.TmpUserEmail,
+                InvitedDate = result.InvitedDate,
+                InvitedBy = result.InvitedBy,
+                Tags = result.Tags,
+                CustomRoleId = result.CustomRoleId,
+            };
             r.RegistrationUrl = registrationUrl;
-            r.OrgUser = result;
 
             return r;
         }

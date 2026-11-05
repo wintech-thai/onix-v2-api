@@ -27,5 +27,7 @@ namespace Its.Onix.Api.Services
         public Task<MVBankAccountMerchant?> UnSelectMerchant(string orgId,string bankAccountId, string merchantId);
 
         public Task<MVBankAccount?> UpdateBankAccountConfigById(string orgId, string bankAccountId, MBankAccountConfig bankConfig);
+        public Task<MVBankAccount> UploadBankAccountBookBank(string orgId, string bankAccountId, MFileDocument fileDocument);
+        public Task<string?> CheckBankAccountDuplicate(string orgId, string? accountNumber, string? bankCode, string? accountName); // คืน status code ถ้าซ้ำ, null ถ้าไม่ซ้ำ
     }
 }

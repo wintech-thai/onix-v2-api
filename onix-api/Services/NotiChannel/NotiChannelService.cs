@@ -36,6 +36,7 @@ namespace Its.Onix.Api.Services
                 new() { Name = "Restore.Failed", Value = "Database restore failed" },
                 new() { Name = "Agent.NotReady", Value = "LINE Agent is not ready (login lost or offline)" },
                 new() { Name = "Agent.Ready", Value = "LINE Agent recovered and is ready again" },
+                new() { Name = "MerchantRegistration.Event", Value = "Merchant registration service request event (create/update/approve/reject)" },
             };
 
             return list;
