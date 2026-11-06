@@ -20,5 +20,6 @@ namespace Its.Onix.Api.Services
         public MJob CreatePaymentInSuccessJob(string orgId, string jobType, MPaymentTransaction pmt, MPaymentRequest pmr);
         public MVJob? CloseBackupJob(string orgId, string jobId);
         public MJob CreateMerchantRegistrationEventJob(string orgId, MServiceRequest sr, string action, string? reason = null);
+        public MJob CreateSupportCaseEventJob(string orgId, MCaseManagement cm, string action, string? actionBy = null);
     }
 }

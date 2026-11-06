@@ -9,11 +9,20 @@ namespace Its.Onix.Api.Services
         public Task<MVAccountDoc> AddAccountDoc(string orgId, MAccountDoc ad);
         public Task<MVAccountDoc> UpdateAccountDocById(string orgId, string accountDocId, MAccountDoc ad);
         public Task<MVAccountDoc> ApproveAccountDocById(string orgId, string accountDocId);
+        public Task<MVAccountDoc> RejectAccountDocById(string orgId, string accountDocId, string reason);
+        public Task<MVAccountDoc> UpdateAccountDocParamsById(string orgId, string accountDocId, string paramsJson);
         public Task<MVAccountDoc> CancelAccountDocById(string orgId, string accountDocId);
         public Task<MVAccountDoc> DeleteAccountDocById(string orgId, string accountDocId);
         public Task<List<MAccountDoc>> GetAccountDocs(string orgId, VMAccountDoc param);
         public Task<int> GetAccountDocCount(string orgId, VMAccountDoc param);
         public Task<MVAccountDoc> GetAccountDocById(string orgId, string accountDocIdId);
+
+        // Admin เห็นข้าม org ทุก merchant
+        public Task<List<MAccountDoc>> GetAccountDocsAdmin(VMAccountDoc param);
+        public Task<int> GetAccountDocCountAdmin(VMAccountDoc param);
+        public Task<MVAccountDoc> GetAccountDocByIdAdmin(string accountDocId);
+        public Task<MVAccountDoc> ApproveAccountDocByIdAdmin(string accountDocId);
+        public Task<MVAccountDoc> RejectAccountDocByIdAdmin(string accountDocId, string reason);
         public Task<MVAccountDocItem> AddAccountDocItem(string orgId, string accountDocId, MAccountDocItem adi);
         public Task<List<MAccountDocItem>> GetAccountDocItemsById(string orgId, string accountDocId);
         public Task<MVAccountDocItem> UpdateAccountDocItemById(string orgId, string accountDocItemId, MAccountDocItem adi);

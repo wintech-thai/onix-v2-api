@@ -12,5 +12,6 @@ namespace Its.Onix.Api.Services
         public Task<int> GetPaymentGatewayCount(string orgId, VMPaymentGateway param);
         public Task<MVPaymentGateway> GetPaymentGatewayById(string orgId, string paymentGatewayId);
         public Task<MVPaymentGateway> UpdatePaymentGatewayById(string orgId, string paymentGatewayId, MPaymentGateway paymentGateway);
+        public Task<PaymentGatewayQrResult> GenerateQR(string orgId, string paymentGatewayId, PaymentGatewayQrRequest request);
     }
 }

@@ -39,8 +39,11 @@ namespace Its.Onix.Api.Models
         [Column("tags")]
         public string? Tags { get; set; }
 
-        [Column("document_type")] /* CashInvoice, CreditInvoice */
+        [Column("document_type")] /* CashInvoice, CreditInvoice, PurchaseCash */
         public string? DocumentType { get; set; }
+
+        [Column("document_sub_type")] /* PointTopUp */
+        public string? DocumentSubType { get; set; }
 
         [Column("product_type")] /* Privilege, Item */
         public string? ProductType { get; set; }
@@ -81,11 +84,14 @@ namespace Its.Onix.Api.Models
         [Column("paid_amount")]
         public double? PaidAmount { get; set; } /* ขายสด: จำนวนเงินที่รับชำระ */
 
-        [Column("status")] /* Pending, Approved, Cancelled */
+        [Column("status")] /* Pending, Approved, Cancelled, Rejected */
         public string? Status { get; set; }
 
+        [Column("reject_reason")]
+        public string? RejectReason { get; set; }
+
         [Column("document_params")]
-        public string? DocumentParams { get; set; } /* เป็น JSON string บอกว่า price calculate อย่างไร */
+        public string? DocumentParams { get; set; } /* เป็น JSON string บอกว่า price calculate อย่างไร (PurchaseCash ใช้เก็บข้อมูล QR ด้วย) */
 
         //System fields
         [Column("created_date")]

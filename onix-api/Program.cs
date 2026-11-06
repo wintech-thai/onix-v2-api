@@ -178,6 +178,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPointRuleService, PointRuleService>();
             builder.Services.AddScoped<IPointTriggerService, PointTriggerService>();
             builder.Services.AddScoped<IAccountDocService, AccountDocService>();
+            builder.Services.AddScoped<IPointTopUpService, PointTopUpService>();
             builder.Services.AddScoped<IVoucherService, VoucherService>();
             builder.Services.AddScoped<ICustomRoleService, CustomRoleService>();
             builder.Services.AddScoped<IAgentService, AgentService>();

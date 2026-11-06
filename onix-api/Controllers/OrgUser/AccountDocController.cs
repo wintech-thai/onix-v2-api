@@ -87,6 +87,28 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetAccountDocPurchaseCashes")]
+        public async Task<IActionResult> GetAccountDocPurchaseCashes(string id, [FromBody] VMAccountDoc request)
+        {
+            request.DocumentType = "PurchaseCash";
+            var result = await svc.GetAccountDocs(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetAccountDocPurchaseCashCount")]
+        public async Task<IActionResult> GetAccountDocPurchaseCashCount(string id, [FromBody] VMAccountDoc request)
+        {
+            request.DocumentType = "PurchaseCash";
+            var result = await svc.GetAccountDocCount(id, request);
+
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpGet]
         [Route("org/{id}/action/GetAccountDocById/{accountDocId}")]
         public async Task<IActionResult> GetAccountDocById(string id, string accountDocId)

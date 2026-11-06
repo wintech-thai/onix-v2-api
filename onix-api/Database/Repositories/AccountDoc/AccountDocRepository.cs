@@ -8,6 +8,9 @@ namespace Its.Onix.Api.Database.Repositories
 {
     public class AccountDocRepository : BaseRepository, IAccountDocRepository
     {
+        // ไม่เรียก SetCustomOrgId เลยตั้งแต่ service layer = orgId ยังเป็นค่า default นี้ = ไม่กรองตาม org (ใช้ตอน Admin ดูข้าม org ทุก merchant)
+        private const string RESERVE_ORG_ID = "axxxxnotdefinedxxxxxxa";
+
         public AccountDocRepository(IDataContext ctx)
         {
             context = ctx;
@@ -255,12 +258,23 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        private IQueryable<MAccountDoc> ByIdScoped(Guid id)
+        {
+            var query = context!.AccountDocs!.Where(p => p!.Id!.Equals(id));
+            if (!orgId.Equals(RESERVE_ORG_ID))
+            {
+                query = query.Where(p => p!.OrgId!.Equals(orgId));
+            }
+
+            return query;
+        }
+
         // Callers (the service layer) must check IsAccountDocPending first — this method
         // mutates unconditionally and assumes that validation already happened.
         public async Task<MAccountDoc?> ApproveAccountDocById(string accountDocId)
         {
             Guid id = Guid.Parse(accountDocId);
-            var existing = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var existing = await ByIdScoped(id).FirstOrDefaultAsync();
             if (existing == null) return null;
 
             var now = DateTime.UtcNow;
@@ -272,12 +286,42 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        // ใช้เก็บข้อมูล QR (QrCode/QrCodeImageBase64/PaymentUrl/...) ลงบน PurchaseCash doc หลังสร้าง QR สำเร็จ
+        public async Task<MAccountDoc?> UpdateAccountDocParamsById(string accountDocId, string paramsJson)
+        {
+            Guid id = Guid.Parse(accountDocId);
+            var existing = await ByIdScoped(id).FirstOrDefaultAsync();
+            if (existing == null) return null;
+
+            existing.DocumentParams = paramsJson;
+            existing.UpdatedDate = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+
+            return existing;
+        }
+
+        // Callers (the service layer) must check IsAccountDocPending first — this method
+        // mutates unconditionally and assumes that validation already happened.
+        public async Task<MAccountDoc?> RejectAccountDocById(string accountDocId, string reason)
+        {
+            Guid id = Guid.Parse(accountDocId);
+            var existing = await ByIdScoped(id).FirstOrDefaultAsync();
+            if (existing == null) return null;
+
+            existing.Status = "Rejected";
+            existing.RejectReason = reason;
+            existing.StatusDate = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+
+            return existing;
+        }
+
         // Callers (the service layer) must check IsAccountDocPending first — this method
         // mutates unconditionally and assumes that validation already happened.
         public async Task<MAccountDoc?> CancelAccountDocById(string accountDocId)
         {
             Guid id = Guid.Parse(accountDocId);
-            var existing = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var existing = await ByIdScoped(id).FirstOrDefaultAsync();
             if (existing == null) return null;
 
             existing.Status = "Cancelled";
@@ -290,7 +334,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<bool> IsAccountDocPending(string accountDocId)
         {
             Guid id = Guid.Parse(accountDocId);
-            var doc = await context!.AccountDocs!.FirstOrDefaultAsync(x => x.OrgId!.Equals(orgId) && x.Id!.Equals(id));
+            var doc = await ByIdScoped(id).FirstOrDefaultAsync();
             return doc != null && doc.Status == "Pending";
         }
 
@@ -342,9 +386,17 @@ namespace Its.Onix.Api.Database.Repositories
 
         private ExpressionStarter<MAccountDoc> AccountDocPredicate(VMAccountDoc param)
         {
-            var pd = PredicateBuilder.New<MAccountDoc>();
+            var pd = PredicateBuilder.New<MAccountDoc>(true);
 
-            pd = pd.And(p => p.OrgId!.Equals(orgId));
+            // org filter: apply only when orgId was explicitly set (not the reserve value) — RESERVE_ORG_ID = Admin ดูข้าม org ทุก merchant
+            if (!orgId.Equals(RESERVE_ORG_ID))
+            {
+                pd = pd.And(p => p.OrgId!.Equals(orgId));
+            }
+            else if (!string.IsNullOrEmpty(param.OrgIdFilter))
+            {
+                pd = pd.And(p => p.OrgId!.Equals(param.OrgIdFilter));
+            }
 
             if ((param.FullTextSearch != "") && (param.FullTextSearch != null))
             {
@@ -363,6 +415,11 @@ namespace Its.Onix.Api.Database.Repositories
                 docTypePd = docTypePd.Or(p => p.DocumentType!.Equals(param.DocumentType));
 
                 pd = pd.And(docTypePd);
+            }
+
+            if (!string.IsNullOrEmpty(param.DocumentSubType))
+            {
+                pd = pd.And(p => p.DocumentSubType!.Equals(param.DocumentSubType));
             }
 
             if (!string.IsNullOrEmpty(param.DocumentStatus))
@@ -391,7 +448,8 @@ namespace Its.Onix.Api.Database.Repositories
         private async Task PopulateEntityInfo(IEnumerable<MAccountDoc> docs)
         {
             var list = docs.ToList();
-            var entityIds = list.Where(d => !string.IsNullOrEmpty(d.EntityId)).Select(d => Guid.Parse(d.EntityId!)).Distinct().ToList();
+            // PurchaseCash เก็บ EntityId เป็น "Internal" (ไม่ใช่ GUID) เลยต้องกรองออกก่อน ไม่งั้น Guid.Parse throw
+            var entityIds = list.Where(d => !string.IsNullOrEmpty(d.EntityId) && Guid.TryParse(d.EntityId, out _)).Select(d => Guid.Parse(d.EntityId!)).Distinct().ToList();
             if (entityIds.Count == 0) return;
 
             var entities = await context!.Entities!
@@ -455,11 +513,12 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<MAccountDoc?> GetAccountDocById(string accountDocId)
         {
             Guid id = Guid.Parse(accountDocId);
-            var u = await context!.AccountDocs!.Where(p => p!.Id!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            var u = await ByIdScoped(id).FirstOrDefaultAsync();
             if (u == null) return null;
 
+            // ยึดจาก OrgId ของเอกสารที่เจอจริง ไม่ใช่ ambient orgId field (ซึ่งตอน Admin ดูข้าม org จะเป็น RESERVE_ORG_ID เสมอ)
             u.Items = await context!.AccountDocItems!
-                .Where(i => i.AccountDocId!.Equals(u.Id.ToString()) && i.OrgId!.Equals(orgId))
+                .Where(i => i.AccountDocId!.Equals(u.Id.ToString()) && i.OrgId!.Equals(u.OrgId))
                 .OrderByDescending(i => i.CreatedDate)
                 .ToListAsync();
 

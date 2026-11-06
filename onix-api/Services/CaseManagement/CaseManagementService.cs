@@ -10,10 +10,12 @@ namespace Its.Onix.Api.Services
     public class CaseManagementService : BaseService, ICaseManagementService
     {
         private readonly ICaseManagementRepository repository;
+        private readonly IJobService _jobService;
 
-        public CaseManagementService(ICaseManagementRepository repo) : base()
+        public CaseManagementService(ICaseManagementRepository repo, IJobService jobService) : base()
         {
             repository = repo;
+            _jobService = jobService;
         }
 
         public async Task<MVCaseManagement> GetCaseById(string orgId, string caseId)
@@ -80,6 +82,9 @@ namespace Its.Onix.Api.Services
 
             var result = await repository.AddCase(caseManagement);
             r.CaseManagement = result;
+
+            _jobService.CreateSupportCaseEventJob(orgId, result, "create", result.CreatedBy);
+
             return r;
         }
 
@@ -112,6 +117,9 @@ namespace Its.Onix.Api.Services
             }
 
             r.CaseManagement = result;
+
+            _jobService.CreateSupportCaseEventJob(orgId, result, "status-change", updatedBy);
+
             return r;
         }
 
@@ -172,6 +180,9 @@ namespace Its.Onix.Api.Services
 
             var result = await repository.AddComment(comment);
             r.Comment = result;
+
+            _jobService.CreateSupportCaseEventJob(orgId, caseEntity, "comment", createdBy);
+
             return r;
         }
 
