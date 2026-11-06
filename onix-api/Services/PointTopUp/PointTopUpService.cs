@@ -86,6 +86,7 @@ namespace Its.Onix.Api.Services
             {
                 Ref1 = accountDocId,
                 Ref2 = "Point Purchase",
+                Ref3 = orgId,
                 Payer = merchant.ContactEmail,
                 Amount = amount,
             });
@@ -95,12 +96,13 @@ namespace Its.Onix.Api.Services
                 return await _accountDocService.RejectAccountDocById(orgId, accountDocId, qrResult.Description);
             }
 
+            // ระบุ key เป็น camelCase ตรงๆ เพราะเรียก JsonSerializer.Serialize() ตรงๆ แบบนี้ไม่ใช้ค่า camelCase ของ Program.cs (ใช้ได้แค่ตอนผ่าน MVC pipeline)
             var paramsJson = JsonSerializer.Serialize(new
             {
-                qrResult.QrCode,
-                qrResult.QrCodeImageBase64,
-                qrResult.PaymentUrl,
-                qrResult.ExternalPaymentRequestId,
+                qrCode = qrResult.QrCode,
+                qrCodeImageBase64 = qrResult.QrCodeImageBase64,
+                paymentUrl = qrResult.PaymentUrl,
+                externalPaymentRequestId = qrResult.ExternalPaymentRequestId,
             });
 
             return await _accountDocService.UpdateAccountDocParamsById(orgId, accountDocId, paramsJson);

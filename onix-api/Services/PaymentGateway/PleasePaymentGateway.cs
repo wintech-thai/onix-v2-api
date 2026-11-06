@@ -37,6 +37,7 @@ namespace Its.Onix.Api.Services
                 {
                     ["RefId1"] = request.Ref1,
                     ["RefId2"] = request.Ref2,
+                    ["RefId3"] = request.Ref3,
                     ["PayerName"] = request.Payer,
                     ["RequestedAmount"] = request.Amount,
                     ["Currency"] = "THB",
