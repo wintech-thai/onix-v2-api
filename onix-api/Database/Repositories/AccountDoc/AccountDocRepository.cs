@@ -487,7 +487,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = AccountDocPredicate(param!);
-            var result = await context!.AccountDocs!.AsExpandable().Where(predicate)
+            var result = await context!.AccountDocs!.Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
@@ -507,7 +507,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetAccountDocCount(VMAccountDoc param)
         {
             var predicate = AccountDocPredicate(param!);
-            var result = await context!.AccountDocs!.AsExpandable().Where(predicate).CountAsync();
+            var result = await context!.AccountDocs!.Where(predicate).CountAsync();
 
             return result;
         }
