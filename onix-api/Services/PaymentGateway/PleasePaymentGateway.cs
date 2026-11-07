@@ -74,6 +74,17 @@ namespace Its.Onix.Api.Services
                 result.QrCodeImageBase64 = pr.TryGetProperty("qrCodeImage", out var imgEl) ? imgEl.GetString() : null;
                 result.PaymentUrl = pr.TryGetProperty("paymentUrl", out var urlEl) ? urlEl.GetString() : null;
                 result.ExternalPaymentRequestId = pr.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+                result.GeneratedAmount = pr.TryGetProperty("generatedAmount", out var gaEl) && gaEl.ValueKind == JsonValueKind.Number ? gaEl.GetDouble() : null;
+                result.PayInBankAccountNo = pr.TryGetProperty("payInBankAccountNo", out var banoEl) ? banoEl.GetString() : null;
+                result.PayInBankAccountName = pr.TryGetProperty("payInBankAccountName", out var banameEl) ? banameEl.GetString() : null;
+                result.PayInBankCode = pr.TryGetProperty("payInBankCode", out var bcodeEl) ? bcodeEl.GetString() : null;
+                result.PayInPromptPayId = pr.TryGetProperty("payInPromptPayId", out var ppidEl) ? ppidEl.GetString() : null;
+                result.SlipUploadUrl = pr.TryGetProperty("slipUploadUrl", out var slipEl) ? slipEl.GetString() : null;
+                result.PaymentStatusUrl = pr.TryGetProperty("paymentStatusUrl", out var statusUrlEl) ? statusUrlEl.GetString() : null;
+                result.ExpireAt = pr.TryGetProperty("expireAt", out var expEl) && expEl.ValueKind == JsonValueKind.String && expEl.TryGetDateTime(out var expDt) ? expDt : null;
+                result.WebsocketPath = pr.TryGetProperty("websocketPath", out var wsEl) ? wsEl.GetString() : null;
+                result.SessionId = pr.TryGetProperty("sessionId", out var sidEl) ? sidEl.GetString() : null;
+                result.GatewayBaseUrl = _config.EndpointBaseUrl;
             }
             catch (Exception ex)
             {

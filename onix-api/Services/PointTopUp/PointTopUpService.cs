@@ -103,6 +103,17 @@ namespace Its.Onix.Api.Services
                 qrCodeImageBase64 = qrResult.QrCodeImageBase64,
                 paymentUrl = qrResult.PaymentUrl,
                 externalPaymentRequestId = qrResult.ExternalPaymentRequestId,
+                generatedAmount = qrResult.GeneratedAmount,
+                payinBankCode = qrResult.PayInBankCode,
+                payinBankAccountNo = qrResult.PayInBankAccountNo,
+                payinBankAccountName = qrResult.PayInBankAccountName,
+                payinPromptPayId = qrResult.PayInPromptPayId,
+                slipUploadUrl = qrResult.SlipUploadUrl,
+                paymentStatusUrl = qrResult.PaymentStatusUrl,
+                expireAt = qrResult.ExpireAt,
+                websocketPath = qrResult.WebsocketPath,
+                sessionId = qrResult.SessionId,
+                gatewayBaseUrl = qrResult.GatewayBaseUrl,
             });
 
             return await _accountDocService.UpdateAccountDocParamsById(orgId, accountDocId, paramsJson);
