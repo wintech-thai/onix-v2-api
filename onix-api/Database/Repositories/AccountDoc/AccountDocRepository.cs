@@ -405,6 +405,8 @@ namespace Its.Onix.Api.Database.Repositories
                 fullTextPd = fullTextPd.Or(p => p.Status!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Description!.Contains(param.FullTextSearch));
                 fullTextPd = fullTextPd.Or(p => p.Tags!.Contains(param.FullTextSearch));
+                // ปรับแก้ ข้อ 3 : ให้ค้นตามชื่อ merchant (OrgId) ได้ด้วย
+                fullTextPd = fullTextPd.Or(p => p.OrgId!.Contains(param.FullTextSearch));
 
                 pd = pd.And(fullTextPd);
             }
@@ -485,7 +487,7 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             var predicate = AccountDocPredicate(param!);
-            var result = await context!.AccountDocs!.Where(predicate)
+            var result = await context!.AccountDocs!.AsExpandable().Where(predicate)
                 .OrderByDescending(e => e.CreatedDate)
                 .Skip(offset)
                 .Take(limit)
@@ -505,7 +507,7 @@ namespace Its.Onix.Api.Database.Repositories
         public async Task<int> GetAccountDocCount(VMAccountDoc param)
         {
             var predicate = AccountDocPredicate(param!);
-            var result = await context!.AccountDocs!.Where(predicate).CountAsync();
+            var result = await context!.AccountDocs!.AsExpandable().Where(predicate).CountAsync();
 
             return result;
         }

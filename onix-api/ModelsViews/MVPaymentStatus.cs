@@ -32,5 +32,8 @@ namespace Its.Onix.Api.ModelsViews
         public string? MerchantName { get; set; }
 
         public string? SlipUploadUrl { get; set; }
+
+        // ปรับแก้ ข้อ 7 : สลิปล่าสุดที่ upload มา (ถ้ายังไม่มี upload จะเป็น null)
+        public string? LatestSlipImageBase64 { get; set; }
     }
 }
