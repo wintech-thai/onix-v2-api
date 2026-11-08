@@ -549,5 +549,34 @@ namespace Its.Onix.Api.Services
             var result = AddJob(orgId, job);
             return result?.Job!;
         }
+
+        public MJob CreateSupportCaseEventJob(string orgId, MCaseManagement cm, string action, string? actionBy = null)
+        {
+            //event เดียวใช้ร่วมกันทั้ง create/update/status change ของ support case
+            var job = new MJob()
+            {
+                Name = $"{Guid.NewGuid()}",
+                Description = $"Support Case [{action}] — Case ID: {cm.Id}",
+                Type = "SupportCase.Trigger",
+                Status = "Pending",
+                Tags = "support-case",
+
+                Parameters =
+                [
+                    new NameValue { Name = "EVENT_TYPE", Value = "SupportCase.Trigger" },
+                    new NameValue { Name = "ACTION", Value = action },
+                    new NameValue { Name = "CASE_ID", Value = cm.Id.ToString() },
+                    new NameValue { Name = "CASE_REF", Value = cm.Ref },
+                    new NameValue { Name = "SUBJECT", Value = cm.Subject },
+                    new NameValue { Name = "PRIORITY", Value = cm.Priority },
+                    new NameValue { Name = "STATUS", Value = cm.Status },
+                    new NameValue { Name = "MERCHANT_ORG_ID", Value = cm.OrgId },
+                    new NameValue { Name = "ACTION_BY", Value = actionBy },
+                ]
+            };
+
+            var result = AddJob(orgId, job);
+            return result?.Job!;
+        }
     }
 }

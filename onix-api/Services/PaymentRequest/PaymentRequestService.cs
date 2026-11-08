@@ -2506,6 +2506,17 @@ namespace Its.Onix.Api.Services
             r.MerchantName = merchantName;
             r.SlipUploadUrl = issueFreshSlipToken ? slipUrl : null;
 
+            // ปรับแก้ ข้อ 7 : ดึงรูปสลิปล่าสุดที่ upload มาแสดงด้วย ถ้ายังไม่มี upload ก็ปล่อยเป็น null
+            if (!string.IsNullOrEmpty(pr.PayInSlipUploads))
+            {
+                try
+                {
+                    var slips = JsonSerializer.Deserialize<List<MPayInSlipItem>>(pr.PayInSlipUploads);
+                    r.LatestSlipImageBase64 = slips != null && slips.Count > 0 ? slips[^1].ImageBase64 : null;
+                }
+                catch { }
+            }
+
             return r;
         }
 

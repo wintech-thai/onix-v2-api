@@ -14,6 +14,8 @@ namespace Its.Onix.Api.Services
         private readonly IDocumentNumberService _documentNumberService;
         private readonly IEntityRepository _entityRepository;
         private readonly IRedisHelper _redis;
+        private readonly IMerchantService _merchantService;
+        private readonly IPointService _pointService;
 
         public AccountDocService(
             IAccountDocRepository repo,
@@ -21,7 +23,9 @@ namespace Its.Onix.Api.Services
             IPointRuleService pointRuleService,
             IDocumentNumberService documentNumberService,
             IEntityRepository entityRepository,
-            IRedisHelper redis) : base()
+            IRedisHelper redis,
+            IMerchantService merchantService,
+            IPointService pointService) : base()
         {
             repository = repo;
             _itemService = itemService;
@@ -29,6 +33,8 @@ namespace Its.Onix.Api.Services
             _documentNumberService = documentNumberService;
             _entityRepository = entityRepository;
             _redis = redis;
+            _merchantService = merchantService;
+            _pointService = pointService;
         }
 
         public async Task<MVAccountDoc> AddAccountDoc(string orgId, MAccountDoc ad)
@@ -45,6 +51,19 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "DOCTYPE_MISSING";
                 r.Description = $"Document type is missing!!!";
+
+                return r;
+            }
+
+            // PurchaseCash ไม่มีลูกค้าจริง (เป็นคำสั่งซื้อฝั่ง merchant เอง เช่น เติม point) — ข้าม customer lookup + document number service
+            if (ad.DocumentType == "PurchaseCash")
+            {
+                ad.EntityId = "Internal";
+                ad.DocumentNo = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+                ad.DocumentDate ??= DateTime.UtcNow;
+
+                var purchaseResult = await repository!.AddAccountDoc(ad);
+                r.AccountDoc = purchaseResult;
 
                 return r;
             }
@@ -134,9 +153,78 @@ namespace Its.Onix.Api.Services
             if (failure != null) return failure;
 
             var result = await repository!.ApproveAccountDocById(accountDocId);
+            if (result != null)
+            {
+                await ProcessApprovedDocumentSideEffects(result);
+            }
 
-            //TODO : Implement here to process point deduction or addition base on document type
+            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+        }
 
+        // Admin เห็นข้าม org ทุก merchant — ไม่เรียก SetCustomOrgId เลย ปล่อยให้ repository ใช้ค่า RESERVE_ORG_ID default (ไม่กรองตาม org)
+        public async Task<MVAccountDoc> ApproveAccountDocByIdAdmin(string accountDocId)
+        {
+            var failure = await ValidatePendingOrNull("global", accountDocId, "");
+            if (failure != null) return failure;
+
+            var result = await repository!.ApproveAccountDocById(accountDocId);
+            if (result != null)
+            {
+                await ProcessApprovedDocumentSideEffects(result);
+            }
+
+            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+        }
+
+        // ข้อ 5c : approve "PointTopUp" => เติม point wallet ของ merchant นั้น — แยกเป็น method เผื่อในอนาคตจะ reuse จาก flow auto-approve ตอนจ่ายเงินจริง (ข้อ 5d)
+        private async Task ProcessApprovedDocumentSideEffects(MAccountDoc doc)
+        {
+            if (doc.DocumentType != "PurchaseCash" || doc.DocumentSubType != "PointTopUp") return;
+
+            var merchants = await _merchantService.GetMerchants(doc.OrgId!, new VMMerchant { Limit = 100 });
+            var merchant = merchants.FirstOrDefault(m => m.OrgId == doc.OrgId);
+            if (merchant?.Id == null) return;
+
+            var walletResult = await _pointService.GetWalletByRefIdAndType(doc.OrgId!, merchant.Id.ToString()!, "MerchantPoint");
+            if (walletResult?.Wallet?.Id == null) return;
+
+            var amount = doc.GrandTotal ?? doc.NetAmount ?? doc.TotalPrice ?? 0;
+            await _pointService.AddPoint(doc.OrgId!, new MPointTx
+            {
+                WalletId = walletResult.Wallet.Id.ToString(),
+                TxAmount = (long)amount,
+                TxAmountDecimal = (decimal)amount,
+                Tags = "PointTopUp",
+                Tags2 = doc.DocumentNo,
+                Description = $"Point top-up from PurchaseCash [{doc.DocumentNo}]",
+            });
+        }
+
+        public async Task<MVAccountDoc> UpdateAccountDocParamsById(string orgId, string accountDocId, string paramsJson)
+        {
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.UpdateAccountDocParamsById(accountDocId, paramsJson);
+            return new MVAccountDoc() { Status = result != null ? "OK" : "NOTFOUND", Description = result != null ? "Success" : $"Account document ID [{accountDocId}] not found for the organization [{orgId}]", AccountDoc = result };
+        }
+
+        public async Task<MVAccountDoc> RejectAccountDocById(string orgId, string accountDocId, string reason)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var failure = await ValidatePendingOrNull(orgId, accountDocId, "");
+            if (failure != null) return failure;
+
+            var result = await repository!.RejectAccountDocById(accountDocId, reason);
+            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+        }
+
+        // Admin เห็นข้าม org ทุก merchant — ไม่เรียก SetCustomOrgId เลย (เหมือน ApproveAccountDocByIdAdmin)
+        public async Task<MVAccountDoc> RejectAccountDocByIdAdmin(string accountDocId, string reason)
+        {
+            var failure = await ValidatePendingOrNull("global", accountDocId, "");
+            if (failure != null) return failure;
+
+            var result = await repository!.RejectAccountDocById(accountDocId, reason);
             return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
         }
 
@@ -248,6 +336,41 @@ namespace Its.Onix.Api.Services
             var result = await repository!.GetAccountDocCount(param);
 
             return result;
+        }
+
+        // Admin เห็นข้าม org ทุก merchant — ไม่เรียก SetCustomOrgId เลย, กรองเฉพาะ org เดียวได้ผ่าน param.OrgIdFilter
+        public async Task<List<MAccountDoc>> GetAccountDocsAdmin(VMAccountDoc param)
+        {
+            return await repository!.GetAccountDocs(param);
+        }
+
+        public async Task<int> GetAccountDocCountAdmin(VMAccountDoc param)
+        {
+            return await repository!.GetAccountDocCount(param);
+        }
+
+        public async Task<MVAccountDoc> GetAccountDocByIdAdmin(string accountDocId)
+        {
+            var r = new MVAccountDoc() { Status = "OK", Description = "Success" };
+
+            if (!ServiceUtils.IsGuidValid(accountDocId))
+            {
+                r.Status = "UUID_INVALID";
+                r.Description = $"Account document ID [{accountDocId}] format is invalid";
+
+                return r;
+            }
+
+            var result = await repository!.GetAccountDocById(accountDocId);
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Account document ID [{accountDocId}] not found";
+            }
+
+            r.AccountDoc = result;
+
+            return r;
         }
 
         public async Task<MVAccountDoc> GetAccountDocById(string orgId, string accountDocIdId)

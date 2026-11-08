@@ -186,5 +186,34 @@ namespace Its.Onix.Api.Services
             r.PaymentGateway = result;
             return r;
         }
+
+        // Factory pattern : เลือก IPaymentGateway implementation ตาม Scheme ของ payment gateway ที่ระบุ
+        public async Task<PaymentGatewayQrResult> GenerateQR(string orgId, string paymentGatewayId, PaymentGatewayQrRequest request)
+        {
+            if (!ServiceUtils.IsGuidValid(paymentGatewayId))
+            {
+                return new PaymentGatewayQrResult { Status = "UUID_INVALID", Description = $"Payment Gateway ID [{paymentGatewayId}] format is invalid" };
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var config = await repository!.GetPaymentGatewayById(paymentGatewayId);
+            if (config == null)
+            {
+                return new PaymentGatewayQrResult { Status = "NOTFOUND", Description = $"Payment Gateway ID [{paymentGatewayId}] not found for the organization [{orgId}]" };
+            }
+
+            IPaymentGateway? gateway = config.Scheme switch
+            {
+                "PleasePayment" => new PleasePaymentGateway(config),
+                _ => null,
+            };
+
+            if (gateway == null)
+            {
+                return new PaymentGatewayQrResult { Status = "PAYMENT_GATEWAY_SCHEME_UNSUPPORTED", Description = $"Payment gateway scheme [{config.Scheme}] is not supported" };
+            }
+
+            return await gateway.GenerateQR(request);
+        }
     }
 }

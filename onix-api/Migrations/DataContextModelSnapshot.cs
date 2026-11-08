@@ -61,6 +61,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("document_params");
 
+                    b.Property<string>("DocumentSubType")
+                        .HasColumnType("text")
+                        .HasColumnName("document_sub_type");
+
                     b.Property<string>("DocumentType")
                         .HasColumnType("text")
                         .HasColumnName("document_type");
@@ -96,6 +100,10 @@ namespace onix.api.Migrations
                     b.Property<string>("ProductType")
                         .HasColumnType("text")
                         .HasColumnName("product_type");
+
+                    b.Property<string>("RejectReason")
+                        .HasColumnType("text")
+                        .HasColumnName("reject_reason");
 
                     b.Property<string>("Status")
                         .HasColumnType("text")
