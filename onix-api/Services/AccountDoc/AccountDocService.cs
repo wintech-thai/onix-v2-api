@@ -16,6 +16,7 @@ namespace Its.Onix.Api.Services
         private readonly IRedisHelper _redis;
         private readonly IMerchantService _merchantService;
         private readonly IPointService _pointService;
+        private readonly IInventoryDocService _inventoryDocService;
 
         public AccountDocService(
             IAccountDocRepository repo,
@@ -25,7 +26,8 @@ namespace Its.Onix.Api.Services
             IEntityRepository entityRepository,
             IRedisHelper redis,
             IMerchantService merchantService,
-            IPointService pointService) : base()
+            IPointService pointService,
+            IInventoryDocService inventoryDocService) : base()
         {
             repository = repo;
             _itemService = itemService;
@@ -35,6 +37,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
             _merchantService = merchantService;
             _pointService = pointService;
+            _inventoryDocService = inventoryDocService;
         }
 
         public async Task<MVAccountDoc> AddAccountDoc(string orgId, MAccountDoc ad)
@@ -152,13 +155,7 @@ namespace Its.Onix.Api.Services
             var failure = await ValidatePendingOrNull(orgId, accountDocId, "");
             if (failure != null) return failure;
 
-            var result = await repository!.ApproveAccountDocById(accountDocId);
-            if (result != null)
-            {
-                await ProcessApprovedDocumentSideEffects(result);
-            }
-
-            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+            return await ApproveAccountDocCore(accountDocId);
         }
 
         // Admin เห็นข้าม org ทุก merchant — ไม่เรียก SetCustomOrgId เลย ปล่อยให้ repository ใช้ค่า RESERVE_ORG_ID default (ไม่กรองตาม org)
@@ -167,20 +164,73 @@ namespace Its.Onix.Api.Services
             var failure = await ValidatePendingOrNull("global", accountDocId, "");
             if (failure != null) return failure;
 
+            return await ApproveAccountDocCore(accountDocId);
+        }
+
+        // ข้อ 4b : ก่อน approve จริงต้องเช็คว่าถ้าตัด stock รายการ InventoryItem ทุกตัวแล้วจะติดลบไหม
+        // ถ้าติดลบ ต้อง "approve ไม่ได้" เลย (ห้าม flip status ของ AccountDoc ไปแล้วค่อยพบว่าตัด stock ไม่ได้)
+        private async Task<MVAccountDoc> ApproveAccountDocCore(string accountDocId)
+        {
+            var doc = await repository!.GetAccountDocById(accountDocId);
+
+            var stockFailure = await ValidateSufficientStockForSaleOrNull(doc);
+            if (stockFailure != null) return stockFailure;
+
             var result = await repository!.ApproveAccountDocById(accountDocId);
             if (result != null)
             {
+                result.Items = doc?.Items;
                 await ProcessApprovedDocumentSideEffects(result);
             }
 
             return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
         }
 
+        private async Task<MVAccountDoc?> ValidateSufficientStockForSaleOrNull(MAccountDoc? doc)
+        {
+            var items = (doc?.Items ?? new List<MAccountDocItem>())
+                .Where(i => i.ProductType == "InventoryItem" && !string.IsNullOrEmpty(i.ProductId) && !string.IsNullOrEmpty(i.LocationId))
+                .ToList();
+            if (items.Count == 0 || string.IsNullOrEmpty(doc?.OrgId)) return null;
+
+            foreach (var item in items)
+            {
+                var requested = (decimal)(item.Quantity ?? 0);
+                if (requested <= 0) continue;
+
+                var wallet = await _pointService.GetInventoryWalletByLocationItemId(doc.OrgId!, item.LocationId!, item.ProductId!);
+                var available = wallet?.PointQuantityBalanceDecimal ?? 0;
+                if (requested > available)
+                {
+                    return new MVAccountDoc
+                    {
+                        Status = "INSUFFICIENT_STOCK",
+                        Description = $"Item [{item.ProductCode}] insufficient stock at location [{item.LocationName}]: available [{available}], requested [{requested}]",
+                    };
+                }
+            }
+
+            return null;
+        }
+
         // ข้อ 5c : approve "PointTopUp" => เติม point wallet ของ merchant นั้น — แยกเป็น method เผื่อในอนาคตจะ reuse จาก flow auto-approve ตอนจ่ายเงินจริง (ข้อ 5d)
+        // ข้อ 4 (x014) : approve ขายเชื่อ/ขายสด => ตัด stock รายการ InventoryItem + (เฉพาะขายเชื่อ) บันทึกยอดลูกหนี้
         private async Task ProcessApprovedDocumentSideEffects(MAccountDoc doc)
         {
-            if (doc.DocumentType != "PurchaseCash" || doc.DocumentSubType != "PointTopUp") return;
+            if (doc.DocumentType == "PurchaseCash" && doc.DocumentSubType == "PointTopUp")
+            {
+                await ProcessPointTopUpSideEffect(doc);
+                return;
+            }
 
+            if (doc.DocumentType == "CashInvoice" || doc.DocumentType == "CreditInvoice")
+            {
+                await ProcessSaleStockDeductionAndReceivable(doc);
+            }
+        }
+
+        private async Task ProcessPointTopUpSideEffect(MAccountDoc doc)
+        {
             var merchants = await _merchantService.GetMerchants(doc.OrgId!, new VMMerchant { Limit = 100 });
             var merchant = merchants.FirstOrDefault(m => m.OrgId == doc.OrgId);
             if (merchant?.Id == null) return;
@@ -197,6 +247,95 @@ namespace Its.Onix.Api.Services
                 Tags = "PointTopUp",
                 Tags2 = doc.DocumentNo,
                 Description = $"Point top-up from PurchaseCash [{doc.DocumentNo}]",
+            });
+        }
+
+        // ข้อ 4a/4b : เอาเฉพาะรายการ ProductType=InventoryItem มาสร้างเป็น InventoryDoc (StockOut) แยกตาม location ที่เลือก
+        // แล้ว approve ให้เลย (reuse ValidateSufficientStockOrNull + DeductPointV2 ของ InventoryDocService โดยตรง ไม่ต้องเขียนซ้ำ)
+        private async Task ProcessSaleStockDeductionAndReceivable(MAccountDoc doc)
+        {
+            var orgId = doc.OrgId!;
+            var itemLines = (doc.Items ?? new List<MAccountDocItem>())
+                .Where(i => i.ProductType == "InventoryItem" && !string.IsNullOrEmpty(i.ProductId) && !string.IsNullOrEmpty(i.LocationId))
+                .ToList();
+
+            if (itemLines.Count > 0)
+            {
+                var saleTypeLabel = doc.DocumentType == "CashInvoice" ? "ขายสด" : "ขายเชื่อ";
+                foreach (var group in itemLines.GroupBy(i => i.LocationId))
+                {
+                    var first = group.First();
+                    var inventoryDoc = new MInventoryDoc
+                    {
+                        FromLocationId = group.Key,
+                        FromLocationCode = first.LocationCode,
+                        FromLocationName = first.LocationName,
+                        Description = $"ตัดสต็อกจาก{saleTypeLabel} เลขที่ {doc.DocumentNo}",
+                        Items = group.Select(i => new MInventoryDocItem
+                        {
+                            ItemId = i.ProductId,
+                            ItemCode = i.ProductCode,
+                            ItemName = i.ProductDesc,
+                            ItemQuantity = (decimal?)i.Quantity,
+                        }).ToList(),
+                    };
+
+                    var addResult = await _inventoryDocService.AddInventoryDocStockOut(orgId, inventoryDoc);
+                    if (addResult.Status != "OK" || addResult.InventoryDoc?.Id == null) continue;
+
+                    var approveResult = await _inventoryDocService.ApproveInventoryDocStockOut(orgId, addResult.InventoryDoc.Id.ToString()!);
+
+                    // ข้อ 4b.iv : เก็บมูลค่า item ณ ตอนตัด stock ไปขาย ไว้ที่ AccountDocItem (ไว้คิดต้นทุนสินค้าในอนาคต)
+                    var approvedItems = approveResult.InventoryDoc?.Items ?? new List<MInventoryDocItem>();
+                    var groupList = group.ToList();
+                    for (int i = 0; i < groupList.Count && i < approvedItems.Count; i++)
+                    {
+                        if (groupList[i].Id.HasValue && approvedItems[i].ItemAmount.HasValue)
+                        {
+                            await repository!.UpdateAccountDocItemCostAmountById(groupList[i].Id!.Value, (double)approvedItems[i].ItemAmount!.Value);
+                        }
+                    }
+                }
+            }
+
+            if (doc.DocumentType == "CreditInvoice")
+            {
+                await AddAccountReceivable(doc);
+            }
+        }
+
+        // ข้อ 4c : ขายเชื่อเท่านั้นที่ต้อง track ยอดลูกหนี้ — เก็บไว้ที่ wallet แยกต่างหาก (RefId=CustomerId, WalletType=AccountReceivable)
+        // สร้าง wallet ให้เลยถ้ายังไม่มี (ลูกค้าเก่าที่ยังไม่เคยขายเชื่อมาก่อน)
+        private async Task AddAccountReceivable(MAccountDoc doc)
+        {
+            if (string.IsNullOrEmpty(doc.EntityId)) return;
+            var orgId = doc.OrgId!;
+
+            var walletResult = await _pointService.GetWalletByRefIdAndType(orgId, doc.EntityId, "AccountReceivable");
+            var wallet = walletResult?.Wallet;
+            if (wallet == null)
+            {
+                var createResult = await _pointService.AddWallet(orgId, new MWallet
+                {
+                    RefId = doc.EntityId,
+                    WalletType = "AccountReceivable",
+                    Name = $"AR-{doc.EntityCode ?? doc.EntityId}",
+                    PointBalance = 0,
+                    PointBalanceDecimal = 0,
+                });
+                wallet = createResult.Wallet;
+            }
+            if (wallet?.Id == null) return;
+
+            var amount = doc.GrandTotal ?? doc.NetAmount ?? doc.TotalPrice ?? 0;
+            await _pointService.AddPoint(orgId, new MPointTx
+            {
+                WalletId = wallet.Id.ToString(),
+                TxAmount = (long)amount,
+                TxAmountDecimal = (decimal)amount,
+                Tags = doc.Id.ToString(), // ข้อ 5b : ใช้ลิงก์กลับไปที่เอกสารขายเชื่อต้นทางในหน้า Balance Transaction
+                Tags2 = doc.DocumentNo,
+                Description = "CreditInvoice",
             });
         }
 

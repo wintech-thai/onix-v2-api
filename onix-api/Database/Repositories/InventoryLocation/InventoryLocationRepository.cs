@@ -133,6 +133,7 @@ namespace Its.Onix.Api.Database.Repositories
                 //Not allow to update code
                 result.Name = inventoryLocation.Name;
                 result.LocationType = inventoryLocation.LocationType;
+                result.IsSalesWarehouse = inventoryLocation.IsSalesWarehouse;
                 result.UpdatedDate = DateTime.UtcNow;
                 context!.SaveChanges();
             }

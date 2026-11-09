@@ -103,6 +103,16 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        // ข้อ 4b.iv : เก็บมูลค่าต้นทุนของ item ตอนตัด stock ไปขาย ไว้คิดต้นทุนสินค้าในอนาคต — ไม่กระทบยอดเอกสาร (ไม่เรียก UpdateAccountDocTotal)
+        public async Task UpdateAccountDocItemCostAmountById(Guid accountDocItemId, double costAmount)
+        {
+            var existing = await context!.AccountDocItems!.Where(p => p!.Id!.Equals(accountDocItemId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            if (existing == null) return;
+
+            existing.CostAmount = costAmount;
+            await context.SaveChangesAsync();
+        }
+
         public async Task<MAccountDocItem> AddAccountDocItem(string accountDocId, MAccountDocItem adi)
         {
             adi.OrgId = orgId;
@@ -184,6 +194,9 @@ namespace Its.Onix.Api.Database.Repositories
                     existing.ProductType = item.ProductType;
                     existing.ProductCode = item.ProductCode;
                     existing.ProductDesc = item.ProductDesc;
+                    existing.LocationId = item.LocationId;
+                    existing.LocationCode = item.LocationCode;
+                    existing.LocationName = item.LocationName;
                     existing.Quantity = item.Quantity;
                     existing.UnitPrice = item.UnitPrice;
                     existing.TotalPrice = item.TotalPrice;
@@ -281,6 +294,13 @@ namespace Its.Onix.Api.Database.Repositories
             existing.Status = "Approved";
             existing.ApprovedDate = now;
             existing.StatusDate = now;
+
+            // ขายสด (CashInvoice) ไม่มีการกรอก paid amount เอง — ถือว่าจ่ายเต็มยอดบิลเสมอ
+            if (existing.DocumentType == "CashInvoice")
+            {
+                existing.PaidAmount = existing.GrandTotal ?? existing.NetAmount ?? existing.TotalPrice ?? 0;
+            }
+
             await context.SaveChangesAsync();
 
             return existing;

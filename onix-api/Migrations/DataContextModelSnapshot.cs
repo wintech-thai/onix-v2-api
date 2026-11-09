@@ -170,6 +170,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("account_doc_id");
 
+                    b.Property<double?>("CostAmount")
+                        .HasColumnType("double precision")
+                        .HasColumnName("cost_amount");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
@@ -197,6 +201,18 @@ namespace onix.api.Migrations
                     b.Property<double?>("ItemDiscountValue")
                         .HasColumnType("double precision")
                         .HasColumnName("item_discount_value");
+
+                    b.Property<string>("LocationCode")
+                        .HasColumnType("text")
+                        .HasColumnName("location_code");
+
+                    b.Property<string>("LocationId")
+                        .HasColumnType("text")
+                        .HasColumnName("location_id");
+
+                    b.Property<string>("LocationName")
+                        .HasColumnType("text")
+                        .HasColumnName("location_name");
 
                     b.Property<double?>("NetAmount")
                         .HasColumnType("double precision")
@@ -2184,6 +2200,10 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
+
+                    b.Property<bool?>("IsSalesWarehouse")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sales_warehouse");
 
                     b.Property<string>("LocationType")
                         .HasColumnType("text")

@@ -125,6 +125,16 @@ namespace Prom.LPR.Api.Controllers
             return Ok(result);
         }
 
+        // ข้อ 5a (x014) : หน้า customer ใช้ดึงยอดหนี้ (wallet type=AccountReceivable) ของลูกค้าแต่ละคน
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetWalletByRefIdAndType/{refId}/{walletType}")]
+        public async Task<IActionResult> GetWalletByRefIdAndType(string id, string refId, string walletType)
+        {
+            var result = await svc.GetWalletByRefIdAndType(id, refId, walletType);
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/UpdateWalletById/{walletId}")]
@@ -169,6 +179,16 @@ namespace Prom.LPR.Api.Controllers
         public async Task<IActionResult> GetWalletsByItemId(string id, string itemId)
         {
             var result = await svc.GetWalletsByItemId(id, itemId);
+            return Ok(result);
+        }
+
+        // ข้อ 5a (x014) : หน้า customer list ใช้ดึงยอดหนี้รวมของลูกค้าทุกคน (group by RefId) ในครั้งเดียว
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/{id}/action/GetWalletBalancesGroupByRefId/{walletType}")]
+        public async Task<IActionResult> GetWalletBalancesGroupByRefId(string id, string walletType)
+        {
+            var result = await svc.GetWalletBalancesGroupByRefId(id, walletType);
             return Ok(result);
         }
 

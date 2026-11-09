@@ -17,6 +17,7 @@ namespace Its.Onix.Api.Services
         public Task<MWallet?> GetInventoryWalletByLocationItemId(string orgId, string locationId, string itemId);
         public Task<List<MWallet>> GetWalletsByLocationId(string orgId, string locationId);
         public Task<List<MWallet>> GetWalletsByItemId(string orgId, string itemId);
+        public Task<List<MWallet>> GetWalletBalancesGroupByRefId(string orgId, string walletType);
 
         public Task<List<MPointTx>> GetPointTxsByWalletId(string orgId, VMPointTx param);
         public Task<int> GetPointTxsCountByWalletId(string orgId, VMPointTx param);
