@@ -485,6 +485,13 @@ namespace Its.Onix.Api.Services
             return await repository!.GetWalletsByItemId(itemId);
         }
 
+        // ข้อ 5a (x014) : หน้า customer list ใช้ดึงยอดหนี้ (wallet type=AccountReceivable) ของลูกค้าทุกคนในครั้งเดียว แทนที่จะยิงทีละคน
+        public async Task<List<MWallet>> GetWalletBalancesGroupByRefId(string orgId, string walletType)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetPointWalletBalancesGroupByRefId(walletType);
+        }
+
         public async Task<List<MPointTx>> GetPointTxsByCustomerId(string orgId, string custId, VMPointTx param)
         {
             repository.SetCustomOrgId(orgId);

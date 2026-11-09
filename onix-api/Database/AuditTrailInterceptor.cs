@@ -14,7 +14,9 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
             "PaymentRequests",
             "PaymentTransactions",
             "InventoryDocs",
-            "InventoryDocItems"
+            "InventoryDocItems",
+            "AccountDocs",
+            "AccountDocItems"
         };
 
     public AuditTrailInterceptor(RequestContext requestContext)

@@ -37,7 +37,9 @@ namespace Its.Onix.Api.Database.Repositories
             var ownsRow = await context!.PaymentRequests!.AnyAsync(p => p.Id == id && p.OrgId == orgId)
                 || await context!.PaymentTransactions!.AnyAsync(p => p.Id == id && p.OrgId == orgId)
                 || await context!.InventoryDocs!.AnyAsync(p => p.Id == id && p.OrgId == orgId)
-                || await context!.InventoryDocItems!.AnyAsync(p => p.Id == id && p.OrgId == orgId);
+                || await context!.InventoryDocItems!.AnyAsync(p => p.Id == id && p.OrgId == orgId)
+                || await context!.AccountDocs!.AnyAsync(p => p.Id == id && p.OrgId == orgId)
+                || await context!.AccountDocItems!.AnyAsync(p => p.Id == id && p.OrgId == orgId);
 
             if (!ownsRow)
             {

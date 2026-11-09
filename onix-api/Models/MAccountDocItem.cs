@@ -37,6 +37,15 @@ namespace Its.Onix.Api.Models
         [Column("product_desc")]
         public string? ProductDesc { get; set; }
 
+        [Column("location_id")]
+        public string? LocationId { get; set; } /* InventoryLocation.Id ที่ใช้ตัด stock, เฉพาะ ProductType=InventoryItem */
+
+        [Column("location_code")]
+        public string? LocationCode { get; set; }
+
+        [Column("location_name")]
+        public string? LocationName { get; set; }
+
         [Column("tags")]
         public string? Tags { get; set; }
 
@@ -84,6 +93,9 @@ namespace Its.Onix.Api.Models
 
         [Column("incentive_price")]
         public double? IncentiveTotalPrice { get; set; } /* เช่น รางวัลเมื่อถูกหวย */
+
+        [Column("cost_amount")]
+        public double? CostAmount { get; set; } /* มูลค่าต้นทุนของ item ณ ตอนตัด stock ไปขาย (qty * ราคาเฉลี่ยถ่วงน้ำหนัก ณ ตอนนั้น) ไว้คิดต้นทุนสินค้า */
 
 
         //System fields

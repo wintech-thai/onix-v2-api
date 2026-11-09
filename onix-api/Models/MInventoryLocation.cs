@@ -28,6 +28,9 @@ namespace Its.Onix.Api.Models
         [Column("location_type")]
         public string? LocationType { get; set; } /* Ref to MasterRef RefType=InventoryLocationType */
 
+        [Column("is_sales_warehouse")]
+        public bool? IsSalesWarehouse { get; set; }
+
         //System fields
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
@@ -38,6 +41,7 @@ namespace Its.Onix.Api.Models
         public MInventoryLocation()
         {
             Id = Guid.NewGuid();
+            IsSalesWarehouse = false;
             CreatedDate = DateTime.UtcNow;
             UpdatedDate = DateTime.UtcNow;
         }
