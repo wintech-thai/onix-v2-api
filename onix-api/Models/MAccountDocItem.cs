@@ -97,6 +97,9 @@ namespace Its.Onix.Api.Models
         [Column("cost_amount")]
         public double? CostAmount { get; set; } /* มูลค่าต้นทุนของ item ณ ตอนตัด stock ไปขาย (qty * ราคาเฉลี่ยถ่วงน้ำหนัก ณ ตอนนั้น) ไว้คิดต้นทุนสินค้า */
 
+        [Column("cost_unit_price")]
+        public double? CostUnitPrice { get; set; } /* ราคาต้นทุนต่อหน่วย (ราคาเฉลี่ยถ่วงน้ำหนักของ stock item ที่ location นั้น ณ ตอน approve) = CostAmount / Quantity */
+
 
         //System fields
         [Column("created_date")]
