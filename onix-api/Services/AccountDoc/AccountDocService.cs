@@ -292,7 +292,10 @@ namespace Its.Onix.Api.Services
                     {
                         if (groupList[i].Id.HasValue && approvedItems[i].ItemAmount.HasValue)
                         {
-                            await repository!.UpdateAccountDocItemCostAmountById(groupList[i].Id!.Value, (double)approvedItems[i].ItemAmount!.Value);
+                            await repository!.UpdateAccountDocItemCostAmountById(
+                                groupList[i].Id!.Value,
+                                (double)approvedItems[i].ItemAmount!.Value,
+                                (double)(approvedItems[i].ItemUnitPrice ?? 0));
                         }
                     }
                 }

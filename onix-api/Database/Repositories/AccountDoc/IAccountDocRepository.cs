@@ -26,6 +26,6 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MAccountDocItem> AddAccountDocItem(string accountDocId, MAccountDocItem adi);
         public Task<MAccountDocItem?> UpdateAccountDocItemById(string accountDocItemId, MAccountDocItem adi);
         public Task<MAccountDocItem?> DeleteAccountDocItemById(string accountDocItemId);
-        public Task UpdateAccountDocItemCostAmountById(Guid accountDocItemId, double costAmount);
+        public Task UpdateAccountDocItemCostAmountById(Guid accountDocItemId, double costAmount, double costUnitPrice);
     }
 }

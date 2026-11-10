@@ -104,12 +104,13 @@ namespace Its.Onix.Api.Database.Repositories
         }
 
         // ข้อ 4b.iv : เก็บมูลค่าต้นทุนของ item ตอนตัด stock ไปขาย ไว้คิดต้นทุนสินค้าในอนาคต — ไม่กระทบยอดเอกสาร (ไม่เรียก UpdateAccountDocTotal)
-        public async Task UpdateAccountDocItemCostAmountById(Guid accountDocItemId, double costAmount)
+        public async Task UpdateAccountDocItemCostAmountById(Guid accountDocItemId, double costAmount, double costUnitPrice)
         {
             var existing = await context!.AccountDocItems!.Where(p => p!.Id!.Equals(accountDocItemId) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
             if (existing == null) return;
 
             existing.CostAmount = costAmount;
+            existing.CostUnitPrice = costUnitPrice;
             await context.SaveChangesAsync();
         }
 

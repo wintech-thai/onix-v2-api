@@ -174,6 +174,10 @@ namespace onix.api.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("cost_amount");
 
+                    b.Property<double?>("CostUnitPrice")
+                        .HasColumnType("double precision")
+                        .HasColumnName("cost_unit_price");
+
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
