@@ -99,11 +99,13 @@ namespace Its.Onix.Api.Controllers
         public async Task<IActionResult> CreatePayOutRequest(string orgId, [FromBody] MPaymentRequest request)
         {
             var mc = await GetCurrentMerchant(orgId);
-            var denyResult = DenyIfMerchantIsNotOwn(mc);
-            if (denyResult != null)
-            {
-                return Ok(denyResult);
-            }
+            
+            //ไม่ต้องเช็คตรงนี้เพราะว่า merchant สามารถสร้างได้หมด
+            //var denyResult = DenyIfMerchantIsNotOwn(mc);
+            //if (denyResult != null)
+            //{
+            //    return Ok(denyResult);
+            //}
 
             var merchant = mc!;
             var bankAccountId = request.PayinBankAccountId!;
