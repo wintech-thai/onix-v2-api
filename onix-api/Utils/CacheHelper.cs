@@ -161,6 +161,14 @@ namespace Its.Onix.Api.Utils
             return key;
         }
 
+        // x093 4 : ใช้โดย PaymentConfirmationController (anonymous endpoint) เพื่อ authen header PP-API-KEY
+        public static string CreateSystemPaymentConfirmationKeyCacheKey(string orgId)
+        {
+            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";
+            var key = $"SystemPaymentConfirmationKey:{environment}:{orgId}";
+            return key;
+        }
+
         public static string CreateBrandLogoImageKey(string orgId)
         {
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Local";

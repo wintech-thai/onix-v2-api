@@ -137,6 +137,25 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        //x093 4 : ต้อง authen ถึงจะอ่านค่า Payment Confirmation key ได้ (เหมือน SMTP config)
+        [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetPaymentConfirmationConfig")]
+        public async Task<IActionResult> GetPaymentConfirmationConfig()
+        {
+            var result = await svc.GetPaymentConfirmationConfig("global");
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/SetPaymentConfirmationConfig")]
+        public async Task<IActionResult> SetPaymentConfirmationConfig([FromBody] MConfiguration cfg)
+        {
+            var result = await svc.SetPaymentConfirmationConfig("global", cfg);
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/SubmitTestEmailJob")]

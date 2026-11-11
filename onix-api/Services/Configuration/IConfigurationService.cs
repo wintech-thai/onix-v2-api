@@ -20,5 +20,11 @@ namespace Its.Onix.Api.Services
         public Task<MVConfiguration> SetClientIpSource(string orgId, string scope, MConfiguration config);
         public Task<MVConfiguration?> GetSmtpConfig(string orgId);
         public Task<MVConfiguration> SetSmtpConfig(string orgId, MConfiguration config);
+
+        // x093 4/5 : key ที่ merchant เอาไปใส่ header PP-API-KEY ของ webhook ตัวเอง, ใช้ authen
+        // ตอน PaymentConfirmationController (anonymous) ถูกเรียกจาก Ruby script
+        public Task<MVConfiguration?> GetPaymentConfirmationConfig(string orgId);
+        public Task<MVConfiguration> SetPaymentConfirmationConfig(string orgId, MConfiguration config);
+        public Task<string?> GetSystemPaymentConfirmationKeyCached(string orgId);
     }
 }

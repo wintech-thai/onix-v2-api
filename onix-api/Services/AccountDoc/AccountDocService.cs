@@ -244,7 +244,7 @@ namespace Its.Onix.Api.Services
                 WalletId = walletResult.Wallet.Id.ToString(),
                 TxAmount = (long)amount,
                 TxAmountDecimal = (decimal)amount,
-                Tags = "PointTopUp",
+                Tags = $"PointTopUp,AccountDocId=[{doc.Id}]",
                 Tags2 = doc.DocumentNo,
                 Description = $"Point top-up from PurchaseCash [{doc.DocumentNo}]",
             });

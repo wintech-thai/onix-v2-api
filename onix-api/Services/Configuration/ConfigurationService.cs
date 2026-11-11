@@ -363,6 +363,104 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVConfiguration?> GetPaymentConfirmationConfig(string orgId)
+        {
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Payment confirmation configuration retrieved successfully"
+            };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetConfigurationByType("SystemPaymentConfirmationKey");
+
+            if (result == null)
+            {
+                r.Status = "NOT_FOUND";
+                r.Description = "Payment confirmation configuration not found for the specified organization";
+                return r;
+            }
+
+            var pc = !string.IsNullOrEmpty(result.ConfigValue)
+                ? JsonSerializer.Deserialize<MPaymentConfirmationConfig>(result.ConfigValue)
+                : new MPaymentConfirmationConfig();
+
+            //ไม่คืน API key เต็ม ๆ กลับไปให้ frontend เห็น เอาแค่ 2 ตัวหน้า 2 ตัวหลังพอ (เหมือน SMTP password)
+            pc!.ApiKey = ServiceUtils.MaskSmtpPassword(pc.ApiKey);
+
+            result.PaymentConfirmationConfig = pc;
+            result.ConfigValue = "";
+
+            r.Configuration = result;
+            return r;
+        }
+
+        public async Task<MVConfiguration> SetPaymentConfirmationConfig(string orgId, MConfiguration config)
+        {
+            repository!.SetCustomOrgId(orgId);
+
+            var r = new MVConfiguration()
+            {
+                Status = "OK",
+                Description = "Payment confirmation configuration saved successfully"
+            };
+
+            if (config.PaymentConfirmationConfig == null)
+            {
+                r.Status = "CONFIG_VALUE_MISSING";
+                r.Description = "Payment confirmation configuration data is missing";
+                return r;
+            }
+
+            //ถ้า user ไม่ได้กรอก API key ใหม่มา (เว้นว่างไว้) ให้คงคีย์เดิมไว้ ไม่เขียนทับด้วยค่าว่าง
+            if (string.IsNullOrEmpty(config.PaymentConfirmationConfig.ApiKey))
+            {
+                var existing = await repository!.GetConfigurationByType("SystemPaymentConfirmationKey");
+                var existingPc = !string.IsNullOrEmpty(existing?.ConfigValue)
+                    ? JsonSerializer.Deserialize<MPaymentConfirmationConfig>(existing!.ConfigValue!)
+                    : null;
+                config.PaymentConfirmationConfig.ApiKey = existingPc?.ApiKey;
+            }
+
+            config.ConfigType = "SystemPaymentConfirmationKey";
+            config.ConfigValue = JsonSerializer.Serialize(config.PaymentConfirmationConfig);
+            config.Status = "Active";
+
+            var c = await repository!.UpsertConfiguration(config);
+            c.ConfigValue = "";
+
+            //ปรับ cache ที่ PaymentConfirmationController (anonymous endpoint) ใช้ authen ให้ตรงกับค่าใหม่ทันที
+            await _redis.SetObjectAsync(CacheHelper.CreateSystemPaymentConfirmationKeyCacheKey(orgId), config.PaymentConfirmationConfig.ApiKey, TimeSpan.FromHours(1));
+
+            r.Configuration = c;
+            return r;
+        }
+
+        // x093 5a : ใช้โดย PaymentConfirmationController (anonymous) authen header PP-API-KEY — อ่านจาก Redis ก่อน ถ้าไม่มีค่อยดึงจาก database แล้ว load ใส่ cache
+        public async Task<string?> GetSystemPaymentConfirmationKeyCached(string orgId)
+        {
+            var cacheKey = CacheHelper.CreateSystemPaymentConfirmationKeyCacheKey(orgId);
+            var cached = await _redis.GetObjectAsync<string>(cacheKey);
+            if (!string.IsNullOrEmpty(cached))
+            {
+                return cached;
+            }
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetConfigurationByType("SystemPaymentConfirmationKey");
+            var pc = !string.IsNullOrEmpty(result?.ConfigValue)
+                ? JsonSerializer.Deserialize<MPaymentConfirmationConfig>(result!.ConfigValue!)
+                : null;
+
+            if (string.IsNullOrEmpty(pc?.ApiKey))
+            {
+                return null;
+            }
+
+            await _redis.SetObjectAsync(cacheKey, pc.ApiKey, TimeSpan.FromHours(1));
+            return pc.ApiKey;
+        }
+
         [Obsolete("Brand logo is now uploaded as base64 directly via SetBrandConfig. Kept only until legacy clients stop calling it.")]
         public async Task<MVPresignedUrl> GetBrandLogoUploadPresignedUrl(string orgId, VMUploadDocument param)
         {
