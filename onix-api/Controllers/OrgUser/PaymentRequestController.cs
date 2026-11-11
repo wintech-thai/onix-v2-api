@@ -100,12 +100,11 @@ namespace Its.Onix.Api.Controllers
         {
             var mc = await GetCurrentMerchant(orgId);
             
-            //ไม่ต้องเช็คตรงนี้เพราะว่า merchant สามารถสร้างได้หมด
-            //var denyResult = DenyIfMerchantIsNotOwn(mc);
-            //if (denyResult != null)
-            //{
-            //    return Ok(denyResult);
-            //}
+            var denyResult = DenyIfMerchantIsNotOwn(mc);
+            if (denyResult != null)
+            {
+                return Ok(denyResult);
+            }
 
             var merchant = mc!;
             var bankAccountId = request.PayinBankAccountId!;
@@ -341,11 +340,11 @@ namespace Its.Onix.Api.Controllers
 
             var merchant = merchantVm.Merchant;
 
-            var denyResult = DenyIfMerchantIsNotOwn(merchant);
-            if (denyResult != null)
-            {
-                return Ok(denyResult);
-            }
+            //var denyResult = DenyIfMerchantIsNotOwn(merchant);
+            //if (denyResult != null)
+            //{
+            //    return Ok(denyResult);
+            //}
 
             var bankAccountId = request.PayinBankAccountId!;
             var baVm = new MVBankAccount() { Status = "OK", BankAccount = null };
