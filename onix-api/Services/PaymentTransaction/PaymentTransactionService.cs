@@ -1334,5 +1334,62 @@ namespace Its.Onix.Api.Services
 
             return pmtVm;
         }
+
+        // Resets status to Pending then reuses CreatePaymentTxByPayInRequestId unchanged; null custody counts as PlatformOwn (x088 convention)
+        public async Task<MVPaymentTransaction> ApproveRejectedPayInRequestById(string orgId, string paymentRequestId, bool requireMerchantOwn, MPaymentRequest? payload = null)
+        {
+            _paymentRequestRepo!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var pmr = await _paymentRequestRepo.GetPaymentRequestById(paymentRequestId);
+            if (pmr == null)
+            {
+                r.Status = "ERROR_PAYMENT_REQUEST_UNKNOWN";
+                r.Description = $"Unable to find payment request with ID=[{paymentRequestId}]";
+
+                return r;
+            }
+
+            if (pmr.Direction != "PayIn")
+            {
+                r.Status = "ERROR_INVALID_DIRECTION";
+                r.Description = "Only PayIn requests can be re-approved from Rejected";
+
+                return r;
+            }
+
+            if (pmr.Status != "Rejected")
+            {
+                r.Status = "ERROR_INVALID_STATUS";
+                r.Description = $"Payment request status must be 'Rejected' to re-approve but it is [{pmr.Status}]";
+
+                return r;
+            }
+
+            if (requireMerchantOwn && pmr.PayInBankCustodyType != "MerchantOwn")
+            {
+                r.Status = "ERROR_NOT_MERCHANT_OWN";
+                r.Description = $"This payment request is not MerchantOwn custody type (current=[{pmr.PayInBankCustodyType}]), this action is only allowed from the Merchant app";
+
+                return r;
+            }
+
+            if (!requireMerchantOwn && pmr.PayInBankCustodyType == "MerchantOwn")
+            {
+                r.Status = "ERROR_MERCHANT_OWN_NOT_ALLOWED";
+                r.Description = "This payment request is MerchantOwn custody type, this action is only allowed from the Merchant app";
+
+                return r;
+            }
+
+            await _paymentRequestRepo.ResetPayInRequestToPendingById(paymentRequestId);
+
+            return await CreatePaymentTxByPayInRequestId(orgId, paymentRequestId, payload);
+        }
     }
 }

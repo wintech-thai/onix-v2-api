@@ -627,6 +627,20 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        // Lets a Rejected PayIn request pass CreatePaymentTxByPayInRequestId's Pending-only precondition again
+        public async Task<MPaymentRequest?> ResetPayInRequestToPendingById(string paymentRequestId)
+        {
+            Guid id = Guid.Parse(paymentRequestId);
+            var existing = await context!.PaymentRequests!.AsExpandable().Where(IsOrgMatchPredicate(id)).FirstOrDefaultAsync();
+            if (existing != null)
+            {
+                existing.Status = "Pending";
+            }
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
         public async Task<MPaymentRequest?> UpdateQrCodeByIdForP2P(string paymentRequestId, MPaymentRequest payOut)
         {
             Guid id = Guid.Parse(paymentRequestId);

@@ -212,6 +212,16 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        // Only MerchantOwn PayIn requests are allowed here
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{orgId}/action/ApproveRejectedPayInRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> ApproveRejectedPayInRequestById(string orgId, string paymentRequestId, [FromBody] MPaymentRequest? payload = null)
+        {
+            var result = await _paymentTransactionSvc.ApproveRejectedPayInRequestById(orgId, paymentRequestId, requireMerchantOwn: true, payload);
+            return Ok(result);
+        }
+
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{orgId}/action/GetPendingPayInRequestsForPaymentTx")]

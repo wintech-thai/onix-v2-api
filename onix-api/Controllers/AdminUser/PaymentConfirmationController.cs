@@ -1,13 +1,12 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Its.Onix.Api.Services;
-using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Controllers
 {
-    // x093 5 : endpoint นี้ anonymous ทั้งหมด (ไม่มี JWT) — Ruby script ภายนอกเป็นคนยิงเข้ามาตอนมีเงินเข้าบัญชีจริง
-    // ต้อง authen เองผ่าน header PP-API-KEY เทียบกับ SystemPaymentConfirmationKey (ConfigurationService.GetSystemPaymentConfirmationKeyCached)
+    // Anonymous endpoint, called via merchant's own webhook config — auths itself against PP-API-KEY header instead of JWT
     [Authorize(Policy = "GenericRolePolicy")]
     [ApiController]
     [Route("/admin-api/[controller]")]
@@ -25,11 +24,29 @@ namespace Its.Onix.Api.Controllers
             _accountDocSvc = accountDocService;
         }
 
+        // Real payload is a raw MJob (Parameters[].Name/.Value), not flat {Ref1,Ref2,Ref3} — supports both shapes
+        private static string? GetParam(JsonElement root, string jobParamName, string flatName)
+        {
+            if (root.TryGetProperty("Parameters", out var parameters) && parameters.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var p in parameters.EnumerateArray())
+                {
+                    if (p.TryGetProperty("Name", out var n) && string.Equals(n.GetString(), jobParamName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return p.TryGetProperty("Value", out var v) ? v.GetString() : null;
+                    }
+                }
+                return null;
+            }
+
+            return root.TryGetProperty(flatName, out var flat) ? flat.GetString() : null;
+        }
+
         [ExcludeFromCodeCoverage]
         [AllowAnonymous]
         [HttpPost]
         [Route("org/global/action/PleasePaymentConfirmation")]
-        public async Task<IActionResult> PleasePaymentConfirmation([FromBody] VMPaymentConfirmation request)
+        public async Task<IActionResult> PleasePaymentConfirmation([FromBody] JsonElement request)
         {
             var apiKeyHeader = Request.Headers.TryGetValue(ApiKeyHeaderName, out var h) ? h.ToString() : "";
             if (string.IsNullOrEmpty(apiKeyHeader))
@@ -43,16 +60,30 @@ namespace Its.Onix.Api.Controllers
                 return Unauthorized(new { Status = "UNAUTHORIZED", Description = $"Invalid {ApiKeyHeaderName}" });
             }
 
-            // x093 5biii : เช็คว่านี่คือการเรียกจากการเติมเงิน point wallet จาก Ref2 (ดู PointTopUpService.CreatePointTopUp)
-            if (!string.IsNullOrEmpty(request.Ref1) && string.Equals(request.Ref2, "Point Purchase", StringComparison.OrdinalIgnoreCase))
+            var ref1 = GetParam(request, "PMR_REF_ID1", "Ref1");
+            var ref2 = GetParam(request, "PMR_REF_ID2", "Ref2");
+            var eventType = GetParam(request, "EVENT_TYPE", "EventType")
+                ?? (request.TryGetProperty("Type", out var t) ? t.GetString() : null);
+
+            // Ref2 identifies a point-wallet-topup call — see PointTopUpService.CreatePointTopUp
+            if (!string.IsNullOrEmpty(ref1) && string.Equals(ref2, "Point Purchase", StringComparison.OrdinalIgnoreCase))
             {
-                // x093 5b.i/ii : approve ตัว AccountDoc (PurchaseCash/PointTopUp) เลย — ฝั่ง approve เดิมจัดการ topup point wallet ให้อยู่แล้ว (ProcessPointTopUpSideEffect)
-                var result = await _accountDocSvc.ApproveAccountDocByIdAdmin(request.Ref1);
+                var isRejected = eventType?.Contains("Reject", StringComparison.OrdinalIgnoreCase) == true;
+                if (isRejected)
+                {
+                    // Failed/expired payin request must reject the linked AccountDoc too, or it stays Pending forever
+                    var reason = GetParam(request, "STATUS_REASON", "Reason");
+                    var rejectResult = await _accountDocSvc.RejectAccountDocByIdAdmin(ref1, string.IsNullOrWhiteSpace(reason) ? "Payin request expired or rejected" : reason);
+                    return Ok(rejectResult);
+                }
+
+                // Approve side-effect already handles the point wallet topup (ProcessPointTopUpSideEffect)
+                var result = await _accountDocSvc.ApproveAccountDocByIdAdmin(ref1);
                 return Ok(result);
             }
 
-            // x093 5biv : ในอนาคต endpoint นี้รองรับการชำระเงินแบบอื่นที่ไม่ใช่เติมเงิน point wallet ได้ โดยเพิ่ม branch เช็ค Ref2 แบบอื่นตรงนี้
-            return Ok(new { Status = "UNKNOWN_REF_TYPE", Description = $"No handler for Ref2=[{request.Ref2}]" });
+            // Other payment types can add their own Ref2 branch here later
+            return Ok(new { Status = "UNKNOWN_REF_TYPE", Description = $"No handler for Ref2=[{ref2}]" });
         }
     }
 }

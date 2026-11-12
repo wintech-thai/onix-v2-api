@@ -202,5 +202,15 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.CreatePaymentTxByPayInRequestId("global", paymentRequestId, payload);
             return Ok(result);
         }
+
+        // Admin sees across all merchants, so only PlatformOwn PayIn requests are allowed here
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/global/action/ApproveRejectedPayInRequestById/{paymentRequestId}")]
+        public async Task<IActionResult> ApproveRejectedPayInRequestById(string paymentRequestId, [FromBody] MPaymentRequest? payload = null)
+        {
+            var result = await svc.ApproveRejectedPayInRequestById("global", paymentRequestId, requireMerchantOwn: false, payload);
+            return Ok(result);
+        }
     }
 }
