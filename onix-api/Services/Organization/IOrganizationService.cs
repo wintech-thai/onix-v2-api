@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Services
     public interface IOrganizationService
     {
         public Task<MOrganization> GetOrganization(string orgId);
+        public Task<MOrganization?> DeleteOrganization(string orgId);
         public Task<List<MOrganization>> GetOrganizations(VMOrganization param);
         public Task<int> GetOrganizationCount(VMOrganization param);
         public Task<MVOrganization> UpdateOrganization(string orgId, MOrganization org);

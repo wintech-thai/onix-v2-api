@@ -21,9 +21,10 @@ namespace Its.Onix.Api.Services
         private readonly IOrganizationService organizationService;
         private readonly IOrganizationUserService organizationUserService;
         private readonly IBankAccountService bankAccountService;
+        private readonly IPaymentRequestRepository paymentRequestRepository;
 
         public ServiceRequestService(IServiceRequestRepository repo, IJobService jobSvc, IFileDocumentService fileDocumentSvc, IMerchantRepository merchantRepo, IUserRepository userRepo,
-            IOrganizationService orgSvc, IOrganizationUserService orgUserSvc, IBankAccountService bankAccountSvc) : base()
+            IOrganizationService orgSvc, IOrganizationUserService orgUserSvc, IBankAccountService bankAccountSvc, IPaymentRequestRepository paymentRequestRepo) : base()
         {
             repository = repo;
             jobService = jobSvc;
@@ -33,6 +34,7 @@ namespace Its.Onix.Api.Services
             organizationService = orgSvc;
             organizationUserService = orgUserSvc;
             bankAccountService = bankAccountSvc;
+            paymentRequestRepository = paymentRequestRepo;
             repository.SetCustomOrgId(ORG_ID);
         }
 
@@ -347,6 +349,56 @@ namespace Its.Onix.Api.Services
             if (existing.Status == "Approved" || existing.Status == "Rejected")
             {
                 return new MVServiceRequest { Status = "APPROVED_CANNOT_DELETE", Description = $"Service request is already [{existing.Status}] and cannot be deleted" };
+            }
+
+            var deleted = await repository.DeleteServiceRequestById(serviceRequestId);
+            return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = deleted };
+        }
+
+        // Admin-only test cleanup: undoes everything Approve created (org/merchant/user) so the same email can sign up again
+        public async Task<MVServiceRequest> DeleteServiceRequestCompletelyById(string serviceRequestId)
+        {
+            if (!ServiceUtils.IsGuidValid(serviceRequestId))
+            {
+                return new MVServiceRequest { Status = "UUID_INVALID", Description = $"Service request ID [{serviceRequestId}] format is invalid" };
+            }
+
+            var existing = await repository.GetServiceRequestById(serviceRequestId);
+            if (existing == null)
+            {
+                return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
+            }
+
+            var shopCode = existing.ShopCode;
+            if (!string.IsNullOrEmpty(shopCode))
+            {
+                merchantRepository.SetCustomOrgId(shopCode);
+                var merchant = await merchantRepository.GetMerchantByCode(shopCode);
+                if (merchant != null)
+                {
+                    // Refuse to wipe a merchant that already has real payment activity on it
+                    paymentRequestRepository.SetCustomOrgId(shopCode);
+                    var txCount = await paymentRequestRepository.GetPaymentRequestCount(new VMPaymentRequest { MerchantId = merchant.Id.ToString() });
+                    if (txCount > 0)
+                    {
+                        return new MVServiceRequest { Status = "MERCHANT_HAS_ACTIVITY", Description = $"Merchant [{shopCode}] already has {txCount} payment request(s), refusing to delete" };
+                    }
+
+                    await merchantRepository.DeleteMerchantById(merchant.Id.ToString()!);
+                }
+
+                var orgUsers = organizationUserService.GetUsers(shopCode, new VMOrganizationUser());
+                foreach (var ou in orgUsers)
+                {
+                    organizationUserService.DeleteUserById(shopCode, ou.OrgUserId.ToString()!);
+                }
+
+                await organizationService.DeleteOrganization(shopCode);
+            }
+
+            if (!string.IsNullOrEmpty(existing.Email))
+            {
+                userRepository.DeleteUserByEmail(existing.Email);
             }
 
             var deleted = await repository.DeleteServiceRequestById(serviceRequestId);

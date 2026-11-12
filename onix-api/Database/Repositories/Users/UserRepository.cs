@@ -86,5 +86,16 @@ namespace Its.Onix.Api.Database.Repositories
             var u = context!.Users!.Where(p => p!.UserEmail!.Equals(email)).FirstOrDefault();
             return u!;
         }
+
+        public MUser? DeleteUserByEmail(string email)
+        {
+            var u = context!.Users!.Where(p => p!.UserEmail!.Equals(email)).FirstOrDefault();
+            if (u != null)
+            {
+                context.Users!.Remove(u);
+                context.SaveChanges();
+            }
+            return u;
+        }
     }
 }

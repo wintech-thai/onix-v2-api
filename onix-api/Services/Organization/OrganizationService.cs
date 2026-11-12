@@ -134,6 +134,12 @@ namespace Its.Onix.Api.Services
             return t;
         }
 
+        public async Task<MOrganization?> DeleteOrganization(string orgId)
+        {
+            repository!.SetCustomOrgId(orgId);
+            return await repository.DeleteOrganization();
+        }
+
         public async Task<List<MOrganization>> GetOrganizations(VMOrganization param)
         {
             var result = await repository!.GetOrganizations(param);

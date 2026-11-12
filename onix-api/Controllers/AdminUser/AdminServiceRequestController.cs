@@ -131,6 +131,15 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        [ExcludeFromCodeCoverage]
+        [HttpDelete]
+        [Route("org/global/action/DeleteServiceRequestCompletelyById/{serviceRequestId}")]
+        public async Task<IActionResult> DeleteServiceRequestCompletelyById(string serviceRequestId)
+        {
+            var result = await svc.DeleteServiceRequestCompletelyById(serviceRequestId);
+            return Ok(result);
+        }
+
         // ปุ่ม "Regenerate Link" ฝั่ง Admin
         [ExcludeFromCodeCoverage]
         [HttpPost]

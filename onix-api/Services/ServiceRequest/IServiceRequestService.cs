@@ -25,6 +25,9 @@ namespace Its.Onix.Api.Services
         public Task<int> GetServiceRequestCount(VMServiceRequest param);
         public Task<MVServiceRequest> UpdateServiceRequestById(string serviceRequestId, MServiceRequest request);
         public Task<MVServiceRequest> DeleteServiceRequestById(string serviceRequestId);
+
+        // Admin-only: also tears down the org/merchant/user Approve created, so the same email can re-register
+        public Task<MVServiceRequest> DeleteServiceRequestCompletelyById(string serviceRequestId);
         public Task<MVServiceRequest> RejectServiceRequest(string serviceRequestId, string? reason);
         public Task<MVServiceRequest> ApproveServiceRequest(string serviceRequestId, VMApproveServiceRequest payload);
 
