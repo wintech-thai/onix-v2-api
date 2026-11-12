@@ -321,6 +321,20 @@ namespace Its.Onix.Api.Database.Repositories
             return existing;
         }
 
+        // Lets a Rejected AccountDoc be re-approved later, mirroring ResetPayInRequestToPendingById
+        public async Task<MAccountDoc?> ResetAccountDocToPendingById(string accountDocId)
+        {
+            Guid id = Guid.Parse(accountDocId);
+            var existing = await ByIdScoped(id).FirstOrDefaultAsync();
+            if (existing == null) return null;
+
+            existing.Status = "Pending";
+            existing.StatusDate = DateTime.UtcNow;
+            await context.SaveChangesAsync();
+
+            return existing;
+        }
+
         // Callers (the service layer) must check IsAccountDocPending first — this method
         // mutates unconditionally and assumes that validation already happened.
         public async Task<MAccountDoc?> RejectAccountDocById(string accountDocId, string reason)

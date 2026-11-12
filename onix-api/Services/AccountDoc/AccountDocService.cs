@@ -370,6 +370,29 @@ namespace Its.Onix.Api.Services
             return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
         }
 
+        // Lets a re-approved PayIn request's webhook re-approve the linked AccountDoc too, instead of hitting INVALID_STATUS
+        public async Task<MVAccountDoc> ResetAccountDocToPendingByIdAdmin(string accountDocId)
+        {
+            if (!ServiceUtils.IsGuidValid(accountDocId))
+            {
+                return new MVAccountDoc() { Status = "UUID_INVALID", Description = $"Account document ID [{accountDocId}] format is invalid" };
+            }
+
+            var existing = await repository!.GetAccountDocById(accountDocId);
+            if (existing == null)
+            {
+                return new MVAccountDoc() { Status = "NOTFOUND", Description = $"Account document ID [{accountDocId}] not found" };
+            }
+
+            if (existing.Status != "Rejected")
+            {
+                return new MVAccountDoc() { Status = "INVALID_STATUS", Description = $"Only a Rejected account document can be reset to Pending, current status is [{existing.Status}]" };
+            }
+
+            var result = await repository!.ResetAccountDocToPendingById(accountDocId);
+            return new MVAccountDoc() { Status = "OK", Description = "Success", AccountDoc = result };
+        }
+
         public async Task<MVAccountDoc> CancelAccountDocById(string orgId, string accountDocId)
         {
             repository!.SetCustomOrgId(orgId);

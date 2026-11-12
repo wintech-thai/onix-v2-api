@@ -23,6 +23,7 @@ namespace Its.Onix.Api.Services
         public Task<MVAccountDoc> GetAccountDocByIdAdmin(string accountDocId);
         public Task<MVAccountDoc> ApproveAccountDocByIdAdmin(string accountDocId);
         public Task<MVAccountDoc> RejectAccountDocByIdAdmin(string accountDocId, string reason);
+        public Task<MVAccountDoc> ResetAccountDocToPendingByIdAdmin(string accountDocId);
         public Task<MVAccountDocItem> AddAccountDocItem(string orgId, string accountDocId, MAccountDocItem adi);
         public Task<List<MAccountDocItem>> GetAccountDocItemsById(string orgId, string accountDocId);
         public Task<MVAccountDocItem> UpdateAccountDocItemById(string orgId, string accountDocItemId, MAccountDocItem adi);

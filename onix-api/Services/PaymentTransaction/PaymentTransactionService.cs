@@ -17,17 +17,19 @@ namespace Its.Onix.Api.Services
         private readonly IPointService? _pointService = null;
         private readonly IJobService? _jobService = null;
         private readonly IMerchantService? _merchantService = null;
+        private readonly IAccountDocService? _accountDocService = null;
         private readonly IRedisHelper _redis;
         private readonly IHubContext<PaymentHub> _hub;
 
         public PaymentTransactionService(
-            IPaymentTransactionRepository repo, 
+            IPaymentTransactionRepository repo,
             IPaymentRequestRepository paymentRequestRepo,
             //IPaymentRequestService paymentRequestService,
             IPointService pointService,
             IBankAccountRepository bankAccountRepo,
             IJobService jobService,
             IMerchantService merchantService,
+            IAccountDocService accountDocService,
             IHubContext<PaymentHub> hub,
             IRedisHelper redis) : base()
         {
@@ -39,6 +41,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
             _hub = hub;
             _merchantService = merchantService;
+            _accountDocService = accountDocService;
             //_paymentRequestSvc = paymentRequestService;
         }
 
@@ -1385,6 +1388,13 @@ namespace Its.Onix.Api.Services
                 r.Description = "This payment request is MerchantOwn custody type, this action is only allowed from the Merchant app";
 
                 return r;
+            }
+
+            // Point-wallet-topup requests have a linked AccountDoc that was rejected alongside the PayIn
+            // request — it must come back to Pending too, or the webhook's re-approve hits INVALID_STATUS
+            if (string.Equals(pmr.RefId2, "Point Purchase", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(pmr.RefId1) && ServiceUtils.IsGuidValid(pmr.RefId1))
+            {
+                await _accountDocService!.ResetAccountDocToPendingByIdAdmin(pmr.RefId1);
             }
 
             await _paymentRequestRepo.ResetPayInRequestToPendingById(paymentRequestId);
