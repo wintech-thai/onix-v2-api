@@ -304,7 +304,7 @@ namespace Its.Onix.Api
                         partitionKey: clientIp,
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = 50, // อนุญาต 50 requests
+                            PermitLimit = 300, // อนุญาต 300 requests
                             Window = TimeSpan.FromSeconds(10), // ต่อ 10 วินาที
                             QueueLimit = 0,
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst

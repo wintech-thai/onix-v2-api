@@ -17,17 +17,19 @@ namespace Its.Onix.Api.Services
         private readonly IPointService? _pointService = null;
         private readonly IJobService? _jobService = null;
         private readonly IMerchantService? _merchantService = null;
+        private readonly IAccountDocService? _accountDocService = null;
         private readonly IRedisHelper _redis;
         private readonly IHubContext<PaymentHub> _hub;
 
         public PaymentTransactionService(
-            IPaymentTransactionRepository repo, 
+            IPaymentTransactionRepository repo,
             IPaymentRequestRepository paymentRequestRepo,
             //IPaymentRequestService paymentRequestService,
             IPointService pointService,
             IBankAccountRepository bankAccountRepo,
             IJobService jobService,
             IMerchantService merchantService,
+            IAccountDocService accountDocService,
             IHubContext<PaymentHub> hub,
             IRedisHelper redis) : base()
         {
@@ -39,6 +41,7 @@ namespace Its.Onix.Api.Services
             _redis = redis;
             _hub = hub;
             _merchantService = merchantService;
+            _accountDocService = accountDocService;
             //_paymentRequestSvc = paymentRequestService;
         }
 
@@ -1333,6 +1336,70 @@ namespace Its.Onix.Api.Services
             _ = await _paymentRequestRepo.ApprovePaymentRequestById(paymentRequestId, payload);
 
             return pmtVm;
+        }
+
+        // Resets status to Pending then reuses CreatePaymentTxByPayInRequestId unchanged; null custody counts as PlatformOwn (x088 convention)
+        public async Task<MVPaymentTransaction> ApproveRejectedPayInRequestById(string orgId, string paymentRequestId, bool requireMerchantOwn, MPaymentRequest? payload = null)
+        {
+            _paymentRequestRepo!.SetCustomOrgId(orgId);
+
+            var r = new MVPaymentTransaction()
+            {
+                Status = "OK",
+                Description = "Success"
+            };
+
+            var pmr = await _paymentRequestRepo.GetPaymentRequestById(paymentRequestId);
+            if (pmr == null)
+            {
+                r.Status = "ERROR_PAYMENT_REQUEST_UNKNOWN";
+                r.Description = $"Unable to find payment request with ID=[{paymentRequestId}]";
+
+                return r;
+            }
+
+            if (pmr.Direction != "PayIn")
+            {
+                r.Status = "ERROR_INVALID_DIRECTION";
+                r.Description = "Only PayIn requests can be re-approved from Rejected";
+
+                return r;
+            }
+
+            if (pmr.Status != "Rejected")
+            {
+                r.Status = "ERROR_INVALID_STATUS";
+                r.Description = $"Payment request status must be 'Rejected' to re-approve but it is [{pmr.Status}]";
+
+                return r;
+            }
+
+            if (requireMerchantOwn && pmr.PayInBankCustodyType != "MerchantOwn")
+            {
+                r.Status = "ERROR_NOT_MERCHANT_OWN";
+                r.Description = $"This payment request is not MerchantOwn custody type (current=[{pmr.PayInBankCustodyType}]), this action is only allowed from the Merchant app";
+
+                return r;
+            }
+
+            if (!requireMerchantOwn && pmr.PayInBankCustodyType == "MerchantOwn")
+            {
+                r.Status = "ERROR_MERCHANT_OWN_NOT_ALLOWED";
+                r.Description = "This payment request is MerchantOwn custody type, this action is only allowed from the Merchant app";
+
+                return r;
+            }
+
+            // Point-wallet-topup requests have a linked AccountDoc that was rejected alongside the PayIn
+            // request — it must come back to Pending too, or the webhook's re-approve hits INVALID_STATUS
+            if (string.Equals(pmr.RefId2, "Point Purchase", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(pmr.RefId1) && ServiceUtils.IsGuidValid(pmr.RefId1))
+            {
+                await _accountDocService!.ResetAccountDocToPendingByIdAdmin(pmr.RefId1);
+            }
+
+            await _paymentRequestRepo.ResetPayInRequestToPendingById(paymentRequestId);
+
+            return await CreatePaymentTxByPayInRequestId(orgId, paymentRequestId, payload);
         }
     }
 }

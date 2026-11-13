@@ -17,6 +17,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MAccountDoc?> UpdateAccountDocParamsById(string accountDocId, string paramsJson);
         public Task<MAccountDoc?> ApproveAccountDocById(string accountDocId);
         public Task<MAccountDoc?> RejectAccountDocById(string accountDocId, string reason);
+        public Task<MAccountDoc?> ResetAccountDocToPendingById(string accountDocId);
         public Task<MAccountDoc?> CancelAccountDocById(string accountDocId);
         public Task<MAccountDoc?> DeleteAccountDocById(string accountDocId);
         public Task<List<MAccountDoc>> GetAccountDocs(VMAccountDoc param);

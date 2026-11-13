@@ -344,11 +344,8 @@ namespace Its.Onix.Api.Services
                 return new MVServiceRequest { Status = "NOTFOUND", Description = $"Service request ID [{serviceRequestId}] not found" };
             }
 
-            if (existing.Status == "Approved" || existing.Status == "Rejected")
-            {
-                return new MVServiceRequest { Status = "APPROVED_CANNOT_DELETE", Description = $"Service request is already [{existing.Status}] and cannot be deleted" };
-            }
-
+            // Deleting the service request row is always safe — it never touches the merchant/org/user
+            // Approve created, so it's allowed regardless of status (needed to free an email for re-signup)
             var deleted = await repository.DeleteServiceRequestById(serviceRequestId);
             return new MVServiceRequest { Status = "OK", Description = "Success", ServiceRequest = deleted };
         }

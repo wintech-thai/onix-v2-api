@@ -45,6 +45,9 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public MSmtpConfig? SmtpConfig { get; set; }
 
+        [NotMapped]
+        public MPaymentConfirmationConfig? PaymentConfirmationConfig { get; set; }
+
 
         public MConfiguration()
         {
