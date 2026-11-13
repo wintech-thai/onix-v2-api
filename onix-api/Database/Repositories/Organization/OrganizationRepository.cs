@@ -17,17 +17,6 @@ namespace Its.Onix.Api.Database.Repositories
             return result!;
         }
 
-        public async Task<MOrganization?> DeleteOrganization()
-        {
-            var existing = await context!.Organizations!.Where(x => x.OrgCustomId!.Equals(orgId)).FirstOrDefaultAsync();
-            if (existing != null)
-            {
-                context.Organizations!.Remove(existing);
-                await context.SaveChangesAsync();
-            }
-            return existing;
-        }
-
         // ไม่ใช้ LinqKit/PredicateBuilder เพราะ AsExpandable() ชนกับ EF Core async operations
         // ("source 'IQueryable' doesn't implement 'IAsyncEnumerable'") - chain .Where() ตรง ๆ แทน
         private IQueryable<MOrganization> ApplyOrganizationFilters(IQueryable<MOrganization> query, VMOrganization param)

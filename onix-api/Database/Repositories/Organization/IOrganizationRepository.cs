@@ -7,7 +7,6 @@ namespace Its.Onix.Api.Database.Repositories
     {
         public void SetCustomOrgId(string customOrgId);
         public Task<MOrganization> GetOrganization();
-        public Task<MOrganization?> DeleteOrganization();
         public Task<List<MOrganization>> GetOrganizations(VMOrganization param);
         public Task<int> GetOrganizationCount(VMOrganization param);
         public Task<MOrganization?> UpdateOrganization(MOrganization org);
