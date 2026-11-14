@@ -9,9 +9,6 @@ namespace Its.Onix.Api.Services
     // ข้อ 3c : กดเติม point => สร้าง AccountDoc "PurchaseCash" + ขอ QR จาก payment gateway, แล้วอัปเดตสถานะตามผล
     public class PointTopUpService : IPointTopUpService
     {
-        // ตอนนี้ hardcode payment gateway ที่ใช้รับเงินเติม point ไว้ก่อนตาม spec (ตั้งค่าไว้แล้วที่ System Management > Payment Gateway)
-        private const string PointTopUpPaymentGatewayCode = "system-merchant-001";
-
         private readonly IAccountDocService _accountDocService;
         private readonly IPaymentGatewayService _paymentGatewayService;
         private readonly IPaymentGatewayRepository _paymentGatewayRepository;
@@ -43,11 +40,16 @@ namespace Its.Onix.Api.Services
                 return new MVAccountDoc { Status = "MERCHANT_NOTFOUND", Description = $"Merchant not found for organization [{orgId}]" };
             }
 
+            if (merchant.PaymentGatewayId == null)
+            {
+                return new MVAccountDoc { Status = "PAYMENT_GATEWAY_NOTCONFIGURED", Description = $"Point top-up payment gateway for merchant [{merchant.Code}] is not configured" };
+            }
+
             _paymentGatewayRepository.SetCustomOrgId("global");
-            var gateway = await _paymentGatewayRepository.GetPaymentGatewayByCode(PointTopUpPaymentGatewayCode);
+            var gateway = await _paymentGatewayRepository.GetPaymentGatewayById(merchant.PaymentGatewayId.ToString()!);
             if (gateway?.Id == null)
             {
-                return new MVAccountDoc { Status = "PAYMENT_GATEWAY_NOTCONFIGURED", Description = $"Point top-up payment gateway [{PointTopUpPaymentGatewayCode}] is not configured" };
+                return new MVAccountDoc { Status = "PAYMENT_GATEWAY_NOTCONFIGURED", Description = $"Point top-up payment gateway for merchant [{merchant.Code}] is not configured" };
             }
 
             var amountDouble = (double)amount;
