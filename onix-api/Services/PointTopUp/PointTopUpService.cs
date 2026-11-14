@@ -2,16 +2,12 @@ using System.Text.Json;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
-using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Services
 {
     // ข้อ 3c : กดเติม point => สร้าง AccountDoc "PurchaseCash" + ขอ QR จาก payment gateway, แล้วอัปเดตสถานะตามผล
     public class PointTopUpService : IPointTopUpService
     {
-        // ตอนนี้ hardcode payment gateway ที่ใช้รับเงินเติม point ไว้ก่อนตาม spec (ตั้งค่าไว้แล้วที่ System Management > Payment Gateway)
-        private const string PointTopUpPaymentGatewayCode = "system-merchant-001";
-
         private readonly IAccountDocService _accountDocService;
         private readonly IPaymentGatewayService _paymentGatewayService;
         private readonly IPaymentGatewayRepository _paymentGatewayRepository;
@@ -36,18 +32,24 @@ namespace Its.Onix.Api.Services
                 return new MVAccountDoc { Status = "INVALID_AMOUNT", Description = "Amount must be greater than 0" };
             }
 
-            var merchants = await _merchantService.GetMerchants(orgId, new VMMerchant { Limit = 100 });
-            var merchant = merchants.FirstOrDefault(m => m.OrgId == orgId);
+            // GetMerchants (list) ใช้ projection ที่ไม่ครบทุกฟิลด์ (ไม่มี PaymentGatewayId) จึงต้องดึงทีละตัวผ่าน GetMerchantByCode แทน
+            var merchantResult = await _merchantService.GetMerchantByCode(orgId, orgId);
+            var merchant = merchantResult.Merchant;
             if (merchant == null)
             {
                 return new MVAccountDoc { Status = "MERCHANT_NOTFOUND", Description = $"Merchant not found for organization [{orgId}]" };
             }
 
+            if (merchant.PaymentGatewayId == null)
+            {
+                return new MVAccountDoc { Status = "PAYMENT_GATEWAY_NOTCONFIGURED", Description = $"Point top-up payment gateway for merchant [{merchant.Code}] is not configured" };
+            }
+
             _paymentGatewayRepository.SetCustomOrgId("global");
-            var gateway = await _paymentGatewayRepository.GetPaymentGatewayByCode(PointTopUpPaymentGatewayCode);
+            var gateway = await _paymentGatewayRepository.GetPaymentGatewayById(merchant.PaymentGatewayId.ToString()!);
             if (gateway?.Id == null)
             {
-                return new MVAccountDoc { Status = "PAYMENT_GATEWAY_NOTCONFIGURED", Description = $"Point top-up payment gateway [{PointTopUpPaymentGatewayCode}] is not configured" };
+                return new MVAccountDoc { Status = "PAYMENT_GATEWAY_NOTCONFIGURED", Description = $"Point top-up payment gateway for merchant [{merchant.Code}] is not configured" };
             }
 
             var amountDouble = (double)amount;
