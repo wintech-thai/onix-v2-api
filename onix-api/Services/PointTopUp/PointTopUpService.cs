@@ -2,7 +2,6 @@ using System.Text.Json;
 using Its.Onix.Api.Database.Repositories;
 using Its.Onix.Api.Models;
 using Its.Onix.Api.ModelsViews;
-using Its.Onix.Api.ViewsModels;
 
 namespace Its.Onix.Api.Services
 {
@@ -33,8 +32,9 @@ namespace Its.Onix.Api.Services
                 return new MVAccountDoc { Status = "INVALID_AMOUNT", Description = "Amount must be greater than 0" };
             }
 
-            var merchants = await _merchantService.GetMerchants(orgId, new VMMerchant { Limit = 100 });
-            var merchant = merchants.FirstOrDefault(m => m.OrgId == orgId);
+            // GetMerchants (list) ใช้ projection ที่ไม่ครบทุกฟิลด์ (ไม่มี PaymentGatewayId) จึงต้องดึงทีละตัวผ่าน GetMerchantByCode แทน
+            var merchantResult = await _merchantService.GetMerchantByCode(orgId, orgId);
+            var merchant = merchantResult.Merchant;
             if (merchant == null)
             {
                 return new MVAccountDoc { Status = "MERCHANT_NOTFOUND", Description = $"Merchant not found for organization [{orgId}]" };
