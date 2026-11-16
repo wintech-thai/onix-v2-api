@@ -151,6 +151,39 @@ namespace Its.Onix.Api.Controllers
             return Ok(result);
         }
 
+        // Get/Update/Enable/Disable สำหรับ Organization เดี่ยวๆ (ไม่พึ่ง Merchant) ใช้โดย product ที่ orgType ไม่ใช่ PLEASE-PAYMENT/PLEASE-ERP เช่น PLEASE-ACCESS
+        [HttpGet]
+        [Route("org/global/action/GetOrganizationById/{orgId}")]
+        public async Task<IActionResult> GetOrganizationById(string orgId)
+        {
+            var result = await _orgSvc.GetOrganization(orgId);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/UpdateOrganizationById/{orgId}")]
+        public async Task<IActionResult> UpdateOrganizationById(string orgId, [FromBody] MOrganization request)
+        {
+            var result = await _orgSvc.UpdateOrganization(orgId, request);
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/EnableOrganizationById/{orgId}")]
+        public async Task<IActionResult> EnableOrganizationById(string orgId)
+        {
+            var result = await _orgSvc.UpdateOrganizationStatus(orgId, "Active");
+            return Ok(result);
+        }
+
+        [HttpPost]
+        [Route("org/global/action/DisableOrganizationById/{orgId}")]
+        public async Task<IActionResult> DisableOrganizationById(string orgId)
+        {
+            var result = await _orgSvc.UpdateOrganizationStatus(orgId, "Disabled");
+            return Ok(result);
+        }
+
         [HttpPost]
         [Route("org/global/action/CreatePaymentEndpointsApiKey/{orgId}/{roles}")]
         public IActionResult CreatePaymentEndpointsApiKey(string orgId, string roles)
