@@ -200,6 +200,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
             builder.Services.AddScoped<IAuditNoticeService, AuditNoticeService>();
             builder.Services.AddScoped<IMerchantCurrencyService, MerchantCurrencyService>();
+            builder.Services.AddScoped<IPortalPageService, PortalPageService>();
+            builder.Services.AddScoped<IPortalSessionService, PortalSessionService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -261,6 +263,8 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IAuditTrailRepository, AuditTrailRepository>();
             builder.Services.AddScoped<IAuditNoticeRepository, AuditNoticeRepository>();
             builder.Services.AddScoped<IMerchantCurrencyRepository, MerchantCurrencyRepository>();
+            builder.Services.AddScoped<IPortalPageRepository, PortalPageRepository>();
+            builder.Services.AddScoped<IPortalSessionRepository, PortalSessionRepository>();
 
 
             builder.Services.AddAuthentication("BasicOrBearer")

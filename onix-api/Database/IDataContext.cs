@@ -79,6 +79,9 @@ namespace Its.Onix.Api.Database
 
         public DbSet<MServiceRequest>? ServiceRequests { get; set; }
 
+        public DbSet<MPortalPage>? PortalPages { get; set; }
+        public DbSet<MPortalSession>? PortalSessions { get; set; }
+
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
     }
