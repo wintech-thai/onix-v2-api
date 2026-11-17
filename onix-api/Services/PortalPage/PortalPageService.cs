@@ -210,13 +210,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //TODO: debug line, remove after diagnosis
-            if (apiKey.Roles == null || !apiKey.Roles.Contains("PORTAL_PAGE"))
-            {
-                r.Status = "DEBUG_ROLES_LOST";
-                r.Description = $"apiKey.Roles after AddApiKey = [{string.Join(",", apiKey.Roles ?? new List<string>())}]";
-                return r;
-            }
+            //AddApiKey ไม่ persist RolesList ให้ ต้องตามด้วย UpdateApiKeyById เหมือน api-keys/create ฝั่ง frontend
+            _apiKeyService.UpdateApiKeyById(orgId, addResult.ApiKey!.KeyId!.Value.ToString(), new MApiKey { Roles = ["PORTAL_PAGE"] });
 
             await repository!.UpdatePortalPageApiKeyById(portalPageId, addResult.ApiKey!.KeyId!.Value, uniqueKeyName);
 
