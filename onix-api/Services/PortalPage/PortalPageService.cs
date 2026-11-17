@@ -210,6 +210,14 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //TODO: debug line, remove after diagnosis
+            if (apiKey.Roles == null || !apiKey.Roles.Contains("PORTAL_PAGE"))
+            {
+                r.Status = "DEBUG_ROLES_LOST";
+                r.Description = $"apiKey.Roles after AddApiKey = [{string.Join(",", apiKey.Roles ?? new List<string>())}]";
+                return r;
+            }
+
             await repository!.UpdatePortalPageApiKeyById(portalPageId, addResult.ApiKey!.KeyId!.Value, uniqueKeyName);
 
             r.ApiKey = addResult.ApiKey;
