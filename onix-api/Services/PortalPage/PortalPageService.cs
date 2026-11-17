@@ -210,8 +210,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //AddApiKey ไม่ persist RolesList ให้ ต้องตามด้วย UpdateApiKeyById เหมือน api-keys/create ฝั่ง frontend
-            _apiKeyService.UpdateApiKeyById(orgId, addResult.ApiKey!.KeyId!.Value.ToString(), new MApiKey { Roles = ["PORTAL_PAGE"] });
+            //AddApiKey ไม่ persist RolesList ให้ ตั้งค่าตรงนี้แล้วให้ SaveChanges รอบถัดไปพาไปด้วย (เรียก UpdateApiKeyById ซ้ำใน request เดียวกันทำให้ api_key เพี้ยน)
+            addResult.ApiKey!.RolesList = "PORTAL_PAGE";
 
             await repository!.UpdatePortalPageApiKeyById(portalPageId, addResult.ApiKey!.KeyId!.Value, uniqueKeyName);
 
