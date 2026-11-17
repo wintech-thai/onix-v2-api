@@ -162,7 +162,7 @@ namespace Its.Onix.Api.Services
                 else if (string.IsNullOrEmpty(verify.ApiKey!.RolesList) || !verify.ApiKey.RolesList.Split(',').Contains("PORTAL_PAGE"))
                 {
                     keyStatus = "ERROR_API_KEY_WRONG_ROLE";
-                    keyDesc = "API key does not have PORTAL_PAGE role";
+                    keyDesc = $"API key does not have PORTAL_PAGE role (debug: RolesList=[{verify.ApiKey?.RolesList}])"; //TODO: debug line, remove after diagnosis
                 }
             }
 
