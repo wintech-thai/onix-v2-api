@@ -159,10 +159,17 @@ namespace Its.Onix.Api.Services
                     keyStatus = "ERROR_API_KEY_NOT_OWN_BY_PORTAL_PAGE";
                     keyDesc = "API key does not belong to this portal page";
                 }
-                else if (string.IsNullOrEmpty(verify.ApiKey!.RolesList) || !verify.ApiKey.RolesList.Split(',').Contains("PORTAL_PAGE"))
+                else
                 {
-                    keyStatus = "ERROR_API_KEY_WRONG_ROLE";
-                    keyDesc = "API key does not have PORTAL_PAGE role";
+                    //PORTAL_PAGE ยังไม่ใช่ system role จริง ๆ เลยรับ custom role ที่ admin ผูกเองกับ api key นี้ได้ด้วย ไม่บังคับต้องมี role string นี้เท่านั้น
+                    var hasPortalPageRole = !string.IsNullOrEmpty(verify.ApiKey!.RolesList) && verify.ApiKey.RolesList.Split(',').Contains("PORTAL_PAGE");
+                    var hasCustomRole = !string.IsNullOrEmpty(verify.ApiKey.CustomRoleId);
+
+                    if (!hasPortalPageRole && !hasCustomRole)
+                    {
+                        keyStatus = "ERROR_API_KEY_WRONG_ROLE";
+                        keyDesc = "API key does not have PORTAL_PAGE role or a custom role assigned";
+                    }
                 }
             }
 
