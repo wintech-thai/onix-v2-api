@@ -242,7 +242,32 @@ namespace Its.Onix.Api.Services
             org.Addresses = JsonSerializer.Serialize(org.AddressesArray);
         }
         
-        public Task<MVOrganization> UpdateOrganization(string orgId, MOrganization org)
+        //ฟอร์ม Edit Tenant (Admin) กับ Company Profile (Merchant) แก้คนละ field กัน ถ้าไม่ merge ของเดิมไว้
+        //ฝั่งที่ไม่ได้ส่ง field นั้นมาจะโดนเซ็ตเป็น null ทับของอีกฝั่งทุกครั้งที่ save (เช่น save Company Profile แล้ว OrgName/Status ที่ Admin ตั้งไว้หาย)
+        private static void FillMissingFields(MOrganization org, MOrganization existing)
+        {
+            org.OrgName ??= existing.OrgName;
+            org.OrgDescription ??= existing.OrgDescription;
+            org.Tags ??= existing.Tags;
+            org.Status ??= existing.Status;
+            org.OrgNameTh ??= existing.OrgNameTh;
+            org.OrgNameEn ??= existing.OrgNameEn;
+            org.ContactNameTh ??= existing.ContactNameTh;
+            org.ContactNameEn ??= existing.ContactNameEn;
+            org.AddressTh ??= existing.AddressTh;
+            org.AddressEn ??= existing.AddressEn;
+            org.Phone ??= existing.Phone;
+            org.Fax ??= existing.Fax;
+            org.Email ??= existing.Email;
+            org.TaxId ??= existing.TaxId;
+            org.Website ??= existing.Website;
+            org.LogoImageBase64 ??= existing.LogoImageBase64;
+            org.LogoImagePath ??= existing.LogoImagePath;
+            org.Addresses ??= existing.Addresses;
+            org.Channels ??= existing.Channels;
+        }
+
+        public async Task<MVOrganization> UpdateOrganization(string orgId, MOrganization org)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -261,7 +286,7 @@ namespace Its.Onix.Api.Services
                     r.Status = "OBJECT_NOT_FOUND";
                     r.Description = $"Object name [{org.LogoImagePath}] not found!!!";
 
-                    return Task.FromResult(r);
+                    return r;
                 }
 
                 var bucket = Environment.GetEnvironmentVariable("STORAGE_BUCKET")!;
@@ -275,17 +300,19 @@ namespace Its.Onix.Api.Services
 
                     r.Status = validateResult.Status;
                     r.Description = validateResult.Description;
-                    return Task.FromResult(r);
+                    return r;
                 }
 
                 //Update metadata onix-is-temp-file to 'false'
                 _storageUtil.UpdateMetaData(bucket, org.LogoImagePath, "onix-is-temp-file", "false");
             }
 
-            var t = repository.UpdateOrganization(org);
-            r.Organization = t.Result;
+            var existing = await repository.GetOrganization();
+            FillMissingFields(org, existing);
 
-            return Task.FromResult(r);
+            r.Organization = await repository.UpdateOrganization(org);
+
+            return r;
         }
 
         public Task<MOrganization> GetCompanyProfile(string orgId)
@@ -293,7 +320,7 @@ namespace Its.Onix.Api.Services
             return GetOrganization(orgId);
         }
 
-        public Task<MVOrganization> UpdateCompanyProfile(string orgId, MOrganization org)
+        public async Task<MVOrganization> UpdateCompanyProfile(string orgId, MOrganization org)
         {
             repository!.SetCustomOrgId(orgId);
 
@@ -303,10 +330,12 @@ namespace Its.Onix.Api.Services
                 Description = "Success"
             };
 
-            var t = repository.UpdateOrganization(org);
-            r.Organization = t.Result;
+            var existing = await repository.GetOrganization();
+            FillMissingFields(org, existing);
 
-            return Task.FromResult(r);
+            r.Organization = await repository.UpdateOrganization(org);
+
+            return r;
         }
 
         public async Task<MVOrganization?> UpdateOrganizationStatus(string orgId, string status)
