@@ -115,5 +115,14 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.CreatePortalPageApiKey(id, portalPageId, request.KeyName ?? "", request.KeyDescription);
             return Ok(result);
         }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/GetPortalPageApiKey/{portalPageId}")]
+        public async Task<IActionResult> GetPortalPageApiKey(string id, string portalPageId, [FromBody] CreatePortalPageApiKeyRequest request)
+        {
+            var result = await svc.GetPortalPageApiKey(id, portalPageId, request.KeyName ?? "", request.KeyDescription);
+            return Ok(result);
+        }
     }
 }

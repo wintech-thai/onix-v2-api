@@ -219,6 +219,33 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVApiKey> GetPortalPageApiKey(string orgId, string portalPageId, string keyName, string? keyDescription)
+        {
+            var r = new MVApiKey() { Status = "OK", Description = "Success" };
+
+            repository!.SetCustomOrgId(orgId);
+            var portalPage = await repository!.GetPortalPageById(portalPageId);
+            if (portalPage == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Portal Page ID [{portalPageId}] not found";
+                return r;
+            }
+
+            if (portalPage.ApiKeyId != null)
+            {
+                var existingKey = await _apiKeyService.GetApiKeyRawById(orgId, portalPage.ApiKeyId.ToString()!);
+                if (existingKey != null)
+                {
+                    r.ApiKey = existingKey;
+                    return r;
+                }
+                //ApiKeyId มีแต่หา key จริงไม่เจอ (เช่นถูกลบไปที่หน้า Api Keys) ตกไปสร้างใหม่แทนด้านล่าง
+            }
+
+            return await CreatePortalPageApiKey(orgId, portalPageId, keyName, keyDescription);
+        }
+
         public async Task<MPortalPage?> GetPortalPageByCodeForPublic(string orgId, string code)
         {
             repository!.SetCustomOrgId(orgId);

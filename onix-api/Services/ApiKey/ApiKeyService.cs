@@ -276,5 +276,13 @@ namespace Its.Onix.Api.Services
 
             return r;
         }
+
+        public async Task<MApiKey?> GetApiKeyRawById(string orgId, string keyId)
+        {
+            if (!ServiceUtils.IsGuidValid(keyId)) return null;
+
+            repository!.SetCustomOrgId(orgId);
+            return await repository!.GetApiKeyById(keyId);
+        }
     }
 }

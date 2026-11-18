@@ -16,6 +16,9 @@ namespace Its.Onix.Api.Services
         public int GetApiKeyCount(string orgId, VMApiKey param);
         public MVApiKey? UpdateApiKeyById(string orgId, string keyId, MApiKey apiKey);
         public Task<MVApiKey> GetApiKeyById(string orgId, string keyId);
+
+        //คืนค่า api key จริง ไม่ปิดบังเหมือน GetApiKeyById — ใช้เฉพาะ caller ภายในที่มีสิทธิ์เอา key กลับไปใช้ซ้ำ (เช่น portal page link) เท่านั้น
+        public Task<MApiKey?> GetApiKeyRawById(string orgId, string keyId);
         public MVApiKey? UpdateApiKeyStatusById(string orgId, string keyId, string status);
     }
 }
