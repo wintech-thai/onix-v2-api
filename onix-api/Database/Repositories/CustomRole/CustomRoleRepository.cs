@@ -69,6 +69,7 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(customRoleId);
             var u = await GetSelection().AsExpandable().Where(p => p!.RoleId!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
+            Console.WriteLine($"DEBUG_X001 - repo.GetCustomRoleById(read), RoleId=[{customRoleId}], RoleDefinition=[{u?.RoleDefinition}]");
             return u;
         }
 
