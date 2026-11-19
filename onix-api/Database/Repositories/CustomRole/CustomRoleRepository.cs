@@ -69,7 +69,6 @@ namespace Its.Onix.Api.Database.Repositories
         {
             Guid id = Guid.Parse(customRoleId);
             var u = await GetSelection().AsExpandable().Where(p => p!.RoleId!.Equals(id) && p!.OrgId!.Equals(orgId)).FirstOrDefaultAsync();
-            Console.WriteLine($"DEBUG_X001 - repo.GetCustomRoleById(read), RoleId=[{customRoleId}], RoleDefinition=[{u?.RoleDefinition}]");
             return u;
         }
 
@@ -123,15 +122,11 @@ namespace Its.Onix.Api.Database.Repositories
             customRole.OrgId = orgId;
             customRole.RoleCreatedDate = DateTime.UtcNow;
 
-            Console.WriteLine($"DEBUG_X001 - repo.AddCustomRole before AddAsync, RoleId=[{customRole.RoleId}], RoleDefinition=[{customRole.RoleDefinition}]");
             await context!.CustomRoles!.AddAsync(customRole);
             await context.SaveChangesAsync();
-            Console.WriteLine($"DEBUG_X001 - repo.AddCustomRole after SaveChangesAsync, tracked customRole.RoleDefinition=[{customRole.RoleDefinition}]");
 
-            //Qualify เต็ม กันพลาด namespace เดียวกับที่สงสัยว่าเป็นสาเหตุ (ไฟล์นี้ import System.Data.Entity ไม่ใช่ EF Core)
-            var noTrackQuery = Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(context.CustomRoles!);
-            var reloaded = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(noTrackQuery, p => p!.RoleId!.Equals(customRole.RoleId));
-            Console.WriteLine($"DEBUG_X001 - repo.AddCustomRole fresh re-query from DB (forced EF Core namespace), RoleDefinition=[{reloaded?.RoleDefinition}]");
+            //Detach กัน caller ไปแก้ field ของ entity ตัวนี้ทีหลัง (เช่นเคลียร์ RoleDefinition ก่อนส่งออก) แล้วโดน save รอบถัดไปในคำขอเดียวกันเขียนทับ DB โดยไม่ตั้งใจ
+            context.Entry(customRole).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
 
             return customRole;
         }
@@ -162,6 +157,13 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             await context.SaveChangesAsync();
+
+            //Detach ด้วยเหตุผลเดียวกับ AddCustomRole
+            if (existing != null)
+            {
+                context.Entry(existing).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+            }
+
             return existing;
         }
     }

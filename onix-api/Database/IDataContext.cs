@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Database
     {
         int SaveChanges();
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry Entry(object entity);
         public DbSet<MOrganization>? Organizations { get; set; }
         public DbSet<MApiKey>? ApiKeys { get; set; }
         public DbSet<MPaymentGateway>? PaymentGateways { get; set; }
