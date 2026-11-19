@@ -11,7 +11,7 @@ namespace Its.Onix.Api.Services
         public Task<MVPortalSession> GetPortalSessionById(string orgId, string portalSessionId);
         public Task<MVPortalSession> UpdatePortalSessionStatusById(string orgId, string portalSessionId, string status, string? statusDesc);
 
-        //Public (ไม่ผ่าน auth token) - เรียกจากหน้า portal page จริง ๆ เวลา Mikrotik/ผู้ใช้เปิดเข้ามา
-        public Task<MVPortalSession> AddPortalSessionPublic(string orgId, string? code, string? apiKeyValue, Dictionary<string, string> parameters);
+        //เรียกจากหน้า portal page จริง ๆ เวลา Mikrotik/ผู้ใช้เปิดเข้ามา - OrgUser-level route, auth ด้วย api key ผ่าน Basic auth
+        public Task<MVPortalSession> AddPortalSession(string orgId, string? code, string? apiKeyId, Dictionary<string, string> parameters);
     }
 }

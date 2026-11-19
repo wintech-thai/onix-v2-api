@@ -45,5 +45,37 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.GetPortalSessionById(id, portalSessionId);
             return Ok(result);
         }
+
+        // org-id = OrgCustomId, tenant-id = internal OrgId guid (kept for traceability only, Organization=Tenant 1:1 here)
+        // เรียกจากหน้า login-portal ตอน Mikrotik redirect ผู้ใช้มา - auth ด้วย api key ผ่าน Basic auth (ดู BasicAuthenticationRepo)
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [HttpGet]
+        [Route("org/{id}/action/AddPortalSession/{tenantId}")]
+        public async Task<IActionResult> AddPortalSession(string id, string tenantId)
+        {
+            var parameters = new Dictionary<string, string>();
+
+            foreach (var q in Request.Query)
+            {
+                parameters[q.Key] = q.Value.ToString();
+            }
+
+            if (Request.HasFormContentType)
+            {
+                foreach (var f in Request.Form)
+                {
+                    parameters[f.Key] = f.Value.ToString();
+                }
+            }
+
+            parameters["__tenantId"] = tenantId; //เก็บไว้เพื่อ traceability
+
+            parameters.TryGetValue("code", out var code);
+            var apiKeyId = HttpContext.Items["Temp-Identity-Id"]?.ToString();
+
+            var result = await svc.AddPortalSession(id, code, apiKeyId, parameters);
+            return Ok(result);
+        }
     }
 }

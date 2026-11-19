@@ -10,16 +10,13 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPortalSessionRepository? repository = null;
         private readonly IPortalPageService _portalPageService;
-        private readonly IApiKeyService _apiKeyService;
 
         public PortalSessionService(
             IPortalSessionRepository repo,
-            IPortalPageService portalPageService,
-            IApiKeyService apiKeyService) : base()
+            IPortalPageService portalPageService) : base()
         {
             repository = repo;
             _portalPageService = portalPageService;
-            _apiKeyService = apiKeyService;
         }
 
         public async Task<MVPortalSession> GetPortalSessions(string orgId, VMPortalSession param)
@@ -94,7 +91,9 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
-        public async Task<MVPortalSession> AddPortalSessionPublic(string orgId, string? code, string? apiKeyValue, Dictionary<string, string> parameters)
+        //เรียกจาก OrgUser-level route แล้ว ผ่าน auth (key) ที่ GenericRbacHandler เช็คให้แล้วตอนนี้ว่ามีสิทธิ์เรียก API นี้จริง
+        //apiKeyId คือ key ที่ auth ผ่านมาแล้ว (Temp-Identity-Id) เอามาเช็คแค่ว่าเป็นของ portal page นี้โดยเฉพาะ ไม่ใช่ portal page อื่นในองค์กรเดียวกัน
+        public async Task<MVPortalSession> AddPortalSession(string orgId, string? code, string? apiKeyId, Dictionary<string, string> parameters)
         {
             var r = new MVPortalSession() { Status = "OK", Description = "Success" };
 
@@ -136,41 +135,13 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //ตรวจ api key ที่ส่งมาทาง query/form
             var keyStatus = "OK";
             var keyDesc = "Success";
 
-            if (string.IsNullOrEmpty(apiKeyValue))
+            if (portalPage.ApiKeyId == null || !string.Equals(apiKeyId, portalPage.ApiKeyId.ToString(), StringComparison.OrdinalIgnoreCase))
             {
-                keyStatus = "ERROR_API_KEY_MISSING";
-                keyDesc = "API key (key parameter) is missing";
-            }
-            else
-            {
-                var verify = _apiKeyService.VerifyApiKey(orgId, apiKeyValue);
-                if (verify.Status != "OK")
-                {
-                    keyStatus = verify.Status!;
-                    keyDesc = verify.Description!;
-                }
-                else if (portalPage.ApiKeyId == null || verify.ApiKey!.KeyId != portalPage.ApiKeyId)
-                {
-                    //key ถูกแต่ไม่ใช่ตัวที่ผูกกับ portal page นี้
-                    keyStatus = "ERROR_API_KEY_NOT_OWN_BY_PORTAL_PAGE";
-                    keyDesc = "API key does not belong to this portal page";
-                }
-                else
-                {
-                    //PORTAL_PAGE ยังไม่ใช่ system role จริง ๆ เลยรับ custom role ที่ admin ผูกเองกับ api key นี้ได้ด้วย ไม่บังคับต้องมี role string นี้เท่านั้น
-                    var hasPortalPageRole = !string.IsNullOrEmpty(verify.ApiKey!.RolesList) && verify.ApiKey.RolesList.Split(',').Contains("PORTAL_PAGE");
-                    var hasCustomRole = !string.IsNullOrEmpty(verify.ApiKey.CustomRoleId);
-
-                    if (!hasPortalPageRole && !hasCustomRole)
-                    {
-                        keyStatus = "ERROR_API_KEY_WRONG_ROLE";
-                        keyDesc = "API key does not have PORTAL_PAGE role or a custom role assigned";
-                    }
-                }
+                keyStatus = "ERROR_API_KEY_NOT_OWN_BY_PORTAL_PAGE";
+                keyDesc = "API key does not belong to this portal page";
             }
 
             var newSession = new MPortalSession()

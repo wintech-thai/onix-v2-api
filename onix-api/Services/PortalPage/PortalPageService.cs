@@ -10,13 +10,49 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPortalPageRepository? repository = null;
         private readonly IApiKeyService _apiKeyService;
+        private readonly ICustomRoleService _customRoleService;
 
         public PortalPageService(
             IPortalPageRepository repo,
-            IApiKeyService apiKeyService) : base()
+            IApiKeyService apiKeyService,
+            ICustomRoleService customRoleService) : base()
         {
             repository = repo;
             _apiKeyService = apiKeyService;
+            _customRoleService = customRoleService;
+        }
+
+        //ให้สิทธิ์เรียก AddPortalSession ผ่าน custom role จริงที่ auth pipeline รู้จัก แทนการแปะ role string ปลอมๆ ที่ระบบไม่เคยรู้จัก
+        //เรียกทั้งตอนสร้าง key ใหม่ และตอนเจอ key เก่าที่ยังไม่เคยมี custom role (migrate key เก่าแบบ lazy)
+        private async Task<MApiKey> EnsureCustomRoleAssigned(string orgId, MPortalPage portalPage, MApiKey apiKey)
+        {
+            if (!string.IsNullOrEmpty(apiKey.CustomRoleId)) return apiKey;
+
+            var customRole = new MCustomRole()
+            {
+                RoleName = $"portal-page-{apiKey.KeyName}",
+                RoleDescription = $"Allows calling AddPortalSession for portal page [{portalPage.Code}]",
+                Level = "UserRole",
+                Permissions =
+                [
+                    new ControllerNode()
+                    {
+                        ControllerName = "PortalSession",
+                        ApiPermissions = [ new ApiNode() { ControllerName = "PortalSession", ApiName = "AddPortalSession", IsAllowed = true } ],
+                    }
+                ],
+            };
+            var roleResult = await _customRoleService.AddCustomRole(orgId, customRole);
+
+            _apiKeyService.UpdateApiKeyById(orgId, apiKey.KeyId!.Value.ToString(), new MApiKey()
+            {
+                KeyDescription = apiKey.KeyDescription,
+                CustomRoleId = roleResult.CustomRole!.RoleId.ToString(),
+            });
+
+            apiKey.CustomRoleId = roleResult.CustomRole!.RoleId.ToString();
+            apiKey.CustomRoleName = customRole.RoleName;
+            return apiKey;
         }
 
         public async Task<IEnumerable<MPortalPage>> GetPortalPages(string orgId, VMPortalPage param)
@@ -199,7 +235,6 @@ namespace Its.Onix.Api.Services
             {
                 KeyName = uniqueKeyName,
                 KeyDescription = keyDescription ?? $"API key for portal page [{portalPage.Code}]",
-                Roles = ["PORTAL_PAGE"],
             };
 
             var addResult = _apiKeyService.AddApiKey(orgId, apiKey);
@@ -210,12 +245,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //AddApiKey ไม่ persist RolesList ให้ ตั้งค่าตรงนี้แล้วให้ SaveChanges รอบถัดไปพาไปด้วย (เรียก UpdateApiKeyById ซ้ำใน request เดียวกันทำให้ api_key เพี้ยน)
-            addResult.ApiKey!.RolesList = "PORTAL_PAGE";
-
             await repository!.UpdatePortalPageApiKeyById(portalPageId, addResult.ApiKey!.KeyId!.Value, uniqueKeyName);
 
-            r.ApiKey = addResult.ApiKey;
+            r.ApiKey = await EnsureCustomRoleAssigned(orgId, portalPage, addResult.ApiKey!);
             return r;
         }
 
@@ -237,7 +269,7 @@ namespace Its.Onix.Api.Services
                 var existingKey = await _apiKeyService.GetApiKeyRawById(orgId, portalPage.ApiKeyId.ToString()!);
                 if (existingKey != null)
                 {
-                    r.ApiKey = existingKey;
+                    r.ApiKey = await EnsureCustomRoleAssigned(orgId, portalPage, existingKey);
                     return r;
                 }
                 //ApiKeyId มีแต่หา key จริงไม่เจอ (เช่นถูกลบไปที่หน้า Api Keys) ตกไปสร้างใหม่แทนด้านล่าง
