@@ -147,8 +147,10 @@ namespace Its.Onix.Api.Services
 
             customRole.Permissions ??= []; //Empty array
             customRole.RoleDefinition = JsonSerializer.Serialize(customRole.Permissions)!;
+            Console.WriteLine($"DEBUG_X001 - Before repo.AddCustomRole, RoleId=[{customRole.RoleId}], RoleDefinition=[{customRole.RoleDefinition}]");
 
             var result = await repository!.AddCustomRole(customRole);
+            Console.WriteLine($"DEBUG_X001 - After repo.AddCustomRole returned, RoleId=[{result.RoleId}], RoleDefinition=[{result.RoleDefinition}]");
             r.CustomRole = result;
 
             CachRolePermissions(orgId, result, false);

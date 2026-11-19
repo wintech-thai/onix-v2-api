@@ -122,8 +122,15 @@ namespace Its.Onix.Api.Database.Repositories
             customRole.OrgId = orgId;
             customRole.RoleCreatedDate = DateTime.UtcNow;
 
+            Console.WriteLine($"DEBUG_X001 - repo.AddCustomRole before AddAsync, RoleId=[{customRole.RoleId}], RoleDefinition=[{customRole.RoleDefinition}]");
             await context!.CustomRoles!.AddAsync(customRole);
             await context.SaveChangesAsync();
+            Console.WriteLine($"DEBUG_X001 - repo.AddCustomRole after SaveChangesAsync, tracked customRole.RoleDefinition=[{customRole.RoleDefinition}]");
+
+            //Qualify เต็ม กันพลาด namespace เดียวกับที่สงสัยว่าเป็นสาเหตุ (ไฟล์นี้ import System.Data.Entity ไม่ใช่ EF Core)
+            var noTrackQuery = Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AsNoTracking(context.CustomRoles!);
+            var reloaded = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(noTrackQuery, p => p!.RoleId!.Equals(customRole.RoleId));
+            Console.WriteLine($"DEBUG_X001 - repo.AddCustomRole fresh re-query from DB (forced EF Core namespace), RoleDefinition=[{reloaded?.RoleDefinition}]");
 
             return customRole;
         }
