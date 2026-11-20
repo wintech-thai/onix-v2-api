@@ -47,11 +47,13 @@ namespace Its.Onix.Api.Database.Repositories
 
         // เลือกเฉพาะ field ที่ map จริงมา projection ใหม่ (เหมือน MerchantRepository.GetSelection())
         // เพื่อไม่ให้ EF ต้อง materialize field แบบ [NotMapped] เช่น Merchant/AddressesArray/ChannelsArray
+        // PortalPageCount มาจาก left join กับ PortalPages (นับจำนวน portal page ของ org นั้น ๆ)
         private IQueryable<MOrganization> GetSelection()
         {
             var query =
                 from org in context!.Organizations
-                select new { org };
+                join pp in context.PortalPages! on org.OrgCustomId equals pp.OrgId into ppJoin
+                select new { org, ppJoin };
             return query.Select(x => new MOrganization
             {
                 OrgId = x.org.OrgId,
@@ -63,6 +65,7 @@ namespace Its.Onix.Api.Database.Repositories
                 Phone = x.org.Phone,
                 Status = x.org.Status,
                 OrgCreatedDate = x.org.OrgCreatedDate,
+                PortalPageCount = x.ppJoin.Count(),
             });
         }
 

@@ -124,6 +124,7 @@ namespace Its.Onix.Api.Services
                 var disabledSession = new MPortalSession()
                 {
                     PortalPageCode = portalPage.Code,
+                    AuthMethod = portalPage.AuthMethod,
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     Status = "Failed",
                     StatusDesc = "Portal page is disabled",
@@ -147,6 +148,7 @@ namespace Its.Onix.Api.Services
             var newSession = new MPortalSession()
             {
                 PortalPageCode = portalPage.Code,
+                AuthMethod = portalPage.AuthMethod,
                 ParametersJson = JsonSerializer.Serialize(parameters),
                 Status = keyStatus == "OK" ? "Pending" : "Failed",
                 StatusDesc = keyStatus == "OK" ? null : $"{keyStatus} - {keyDesc}",

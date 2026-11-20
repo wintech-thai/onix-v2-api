@@ -39,6 +39,13 @@ namespace Its.Onix.Api.Models
         [Column("api_code")]
         public string? ApiCode { get; set; } /* denormalized จาก ApiKeys.key_name เอาไว้แสดงเฉย ๆ */
 
+        [Column("realm_id")]
+        public Guid? RealmId { get; set; }
+
+        //ได้จาก left outer join กับ PortalRealms ตอน query เสมอ (ไม่ denormalize) เปลี่ยนชื่อ realm แล้วค่านี้เปลี่ยนตามทันที
+        [NotMapped]
+        public string? RealmName { get; set; }
+
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 

@@ -4430,6 +4430,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("org_id");
 
+                    b.Property<Guid?>("RealmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("realm_id");
+
                     b.Property<string>("Theme")
                         .HasColumnType("text")
                         .HasColumnName("theme");
@@ -4444,12 +4448,108 @@ namespace onix.api.Migrations
                     b.ToTable("PortalPages");
                 });
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MPortalRealm", b =>
+                {
+                    b.Property<Guid?>("RealmId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("realm_id");
+
+                    b.Property<string>("AuthType")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_type");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("RealmName")
+                        .HasColumnType("text")
+                        .HasColumnName("realm_name");
+
+                    b.HasKey("RealmId");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex(new[] { "OrgId", "RealmName" }, "PortalRealm_Org_Name_Unique")
+                        .IsUnique();
+
+                    b.ToTable("PortalRealms");
+                });
+
+            modelBuilder.Entity("Its.Onix.Api.Models.MPortalRealmUser", b =>
+                {
+                    b.Property<Guid?>("RealmUserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("realm_user_id");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("EncryptedPassword")
+                        .HasColumnType("text")
+                        .HasColumnName("encrypted_password");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text")
+                        .HasColumnName("first_name");
+
+                    b.Property<bool?>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
+
+                    b.Property<DateTime?>("LastSeenDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_date");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<Guid?>("RealmId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("realm_id");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text")
+                        .HasColumnName("user_name");
+
+                    b.HasKey("RealmUserId");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex("RealmId");
+
+                    b.HasIndex(new[] { "RealmId", "UserName" }, "PortalRealmUser_Realm_UserName_Unique")
+                        .IsUnique();
+
+                    b.ToTable("PortalRealmUsers");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MPortalSession", b =>
                 {
                     b.Property<Guid?>("PortalSessionId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("portal_session_id");
+
+                    b.Property<string>("AuthMethod")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_method");
 
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")

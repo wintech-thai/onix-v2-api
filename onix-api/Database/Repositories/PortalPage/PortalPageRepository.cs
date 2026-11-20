@@ -11,9 +11,35 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
+        //เอา RealmName มาจาก left outer join กับ PortalRealms เสมอ (ไม่ denormalize) เปลี่ยนชื่อ realm แล้วตรงนี้เปลี่ยนตามทันที
+        private IQueryable<MPortalPage> GetJoinedSelection()
+        {
+            var query =
+                from pp in context!.PortalPages
+                join r in context.Realms! on pp.RealmId equals r.RealmId into realmJoin
+                from realm in realmJoin.DefaultIfEmpty()
+                select new MPortalPage
+                {
+                    PortalPageId = pp.PortalPageId,
+                    OrgId = pp.OrgId,
+                    Code = pp.Code,
+                    AuthMethod = pp.AuthMethod,
+                    Theme = pp.Theme,
+                    IsDefault = pp.IsDefault,
+                    IsEnabled = pp.IsEnabled,
+                    ApiKeyId = pp.ApiKeyId,
+                    ApiCode = pp.ApiCode,
+                    RealmId = pp.RealmId,
+                    RealmName = realm != null ? realm.RealmName : null,
+                    CreatedDate = pp.CreatedDate,
+                };
+
+            return query;
+        }
+
         private IQueryable<MPortalPage> GetSelection(VMPortalPage param)
         {
-            var query = context!.PortalPages!.AsQueryable();
+            var query = GetJoinedSelection();
 
             if (orgId != "global")
             {
@@ -61,7 +87,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPortalPage?> GetPortalPageById(string portalPageId)
         {
             var id = Guid.Parse(portalPageId);
-            var query = context!.PortalPages!.Where(x => x.PortalPageId!.Equals(id));
+            var query = GetJoinedSelection().Where(x => x.PortalPageId!.Equals(id));
 
             if (orgId != "global")
             {
@@ -92,6 +118,15 @@ namespace Its.Onix.Api.Database.Repositories
             context!.PortalPages!.Add(portalPage);
             await context.SaveChangesAsync();
 
+            //Detach กัน caller ไปแก้ field ของ entity ตัวนี้ทีหลัง แล้วโดน save รอบถัดไปในคำขอเดียวกันเขียนทับโดยไม่ตั้งใจ (เคสเดียวกับ ApiKeyRepository)
+            context.Entry(portalPage).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
+            if (portalPage.RealmId != null)
+            {
+                var realm = await context!.Realms!.Where(x => x.RealmId!.Equals(portalPage.RealmId)).FirstOrDefaultAsync();
+                portalPage.RealmName = realm?.RealmName;
+            }
+
             return portalPage;
         }
 
@@ -105,8 +140,22 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Code = portalPage.Code;
                 result.AuthMethod = portalPage.AuthMethod;
                 result.Theme = portalPage.Theme;
+                result.RealmId = portalPage.RealmId;
 
                 await context!.SaveChangesAsync();
+
+                //Detach ด้วยเหตุผลเดียวกับ ApiKeyRepository/AddPortalPage
+                context.Entry(result).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
+                if (result.RealmId != null)
+                {
+                    var realm = await context!.Realms!.Where(x => x.RealmId!.Equals(result.RealmId)).FirstOrDefaultAsync();
+                    result.RealmName = realm?.RealmName;
+                }
+                else
+                {
+                    result.RealmName = null;
+                }
             }
 
             return result;
