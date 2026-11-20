@@ -31,6 +31,10 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public int? PortalPageCount { get; set; }
 
+        //นับจาก RealmUsers ที่ผูก realm นี้อยู่ ไม่ persist ลง DB (มีความหมายเฉพาะ realm ที่เป็น Native)
+        [NotMapped]
+        public int? RealmUserCount { get; set; }
+
         public MPortalRealm()
         {
             RealmId = Guid.NewGuid();

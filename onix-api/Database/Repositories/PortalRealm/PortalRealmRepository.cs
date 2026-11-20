@@ -12,11 +12,13 @@ namespace Its.Onix.Api.Database.Repositories
         }
 
         //PortalPageCount มาจาก left join กับ PortalPages นับว่ามี portal page กี่อันผูก realm นี้อยู่
+        //RealmUserCount มาจาก left join กับ RealmUsers นับว่ามี user กี่คนผูก realm นี้อยู่ (มีความหมายเฉพาะ realm ที่เป็น Native)
         private IQueryable<MPortalRealm> GetSelection(VMPortalRealm param)
         {
             var query =
                 from r in context!.Realms
                 join pp in context.PortalPages! on r.RealmId equals pp.RealmId into ppJoin
+                join ru in context.RealmUsers! on r.RealmId equals ru.RealmId into ruJoin
                 select new MPortalRealm
                 {
                     RealmId = r.RealmId,
@@ -25,6 +27,7 @@ namespace Its.Onix.Api.Database.Repositories
                     AuthType = r.AuthType,
                     CreatedDate = r.CreatedDate,
                     PortalPageCount = ppJoin.Count(),
+                    RealmUserCount = ruJoin.Count(),
                 };
 
             if (orgId != "global")
