@@ -95,6 +95,23 @@ namespace Its.Onix.Api.Utils
             return result;
         }
 
+        public static ValidationResult ValidatePortalPageCode(string code)
+        {
+            var result = new ValidationResult() { Status = "OK", Description = "" };
+
+            //ห้ามมีอักขระพิเศษ/space เพราะ code นี้จะถูกส่งไปเป็น query string ใน URL
+            var regex = new Regex(@"^[a-zA-Z0-9_-]{1,50}$");
+            var ok = regex.IsMatch(code ?? "");
+
+            if (!ok)
+            {
+                result.Status = "ERROR_VALIDATION_PORTAL_PAGE_CODE";
+                result.Description = "Portal page code must be in this regex format --> [a-zA-Z0-9_-]{1,50}, no spaces or special characters";
+            }
+
+            return result;
+        }
+
         public static ValidationResult ValidationEffectiveDateInterval(DateTime? startDate, DateTime? endDate)
         {
             var result = new ValidationResult() { Status = "OK", Description = "" };

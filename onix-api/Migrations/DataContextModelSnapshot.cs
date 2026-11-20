@@ -4391,6 +4391,101 @@ namespace onix.api.Migrations
                     b.ToTable("PointsTxs");
                 });
 
+            modelBuilder.Entity("Its.Onix.Api.Models.MPortalPage", b =>
+                {
+                    b.Property<Guid?>("PortalPageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("portal_page_id");
+
+                    b.Property<string>("ApiCode")
+                        .HasColumnType("text")
+                        .HasColumnName("api_code");
+
+                    b.Property<Guid?>("ApiKeyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("api_key_id");
+
+                    b.Property<string>("AuthMethod")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_method");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool?>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<bool?>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("Theme")
+                        .HasColumnType("text")
+                        .HasColumnName("theme");
+
+                    b.HasKey("PortalPageId");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex(new[] { "OrgId", "Code" }, "PortalPage_Org_Code_Unique")
+                        .IsUnique();
+
+                    b.ToTable("PortalPages");
+                });
+
+            modelBuilder.Entity("Its.Onix.Api.Models.MPortalSession", b =>
+                {
+                    b.Property<Guid?>("PortalSessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("portal_session_id");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<DateTime?>("LoginDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("login_date");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("ParametersJson")
+                        .HasColumnType("text")
+                        .HasColumnName("parameters_json");
+
+                    b.Property<string>("PortalPageCode")
+                        .HasColumnType("text")
+                        .HasColumnName("portal_page_code");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StatusDesc")
+                        .HasColumnType("text")
+                        .HasColumnName("status_desc");
+
+                    b.HasKey("PortalSessionId");
+
+                    b.HasIndex("OrgId");
+
+                    b.ToTable("PortalSessions");
+                });
+
             modelBuilder.Entity("Its.Onix.Api.Models.MPricingPlan", b =>
                 {
                     b.Property<Guid?>("Id")

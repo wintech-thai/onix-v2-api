@@ -34,6 +34,9 @@ namespace Its.Onix.Api.Database.Repositories
             context!.ApiKeys!.Add(apiKey);
             context.SaveChanges();
 
+            //Detach กัน caller ไปแก้ field ของ entity ตัวนี้ทีหลัง แล้วโดน save รอบถัดไปในคำขอเดียวกันเขียนทับโดยไม่ตั้งใจ
+            context.Entry(apiKey).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
             return apiKey;
         }
 
@@ -178,6 +181,9 @@ namespace Its.Onix.Api.Database.Repositories
                 result.CustomRoleId = apiKey.CustomRoleId;
 
                 context!.SaveChanges();
+
+                //Detach ด้วยเหตุผลเดียวกับ AddApiKey
+                context.Entry(result).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
             }
 
             return result!;
@@ -192,6 +198,9 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.KeyStatus = status;
                 context!.SaveChanges();
+
+                //Detach ด้วยเหตุผลเดียวกับ AddApiKey
+                context.Entry(result).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
             }
 
             return result!;

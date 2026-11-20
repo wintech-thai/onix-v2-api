@@ -125,6 +125,9 @@ namespace Its.Onix.Api.Database.Repositories
             await context!.CustomRoles!.AddAsync(customRole);
             await context.SaveChangesAsync();
 
+            //Detach กัน caller ไปแก้ field ของ entity ตัวนี้ทีหลัง (เช่นเคลียร์ RoleDefinition ก่อนส่งออก) แล้วโดน save รอบถัดไปในคำขอเดียวกันเขียนทับ DB โดยไม่ตั้งใจ
+            context.Entry(customRole).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+
             return customRole;
         }
 
@@ -154,6 +157,13 @@ namespace Its.Onix.Api.Database.Repositories
             }
 
             await context.SaveChangesAsync();
+
+            //Detach ด้วยเหตุผลเดียวกับ AddCustomRole
+            if (existing != null)
+            {
+                context.Entry(existing).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
+            }
+
             return existing;
         }
     }

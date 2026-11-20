@@ -7,6 +7,7 @@ namespace Its.Onix.Api.Database
     {
         int SaveChanges();
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry Entry(object entity);
         public DbSet<MOrganization>? Organizations { get; set; }
         public DbSet<MApiKey>? ApiKeys { get; set; }
         public DbSet<MPaymentGateway>? PaymentGateways { get; set; }
@@ -78,6 +79,9 @@ namespace Its.Onix.Api.Database
         public DbSet<MInventoryDocItem>? InventoryDocItems { get; set; }
 
         public DbSet<MServiceRequest>? ServiceRequests { get; set; }
+
+        public DbSet<MPortalPage>? PortalPages { get; set; }
+        public DbSet<MPortalSession>? PortalSessions { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }

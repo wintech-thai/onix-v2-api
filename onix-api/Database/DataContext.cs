@@ -90,6 +90,9 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
     public DbSet<MServiceRequest>? ServiceRequests { get; set; }
 
+    public DbSet<MPortalPage>? PortalPages { get; set; }
+    public DbSet<MPortalSession>? PortalSessions { get; set; }
+
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }
 
@@ -281,6 +284,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
         modelBuilder.Entity<MMerchantCurrency>();
         modelBuilder.Entity<MCurrencyAccount>();
         modelBuilder.Entity<MCurrencyAccountMerchant>();
+        modelBuilder.Entity<MPortalPage>();
+        modelBuilder.Entity<MPortalSession>();
 
         modelBuilder.Entity<MIoc>()
             .HasIndex(t => new { t.OrgId, t.IocType, t.IocValue }).IsUnique();
