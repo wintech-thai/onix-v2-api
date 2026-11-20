@@ -11,14 +11,12 @@ namespace Its.Onix.Api.Database.Repositories
             context = ctx;
         }
 
-        //PortalPageCount มาจาก left join กับ PortalPages นับว่ามี portal page กี่อันผูก realm นี้อยู่
-        //RealmUserCount มาจาก left join กับ RealmUsers นับว่ามี user กี่คนผูก realm นี้อยู่ (มีความหมายเฉพาะ realm ที่เป็น Native)
+        //PortalPageCount/RealmUserCount เป็น correlated subquery นับจาก PortalPages/RealmUsers ของ realm นี้
+        //ใช้ .Count(predicate) ตรงๆ แทน join...into สองอันซ้อนกัน เพราะ EF Core แปลเป็น SQL ไม่ได้เมื่อมี GroupJoin สองอันในการ select เดียวกัน
         private IQueryable<MPortalRealm> GetSelection(VMPortalRealm param)
         {
             var query =
                 from r in context!.Realms
-                join pp in context.PortalPages! on r.RealmId equals pp.RealmId into ppJoin
-                join ru in context.RealmUsers! on r.RealmId equals ru.RealmId into ruJoin
                 select new MPortalRealm
                 {
                     RealmId = r.RealmId,
@@ -26,8 +24,8 @@ namespace Its.Onix.Api.Database.Repositories
                     RealmName = r.RealmName,
                     AuthType = r.AuthType,
                     CreatedDate = r.CreatedDate,
-                    PortalPageCount = ppJoin.Count(),
-                    RealmUserCount = ruJoin.Count(),
+                    PortalPageCount = context.PortalPages!.Count(pp => pp.RealmId == r.RealmId),
+                    RealmUserCount = context.RealmUsers!.Count(ru => ru.RealmId == r.RealmId),
                 };
 
             if (orgId != "global")
