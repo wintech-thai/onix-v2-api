@@ -60,7 +60,10 @@ namespace Its.Onix.Api.Authentications
             if (!authHeader.Scheme.Equals("Bearer") && !authHeader.Scheme.Equals("Basic"))
             {
                 var msg = $"Unknown scheme [{authHeader.Scheme}]";
-                await Response.WriteAsync(msg);
+
+                //ไม่ response body ที่ตรงนี้ เหตุผลเดียวกับเคส "No Authorization header found" ด้านบน
+                //(เขียน body ตรงนี้ทำให้ response "started" ไปแล้วด้วย status 200 default พอ AuthorizationMiddleware พยายาม Challenge เป็น 401 ทีหลังเลย throw "response already started")
+                //await Response.WriteAsync(msg);
 
                 return AuthenticateResult.Fail(msg);
             }
@@ -83,7 +86,9 @@ namespace Its.Onix.Api.Authentications
             catch (Exception e)
             {
                 var msg = e.Message;
-                await Response.WriteAsync(msg);
+
+                //ไม่ response body ที่ตรงนี้ เหตุผลเดียวกับเคส "No Authorization header found" ด้านบน
+                //await Response.WriteAsync(msg);
 
                 Log.Error($"[AuthenticationHandlerProxyBase] --> [{msg}]");
                 return AuthenticateResult.Fail($"Invalid Authorization Header for [{authHeader.Scheme}]");
@@ -98,10 +103,15 @@ namespace Its.Onix.Api.Authentications
             else if (authResult!.UserAuthen.Status != "OK")
             {
                 var msg = $"User status invalid [{authResult.UserName}] status=[{authResult.UserAuthen.Status}]";
-                await Response.WriteAsync(msg);
+
+                //ไม่ response body ที่ตรงนี้ เหตุผลเดียวกับเคส "No Authorization header found" ด้านบน
+                //นี่คือสาเหตุจริงที่ disabled API key ยังได้ HTTP 200 กลับไป: เขียน body ตรงนี้ทำให้ response
+                //"started" ไปแล้วด้วย status 200 default ก่อน AuthorizationMiddleware จะ Challenge เป็น 401 ทีหลัง
+                //ทำให้ throw "StatusCode cannot be set because the response has already started" แล้ว client ได้ 200 ค้างไปแทน
+                //await Response.WriteAsync(msg);
 
                 return AuthenticateResult.Fail(msg);
-            } 
+            }
 
             var identity = new ClaimsIdentity(authResult.UserAuthen.Claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
