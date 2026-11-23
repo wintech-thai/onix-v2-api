@@ -188,6 +188,26 @@ namespace Its.Onix.Api.Database.Repositories
             return user;
         }
 
+        public async Task<MPortalRealmUser?> UpdateRealmUserById(string realmUserId, MPortalRealmUser user)
+        {
+            var id = Guid.Parse(realmUserId);
+            var result = await context!.RealmUsers!.Where(x => x.OrgId!.Equals(orgId) && x.RealmUserId!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                //แก้ได้แค่ email/firstname/lastname ตามสเปค ไม่แตะ UserName, RealmId, password
+                result.FirstName = user.FirstName;
+                result.LastName = user.LastName;
+                result.Email = user.Email;
+
+                await context!.SaveChangesAsync();
+
+                context.Entry(result).State = EntityState.Detached;
+            }
+
+            return result;
+        }
+
         public async Task<MPortalRealmUser?> ResetRealmUserPasswordById(string realmUserId, string encryptedPassword)
         {
             var id = Guid.Parse(realmUserId);

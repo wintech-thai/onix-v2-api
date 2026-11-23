@@ -110,6 +110,15 @@ namespace Its.Onix.Api.Controllers
 
         [ExcludeFromCodeCoverage]
         [HttpPost]
+        [Route("org/global/action/UpdateRealmUserById/{orgId}/{realmUserId}")]
+        public async Task<IActionResult> UpdateRealmUserById(string orgId, string realmUserId, [FromBody] MPortalRealmUser request)
+        {
+            var result = await svc.UpdateRealmUserById(orgId, realmUserId, request);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
         [Route("org/global/action/ResetRealmUserPasswordById/{orgId}/{realmUserId}")]
         public async Task<IActionResult> ResetRealmUserPasswordById(string orgId, string realmUserId, [FromBody] ResetPasswordRequest request)
         {

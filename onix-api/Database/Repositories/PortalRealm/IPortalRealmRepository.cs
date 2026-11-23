@@ -19,6 +19,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<int> GetRealmUserCount(string realmId, VMPortalRealmUser param);
         public Task<MPortalRealmUser?> GetRealmUserByUserName(string realmId, string userName);
         public Task<MPortalRealmUser> AddRealmUser(MPortalRealmUser user);
+        public Task<MPortalRealmUser?> UpdateRealmUserById(string realmUserId, MPortalRealmUser user);
         public Task<MPortalRealmUser?> ResetRealmUserPasswordById(string realmUserId, string encryptedPassword);
         public Task<MPortalRealmUser?> UpdateRealmUserStatusById(string realmUserId, bool isEnabled);
         public Task<MPortalRealmUser?> DeleteRealmUserById(string realmUserId);

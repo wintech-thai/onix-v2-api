@@ -194,6 +194,25 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVPortalRealmUser> UpdateRealmUserById(string orgId, string realmUserId, MPortalRealmUser user)
+        {
+            var r = new MVPortalRealmUser() { Status = "OK", Description = "Success" };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.UpdateRealmUserById(realmUserId, user);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Realm User ID [{realmUserId}] not found";
+                return r;
+            }
+
+            result.EncryptedPassword = null;
+            r.RealmUser = result;
+            return r;
+        }
+
         public async Task<MVPortalRealmUser> ResetRealmUserPasswordById(string orgId, string realmUserId, string password)
         {
             var r = new MVPortalRealmUser() { Status = "OK", Description = "Success" };
