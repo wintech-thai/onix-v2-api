@@ -11,5 +11,10 @@ namespace Its.Onix.Api.Utils
         {
             return hasher.HashPassword(null!, password);
         }
+
+        public static bool VerifyPassword(string hashedPassword, string providedPassword)
+        {
+            return hasher.VerifyHashedPassword(null!, hashedPassword, providedPassword) != PasswordVerificationResult.Failed;
+        }
     }
 }

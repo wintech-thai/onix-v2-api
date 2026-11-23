@@ -13,5 +13,8 @@ namespace Its.Onix.Api.Services
 
         //เรียกจากหน้า portal page จริง ๆ เวลา Mikrotik/ผู้ใช้เปิดเข้ามา - OrgUser-level route, auth ด้วย api key ผ่าน Basic auth
         public Task<MVPortalSession> AddPortalSession(string orgId, string? code, string? apiKeyId, Dictionary<string, string> parameters);
+
+        //เรียกจากหน้า login portal (Native) ตอนผู้ใช้กรอก user/password - เช็คกับ realm user ของ portal page นี้ แล้วอัปเดต session
+        public Task<MVPortalSession> VerifyNativeLogin(string orgId, string portalSessionId, string userName, string password);
     }
 }

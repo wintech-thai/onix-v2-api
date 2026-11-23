@@ -22,6 +22,7 @@ namespace Its.Onix.Api.Database.Repositories
         public Task<MPortalRealmUser?> UpdateRealmUserById(string realmUserId, MPortalRealmUser user);
         public Task<MPortalRealmUser?> ResetRealmUserPasswordById(string realmUserId, string encryptedPassword);
         public Task<MPortalRealmUser?> UpdateRealmUserStatusById(string realmUserId, bool isEnabled);
+        public Task<MPortalRealmUser?> UpdateRealmUserLastSeenById(string realmUserId);
         public Task<MPortalRealmUser?> DeleteRealmUserById(string realmUserId);
     }
 }

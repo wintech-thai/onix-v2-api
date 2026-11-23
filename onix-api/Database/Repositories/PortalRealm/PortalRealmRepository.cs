@@ -240,6 +240,22 @@ namespace Its.Onix.Api.Database.Repositories
             return result;
         }
 
+        public async Task<MPortalRealmUser?> UpdateRealmUserLastSeenById(string realmUserId)
+        {
+            var id = Guid.Parse(realmUserId);
+            var result = await context!.RealmUsers!.Where(x => x.OrgId!.Equals(orgId) && x.RealmUserId!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.LastSeenDate = DateTime.UtcNow;
+                await context!.SaveChangesAsync();
+
+                context.Entry(result).State = EntityState.Detached;
+            }
+
+            return result;
+        }
+
         public async Task<MPortalRealmUser?> DeleteRealmUserById(string realmUserId)
         {
             var id = Guid.Parse(realmUserId);

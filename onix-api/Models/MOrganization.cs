@@ -92,6 +92,10 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public int? PortalPageCount { get; set; }
 
+        //นับจาก Realms ของ org นี้ ไม่ persist ลง DB
+        [NotMapped]
+        public int? RealmCount { get; set; }
+
         [Column("org_created_date")]
         public DateTime? OrgCreatedDate { get; set; }
 

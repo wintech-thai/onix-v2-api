@@ -45,7 +45,22 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (!string.IsNullOrEmpty(param.FullTextSearch))
             {
-                query = query.Where(x => x.PortalPageCode!.Contains(param.FullTextSearch) || x.ParametersJson!.Contains(param.FullTextSearch));
+                var s = param.FullTextSearch;
+                query = query.Where(x =>
+                    x.PortalPageCode!.Contains(s) ||
+                    x.ParametersJson!.Contains(s) ||
+                    (x.MacAddress != null && x.MacAddress.Contains(s)) ||
+                    (x.UserName != null && x.UserName.Contains(s)));
+            }
+
+            if (param.DateFrom != null)
+            {
+                query = query.Where(x => x.CreatedDate >= param.DateFrom);
+            }
+
+            if (param.DateTo != null)
+            {
+                query = query.Where(x => x.CreatedDate <= param.DateTo);
             }
 
             return query;
@@ -83,7 +98,7 @@ namespace Its.Onix.Api.Database.Repositories
             return query.FirstOrDefaultAsync();
         }
 
-        public async Task<MPortalSession?> UpdatePortalSessionStatusById(string portalSessionId, string status, string? statusDesc)
+        public async Task<MPortalSession?> UpdatePortalSessionStatusById(string portalSessionId, string status, string? statusDesc, string? userName = null)
         {
             var id = Guid.Parse(portalSessionId);
             var result = await context!.PortalSessions!.Where(x => x.OrgId!.Equals(orgId) && x.PortalSessionId!.Equals(id)).FirstOrDefaultAsync();
@@ -92,6 +107,10 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 result.Status = status;
                 result.StatusDesc = statusDesc;
+                if (userName != null)
+                {
+                    result.UserName = userName;
+                }
                 if (status == "Authorized")
                 {
                     result.LoginDate = DateTime.UtcNow;

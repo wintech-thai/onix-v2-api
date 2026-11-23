@@ -19,6 +19,9 @@ namespace Its.Onix.Api.Services
         public Task<MVPortalRealmUser> UpdateRealmUserById(string orgId, string realmUserId, MPortalRealmUser user);
         public Task<MVPortalRealmUser> ResetRealmUserPasswordById(string orgId, string realmUserId, string password);
         public Task<MVPortalRealmUser> UpdateRealmUserStatusById(string orgId, string realmUserId, bool isEnabled);
+
+        //ใช้จากหน้า login portal (Native) เช็ค username/password ของ realm user แล้วอัปเดต last seen ถ้าถูก
+        public Task<MVPortalRealmUser> VerifyRealmUserLogin(string orgId, string realmId, string userName, string password);
         public Task<MVPortalRealmUser> DeleteRealmUserById(string orgId, string realmUserId);
     }
 }

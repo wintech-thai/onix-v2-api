@@ -77,5 +77,21 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.AddPortalSession(id, code, apiKeyId, parameters);
             return Ok(result);
         }
+
+        public class VerifyNativeLoginRequest
+        {
+            public string? UserName { get; set; }
+            public string? Password { get; set; }
+        }
+
+        // org-id = OrgCustomId - เรียกจากหน้า login-portal ตอนผู้ใช้กรอก user/password - auth ด้วย api key ผ่าน Basic auth เหมือน AddPortalSession
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/VerifyNativeLogin/{portalSessionId}")]
+        public async Task<IActionResult> VerifyNativeLogin(string id, string portalSessionId, [FromBody] VerifyNativeLoginRequest request)
+        {
+            var result = await svc.VerifyNativeLogin(id, portalSessionId, request.UserName ?? "", request.Password ?? "");
+            return Ok(result);
+        }
     }
 }

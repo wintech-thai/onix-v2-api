@@ -260,6 +260,44 @@ namespace Its.Onix.Api.Services
             return r;
         }
 
+        public async Task<MVPortalRealmUser> VerifyRealmUserLogin(string orgId, string realmId, string userName, string password)
+        {
+            var r = new MVPortalRealmUser() { Status = "OK", Description = "Success" };
+
+            repository!.SetCustomOrgId(orgId);
+            var user = await repository!.GetRealmUserByUserName(realmId, userName);
+
+            //เหตุผลเดียวกันทั้งไม่เจอ user และ password ผิด กันคนเดาว่า username นี้มีอยู่จริงไหม
+            var wrongCredsDesc = "Username or password is incorrect";
+
+            if (user == null)
+            {
+                r.Status = "INVALID_CREDENTIALS";
+                r.Description = wrongCredsDesc;
+                return r;
+            }
+
+            if (user.IsEnabled != true)
+            {
+                r.Status = "USER_DISABLED";
+                r.Description = "This user is disabled";
+                return r;
+            }
+
+            if (!PasswordHashUtils.VerifyPassword(user.EncryptedPassword ?? "", password))
+            {
+                r.Status = "INVALID_CREDENTIALS";
+                r.Description = wrongCredsDesc;
+                return r;
+            }
+
+            var updated = await repository!.UpdateRealmUserLastSeenById(user.RealmUserId!.Value.ToString());
+
+            r.RealmUser = updated ?? user;
+            r.RealmUser.EncryptedPassword = null;
+            return r;
+        }
+
         public async Task<MVPortalRealmUser> DeleteRealmUserById(string orgId, string realmUserId)
         {
             var r = new MVPortalRealmUser() { Status = "OK", Description = "Success" };
