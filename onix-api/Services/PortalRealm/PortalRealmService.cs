@@ -147,6 +147,25 @@ namespace Its.Onix.Api.Services
             return repository!.GetRealmUserCount(realmId, param);
         }
 
+        public async Task<MVPortalRealmUser> GetRealmUserById(string orgId, string realmUserId)
+        {
+            var r = new MVPortalRealmUser() { Status = "OK", Description = "Success" };
+
+            repository!.SetCustomOrgId(orgId);
+            var result = await repository!.GetRealmUserById(realmUserId);
+
+            if (result == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Realm User ID [{realmUserId}] not found";
+                return r;
+            }
+
+            result.EncryptedPassword = null;
+            r.RealmUser = result;
+            return r;
+        }
+
         public async Task<MVPortalRealmUser> AddRealmUser(string orgId, string realmId, MPortalRealmUser user)
         {
             var r = new MVPortalRealmUser() { Status = "OK", Description = "Success" };

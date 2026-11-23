@@ -168,6 +168,19 @@ namespace Its.Onix.Api.Database.Repositories
             return GetUserSelection(realmId, param).CountAsync();
         }
 
+        public Task<MPortalRealmUser?> GetRealmUserById(string realmUserId)
+        {
+            var id = Guid.Parse(realmUserId);
+            var query = context!.RealmUsers!.Where(x => x.RealmUserId!.Equals(id));
+
+            if (orgId != "global")
+            {
+                query = query.Where(x => x.OrgId!.Equals(orgId));
+            }
+
+            return query.FirstOrDefaultAsync();
+        }
+
         public Task<MPortalRealmUser?> GetRealmUserByUserName(string realmId, string userName)
         {
             var id = Guid.Parse(realmId);
