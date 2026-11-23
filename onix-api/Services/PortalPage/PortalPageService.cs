@@ -119,6 +119,15 @@ namespace Its.Onix.Api.Services
 
             var result = await repository!.AddPortalPage(portalPage);
 
+            //สร้าง api key + custom role ผูกไว้ตั้งแต่ตอนสร้าง portal page เลย (ของเดิมไปสร้างตอน get link)
+            //reuse CreatePortalPageApiKey ตัวเดียวกับที่ "get link" ใช้ เพื่อไม่ให้ logic การสร้าง key+role มีสองที่
+            var apiKeyResult = await CreatePortalPageApiKey(orgId, result.PortalPageId!.Value.ToString(), "", null);
+            if (apiKeyResult.Status == "OK" && apiKeyResult.ApiKey != null)
+            {
+                result.ApiKeyId = apiKeyResult.ApiKey.KeyId;
+                result.ApiCode = apiKeyResult.ApiKey.KeyName;
+            }
+
             r.PortalPage = result;
             return r;
         }

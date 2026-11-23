@@ -150,7 +150,9 @@ namespace Its.Onix.Api.Services
             }
             else
             {
-                DeleteApiKeyCache(orgId, r.ApiKey!.ApiKey!);
+                //เรียกจาก Admin ตัว orgId ที่ส่งเข้ามาจะเป็น "global" เสมอ ไม่ใช่ org จริงที่ key นี้ผูกอยู่
+                //ต้องใช้ r.ApiKey.OrgId (org จริง) ไม่งั้น cache key ที่เคลียร์จะคนละอันกับตอน VerifyKey เขียนไว้ ทำให้ key ที่ลบไปแล้วยังใช้งานได้จนกว่า cache จะหมดอายุเอง (5 นาที)
+                DeleteApiKeyCache(r.ApiKey!.OrgId!, r.ApiKey!.ApiKey!);
                 r.ApiKey!.ApiKey = "";
             }
 
@@ -200,7 +202,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            DeleteApiKeyCache(orgId, result.ApiKey!);
+            //เรียกจาก Admin ตัว orgId ที่ส่งเข้ามาจะเป็น "global" เสมอ ไม่ใช่ org จริงที่ key นี้ผูกอยู่ ใช้ result.OrgId แทน (เหตุผลเดียวกับ DeleteApiKeyById)
+            DeleteApiKeyCache(result.OrgId!, result.ApiKey!);
 
             r.ApiKey = result;
             r.ApiKey.RolesList = "";
@@ -229,7 +232,8 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            DeleteApiKeyCache(orgId, result.ApiKey!);
+            //เรียกจาก Admin ตัว orgId ที่ส่งเข้ามาจะเป็น "global" เสมอ ไม่ใช่ org จริงที่ key นี้ผูกอยู่ ใช้ result.OrgId แทน (เหตุผลเดียวกับ DeleteApiKeyById)
+            DeleteApiKeyCache(result.OrgId!, result.ApiKey!);
 
             r.ApiKey = result;
             r.ApiKey.RolesList = "";

@@ -92,6 +92,8 @@ public class DataContext : IdentityDbContext<IdentityUser, IdentityRole, string>
 
     public DbSet<MPortalPage>? PortalPages { get; set; }
     public DbSet<MPortalSession>? PortalSessions { get; set; }
+    public DbSet<MPortalRealm>? Realms { get; set; }
+    public DbSet<MPortalRealmUser>? RealmUsers { get; set; }
 
     //=== Admin tables here =====
     public DbSet<MAdminUser>? AdminUsers { get; set; }

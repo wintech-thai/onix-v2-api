@@ -20,6 +20,9 @@ namespace Its.Onix.Api.Models
         [Column("portal_page_code")]
         public string? PortalPageCode { get; set; } /* Code ของ Portal Page ที่ session นี้เกิดขึ้น */
 
+        [Column("auth_method")]
+        public string? AuthMethod { get; set; } /* denormalized จาก PortalPage.AuthMethod ตอน add session เพื่อเอาไว้แสดง badge */
+
         [Column("parameters_json", TypeName = "text")]
         public string? ParametersJson { get; set; } /* เก็บ parameter ทั้งหมดที่ส่งเข้ามาทางหน้า portal แบบ dynamic (form/query) */
 

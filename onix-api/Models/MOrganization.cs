@@ -88,6 +88,10 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? LogoImageUrl { get; set; }
 
+        //นับจาก PortalPages ของ org นี้ ไม่ persist ลง DB
+        [NotMapped]
+        public int? PortalPageCount { get; set; }
+
         [Column("org_created_date")]
         public DateTime? OrgCreatedDate { get; set; }
 
