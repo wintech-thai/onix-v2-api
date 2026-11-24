@@ -125,7 +125,7 @@ namespace Its.Onix.Api.Services
                     MacAddress = macAddress ?? "",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     Status = "Failed",
-                    StatusDesc = $"Portal page not found for code [{code}] in org [{orgId}]",
+                    StatusDesc = $"ERROR_PORTAL_PAGE_NOT_FOUND - Portal page not found for code [{code}] in org [{orgId}]",
                 };
                 var savedFailed = await repository!.AddPortalSession(failedSession);
 
@@ -145,7 +145,7 @@ namespace Its.Onix.Api.Services
                     MacAddress = "",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     Status = "Failed",
-                    StatusDesc = "MAC address parameter (\"mac\") was not provided",
+                    StatusDesc = "ERROR_MISSING_MAC - MAC address parameter (\"mac\") was not provided",
                 };
                 var savedNoMac = await repository!.AddPortalSession(noMacSession);
 
@@ -164,7 +164,7 @@ namespace Its.Onix.Api.Services
                     MacAddress = macAddress ?? "",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     Status = "Failed",
-                    StatusDesc = "Portal page is disabled",
+                    StatusDesc = "ERROR_PORTAL_PAGE_DISABLED - Portal page is disabled",
                 };
                 var savedDisabled = await repository!.AddPortalSession(disabledSession);
 
