@@ -135,6 +135,25 @@ namespace Its.Onix.Api.Services
 
             var realmName = await GetRealmNameForSession(orgId, portalPage.RealmId);
 
+            if (string.IsNullOrWhiteSpace(macAddress))
+            {
+                var noMacSession = new MPortalSession()
+                {
+                    PortalPageCode = portalPage.Code,
+                    AuthMethod = portalPage.AuthMethod,
+                    RealmName = realmName,
+                    MacAddress = "",
+                    ParametersJson = JsonSerializer.Serialize(parameters),
+                    Status = "Failed",
+                    StatusDesc = "MAC address parameter (\"mac\") was not provided",
+                };
+                var savedNoMac = await repository!.AddPortalSession(noMacSession);
+
+                r.PortalPage = portalPage;
+                r.PortalSession = savedNoMac;
+                return r;
+            }
+
             if (portalPage.IsEnabled != true)
             {
                 var disabledSession = new MPortalSession()
