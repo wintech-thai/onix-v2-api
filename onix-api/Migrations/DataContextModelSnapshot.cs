@@ -4426,6 +4426,10 @@ namespace onix.api.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_enabled");
 
+                    b.Property<string>("Language")
+                        .HasColumnType("text")
+                        .HasColumnName("language");
+
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -4433,6 +4437,14 @@ namespace onix.api.Migrations
                     b.Property<Guid?>("RealmId")
                         .HasColumnType("uuid")
                         .HasColumnName("realm_id");
+
+                    b.Property<string>("RedirectUrlMode")
+                        .HasColumnType("text")
+                        .HasColumnName("redirect_url_mode");
+
+                    b.Property<string>("RedirectUrlValue")
+                        .HasColumnType("text")
+                        .HasColumnName("redirect_url_value");
 
                     b.Property<string>("Theme")
                         .HasColumnType("text")
@@ -4559,6 +4571,10 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("login_date");
 
+                    b.Property<string>("MacAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("mac_address");
+
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -4571,6 +4587,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("portal_page_code");
 
+                    b.Property<string>("RealmName")
+                        .HasColumnType("text")
+                        .HasColumnName("realm_name");
+
                     b.Property<string>("Status")
                         .HasColumnType("text")
                         .HasColumnName("status");
@@ -4578,6 +4598,10 @@ namespace onix.api.Migrations
                     b.Property<string>("StatusDesc")
                         .HasColumnType("text")
                         .HasColumnName("status_desc");
+
+                    b.Property<string>("UserName")
+                        .HasColumnType("text")
+                        .HasColumnName("user_name");
 
                     b.HasKey("PortalSessionId");
 

@@ -10,13 +10,25 @@ namespace Its.Onix.Api.Services
     {
         private readonly IPortalSessionRepository? repository = null;
         private readonly IPortalPageService _portalPageService;
+        private readonly IPortalRealmService _portalRealmService;
 
         public PortalSessionService(
             IPortalSessionRepository repo,
-            IPortalPageService portalPageService) : base()
+            IPortalPageService portalPageService,
+            IPortalRealmService portalRealmService) : base()
         {
             repository = repo;
             _portalPageService = portalPageService;
+            _portalRealmService = portalRealmService;
+        }
+
+        //ดึงชื่อ realm ของ portal page มาตอน add session (ไม่มี realm ผูกไว้ก็ให้ null ไปเลย)
+        private async Task<string?> GetRealmNameForSession(string orgId, Guid? realmId)
+        {
+            if (realmId == null) return null;
+
+            var realmResult = await _portalRealmService.GetRealmById(orgId, realmId.ToString()!);
+            return realmResult.Realm?.RealmName;
         }
 
         public async Task<MVPortalSession> GetPortalSessions(string orgId, VMPortalSession param)
@@ -103,19 +115,42 @@ namespace Its.Onix.Api.Services
                 : await _portalPageService.GetDefaultPortalPageForPublic(orgId);
 
             repository!.SetCustomOrgId(orgId);
+            parameters.TryGetValue("mac", out var macAddress);
 
             if (portalPage == null)
             {
                 var failedSession = new MPortalSession()
                 {
                     PortalPageCode = code ?? "",
+                    MacAddress = macAddress ?? "",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     Status = "Failed",
-                    StatusDesc = $"Portal page not found for code [{code}] in org [{orgId}]",
+                    StatusDesc = $"ERROR_PORTAL_PAGE_NOT_FOUND - Portal page not found for code [{code}] in org [{orgId}]",
                 };
                 var savedFailed = await repository!.AddPortalSession(failedSession);
 
                 r.PortalSession = savedFailed;
+                return r;
+            }
+
+            var realmName = await GetRealmNameForSession(orgId, portalPage.RealmId);
+
+            if (string.IsNullOrWhiteSpace(macAddress))
+            {
+                var noMacSession = new MPortalSession()
+                {
+                    PortalPageCode = portalPage.Code,
+                    AuthMethod = portalPage.AuthMethod,
+                    RealmName = realmName,
+                    MacAddress = "",
+                    ParametersJson = JsonSerializer.Serialize(parameters),
+                    Status = "Failed",
+                    StatusDesc = "ERROR_MISSING_MAC - MAC address parameter (\"mac\") was not provided",
+                };
+                var savedNoMac = await repository!.AddPortalSession(noMacSession);
+
+                r.PortalPage = portalPage;
+                r.PortalSession = savedNoMac;
                 return r;
             }
 
@@ -125,9 +160,11 @@ namespace Its.Onix.Api.Services
                 {
                     PortalPageCode = portalPage.Code,
                     AuthMethod = portalPage.AuthMethod,
+                    RealmName = realmName,
+                    MacAddress = macAddress ?? "",
                     ParametersJson = JsonSerializer.Serialize(parameters),
                     Status = "Failed",
-                    StatusDesc = "Portal page is disabled",
+                    StatusDesc = "ERROR_PORTAL_PAGE_DISABLED - Portal page is disabled",
                 };
                 var savedDisabled = await repository!.AddPortalSession(disabledSession);
 
@@ -149,6 +186,8 @@ namespace Its.Onix.Api.Services
             {
                 PortalPageCode = portalPage.Code,
                 AuthMethod = portalPage.AuthMethod,
+                RealmName = realmName,
+                MacAddress = macAddress ?? "",
                 ParametersJson = JsonSerializer.Serialize(parameters),
                 Status = keyStatus == "OK" ? "Pending" : "Failed",
                 StatusDesc = keyStatus == "OK" ? null : $"{keyStatus} - {keyDesc}",
@@ -158,6 +197,76 @@ namespace Its.Onix.Api.Services
 
             r.PortalPage = portalPage;
             r.PortalSession = saved;
+            return r;
+        }
+
+        //คำนวณ URL ที่จะ redirect กลับไปหลัง login สำเร็จ - Direct ใช้ค่าตรงๆ, Parameter อ่านจาก parameter ที่ Mikrotik ส่งมาตอน add session
+        private static string? ResolveRedirectUrl(MPortalPage page, string? parametersJson)
+        {
+            if (string.IsNullOrEmpty(page.RedirectUrlValue)) return null;
+
+            if (page.RedirectUrlMode == "Parameter")
+            {
+                try
+                {
+                    var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(parametersJson ?? "{}");
+                    return parsed != null && parsed.TryGetValue(page.RedirectUrlValue, out var v) ? v : null;
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return page.RedirectUrlValue;
+        }
+
+        //เรียกจากหน้า login portal (Native) ตอนผู้ใช้กรอก user/password - OrgUser-level route, auth ด้วย api key ผ่าน Basic auth เหมือน AddPortalSession
+        public async Task<MVPortalSession> VerifyNativeLogin(string orgId, string portalSessionId, string userName, string password)
+        {
+            var r = new MVPortalSession() { Status = "OK", Description = "Success" };
+
+            repository!.SetCustomOrgId(orgId);
+            var session = await repository!.GetPortalSessionById(portalSessionId);
+
+            if (session == null)
+            {
+                r.Status = "NOTFOUND";
+                r.Description = $"Portal Session ID [{portalSessionId}] not found";
+                return r;
+            }
+
+            var page = !string.IsNullOrEmpty(session.PortalPageCode)
+                ? await _portalPageService.GetPortalPageByCodeForPublic(orgId, session.PortalPageCode)
+                : null;
+
+            if (page == null || page.RealmId == null)
+            {
+                var failDesc = "Portal page or realm not configured for this session";
+                await repository!.UpdatePortalSessionStatusById(portalSessionId, "Failed", failDesc, userName);
+
+                r.Status = "ERROR_NO_REALM_CONFIGURED";
+                r.Description = failDesc;
+                return r;
+            }
+
+            var loginResult = await _portalRealmService.VerifyRealmUserLogin(orgId, page.RealmId.ToString()!, userName, password);
+
+            if (loginResult.Status != "OK")
+            {
+                var updatedFailed = await repository!.UpdatePortalSessionStatusById(portalSessionId, "Failed", loginResult.Description, userName);
+
+                r.Status = loginResult.Status;
+                r.Description = loginResult.Description;
+                r.PortalSession = updatedFailed;
+                return r;
+            }
+
+            var redirectUrl = ResolveRedirectUrl(page, session.ParametersJson);
+            var updatedSession = await repository!.UpdatePortalSessionStatusById(portalSessionId, "Authorized", null, userName);
+
+            r.PortalSession = updatedSession;
+            r.RedirectUrl = redirectUrl;
             return r;
         }
     }

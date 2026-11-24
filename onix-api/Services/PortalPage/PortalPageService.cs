@@ -117,6 +117,9 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
+            //ไม่ระบุภาษามาให้มองเป็น Thai
+            portalPage.Language = string.IsNullOrEmpty(portalPage.Language) ? "Thai" : portalPage.Language;
+
             var result = await repository!.AddPortalPage(portalPage);
 
             //สร้าง api key + custom role ผูกไว้ตั้งแต่ตอนสร้าง portal page เลย (ของเดิมไปสร้างตอน get link)
@@ -153,6 +156,9 @@ namespace Its.Onix.Api.Services
                 r.Description = $"Portal page code [{portalPage.Code}] is already used in this organization";
                 return r;
             }
+
+            //ไม่ระบุภาษามาให้มองเป็น Thai
+            portalPage.Language = string.IsNullOrEmpty(portalPage.Language) ? "Thai" : portalPage.Language;
 
             var result = await repository!.UpdatePortalPageById(portalPageId, portalPage);
             if (result == null)
@@ -292,6 +298,7 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetPortalPageByCode(code);
 
+            if (result != null) result.Language ??= "Thai"; //ของเก่า null/empty ให้มองเป็น Thai เสมอ
             return result;
         }
 
@@ -300,6 +307,7 @@ namespace Its.Onix.Api.Services
             repository!.SetCustomOrgId(orgId);
             var result = await repository!.GetDefaultPortalPage();
 
+            if (result != null) result.Language ??= "Thai"; //ของเก่า null/empty ให้มองเป็น Thai เสมอ
             return result;
         }
     }

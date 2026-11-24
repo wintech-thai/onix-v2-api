@@ -168,6 +168,19 @@ namespace Its.Onix.Api.Database.Repositories
             return GetUserSelection(realmId, param).CountAsync();
         }
 
+        public Task<MPortalRealmUser?> GetRealmUserById(string realmUserId)
+        {
+            var id = Guid.Parse(realmUserId);
+            var query = context!.RealmUsers!.Where(x => x.RealmUserId!.Equals(id));
+
+            if (orgId != "global")
+            {
+                query = query.Where(x => x.OrgId!.Equals(orgId));
+            }
+
+            return query.FirstOrDefaultAsync();
+        }
+
         public Task<MPortalRealmUser?> GetRealmUserByUserName(string realmId, string userName)
         {
             var id = Guid.Parse(realmId);
@@ -232,6 +245,22 @@ namespace Its.Onix.Api.Database.Repositories
             if (result != null)
             {
                 result.IsEnabled = isEnabled;
+                await context!.SaveChangesAsync();
+
+                context.Entry(result).State = EntityState.Detached;
+            }
+
+            return result;
+        }
+
+        public async Task<MPortalRealmUser?> UpdateRealmUserLastSeenById(string realmUserId)
+        {
+            var id = Guid.Parse(realmUserId);
+            var result = await context!.RealmUsers!.Where(x => x.OrgId!.Equals(orgId) && x.RealmUserId!.Equals(id)).FirstOrDefaultAsync();
+
+            if (result != null)
+            {
+                result.LastSeenDate = DateTime.UtcNow;
                 await context!.SaveChangesAsync();
 
                 context.Entry(result).State = EntityState.Detached;

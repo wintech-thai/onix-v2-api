@@ -8,5 +8,7 @@ namespace Its.Onix.Api.ViewsModels
         public string? FullTextSearch { get; set; }
         public string? Status { get; set; }
         public string? PortalPageCode { get; set; }
+        public DateTime? DateFrom { get; set; }
+        public DateTime? DateTo { get; set; }
     }
 }

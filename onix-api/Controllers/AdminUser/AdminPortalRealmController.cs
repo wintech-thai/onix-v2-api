@@ -100,6 +100,15 @@ namespace Its.Onix.Api.Controllers
         }
 
         [ExcludeFromCodeCoverage]
+        [HttpGet]
+        [Route("org/global/action/GetRealmUserById/{orgId}/{realmUserId}")]
+        public async Task<IActionResult> GetRealmUserById(string orgId, string realmUserId)
+        {
+            var result = await svc.GetRealmUserById(orgId, realmUserId);
+            return Ok(result);
+        }
+
+        [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/global/action/AddRealmUser/{orgId}/{realmId}")]
         public async Task<IActionResult> AddRealmUser(string orgId, string realmId, [FromBody] MPortalRealmUser request)

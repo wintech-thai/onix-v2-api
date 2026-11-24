@@ -23,6 +23,15 @@ namespace Its.Onix.Api.Models
         [Column("auth_method")]
         public string? AuthMethod { get; set; } /* denormalized จาก PortalPage.AuthMethod ตอน add session เพื่อเอาไว้แสดง badge */
 
+        [Column("realm_name")]
+        public string? RealmName { get; set; } /* denormalized จาก PortalPage.RealmId ตอน add session (เก็บเป็นประวัติ ไม่ live join) */
+
+        [Column("mac_address")]
+        public string? MacAddress { get; set; } /* ส่งมาทาง parameter จาก Mikrotik ตอน add session, ไม่มีส่งมาก็ blank ไปก่อน */
+
+        [Column("user_name")]
+        public string? UserName { get; set; } /* stamp ตอน login เสร็จ ไม่ว่าสำเร็จหรือไม่ */
+
         [Column("parameters_json", TypeName = "text")]
         public string? ParametersJson { get; set; } /* เก็บ parameter ทั้งหมดที่ส่งเข้ามาทางหน้า portal แบบ dynamic (form/query) */
 

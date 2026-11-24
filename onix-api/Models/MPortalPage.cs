@@ -46,6 +46,15 @@ namespace Its.Onix.Api.Models
         [NotMapped]
         public string? RealmName { get; set; }
 
+        [Column("language")]
+        public string? Language { get; set; } /* Thai, English - null/empty ของเก่าให้มองเป็น Thai */
+
+        [Column("redirect_url_mode")]
+        public string? RedirectUrlMode { get; set; } /* Direct, Parameter */
+
+        [Column("redirect_url_value")]
+        public string? RedirectUrlValue { get; set; } /* Direct: URL ตรงๆ, Parameter: ชื่อ parameter ที่ Mikrotik ส่งมา */
+
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 

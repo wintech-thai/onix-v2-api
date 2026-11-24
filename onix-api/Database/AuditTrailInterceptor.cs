@@ -16,7 +16,8 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
             "InventoryDocs",
             "InventoryDocItems",
             "AccountDocs",
-            "AccountDocItems"
+            "AccountDocItems",
+            "PortalRealmUsers"
         };
 
     public AuditTrailInterceptor(RequestContext requestContext)

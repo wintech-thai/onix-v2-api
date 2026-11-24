@@ -31,6 +31,9 @@ namespace Its.Onix.Api.Database.Repositories
                     ApiCode = pp.ApiCode,
                     RealmId = pp.RealmId,
                     RealmName = realm != null ? realm.RealmName : null,
+                    Language = pp.Language ?? "Thai", //ของเก่า null/empty ให้มองเป็น Thai เสมอ
+                    RedirectUrlMode = pp.RedirectUrlMode,
+                    RedirectUrlValue = pp.RedirectUrlValue,
                     CreatedDate = pp.CreatedDate,
                 };
 
@@ -141,6 +144,9 @@ namespace Its.Onix.Api.Database.Repositories
                 result.AuthMethod = portalPage.AuthMethod;
                 result.Theme = portalPage.Theme;
                 result.RealmId = portalPage.RealmId;
+                result.Language = portalPage.Language;
+                result.RedirectUrlMode = portalPage.RedirectUrlMode;
+                result.RedirectUrlValue = portalPage.RedirectUrlValue;
 
                 await context!.SaveChangesAsync();
 
