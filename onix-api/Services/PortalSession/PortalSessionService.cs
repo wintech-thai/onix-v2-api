@@ -11,15 +11,18 @@ namespace Its.Onix.Api.Services
         private readonly IPortalSessionRepository? repository = null;
         private readonly IPortalPageService _portalPageService;
         private readonly IPortalRealmService _portalRealmService;
+        private readonly IPortalPageThemeService _portalPageThemeService;
 
         public PortalSessionService(
             IPortalSessionRepository repo,
             IPortalPageService portalPageService,
-            IPortalRealmService portalRealmService) : base()
+            IPortalRealmService portalRealmService,
+            IPortalPageThemeService portalPageThemeService) : base()
         {
             repository = repo;
             _portalPageService = portalPageService;
             _portalRealmService = portalRealmService;
+            _portalPageThemeService = portalPageThemeService;
         }
 
         //ดึงชื่อ realm ของ portal page มาตอน add session (ไม่มี realm ผูกไว้ก็ให้ null ไปเลย)
@@ -197,6 +200,17 @@ namespace Its.Onix.Api.Services
 
             r.PortalPage = portalPage;
             r.PortalSession = saved;
+
+            //แนบ theme มาด้วยเลย กัน frontend ต้องยิง API แยกอีกรอบ
+            if (keyStatus == "OK" && portalPage.ThemeId != null)
+            {
+                var themeResult = await _portalPageThemeService.GetPortalPageThemeById(portalPage.ThemeId.ToString()!);
+                if (themeResult.Status == "OK")
+                {
+                    r.PortalPageTheme = themeResult.PortalPageTheme;
+                }
+            }
+
             return r;
         }
 
