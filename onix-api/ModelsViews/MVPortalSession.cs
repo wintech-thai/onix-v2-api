@@ -13,8 +13,6 @@ namespace Its.Onix.Api.ModelsViews
 
         public MPortalPage? PortalPage { get; set; } /* แนบมาตอนสร้าง session จาก public endpoint ให้ frontend เรนเดอร์หน้า login */
 
-        public MPortalPageTheme? PortalPageTheme { get; set; } /* แนบมาด้วยถ้า portalPage ผูก custom theme ไว้ */
-
         public string? RedirectUrl { get; set; } /* แนบมาตอน login สำเร็จ ให้ frontend เอาไป redirect กลับ Mikrotik */
     }
 }
