@@ -77,12 +77,17 @@ namespace Its.Onix.Api.Database.Repositories
             return context!.PortalPageThemes!.Where(x => x.OrgId!.Equals(GLOBAL_ORG_ID) && x.ThemeName!.Equals(themeName)).FirstOrDefaultAsync();
         }
 
-        //สำหรับ dropdown เลือก custom theme ตอนตั้งค่า portal page - ต้อง authType+language ตรงกับของ portal page เท่านั้น
+        //dropdown เลือก custom theme - ไม่ select HtmlTemplate เพราะไม่ใช้
         public Task<List<MPortalPageTheme>> GetPortalPageThemesForSelection(string authType, string language)
         {
             return context!.PortalPageThemes!
                 .Where(x => x.AuthType!.Equals(authType) && x.Language!.Equals(language))
                 .OrderBy(x => x.ThemeName)
+                .Select(x => new MPortalPageTheme
+                {
+                    ThemeId = x.ThemeId,
+                    ThemeName = x.ThemeName,
+                })
                 .ToListAsync();
         }
 
