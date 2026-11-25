@@ -4450,6 +4450,10 @@ namespace onix.api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("theme");
 
+                    b.Property<Guid?>("ThemeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("theme_id");
+
                     b.HasKey("PortalPageId");
 
                     b.HasIndex("OrgId");
@@ -4458,6 +4462,55 @@ namespace onix.api.Migrations
                         .IsUnique();
 
                     b.ToTable("PortalPages");
+                });
+
+            modelBuilder.Entity("Its.Onix.Api.Models.MPortalPageTheme", b =>
+                {
+                    b.Property<Guid?>("ThemeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("theme_id");
+
+                    b.Property<string>("AuthType")
+                        .HasColumnType("text")
+                        .HasColumnName("auth_type");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("HtmlTemplate")
+                        .HasColumnType("text")
+                        .HasColumnName("html_template");
+
+                    b.Property<string>("Language")
+                        .HasColumnType("text")
+                        .HasColumnName("language");
+
+                    b.Property<string>("OrgId")
+                        .HasColumnType("text")
+                        .HasColumnName("org_id");
+
+                    b.Property<string>("ThemeName")
+                        .HasColumnType("text")
+                        .HasColumnName("theme_name");
+
+                    b.Property<string>("VariablesJson")
+                        .HasColumnType("text")
+                        .HasColumnName("variables_json");
+
+                    b.HasKey("ThemeId");
+
+                    b.HasIndex("OrgId");
+
+                    b.HasIndex(new[] { "OrgId", "ThemeName" }, "PortalPageTheme_Org_Name_Unique")
+                        .IsUnique();
+
+                    b.ToTable("PortalPageThemes");
                 });
 
             modelBuilder.Entity("Its.Onix.Api.Models.MPortalRealm", b =>

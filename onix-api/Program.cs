@@ -203,6 +203,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPortalPageService, PortalPageService>();
             builder.Services.AddScoped<IPortalSessionService, PortalSessionService>();
             builder.Services.AddScoped<IPortalRealmService, PortalRealmService>();
+            builder.Services.AddScoped<IPortalPageThemeService, PortalPageThemeService>();
 
 
             builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -267,6 +268,7 @@ namespace Its.Onix.Api
             builder.Services.AddScoped<IPortalPageRepository, PortalPageRepository>();
             builder.Services.AddScoped<IPortalSessionRepository, PortalSessionRepository>();
             builder.Services.AddScoped<IPortalRealmRepository, PortalRealmRepository>();
+            builder.Services.AddScoped<IPortalPageThemeRepository, PortalPageThemeRepository>();
 
 
             builder.Services.AddAuthentication("BasicOrBearer")

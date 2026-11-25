@@ -25,7 +25,14 @@ namespace Its.Onix.Api.Models
         public string? AuthMethod { get; set; } /* Google, Native */
 
         [Column("theme")]
-        public string? Theme { get; set; } /* Default */
+        public string? Theme { get; set; } /* Default - system theme เลือกตอนไม่ได้ใช้ custom theme */
+
+        [Column("theme_id")]
+        public Guid? ThemeId { get; set; } /* FK ไปยัง PortalPageThemes เมื่อเลือกใช้ custom theme */
+
+        //ได้จาก left outer join กับ PortalPageThemes ตอน query เสมอ (ไม่ denormalize)
+        [NotMapped]
+        public string? ThemeName { get; set; }
 
         [Column("is_default")]
         public bool? IsDefault { get; set; }
