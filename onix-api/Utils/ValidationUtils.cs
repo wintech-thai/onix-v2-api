@@ -112,6 +112,37 @@ namespace Its.Onix.Api.Utils
             return result;
         }
 
+        //ไม่ต้องเป๊ะมาก แค่กันไฟล์ขนาดใหญ่เกินไปและกันเคสที่ไม่ใช่ html เลยหลุดเข้ามา (เช่น paste เอกสาร word มาเฉยๆ)
+        public static ValidationResult ValidatePortalPageThemeHtml(string html)
+        {
+            var result = new ValidationResult() { Status = "OK", Description = "" };
+
+            const int maxLength = 200_000; //~200KB เผื่อ inline style/script พอสมควร
+
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                result.Status = "ERROR_VALIDATION_THEME_HTML";
+                result.Description = "Html template is required";
+                return result;
+            }
+
+            if (html.Length > maxLength)
+            {
+                result.Status = "ERROR_VALIDATION_THEME_HTML";
+                result.Description = $"Html template is too large (max {maxLength:N0} characters)";
+                return result;
+            }
+
+            if (!html.Contains('<') || !html.Contains('>'))
+            {
+                result.Status = "ERROR_VALIDATION_THEME_HTML";
+                result.Description = "Html template does not look like valid html";
+                return result;
+            }
+
+            return result;
+        }
+
         public static ValidationResult ValidationEffectiveDateInterval(DateTime? startDate, DateTime? endDate)
         {
             var result = new ValidationResult() { Status = "OK", Description = "" };

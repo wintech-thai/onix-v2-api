@@ -18,6 +18,8 @@ namespace Its.Onix.Api.Database.Repositories
                 from pp in context!.PortalPages
                 join r in context.Realms! on pp.RealmId equals r.RealmId into realmJoin
                 from realm in realmJoin.DefaultIfEmpty()
+                join th in context.PortalPageThemes! on pp.ThemeId equals th.ThemeId into themeJoin
+                from theme in themeJoin.DefaultIfEmpty()
                 select new MPortalPage
                 {
                     PortalPageId = pp.PortalPageId,
@@ -25,6 +27,8 @@ namespace Its.Onix.Api.Database.Repositories
                     Code = pp.Code,
                     AuthMethod = pp.AuthMethod,
                     Theme = pp.Theme,
+                    ThemeId = pp.ThemeId,
+                    ThemeName = theme != null ? theme.ThemeName : null,
                     IsDefault = pp.IsDefault,
                     IsEnabled = pp.IsEnabled,
                     ApiKeyId = pp.ApiKeyId,
@@ -130,6 +134,12 @@ namespace Its.Onix.Api.Database.Repositories
                 portalPage.RealmName = realm?.RealmName;
             }
 
+            if (portalPage.ThemeId != null)
+            {
+                var theme = await context!.PortalPageThemes!.Where(x => x.ThemeId!.Equals(portalPage.ThemeId)).FirstOrDefaultAsync();
+                portalPage.ThemeName = theme?.ThemeName;
+            }
+
             return portalPage;
         }
 
@@ -143,6 +153,7 @@ namespace Its.Onix.Api.Database.Repositories
                 result.Code = portalPage.Code;
                 result.AuthMethod = portalPage.AuthMethod;
                 result.Theme = portalPage.Theme;
+                result.ThemeId = portalPage.ThemeId;
                 result.RealmId = portalPage.RealmId;
                 result.Language = portalPage.Language;
                 result.RedirectUrlMode = portalPage.RedirectUrlMode;
@@ -161,6 +172,16 @@ namespace Its.Onix.Api.Database.Repositories
                 else
                 {
                     result.RealmName = null;
+                }
+
+                if (result.ThemeId != null)
+                {
+                    var theme = await context!.PortalPageThemes!.Where(x => x.ThemeId!.Equals(result.ThemeId)).FirstOrDefaultAsync();
+                    result.ThemeName = theme?.ThemeName;
+                }
+                else
+                {
+                    result.ThemeName = null;
                 }
             }
 

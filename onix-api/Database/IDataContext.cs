@@ -84,6 +84,7 @@ namespace Its.Onix.Api.Database
         public DbSet<MPortalSession>? PortalSessions { get; set; }
         public DbSet<MPortalRealm>? Realms { get; set; }
         public DbSet<MPortalRealmUser>? RealmUsers { get; set; }
+        public DbSet<MPortalPageTheme>? PortalPageThemes { get; set; }
 
         //=== Admin tables here =====
         public DbSet<MAdminUser>? AdminUsers { get; set; }
