@@ -98,7 +98,7 @@ namespace Its.Onix.Api.Database.Repositories
             return query.FirstOrDefaultAsync();
         }
 
-        public async Task<MPortalSession?> UpdatePortalSessionStatusById(string portalSessionId, string status, string? statusDesc, string? userName = null)
+        public async Task<MPortalSession?> UpdatePortalSessionStatusById(string portalSessionId, string status, string? statusDesc, string? userName = null, string? googleClaimsJson = null)
         {
             var id = Guid.Parse(portalSessionId);
             var result = await context!.PortalSessions!.Where(x => x.OrgId!.Equals(orgId) && x.PortalSessionId!.Equals(id)).FirstOrDefaultAsync();
@@ -110,6 +110,10 @@ namespace Its.Onix.Api.Database.Repositories
                 if (userName != null)
                 {
                     result.UserName = userName;
+                }
+                if (googleClaimsJson != null)
+                {
+                    result.GoogleClaimsJson = googleClaimsJson;
                 }
                 if (status == "Authorized")
                 {

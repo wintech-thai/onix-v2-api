@@ -23,6 +23,7 @@ namespace Its.Onix.Api.Database.Repositories
                     OrgId = r.OrgId,
                     RealmName = r.RealmName,
                     AuthType = r.AuthType,
+                    Description = r.Description,
                     CreatedDate = r.CreatedDate,
                     PortalPageCount = context.PortalPages!.Count(pp => pp.RealmId == r.RealmId),
                     RealmUserCount = context.RealmUsers!.Count(ru => ru.RealmId == r.RealmId),
@@ -35,7 +36,7 @@ namespace Its.Onix.Api.Database.Repositories
 
             if (!string.IsNullOrEmpty(param.FullTextSearch))
             {
-                query = query.Where(x => x.RealmName!.Contains(param.FullTextSearch));
+                query = query.Where(x => x.RealmName!.Contains(param.FullTextSearch) || (x.Description != null && x.Description.Contains(param.FullTextSearch)));
             }
 
             if (!string.IsNullOrEmpty(param.AuthType))
@@ -106,6 +107,13 @@ namespace Its.Onix.Api.Database.Repositories
             {
                 //AuthType แก้ไม่ได้หลังสร้างแล้ว ตั้งใจไม่รับค่าจาก realm.AuthType ตรงนี้
                 result.RealmName = realm.RealmName;
+                result.Description = realm.Description;
+
+                if (result.AuthType == "Google")
+                {
+                    result.GoogleClientId = realm.GoogleClientId;
+                    result.GoogleClientSecret = realm.GoogleClientSecret;
+                }
 
                 await context!.SaveChangesAsync();
 

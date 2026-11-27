@@ -93,5 +93,20 @@ namespace Its.Onix.Api.Controllers
             var result = await svc.VerifyNativeLogin(id, portalSessionId, request.UserName ?? "", request.Password ?? "");
             return Ok(result);
         }
+
+        public class InitiateGoogleLoginRequest
+        {
+            public string? RedirectUri { get; set; }
+        }
+
+        // กดปุ่ม "Login with Google" - redirectUri มาจาก frontend ไม่ hardcode ฝั่ง backend
+        [ExcludeFromCodeCoverage]
+        [HttpPost]
+        [Route("org/{id}/action/InitiateGoogleLogin/{portalSessionId}")]
+        public async Task<IActionResult> InitiateGoogleLogin(string id, string portalSessionId, [FromBody] InitiateGoogleLoginRequest request)
+        {
+            var result = await svc.InitiateGoogleLogin(id, portalSessionId, request.RedirectUri ?? "");
+            return Ok(result);
+        }
     }
 }

@@ -14,5 +14,7 @@ namespace Its.Onix.Api.ModelsViews
         public MPortalPage? PortalPage { get; set; } /* แนบมาตอนสร้าง session จาก public endpoint ให้ frontend เรนเดอร์หน้า login */
 
         public string? RedirectUrl { get; set; } /* แนบมาตอน login สำเร็จ ให้ frontend เอาไป redirect กลับ Mikrotik */
+
+        public string? GoogleAuthUrl { get; set; } /* แนบมาตอน InitiateGoogleLogin สำเร็จ ให้ frontend window.location.href ไปหน้า Google */
     }
 }

@@ -4528,6 +4528,18 @@ namespace onix.api.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<string>("GoogleClientId")
+                        .HasColumnType("text")
+                        .HasColumnName("google_client_id");
+
+                    b.Property<string>("GoogleClientSecret")
+                        .HasColumnType("text")
+                        .HasColumnName("google_client_secret");
+
                     b.Property<string>("OrgId")
                         .HasColumnType("text")
                         .HasColumnName("org_id");
@@ -4619,6 +4631,10 @@ namespace onix.api.Migrations
                     b.Property<DateTime?>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
+
+                    b.Property<string>("GoogleClaimsJson")
+                        .HasColumnType("text")
+                        .HasColumnName("google_claims_json");
 
                     b.Property<DateTime?>("LoginDate")
                         .HasColumnType("timestamp with time zone")

@@ -41,6 +41,9 @@ namespace Its.Onix.Api.Models
         [Column("status_desc")]
         public string? StatusDesc { get; set; } /* เหตุผล เช่น ตอน Failed เพราะ api key ไม่ถูก */
 
+        [Column("google_claims_json", TypeName = "text")]
+        public string? GoogleClaimsJson { get; set; } /* claims จาก Google id_token */
+
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 

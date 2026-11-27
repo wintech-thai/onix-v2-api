@@ -24,6 +24,15 @@ namespace Its.Onix.Api.Models
         [Column("auth_type")]
         public string? AuthType { get; set; } /* Native, Google */
 
+        [Column("description")]
+        public string? Description { get; set; }
+
+        [Column("google_client_id")]
+        public string? GoogleClientId { get; set; } /* เฉพาะ AuthType = Google */
+
+        [Column("google_client_secret")]
+        public string? GoogleClientSecret { get; set; } /* เฉพาะ AuthType = Google */
+
         [Column("created_date")]
         public DateTime? CreatedDate { get; set; }
 

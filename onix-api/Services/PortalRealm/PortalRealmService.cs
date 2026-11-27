@@ -56,11 +56,17 @@ namespace Its.Onix.Api.Services
                 return r;
             }
 
-            //เบื้องต้นรองรับแค่ Native ก่อนตามสเปค ฝั่ง frontend disable ตัวเลือก Google ไว้แล้ว เช็คซ้ำฝั่ง backend กันเรียก API ตรงข้าม UI
-            if (realm.AuthType != "Native")
+            if (realm.AuthType != "Native" && realm.AuthType != "Google")
             {
                 r.Status = "ERROR_AUTH_TYPE_NOT_SUPPORTED";
-                r.Description = "Only Native auth type is supported for now";
+                r.Description = $"Auth type [{realm.AuthType}] is not supported";
+                return r;
+            }
+
+            if (realm.AuthType == "Google" && (string.IsNullOrWhiteSpace(realm.GoogleClientId) || string.IsNullOrWhiteSpace(realm.GoogleClientSecret)))
+            {
+                r.Status = "ERROR_VALIDATION_GOOGLE_CREDENTIALS";
+                r.Description = "Client ID and Client Secret are required for Google auth type";
                 return r;
             }
 
@@ -98,6 +104,14 @@ namespace Its.Onix.Api.Services
             {
                 r.Status = "NAME_DUPLICATE";
                 r.Description = $"Realm name [{realm.RealmName}] is already used in this organization";
+                return r;
+            }
+
+            var current = await repository!.GetRealmById(realmId);
+            if (current?.AuthType == "Google" && (string.IsNullOrWhiteSpace(realm.GoogleClientId) || string.IsNullOrWhiteSpace(realm.GoogleClientSecret)))
+            {
+                r.Status = "ERROR_VALIDATION_GOOGLE_CREDENTIALS";
+                r.Description = "Client ID and Client Secret are required for Google auth type";
                 return r;
             }
 
