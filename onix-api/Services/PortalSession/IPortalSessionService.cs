@@ -17,10 +17,10 @@ namespace Its.Onix.Api.Services
         //เรียกจากหน้า login portal (Native) ตอนผู้ใช้กรอก user/password - เช็คกับ realm user ของ portal page นี้ แล้วอัปเดต session
         public Task<MVPortalSession> VerifyNativeLogin(string orgId, string portalSessionId, string userName, string password);
 
-        //เรียกจากหน้า login portal (Google) ตอนกดปุ่ม "Login with Google" - redirectUri มาจาก frontend (x006 spec: ไม่ hardcode domain ฝั่ง backend)
-        public Task<MVPortalSession> InitiateGoogleLogin(string orgId, string portalSessionId, string redirectUri);
+        //กดปุ่ม "Login with Google" - ส่งแค่ domain มา
+        public Task<MVPortalSession> InitiateGoogleLogin(string orgId, string portalSessionId, string domain);
 
-        //เรียกจาก OAuthCallbackController ตอน Google redirect กลับมาหลัง login (public, ไม่ auth ด้วย JWT/api key)
+        //Google redirect กลับมาเรียกตรงนี้ (public)
         public Task<MVPortalSession> HandleGoogleCallback(string orgId, string? code, string? state, string? error);
     }
 }

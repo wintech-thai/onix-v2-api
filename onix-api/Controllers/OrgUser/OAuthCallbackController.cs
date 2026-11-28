@@ -6,9 +6,7 @@ using Its.Onix.Api.Services;
 
 namespace Its.Onix.Api.Controllers
 {
-    // Google redirect กลับมาตรงนี้หลัง login (browser ของผู้ใช้ hit ตรงนี้เอง ไม่มี Authorization header ใดๆ มาด้วย)
-    // ต้องอยู่ใต้ /api/[controller] (ไม่ใช่ /public-api/) ตาม pattern ที่ลงทะเบียนไว้กับ Google Cloud Console จริง
-    // (ดู x006-google-authen spec) - [AllowAnonymous] ให้ผ่าน default auth policy ไปได้โดยไม่ต้องมี Basic/Bearer
+    // Google redirect กลับมาเรียกตรงนี้ (public, ไม่มี auth header)
     [AllowAnonymous]
     [ApiController]
     [Route("/api/[controller]")]

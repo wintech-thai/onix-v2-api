@@ -96,16 +96,16 @@ namespace Its.Onix.Api.Controllers
 
         public class InitiateGoogleLoginRequest
         {
-            public string? RedirectUri { get; set; }
+            public string? Domain { get; set; }
         }
 
-        // กดปุ่ม "Login with Google" - redirectUri มาจาก frontend ไม่ hardcode ฝั่ง backend
+        // กดปุ่ม "Login with Google" - ส่งแค่ domain มา
         [ExcludeFromCodeCoverage]
         [HttpPost]
         [Route("org/{id}/action/InitiateGoogleLogin/{portalSessionId}")]
         public async Task<IActionResult> InitiateGoogleLogin(string id, string portalSessionId, [FromBody] InitiateGoogleLoginRequest request)
         {
-            var result = await svc.InitiateGoogleLogin(id, portalSessionId, request.RedirectUri ?? "");
+            var result = await svc.InitiateGoogleLogin(id, portalSessionId, request.Domain ?? "");
             return Ok(result);
         }
     }

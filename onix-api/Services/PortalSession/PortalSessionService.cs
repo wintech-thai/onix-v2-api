@@ -293,17 +293,23 @@ namespace Its.Onix.Api.Services
         private static string GenerateNonce() =>
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(24)).Replace('+', '-').Replace('/', '_').TrimEnd('=');
 
+        //ต่อ Google callback URL ให้ตรงกับหน้า realm
+        private static string BuildGoogleCallbackUrl(string domain, string orgId) =>
+            $"https://{domain.Trim().TrimEnd('/')}/api/OAuthCallback/org/{Uri.EscapeDataString(orgId)}/action/GoogleCallback";
+
         //กดปุ่ม "Login with Google"
-        public async Task<MVPortalSession> InitiateGoogleLogin(string orgId, string portalSessionId, string redirectUri)
+        public async Task<MVPortalSession> InitiateGoogleLogin(string orgId, string portalSessionId, string domain)
         {
             var r = new MVPortalSession() { Status = "OK", Description = "Success" };
 
-            if (string.IsNullOrWhiteSpace(redirectUri))
+            if (string.IsNullOrWhiteSpace(domain))
             {
-                r.Status = "ERROR_VALIDATION_REDIRECT_URI";
-                r.Description = "redirectUri is required";
+                r.Status = "ERROR_VALIDATION_DOMAIN";
+                r.Description = "domain is required";
                 return r;
             }
+
+            var redirectUri = BuildGoogleCallbackUrl(domain, orgId);
 
             repository!.SetCustomOrgId(orgId);
             var session = await repository!.GetPortalSessionById(portalSessionId);
