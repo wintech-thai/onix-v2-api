@@ -9,7 +9,7 @@ namespace Its.Onix.Api.Controllers
     // Google redirect กลับมาเรียกตรงนี้ (public, ไม่มี auth header)
     [AllowAnonymous]
     [ApiController]
-    [Route("/api/[controller]")]
+    [Route("/api/OauthCallback")]
     public class OAuthCallbackController : ControllerBase
     {
         private readonly IPortalSessionService svc;

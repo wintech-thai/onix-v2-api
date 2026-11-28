@@ -295,7 +295,7 @@ namespace Its.Onix.Api.Services
 
         //ต่อ Google callback URL ให้ตรงกับหน้า realm
         private static string BuildGoogleCallbackUrl(string domain, string orgId) =>
-            $"https://{domain.Trim().TrimEnd('/')}/api/OAuthCallback/org/{Uri.EscapeDataString(orgId)}/action/GoogleCallback";
+            $"https://{domain.Trim().TrimEnd('/')}/api/OauthCallback/org/{Uri.EscapeDataString(orgId)}/action/GoogleCallback";
 
         //กดปุ่ม "Login with Google"
         public async Task<MVPortalSession> InitiateGoogleLogin(string orgId, string portalSessionId, string domain)
